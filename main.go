@@ -64,7 +64,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 						},
 					},
 				},
-				"schemaGroup": &registry.GroupModel{
+				"schemaGroups": &registry.GroupModel{
 					Singular: "schemaGroup",
 					Plural:   "schemaGroups",
 
@@ -106,10 +106,12 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 			continue
 		}
 
-		if strings.Index(header.Name, "/docker.com/") < 0 &&
-			strings.Index(header.Name, "/apiz.ebay.com/") < 0 {
-			continue
-		}
+		/*
+			if strings.Index(header.Name, "/docker.com/") < 0 &&
+				strings.Index(header.Name, "/apiz.ebay.com/") < 0 {
+				continue
+			}
+		*/
 
 		parts := strings.Split(strings.Trim(header.Name[i+6:], "/"), "/")
 		// org/service/version/file

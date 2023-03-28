@@ -107,6 +107,21 @@ func (gc *GroupCollection) NewGroup(id string) *Group {
 func (gc *GroupCollection) FindByID(id string) {
 }
 
+func (gc *GroupCollection) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if gc == nil {
+		return obj
+	}
+	for _, key := range SortedKeys(gc.Groups) {
+		group := gc.Groups[key]
+		ctx.DataPush(group.ID)
+		obj.AddProperty(group.ID, gc.Groups[key].ToObject(ctx))
+		ctx.DataPop()
+	}
+
+	return obj
+}
+
 func (gc *GroupCollection) ToJSON(ctx *Context) {
 	ctx.Print("{\n")
 	ctx.Indent()
@@ -143,6 +158,42 @@ type Group struct {
 	Name                string
 	Epoch               int
 	ResourceCollections map[string]*ResourceCollection
+}
+
+func (g *Group) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if g == nil {
+		return obj
+	}
+	obj.AddProperty("id", g.ID)
+	obj.AddProperty("name", g.Name)
+	obj.AddProperty("epoch", g.Epoch)
+	obj.AddProperty("self", ctx.DataURL())
+
+	for i, key := range SortedKeys(g.GroupCollection.GroupModel.Resources) {
+		rType := g.GroupCollection.GroupModel.Resources[key]
+		rColl := g.ResourceCollections[rType.Plural]
+
+		obj.AddProperty(rColl.ResourceModel.Plural+"URL",
+			URLBuild(ctx.DataURL(), rColl.ResourceModel.Plural))
+
+		ctx.ModelPush(rColl.ResourceModel.Plural)
+		ctx.DataPush(rColl.ResourceModel.Plural)
+		resObj := rColl.ToObject(ctx)
+		ctx.DataPop()
+		ctx.ModelPop()
+
+		obj.AddProperty(rColl.ResourceModel.Plural+"Count", resObj.Len())
+
+		if ctx.ShouldInline(rColl.ResourceModel.Plural) {
+			obj.AddProperty(rColl.ResourceModel.Plural, resObj)
+			if i+1 != len(g.GroupCollection.GroupModel.Resources) {
+				obj.AddProperty("", "")
+			}
+		}
+	}
+
+	return obj
 }
 
 func (g *Group) ToJSON(ctx *Context) {
@@ -188,6 +239,22 @@ type ResourceCollection struct {
 	Group         *Group
 	ResourceModel *ResourceModel
 	Resources     map[string]*Resource // id
+}
+
+func (rc *ResourceCollection) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if rc == nil {
+		return obj
+	}
+
+	for _, key := range SortedKeys(rc.Resources) {
+		resource := rc.Resources[key]
+		ctx.DataPush(resource.ID)
+		obj.AddProperty(resource.ID, resource.ToObject(ctx))
+		ctx.DataPop()
+	}
+
+	return obj
 }
 
 func (rc *ResourceCollection) ToJSON(ctx *Context) {
@@ -285,6 +352,54 @@ func (r *Resource) FindOrAddVersion(verStr string) *Version {
 	return ver
 }
 
+func (r *Resource) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if r == nil {
+		return obj
+	}
+
+	var latest *Version
+	if r.Latest != "" {
+		latest = r.VersionCollection.Versions[r.Latest]
+	}
+	if latest == nil {
+		panic("Help")
+		for _, latest = range r.VersionCollection.Versions {
+			break
+		}
+	}
+
+	obj.AddProperty("id", r.ID)
+	latest.AddToJsonInner(ctx, obj)
+
+	myURI := URLBuild(ctx.DataURL())
+	mySelf := myURI
+	if mySelf[0] != '#' {
+		mySelf += "?self"
+	}
+
+	contentURI := latest.Data["resourceURI"]
+	if contentURI == nil {
+		contentURI = myURI
+	}
+
+	obj.AddProperty(r.ResourceCollection.ResourceModel.Singular+"URI",
+		contentURI)
+	obj.AddProperty("self", mySelf)
+
+	ctx.ModelPush("versions")
+	ctx.DataPush("versions")
+	vers := r.VersionCollection.ToObject(ctx)
+	ctx.DataPop()
+	ctx.ModelPop()
+
+	if ctx.ShouldInline("versions") && vers.Len() > 0 {
+		obj.AddProperty("versions", vers)
+	}
+
+	return obj
+}
+
 func (r *Resource) ToJSON(ctx *Context) {
 	var latest *Version
 	if r.Latest != "" {
@@ -339,6 +454,22 @@ type VersionCollection struct {
 	Versions map[string]*Version // version
 }
 
+func (vc *VersionCollection) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if vc == nil {
+		return obj
+	}
+
+	for _, key := range SortedKeys(vc.Versions) {
+		ver := vc.Versions[key]
+		ctx.DataPush(ver.ID)
+		obj.AddProperty(ver.ID, ver.ToObject(ctx))
+		ctx.DataPop()
+	}
+
+	return obj
+}
+
 func (vc *VersionCollection) ToJSON(ctx *Context) {
 	ctx.Print("{\n")
 	ctx.Indent()
@@ -371,6 +502,33 @@ type Version struct {
 	Data map[string]interface{}
 }
 
+func (v *Version) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if v == nil {
+		return obj
+	}
+
+	obj.AddProperty("id", v.ID)
+	v.AddToJsonInner(ctx, obj)
+
+	myURI := ctx.DataURL()
+	mySelf := myURI
+	if mySelf[0] != '#' {
+		mySelf += "?self"
+	}
+
+	contentURI := v.Data["resourceURI"]
+	if contentURI == nil {
+		contentURI = myURI
+	}
+
+	obj.AddProperty(v.Resource.ResourceCollection.ResourceModel.Singular+"URI",
+		contentURI)
+	obj.AddProperty("self", mySelf)
+
+	return obj
+}
+
 func (v *Version) ToJSON(ctx *Context) {
 	ctx.Print("{\n")
 	ctx.Indent()
@@ -396,6 +554,13 @@ func (v *Version) ToJSON(ctx *Context) {
 
 	ctx.Outdent()
 	ctx.Print("\t}")
+}
+
+func (v *Version) AddToJsonInner(ctx *Context, obj *Object) {
+	obj.AddProperty("name", v.Name)
+	obj.AddProperty("type", v.Type)
+	obj.AddProperty("version", v.Version)
+	obj.AddProperty("epoch", v.Epoch)
 }
 
 func (v *Version) ToJSONInner(ctx *Context) {
@@ -434,6 +599,64 @@ func SortedKeys(m interface{}) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func (reg *Registry) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if reg == nil {
+		return obj
+	}
+
+	obj.AddProperty("id", reg.ID)
+	obj.AddProperty("name", reg.Name)
+	obj.AddProperty("description", reg.Description)
+	obj.AddProperty("specVersion", reg.SpecVersion)
+	obj.AddProperty("self", ctx.DataURL())
+
+	tags := NewObject()
+	for key, value := range reg.Tags {
+		tags.AddProperty(key, value)
+	}
+	if len(tags.Children) != 0 {
+		obj.AddProperty("tags", tags)
+	}
+
+	obj.AddProperty("docs", reg.Docs)
+	obj.AddProperty("", "")
+
+	if ctx.ShouldInline("model") {
+		ctx.ModelPush("model")
+		obj.AddProperty("model", reg.Model.ToObject(ctx))
+		ctx.ModelPop()
+		obj.AddProperty("", "")
+	}
+
+	for i, key := range SortedKeys(reg.Model.Groups) {
+		gType := reg.Model.Groups[key]
+		gCollection := reg.GroupCollections[gType.Plural]
+
+		obj.AddProperty(gType.Plural+"URL",
+			URLBuild(ctx.DataURL(), gType.Plural))
+
+		ctx.DataPush(gType.Plural)
+		ctx.ModelPush(gType.Plural)
+		groupObj := NewObject()
+		if gCollection != nil {
+			groupObj = gCollection.ToObject(ctx)
+		}
+		ctx.ModelPop()
+		ctx.DataPop()
+
+		obj.AddProperty(gType.Plural+"Count", groupObj.Len())
+		if ctx.ShouldInline(gType.Plural) {
+			obj.AddProperty(gType.Plural, groupObj)
+		}
+		if i+1 != len(reg.Model.Groups) {
+			obj.AddProperty("", "")
+		}
+	}
+
+	return obj
 }
 
 func (reg *Registry) ToJSON(ctx *Context) {
@@ -508,6 +731,37 @@ func (reg *Registry) ToJSON(ctx *Context) {
 		}
 	}
 	ctx.Print("\n}")
+}
+
+func (m *Model) ToObject(ctx *Context) *Object {
+	obj := NewObject()
+	if m == nil {
+		return obj
+	}
+
+	groups := NewObject()
+	for _, key := range SortedKeys(m.Groups) {
+		group := m.Groups[key]
+		groupObj := NewObject()
+		groupObj.AddProperty("singular", group.Singular)
+		groupObj.AddProperty("plural", group.Plural)
+		groupObj.AddProperty("schema", group.Schema)
+
+		resObjs := NewObject()
+		for _, key := range SortedKeys(group.Resources) {
+			res := group.Resources[key]
+			resObj := NewObject()
+			resObj.AddProperty("singular", res.Singular)
+			resObj.AddProperty("plural", res.Plural)
+			resObj.AddProperty("versions", res.Versions)
+			resObjs.AddProperty(key, resObj)
+		}
+
+		groupObj.AddProperty("resources", resObjs)
+		groups.AddProperty(key, groupObj)
+	}
+	obj.AddProperty("groups", groups)
+	return obj
 }
 
 func (m *Model) ToJSON(ctx *Context) {
@@ -702,6 +956,7 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	for len(paths) > 0 && paths[0] == "" {
 		paths = paths[1:]
 	}
+	fmt.Printf("Paths: %v\n", paths)
 
 	ctx := &Context{
 		Flags:         rFlags,
@@ -718,152 +973,259 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	ctx.BaseURL = strings.TrimRight(ctx.BaseURL, "/")
 
 	if len(paths) == 0 {
-		r.ToJSON(ctx)
-		return ctx.Result(), nil
+		r.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		return ctx.buffer.String(), nil
 	}
 
 	if len(paths) == 1 && paths[0] == "model" {
-		r.Model.ToJSON(ctx)
-		return ctx.Result(), nil
+		r.Model.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		return ctx.buffer.String(), nil
 	}
 
-	/*
-		// GROUPs
-		// log.Printf("Paths: %#v\n", paths)
-		var gModel *GroupModel
-		if gModel = r.FindGroupModel(paths[0]); gModel == nil {
-			return "", fmt.Errorf("Unknown group %q", paths[0])
+	// GROUPs
+	var gModel *GroupModel
+	if gModel = r.FindGroupModel(paths[0]); gModel == nil {
+		return "", fmt.Errorf("Unknown group %q", paths[0])
+	}
+	groupColl := r.GroupCollections[gModel.Plural]
+	ctx.BaseURLPush(paths[0])
+
+	if len(paths) == 1 {
+		groupColl.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		return ctx.buffer.String(), nil
+	}
+
+	// GROUPs/ID
+	group := groupColl.Groups[paths[1]]
+	if group == nil {
+		return "", fmt.Errorf("Unknown group ID %q", paths[1])
+	}
+	ctx.BaseURLPush(paths[1])
+	if len(paths) == 2 {
+		group.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		return ctx.buffer.String(), nil
+	}
+
+	// GROUPs/ID/RESOURCEs
+	resColl := group.ResourceCollections[paths[2]]
+	ctx.BaseURLPush(paths[2])
+	if resColl == nil {
+		return "", fmt.Errorf("Unknown rescource collection %q", paths[2])
+	}
+	if len(paths) == 3 {
+		resColl.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		return ctx.buffer.String(), nil
+	}
+
+	// GROUPs/ID/RESOURCEs/ID
+	res := resColl.Resources[paths[3]]
+	ctx.BaseURLPush(paths[3])
+	if res == nil {
+		return "", fmt.Errorf("Unknown resource ID %q", paths[3])
+	}
+
+	if len(paths) == 4 {
+		if ctx.Flags.Self {
+			res.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+			return ctx.buffer.String(), nil
 		}
-		groupColl := r.GroupCollections[gModel.Plural]
-		if groupColl == nil {
-			return "{}", nil
-		}
-		ctx.BaseURLPush(paths[0])
-		if len(paths) == 1 {
-			groupColl.ToJSON(ctx)
-			return ctx.Result(), nil
+		latest := res.FindVersion(res.Latest)
+		data, ok := latest.Data["resourceContent"]
+		if ok {
+			str, _ := data.(string)
+			return str, nil
 		}
 
-		return "tbd", nil
-	*/
-
-	for _, groupColl := range r.GroupCollections {
-		if strings.ToLower(groupColl.GroupModel.Plural) != paths[0] {
-			continue
-		}
-		ctx.BaseURLPush(paths[0])
-		if len(paths) == 1 {
-			groupColl.ToJSON(ctx)
-			return ctx.Result(), nil
-		}
-
-		// GROUPs/ID
-		for _, group := range groupColl.Groups {
-			if group.ID != paths[1] {
-				continue
+		uri, ok := latest.Data["resourceProxyURI"]
+		if ok {
+			resp, err := http.Get(uri.(string))
+			if err != nil {
+				return "", err
 			}
-			ctx.BaseURLPush(paths[1])
-			if len(paths) == 2 {
-				group.ToJSON(ctx)
-				return ctx.Result(), nil
+			if resp.StatusCode/100 != 2 {
+				return "", fmt.Errorf("%s ->%d",
+					uri, resp.StatusCode)
 			}
-
-			// GROUPs/ID/RESOURCEs
-			for _, resColl := range group.ResourceCollections {
-				if strings.ToLower(resColl.ResourceModel.Plural) != paths[2] {
-					continue
-				}
-				ctx.BaseURLPush(paths[2])
-				if len(paths) == 3 {
-					resColl.ToJSON(ctx)
-					return ctx.Result(), nil
-				}
-
-				// GROUPs/ID/RESOURCEs/ID
-				for _, res := range resColl.Resources {
-					if res.ID != paths[3] {
-						continue
-					}
-					ctx.BaseURLPush(paths[3])
-
-					if len(paths) == 4 {
-						if ctx.Flags.Self {
-							res.ToJSON(ctx)
-							return ctx.Result(), nil
-						}
-						latest := res.FindVersion(res.Latest)
-						data, ok := latest.Data["resourceContent"]
-						if ok {
-							str, _ := data.(string)
-							return str, nil
-						}
-
-						uri, ok := latest.Data["resourceProxyURI"]
-						if ok {
-							resp, err := http.Get(uri.(string))
-							if err != nil {
-								return "", err
-							}
-							if resp.StatusCode/100 != 2 {
-								return "", fmt.Errorf("%s ->%d",
-									uri, resp.StatusCode)
-							}
-							body, err := io.ReadAll(resp.Body)
-							if err != nil {
-								return "", err
-							}
-							return string(body), nil
-						}
-					}
-
-					// GROUPs/ID/RESOURCEs/ID/versions
-					if paths[4] == "versions" {
-						ctx.BaseURLPush(paths[4])
-						if len(paths) == 5 {
-							res.VersionCollection.ToJSON(ctx)
-							return ctx.Result(), nil
-						}
-
-						// GROUPs/ID/RESOURCEs/ID/versions/ID
-						for _, ver := range res.VersionCollection.Versions {
-							if ver.ID == paths[5] {
-								ctx.BaseURLPush(paths[5])
-								if len(paths) == 6 {
-									if ctx.Flags.Self {
-										ver.ToJSON(ctx)
-										return ctx.Result(), nil
-									}
-									data, ok := ver.Data["resourceContent"]
-									if ok {
-										str, _ := data.(string)
-										return str, nil
-									}
-
-									uri, ok := ver.Data["resourceProxyURI"]
-									if ok {
-										resp, err := http.Get(uri.(string))
-										if err != nil {
-											return "", err
-										}
-										if resp.StatusCode/100 != 2 {
-											return "", fmt.Errorf("%s ->%d",
-												uri, resp.StatusCode)
-										}
-										body, err := io.ReadAll(resp.Body)
-										if err != nil {
-											return "", err
-										}
-										return string(body), nil
-									}
-								}
-							}
-						}
-					}
-				}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return "", err
 			}
+			return string(body), nil
+		}
+	}
+
+	// GROUPs/ID/RESOURCEs/ID/versions
+	if paths[4] != "versions" {
+		return "", fmt.Errorf("Unknown subresource %q", paths[4])
+	}
+	verColl := res.VersionCollection
+	ctx.BaseURLPush(paths[4])
+	if len(paths) == 5 {
+		verColl.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		return ctx.buffer.String(), nil
+	}
+
+	// GROUPs/ID/RESOURCEs/ID/versions/ID
+	ver := verColl.Versions[paths[5]]
+	if ver == nil {
+		return "", fmt.Errorf("Unknown version id %q", paths[5])
+	}
+
+	ctx.BaseURLPush(paths[5])
+	if len(paths) == 6 {
+		if ctx.Flags.Self {
+			ver.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+			return ctx.buffer.String(), nil
+		}
+		data, ok := ver.Data["resourceContent"]
+		if ok {
+			str, _ := data.(string)
+			return str, nil
+		}
+
+		uri, ok := ver.Data["resourceProxyURI"]
+		if ok {
+			resp, err := http.Get(uri.(string))
+			if err != nil {
+				return "", err
+			}
+			if resp.StatusCode/100 != 2 {
+				return "", fmt.Errorf("%s ->%d",
+					uri, resp.StatusCode)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return "", err
+			}
+			return string(body), nil
 		}
 	}
 
 	return "", fmt.Errorf("Can't figure out what to do with %q",
 		strings.Join(paths, "/"))
+
+	return ctx.buffer.String(), nil
+
+	/*
+	   	for _, groupColl := range r.GroupCollections {
+	   		if strings.ToLower(groupColl.GroupModel.Plural) != paths[0] {
+	   			continue
+	   		}
+	   		ctx.BaseURLPush(paths[0])
+	   		if len(paths) == 1 {
+	   			groupColl.ToJSON(ctx)
+	   			return ctx.Result(), nil
+	   		}
+
+	   		// GROUPs/ID
+	   		for _, group := range groupColl.Groups {
+	   			if group.ID != paths[1] {
+	   				continue
+	   			}
+	   			ctx.BaseURLPush(paths[1])
+	   			if len(paths) == 2 {
+	   				group.ToJSON(ctx)
+	   				return ctx.Result(), nil
+	   			}
+
+	   			// GROUPs/ID/RESOURCEs
+	   			for _, resColl := range group.ResourceCollections {
+	   				if strings.ToLower(resColl.ResourceModel.Plural) != paths[2] {
+	   					continue
+	   				}
+	   				ctx.BaseURLPush(paths[2])
+	   				if len(paths) == 3 {
+	   					resColl.ToJSON(ctx)
+	   					return ctx.Result(), nil
+	   				}
+
+	   				// GROUPs/ID/RESOURCEs/ID
+	   				for _, res := range resColl.Resources {
+	   					if res.ID != paths[3] {
+	   						continue
+	   					}
+	   					ctx.BaseURLPush(paths[3])
+
+	   					if len(paths) == 4 {
+	   						if ctx.Flags.Self {
+	   							res.ToJSON(ctx)
+	   							return ctx.Result(), nil
+	   						}
+	   						latest := res.FindVersion(res.Latest)
+	   						data, ok := latest.Data["resourceContent"]
+	   						if ok {
+	   							str, _ := data.(string)
+	   							return str, nil
+	   						}
+
+	   						uri, ok := latest.Data["resourceProxyURI"]
+	   						if ok {
+	   							resp, err := http.Get(uri.(string))
+	   							if err != nil {
+	   								return "", err
+	   							}
+	   							if resp.StatusCode/100 != 2 {
+	   								return "", fmt.Errorf("%s ->%d",
+	   									uri, resp.StatusCode)
+	   							}
+	   							body, err := io.ReadAll(resp.Body)
+	   							if err != nil {
+	   								return "", err
+	   							}
+	   							return string(body), nil
+	   						}
+	   					}
+
+	   					// GROUPs/ID/RESOURCEs/ID/versions
+	   					if paths[4] == "versions" {
+	   						ctx.BaseURLPush(paths[4])
+	   						if len(paths) == 5 {
+	   							res.VersionCollection.ToJSON(ctx)
+	   							return ctx.Result(), nil
+	   						}
+
+	   						// GROUPs/ID/RESOURCEs/ID/versions/ID
+	   						for _, ver := range res.VersionCollection.Versions {
+	   							if ver.ID == paths[5] {
+	   								ctx.BaseURLPush(paths[5])
+	   								if len(paths) == 6 {
+	   									if ctx.Flags.Self {
+	   										ver.ToJSON(ctx)
+	   										return ctx.Result(), nil
+	   									}
+	   									data, ok := ver.Data["resourceContent"]
+	   									if ok {
+	   										str, _ := data.(string)
+	   										return str, nil
+	   									}
+
+	   									uri, ok := ver.Data["resourceProxyURI"]
+	   									if ok {
+	   										resp, err := http.Get(uri.(string))
+	   										if err != nil {
+	   											return "", err
+	   										}
+	   										if resp.StatusCode/100 != 2 {
+	   											return "", fmt.Errorf("%s ->%d",
+	   												uri, resp.StatusCode)
+	   										}
+	   										body, err := io.ReadAll(resp.Body)
+	   										if err != nil {
+	   											return "", err
+	   										}
+	   										return string(body), nil
+	   									}
+	   								}
+	   							}
+	   						}
+	   					}
+	   				}
+	   			}
+	   		}
+	   	}
+
+	   return "", fmt.Errorf("Can't figure out what to do with %q",
+
+	   	strings.Join(paths, "/"))
+	*/
 }
