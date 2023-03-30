@@ -43,6 +43,15 @@ func (o *Object) AddProperty(name string, val interface{}) {
 	o.Children = append(o.Children, child)
 }
 
+func (o *Object) GetProperty(name string) interface{} {
+	for _, c := range o.Children {
+		if c.Name == name {
+			return c.Value
+		}
+	}
+	return nil
+}
+
 type Array struct {
 	Values []interface{}
 }

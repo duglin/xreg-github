@@ -83,7 +83,10 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		Name:        "APIs-guru Registry",
 		Description: "xRegistry view of github.com/APIs-guru/openapi-directory",
 		SpecVersion: "0.4",
-		Docs:        "https://github.com/duglin/xreg-github",
+		Tags: map[string]string{
+			"stage": "production",
+		},
+		Docs: "https://github.com/duglin/xreg-github",
 	}
 
 	for {
@@ -106,12 +109,10 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 			continue
 		}
 
-		/*
-			if strings.Index(header.Name, "/docker.com/") < 0 &&
-				strings.Index(header.Name, "/apiz.ebay.com/") < 0 {
-				continue
-			}
-		*/
+		if strings.Index(header.Name, "/docker.com/") < 0 &&
+			strings.Index(header.Name, "/apiz.ebay.com/") < 0 {
+			continue
+		}
 
 		parts := strings.Split(strings.Trim(header.Name[i+6:], "/"), "/")
 		// org/service/version/file
@@ -171,6 +172,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		Self:        r.URL.Query().Has("self"),
 		AsDoc:       r.URL.Query().Has("doc"),
 		BaseURL:     baseURL,
+		Filters:     r.URL.Query()["filter"],
 	}
 
 	if r.URL.Query().Has("inline") {
