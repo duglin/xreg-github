@@ -2,7 +2,7 @@ package registry
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"strings"
 )
 
@@ -14,10 +14,12 @@ type GroupCollection struct {
 
 func (gc *GroupCollection) NewGroup(id string) *Group {
 	group := &Group{
-		GroupCollection:     gc,
-		ID:                  id,
-		Name:                id,
-		Epoch:               0,
+		GroupCollection: gc,
+
+		ID:    id,
+		Name:  id,
+		Epoch: 0,
+
 		ResourceCollections: map[string]*ResourceCollection{}, // id
 	}
 	gc.Groups[id] = group
@@ -27,33 +29,45 @@ func (gc *GroupCollection) NewGroup(id string) *Group {
 func (gc *GroupCollection) FindByID(id string) {
 }
 
-func (gc *GroupCollection) ToObject(ctx *Context) *Object {
+func (gc *GroupCollection) ToObject(ctx *Context) (*Object, error) {
 	obj := NewObject()
 	if gc == nil {
-		return obj
+		return obj, nil
 	}
 	for _, key := range SortedKeys(gc.Groups) {
 		group := gc.Groups[key]
 
-		match := ctx.MatchFilters(gc.GroupModel.Singular, "", "", group)
-		log.Printf("  group match: %d\n", match)
+		match, err := ctx.Filter(group)
+		if err != nil {
+			return nil, err
+		}
 		if match == -1 {
 			continue
 		}
 
 		ctx.DataPush(group.ID)
 		ctx.MatchPush(match)
-		groupObj := group.ToObject(ctx)
+		groupObj, err := group.ToObject(ctx)
 		ctx.MatchPop()
 		ctx.DataPop()
+		if err != nil {
+			return nil, err
+		}
+
+		// new
+		if groupObj == nil {
+			continue
+		}
 
 		if match != 1 && groupObj == nil {
 			continue
 		}
+		// 	if groupObj != nil {
 		obj.AddProperty(group.ID, groupObj)
+		// }
 	}
 
-	return obj
+	return obj, nil
 }
 
 func (gc *GroupCollection) ToJSON(ctx *Context) {
@@ -88,16 +102,26 @@ func (gc *GroupCollection) FindGroup(gID string) *Group {
 type Group struct {
 	GroupCollection *GroupCollection
 
-	ID                  string
-	Name                string
-	Epoch               int
+	ID          string
+	Name        string
+	Epoch       int
+	Self        string
+	Description string
+	Docs        string
+	Tags        map[string]string
+	Format      string
+	CreatedBy   string
+	CreatedOn   string
+	ModifiedBy  string
+	ModifiedOn  string
+
 	ResourceCollections map[string]*ResourceCollection
 }
 
-func (g *Group) ToObject(ctx *Context) *Object {
+func (g *Group) ToObject(ctx *Context) (*Object, error) {
 	obj := NewObject()
 	if g == nil {
-		return obj
+		return obj, nil
 	}
 	obj.AddProperty("id", g.ID)
 	obj.AddProperty("name", g.Name)
@@ -110,14 +134,19 @@ func (g *Group) ToObject(ctx *Context) *Object {
 		rType := g.GroupCollection.GroupModel.Resources[key]
 		rColl := g.ResourceCollections[rType.Plural]
 
-		obj.AddProperty(rColl.ResourceModel.Plural+"URL",
+		obj.AddProperty(rColl.ResourceModel.Plural+"Url",
 			URLBuild(ctx.DataURL(), rColl.ResourceModel.Plural))
 
 		ctx.ModelPush(rColl.ResourceModel.Plural)
 		ctx.DataPush(rColl.ResourceModel.Plural)
-		resObj := rColl.ToObject(ctx)
+		ctx.FilterPush(rColl.ResourceModel.Plural)
+		resObj, err := rColl.ToObject(ctx)
+		ctx.FilterPop()
 		ctx.DataPop()
 		ctx.ModelPop()
+		if err != nil {
+			return nil, err
+		}
 
 		obj.AddProperty(rColl.ResourceModel.Plural+"Count", resObj.Len())
 		rCount += resObj.Len()
@@ -130,11 +159,11 @@ func (g *Group) ToObject(ctx *Context) *Object {
 		}
 	}
 
-	if len(ctx.Filters) != 0 && rCount == 0 {
-		return nil
+	if ctx.HasChildrenFilters() && rCount == 0 {
+		return nil, nil
 	}
 
-	return obj
+	return obj, nil
 }
 
 func (g *Group) ToJSON(ctx *Context) {

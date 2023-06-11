@@ -12,6 +12,11 @@ func JSONEscape(obj interface{}) string {
 	return string(buf[1 : len(buf)-1])
 }
 
+func ToJSON(obj interface{}) string {
+	buf, _ := json.MarshalIndent(obj, "", "  ")
+	return string(buf)
+}
+
 func URLBuild(base string, paths ...string) string {
 	isFrag := strings.Index(base, "#") >= 0
 	url := base

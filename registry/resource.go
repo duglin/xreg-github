@@ -2,7 +2,7 @@ package registry
 
 import (
 	"fmt"
-	"log"
+	// "log"
 )
 
 type ResourceCollection struct {
@@ -11,10 +11,10 @@ type ResourceCollection struct {
 	Resources     map[string]*Resource // id
 }
 
-func (rc *ResourceCollection) ToObject(ctx *Context) *Object {
+func (rc *ResourceCollection) ToObject(ctx *Context) (*Object, error) {
 	obj := NewObject()
 	if rc == nil {
-		return obj
+		return obj, nil
 	}
 
 	for _, key := range SortedKeys(rc.Resources) {
@@ -22,27 +22,32 @@ func (rc *ResourceCollection) ToObject(ctx *Context) *Object {
 		latest := *resource.GetLatest()
 		latest.ID = resource.ID
 
-		match := ctx.MatchFilters(rc.Group.GroupCollection.GroupModel.Singular, rc.ResourceModel.Singular, "", &latest)
-		log.Printf("res.ID(%s) match: %v", resource.ID, match)
+		match, err := ctx.Filter(&latest)
+		if err != nil {
+			return nil, err
+		}
 		if match == -1 {
 			continue
 		}
 
 		ctx.DataPush(resource.ID)
 		ctx.MatchPush(match)
-		resObj := resource.ToObject(ctx)
+		resObj, err := resource.ToObject(ctx)
 		ctx.MatchPop()
 		ctx.DataPop()
 
-		if match != 1 && resObj == nil {
+		if err != nil {
+			return nil, err
+		}
+
+		if resObj == nil {
 			continue
 		}
 
-		log.Printf("Adding %s.%s.%s", rc.Group.GroupCollection.GroupModel.Singular, rc.ResourceModel.Singular, resource.ID)
 		obj.AddProperty(resource.ID, resObj)
 	}
 
-	return obj
+	return obj, nil
 }
 
 func (rc *ResourceCollection) ToJSON(ctx *Context) {
@@ -69,7 +74,7 @@ func (rc *ResourceCollection) NewResource(id string) *Resource {
 	res := &Resource{
 		ResourceCollection: rc,
 		ID:                 id,
-		Latest:             "",
+		LatestId:           "",
 		VersionCollection:  &VersionCollection{},
 	}
 
@@ -82,8 +87,21 @@ func (rc *ResourceCollection) NewResource(id string) *Resource {
 type Resource struct {
 	ResourceCollection *ResourceCollection
 
-	ID                string
-	Latest            string
+	ID          string
+	Name        string
+	Epoch       int
+	Self        string
+	LatestId    string
+	LatestUrl   string
+	Description string
+	Docs        string
+	Tags        map[string]string
+	Format      string
+	CreatedBy   string
+	CreatedOn   string
+	ModifiedBy  string
+	ModifiedOn  string
+
 	VersionCollection *VersionCollection // map[string]*Version // version
 }
 
@@ -93,8 +111,8 @@ func (r *Resource) FindVersion(verString string) *Version {
 
 func (r *Resource) GetLatest() *Version {
 	var latest *Version
-	if r.Latest != "" {
-		latest = r.VersionCollection.Versions[r.Latest]
+	if r.LatestId != "" {
+		latest = r.VersionCollection.Versions[r.LatestId]
 	}
 	if latest == nil {
 		panic(fmt.Sprintf("Help cant determine latest for %#v", r))
@@ -110,7 +128,6 @@ func (r *Resource) FindOrAddVersion(verStr string) *Version {
 	ver = &Version{
 		Resource: r,
 		ID:       verStr,
-		Version:  verStr,
 		Data:     map[string]interface{}{},
 	}
 
@@ -120,21 +137,21 @@ func (r *Resource) FindOrAddVersion(verStr string) *Version {
 
 	r.VersionCollection.Versions[verStr] = ver
 
-	if r.Latest == "" {
-		r.Latest = verStr
+	if r.LatestId == "" {
+		r.LatestId = verStr
 	}
 	return ver
 }
 
-func (r *Resource) ToObject(ctx *Context) *Object {
+func (r *Resource) ToObject(ctx *Context) (*Object, error) {
 	obj := NewObject()
 	if r == nil {
-		return obj
+		return obj, nil
 	}
 
 	var latest *Version
-	if r.Latest != "" {
-		latest = r.VersionCollection.Versions[r.Latest]
+	if r.LatestId != "" {
+		latest = r.VersionCollection.Versions[r.LatestId]
 	}
 	if latest == nil {
 		panic("Help")
@@ -161,27 +178,44 @@ func (r *Resource) ToObject(ctx *Context) *Object {
 		contentURI)
 	obj.AddProperty("self", mySelf)
 
+	match, err := ctx.Filter(r.VersionCollection)
+	if err != nil {
+		return nil, err
+	}
+	if match == -1 {
+		return nil, nil
+	}
+
 	ctx.ModelPush("versions")
 	ctx.DataPush("versions")
-	vers := r.VersionCollection.ToObject(ctx)
+	ctx.FilterPush("versions")
+	vers, err := r.VersionCollection.ToObject(ctx)
+	ctx.FilterPop()
 	ctx.DataPop()
 	ctx.ModelPop()
+	if err != nil {
+		return nil, err
+	}
+
+	if vers == nil {
+		return nil, nil
+	}
+
+	if ctx.HasChildrenFilters() && vers.Len() == 0 {
+		return nil, nil
+	}
 
 	if ctx.ShouldInline("versions") && vers.Len() > 0 {
 		obj.AddProperty("versions", vers)
 	}
 
-	if len(ctx.Filters) != 0 && vers.Len() == 0 {
-		return nil
-	}
-
-	return obj
+	return obj, nil
 }
 
 func (r *Resource) ToJSON(ctx *Context) {
 	var latest *Version
-	if r.Latest != "" {
-		latest = r.VersionCollection.Versions[r.Latest]
+	if r.LatestId != "" {
+		latest = r.VersionCollection.Versions[r.LatestId]
 	}
 	if latest == nil {
 		panic("Help")

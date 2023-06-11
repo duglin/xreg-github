@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 
+	// dlog "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
 )
 
@@ -69,7 +70,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 					Plural:   "schemaGroups",
 
 					Resources: map[string]*registry.ResourceModel{
-						"schema": &registry.ResourceModel{
+						"schemas": &registry.ResourceModel{
 							Singular: "schema",
 							Plural:   "schemas",
 							Versions: -1,
@@ -129,6 +130,12 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 
 		res := group.FindOrAddResource("apis", resName)
 
+		g2 := reg.FindOrAddGroup("schemaGroups", parts[0])
+		r2 := g2.FindOrAddResource("schemas", resName)
+		v2 := r2.FindOrAddVersion(parts[verIndex])
+		v2.Name = parts[verIndex+1]
+		v2.Format = "openapi/3.0.6"
+
 		version := res.FindVersion(parts[verIndex])
 		if version != nil {
 			fmt.Printf("group: %s\nresource: %s\n", parts[0], resName)
@@ -139,7 +146,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		io.Copy(buf, reader)
 		version = res.FindOrAddVersion(parts[verIndex])
 		version.Name = parts[verIndex+1]
-		version.Type = "openapi/3.0.6"
+		version.Format = "openapi/3.0.6"
 
 		// Don't upload the file contents into the registry. Instead just
 		// give the registry a URL to it and ask it to server it via proxy.

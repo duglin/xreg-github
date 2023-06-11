@@ -1,34 +1,44 @@
 package registry
 
-import ()
+import (
+// "log"
+)
 
 type VersionCollection struct {
 	Resource *Resource
 	Versions map[string]*Version // version
 }
 
-func (vc *VersionCollection) ToObject(ctx *Context) *Object {
+func (vc *VersionCollection) ToObject(ctx *Context) (*Object, error) {
 	obj := NewObject()
 	if vc == nil {
-		return obj
+		return obj, nil
 	}
 
 	for _, key := range SortedKeys(vc.Versions) {
 		ver := vc.Versions[key]
 
-		match := ctx.MatchFilters(vc.Resource.ResourceCollection.Group.GroupCollection.GroupModel.Singular, vc.Resource.ResourceCollection.ResourceModel.Singular, "version", ver)
+		match, err := ctx.Filter(ver)
+		// log.Printf("versions(%s) match: %d", ver.ID, match)
+		if err != nil {
+			return nil, err
+		}
 		if match == -1 {
 			continue
 		}
 
 		ctx.DataPush(ver.ID)
 		ctx.MatchPush(match)
-		obj.AddProperty(ver.ID, ver.ToObject(ctx))
+		verObj, err := ver.ToObject(ctx)
 		ctx.MatchPop()
 		ctx.DataPop()
+		if err != nil {
+			return nil, err
+		}
+		obj.AddProperty(ver.ID, verObj)
 	}
 
-	return obj
+	return obj, nil
 }
 
 func (vc *VersionCollection) ToJSON(ctx *Context) {
@@ -54,19 +64,26 @@ func (vc *VersionCollection) ToJSON(ctx *Context) {
 type Version struct {
 	Resource *Resource
 
-	ID      string
-	Name    string
-	Type    string
-	Version string
-	Epoch   int
+	ID          string
+	Name        string
+	Epoch       int
+	Self        string
+	Description string
+	Docs        string
+	Tags        map[string]string
+	Format      string
+	CreatedBy   string
+	CreatedOn   string
+	ModifiedBy  string
+	ModifiedOn  string
 
 	Data map[string]interface{}
 }
 
-func (v *Version) ToObject(ctx *Context) *Object {
+func (v *Version) ToObject(ctx *Context) (*Object, error) {
 	obj := NewObject()
 	if v == nil {
-		return obj
+		return obj, nil
 	}
 
 	obj.AddProperty("id", v.ID)
@@ -87,7 +104,7 @@ func (v *Version) ToObject(ctx *Context) *Object {
 		contentURI)
 	obj.AddProperty("self", mySelf)
 
-	return obj
+	return obj, nil
 }
 
 func (v *Version) ToJSON(ctx *Context) {
@@ -119,14 +136,18 @@ func (v *Version) ToJSON(ctx *Context) {
 
 func (v *Version) AddToJsonInner(ctx *Context, obj *Object) {
 	obj.AddProperty("name", v.Name)
-	obj.AddProperty("type", v.Type)
-	obj.AddProperty("version", v.Version)
 	obj.AddProperty("epoch", v.Epoch)
 }
 
 func (v *Version) ToJSONInner(ctx *Context) {
 	ctx.Printf("\t\"name\": \"%s\",\n", v.Name)
-	ctx.Printf("\t\"type\": \"%s\",\n", v.Type)
-	ctx.Printf("\t\"version\": \"%s\",\n", v.Version)
 	ctx.Printf("\t\"epoch\": %d,\n", v.Epoch)
+	// ctx.Printf("\t\"self\": %s,\n", v.Self)
+	ctx.Printf("\t\"description\": %s,\n", v.Description)
+	ctx.Printf("\t\"docs\": %s,\n", v.Docs)
+	ctx.Printf("\t\"tags\": %s,\n", "{}")
+	ctx.Printf("\t\"createdBy\": %s,\n", v.CreatedBy)
+	ctx.Printf("\t\"createdOn\": %s,\n", v.CreatedOn)
+	ctx.Printf("\t\"modifiedBy\": %s,\n", v.ModifiedBy)
+	ctx.Printf("\t\"modifiedOn\": %s,\n", v.ModifiedOn)
 }

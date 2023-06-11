@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"io"
+	// "log"
 	"net/http"
 	"strings"
 )
@@ -18,8 +19,9 @@ type RegistryFlags struct {
 }
 
 type Registry struct {
-	BaseURL string
-	Model   *Model `json:"-"`
+	BaseURL      string
+	Model        *Model `json:"-"`
+	GenericModel *ModelElement
 
 	ID          string
 	Name        string
@@ -75,10 +77,10 @@ func (reg *Registry) FindOrAddGroup(gt string, id string) *Group {
 	return gc.NewGroup(id)
 }
 
-func (reg *Registry) ToObject(ctx *Context) *Object {
+func (reg *Registry) ToObject(ctx *Context) (*Object, error) {
 	obj := NewObject()
 	if reg == nil {
-		return obj
+		return obj, nil
 	}
 
 	obj.AddProperty("id", reg.ID)
@@ -100,7 +102,11 @@ func (reg *Registry) ToObject(ctx *Context) *Object {
 
 	if ctx.ShouldInline("model") {
 		ctx.ModelPush("model")
-		obj.AddProperty("model", reg.Model.ToObject(ctx))
+		mod, err := reg.Model.ToObject(ctx)
+		if err != nil {
+			return nil, err
+		}
+		obj.AddProperty("model", mod)
 		ctx.ModelPop()
 		obj.AddProperty("", "")
 	}
@@ -109,17 +115,24 @@ func (reg *Registry) ToObject(ctx *Context) *Object {
 		gType := reg.Model.Groups[key]
 		gCollection := reg.GroupCollections[gType.Plural]
 
-		obj.AddProperty(gType.Plural+"URL",
+		var err error
+
+		obj.AddProperty(gType.Plural+"Url",
 			URLBuild(ctx.DataURL(), gType.Plural))
 
 		ctx.DataPush(gType.Plural)
 		ctx.ModelPush(gType.Plural)
+		ctx.FilterPush(gType.Plural)
 		groupObj := NewObject()
 		if gCollection != nil {
-			groupObj = gCollection.ToObject(ctx)
+			groupObj, err = gCollection.ToObject(ctx)
 		}
+		ctx.FilterPop()
 		ctx.ModelPop()
 		ctx.DataPop()
+		if err != nil {
+			return nil, err
+		}
 
 		obj.AddProperty(gType.Plural+"Count", groupObj.Len())
 		if ctx.ShouldInline(gType.Plural) {
@@ -130,7 +143,7 @@ func (reg *Registry) ToObject(ctx *Context) *Object {
 		}
 	}
 
-	return obj
+	return obj, nil
 }
 
 func (reg *Registry) ToJSON(ctx *Context) {
@@ -208,19 +221,30 @@ func (reg *Registry) ToJSON(ctx *Context) {
 }
 
 func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
+	if r.GenericModel == nil {
+		r.GenericModel = CreateGenericModel(r.Model)
+	}
+
 	paths := strings.Split(strings.Trim(path, "/"), "/")
 	for len(paths) > 0 && paths[0] == "" {
 		paths = paths[1:]
 	}
 
+	if rFlags == nil {
+		rFlags = &RegistryFlags{}
+	}
+
+	filters, err := ParseFilterExprs(r, paths, rFlags.Filters)
+	if err != nil {
+		return "", err
+	}
+
 	ctx := &Context{
 		Flags:         rFlags,
 		BaseURL:       r.BaseURL,
-		DataPath:      "",
-		ModelPath:     "",
 		currentIndent: "",
 		indent:        rFlags.Indent,
-		Filters:       ParseFilterExprs(rFlags.Filters),
+		Filters:       filters,
 	}
 
 	if rFlags.BaseURL != "" {
@@ -229,12 +253,20 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	ctx.BaseURL = strings.TrimRight(ctx.BaseURL, "/")
 
 	if len(paths) == 0 {
-		r.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		obj, err := r.ToObject(ctx)
+		if err != nil {
+			return "", err
+		}
+		obj.ToJson(&ctx.buffer, "", "  ")
 		return ctx.buffer.String(), nil
 	}
 
 	if len(paths) == 1 && paths[0] == "model" {
-		r.Model.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		obj, err := r.Model.ToObject(ctx)
+		if err != nil {
+			return "", err
+		}
+		obj.ToJson(&ctx.buffer, "", "  ")
 		return ctx.buffer.String(), nil
 	}
 
@@ -247,7 +279,14 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	ctx.BaseURLPush(paths[0])
 
 	if len(paths) == 1 {
-		groupColl.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		groupCollObj, err := groupColl.ToObject(ctx)
+		if err != nil {
+			return "", err
+		}
+		if groupCollObj == nil {
+			return "{}", nil
+		}
+		groupCollObj.ToJson(&ctx.buffer, "", "  ")
 		return ctx.buffer.String(), nil
 	}
 
@@ -258,7 +297,14 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	}
 	ctx.BaseURLPush(paths[1])
 	if len(paths) == 2 {
-		group.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		groupObj, err := group.ToObject(ctx)
+		if err != nil {
+			return "", err
+		}
+		if groupObj == nil {
+			return "{}", nil
+		}
+		groupObj.ToJson(&ctx.buffer, "", "  ")
 		return ctx.buffer.String(), nil
 	}
 
@@ -269,7 +315,14 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 		return "", fmt.Errorf("Unknown rescource collection %q", paths[2])
 	}
 	if len(paths) == 3 {
-		resColl.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		resCollObj, err := resColl.ToObject(ctx)
+		if err != nil {
+			return "", err
+		}
+		if resCollObj == nil {
+			return "{}", nil
+		}
+		resCollObj.ToJson(&ctx.buffer, "", "  ")
 		return ctx.buffer.String(), nil
 	}
 
@@ -282,10 +335,17 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 
 	if len(paths) == 4 {
 		if ctx.Flags.Self {
-			res.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+			resObj, err := res.ToObject(ctx)
+			if err != nil {
+				return "", err
+			}
+			if resObj == nil {
+				return "{}", nil
+			}
+			resObj.ToJson(&ctx.buffer, "", "  ")
 			return ctx.buffer.String(), nil
 		}
-		latest := res.FindVersion(res.Latest)
+		latest := res.FindVersion(res.LatestId)
 		data, ok := latest.Data["resourceContent"]
 		if ok {
 			str, _ := data.(string)
@@ -317,7 +377,14 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	verColl := res.VersionCollection
 	ctx.BaseURLPush(paths[4])
 	if len(paths) == 5 {
-		verColl.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+		verCollObj, err := verColl.ToObject(ctx)
+		if err != nil {
+			return "", err
+		}
+		if verCollObj == nil {
+			return "{}", nil
+		}
+		verCollObj.ToJson(&ctx.buffer, "", "  ")
 		return ctx.buffer.String(), nil
 	}
 
@@ -330,7 +397,14 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	ctx.BaseURLPush(paths[5])
 	if len(paths) == 6 {
 		if ctx.Flags.Self {
-			ver.ToObject(ctx).ToJson(&ctx.buffer, "", "  ")
+			verObj, err := ver.ToObject(ctx)
+			if err != nil {
+				return "", err
+			}
+			if verObj == nil {
+				return "{}", nil
+			}
+			verObj.ToJson(&ctx.buffer, "", "  ")
 			return ctx.buffer.String(), nil
 		}
 		data, ok := ver.Data["resourceContent"]
@@ -361,127 +435,4 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 		strings.Join(paths, "/"))
 
 	return ctx.buffer.String(), nil
-
-	/*
-	   	for _, groupColl := range r.GroupCollections {
-	   		if strings.ToLower(groupColl.GroupModel.Plural) != paths[0] {
-	   			continue
-	   		}
-	   		ctx.BaseURLPush(paths[0])
-	   		if len(paths) == 1 {
-	   			groupColl.ToJSON(ctx)
-	   			return ctx.Result(), nil
-	   		}
-
-	   		// GROUPs/ID
-	   		for _, group := range groupColl.Groups {
-	   			if group.ID != paths[1] {
-	   				continue
-	   			}
-	   			ctx.BaseURLPush(paths[1])
-	   			if len(paths) == 2 {
-	   				group.ToJSON(ctx)
-	   				return ctx.Result(), nil
-	   			}
-
-	   			// GROUPs/ID/RESOURCEs
-	   			for _, resColl := range group.ResourceCollections {
-	   				if strings.ToLower(resColl.ResourceModel.Plural) != paths[2] {
-	   					continue
-	   				}
-	   				ctx.BaseURLPush(paths[2])
-	   				if len(paths) == 3 {
-	   					resColl.ToJSON(ctx)
-	   					return ctx.Result(), nil
-	   				}
-
-	   				// GROUPs/ID/RESOURCEs/ID
-	   				for _, res := range resColl.Resources {
-	   					if res.ID != paths[3] {
-	   						continue
-	   					}
-	   					ctx.BaseURLPush(paths[3])
-
-	   					if len(paths) == 4 {
-	   						if ctx.Flags.Self {
-	   							res.ToJSON(ctx)
-	   							return ctx.Result(), nil
-	   						}
-	   						latest := res.FindVersion(res.Latest)
-	   						data, ok := latest.Data["resourceContent"]
-	   						if ok {
-	   							str, _ := data.(string)
-	   							return str, nil
-	   						}
-
-	   						uri, ok := latest.Data["resourceProxyURI"]
-	   						if ok {
-	   							resp, err := http.Get(uri.(string))
-	   							if err != nil {
-	   								return "", err
-	   							}
-	   							if resp.StatusCode/100 != 2 {
-	   								return "", fmt.Errorf("%s ->%d",
-	   									uri, resp.StatusCode)
-	   							}
-	   							body, err := io.ReadAll(resp.Body)
-	   							if err != nil {
-	   								return "", err
-	   							}
-	   							return string(body), nil
-	   						}
-	   					}
-
-	   					// GROUPs/ID/RESOURCEs/ID/versions
-	   					if paths[4] == "versions" {
-	   						ctx.BaseURLPush(paths[4])
-	   						if len(paths) == 5 {
-	   							res.VersionCollection.ToJSON(ctx)
-	   							return ctx.Result(), nil
-	   						}
-
-	   						// GROUPs/ID/RESOURCEs/ID/versions/ID
-	   						for _, ver := range res.VersionCollection.Versions {
-	   							if ver.ID == paths[5] {
-	   								ctx.BaseURLPush(paths[5])
-	   								if len(paths) == 6 {
-	   									if ctx.Flags.Self {
-	   										ver.ToJSON(ctx)
-	   										return ctx.Result(), nil
-	   									}
-	   									data, ok := ver.Data["resourceContent"]
-	   									if ok {
-	   										str, _ := data.(string)
-	   										return str, nil
-	   									}
-
-	   									uri, ok := ver.Data["resourceProxyURI"]
-	   									if ok {
-	   										resp, err := http.Get(uri.(string))
-	   										if err != nil {
-	   											return "", err
-	   										}
-	   										if resp.StatusCode/100 != 2 {
-	   											return "", fmt.Errorf("%s ->%d",
-	   												uri, resp.StatusCode)
-	   										}
-	   										body, err := io.ReadAll(resp.Body)
-	   										if err != nil {
-	   											return "", err
-	   										}
-	   										return string(body), nil
-	   									}
-	   								}
-	   							}
-	   						}
-	   					}
-	   				}
-	   			}
-	   		}
-	   	}
-
-	   return "", fmt.Errorf("Can't figure out what to do with %q",
-
-	   	strings.Join(paths, "/"))
-	*/
 }

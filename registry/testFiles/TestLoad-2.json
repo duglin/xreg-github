@@ -1,0 +1,170 @@
+{
+  "id": "123-1234-1234",
+  "name": "TestRegistry",
+  "description": "Sample xRegistry",
+  "specVersion": "1.0",
+  "self": "http://example.com/",
+  "tags": {
+    "stage": "production"
+  },
+  "docs": "https://xregistry.io",
+
+  "model": {
+    "groups": {
+      "endpoints": {
+        "singular": "endpoint",
+        "plural": "endpoints",
+        "resources": {
+          "definitions": {
+            "singular": "definition",
+            "plural": "definitions",
+            "versions": -1
+          }
+        }
+      },
+      "schemaGroups": {
+        "singular": "schemaGroup",
+        "plural": "schemaGroups",
+        "resources": {
+          "schemas": {
+            "singular": "schema",
+            "plural": "schemas",
+            "versions": -1
+          }
+        }
+      }
+    }
+  },
+
+  "endpointsURL": "http://example.com/endpoints",
+  "endpointsCount": 2,
+  "endpoints": {
+    "myqueue1": {
+      "id": "myqueue1",
+      "name": "myqueue1",
+      "epoch": 0,
+      "self": "http://example.com/endpoints/myqueue1",
+      "definitionsURL": "http://example.com/endpoints/myqueue1/definitions",
+      "definitionsCount": 2,
+      "definitions": {
+        "msg1": {
+          "id": "msg1",
+          "version": "1.0",
+          "epoch": 0,
+          "definitionURI": "http://example.com/endpoints/myqueue1/definitions/msg1",
+          "self": "http://example.com/endpoints/myqueue1/definitions/msg1?self",
+          "versions": {
+            "1.0": {
+              "id": "1.0",
+              "version": "1.0",
+              "epoch": 0,
+              "definitionURI": "http://example.com/endpoints/myqueue1/definitions/msg1/versions/1.0",
+              "self": "http://example.com/endpoints/myqueue1/definitions/msg1/versions/1.0?self"
+            },
+            "2.0": {
+              "id": "2.0",
+              "version": "2.0",
+              "epoch": 0,
+              "definitionURI": "http://example.com/endpoints/myqueue1/definitions/msg1/versions/2.0",
+              "self": "http://example.com/endpoints/myqueue1/definitions/msg1/versions/2.0?self"
+            }
+          }
+        },
+        "msg2": {
+          "id": "msg2",
+          "version": "1.0",
+          "epoch": 0,
+          "definitionURI": "http://example.com/endpoints/myqueue1/definitions/msg2",
+          "self": "http://example.com/endpoints/myqueue1/definitions/msg2?self",
+          "versions": {
+            "1.0": {
+              "id": "1.0",
+              "version": "1.0",
+              "epoch": 0,
+              "definitionURI": "http://example.com/endpoints/myqueue1/definitions/msg2/versions/1.0",
+              "self": "http://example.com/endpoints/myqueue1/definitions/msg2/versions/1.0?self"
+            },
+            "1.1": {
+              "id": "1.1",
+              "version": "1.1",
+              "epoch": 0,
+              "definitionURI": "http://example.com/endpoints/myqueue1/definitions/msg2/versions/1.1",
+              "self": "http://example.com/endpoints/myqueue1/definitions/msg2/versions/1.1?self"
+            }
+          }
+        }
+      }
+    },
+    "myqueue2": {
+      "id": "myqueue2",
+      "name": "myqueue2",
+      "epoch": 0,
+      "self": "http://example.com/endpoints/myqueue2",
+      "definitionsURL": "http://example.com/endpoints/myqueue2/definitions",
+      "definitionsCount": 1,
+      "definitions": {
+        "msg3": {
+          "id": "msg3",
+          "version": "1.0",
+          "epoch": 0,
+          "definitionURI": "http://example.com/endpoints/myqueue2/definitions/msg3",
+          "self": "http://example.com/endpoints/myqueue2/definitions/msg3?self",
+          "versions": {
+            "1.0": {
+              "id": "1.0",
+              "version": "1.0",
+              "epoch": 0,
+              "definitionURI": "http://example.com/endpoints/myqueue2/definitions/msg3/versions/1.0",
+              "self": "http://example.com/endpoints/myqueue2/definitions/msg3/versions/1.0?self"
+            },
+            "2.0": {
+              "id": "2.0",
+              "version": "2.0",
+              "epoch": 0,
+              "definitionURI": "http://example.com/endpoints/myqueue2/definitions/msg3/versions/2.0",
+              "self": "http://example.com/endpoints/myqueue2/definitions/msg3/versions/2.0?self"
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "schemaGroupsURL": "http://example.com/schemagroups",
+  "schemaGroupsCount": 1,
+  "schemaGroups": {
+    "myschemas": {
+      "id": "myschemas",
+      "name": "myschemas",
+      "epoch": 0,
+      "self": "http://example.com/schemagroups/myschemas",
+      "schemasURL": "http://example.com/schemagroups/myschemas/schemas",
+      "schemasCount": 1,
+      "schemas": {
+        "myresource": {
+          "id": "myresource",
+          "version": "0.5",
+          "epoch": 0,
+          "schemaURI": "http://example.com/schemagroups/myschemas/schemas/myresource",
+          "self": "http://example.com/schemagroups/myschemas/schemas/myresource?self",
+          "versions": {
+            "0.5": {
+              "id": "0.5",
+              "version": "0.5",
+              "epoch": 0,
+              "schemaURI": "http://example.com/schemagroups/myschemas/schemas/myresource/versions/0.5",
+              "self": "http://example.com/schemagroups/myschemas/schemas/myresource/versions/0.5?self"
+            },
+            "1.0-rc": {
+              "id": "1.0-rc",
+              "version": "1.0-rc",
+              "epoch": 0,
+              "schemaURI": "http://example.com/schemagroups/myschemas/schemas/myresource/versions/1.0-rc",
+              "self": "http://example.com/schemagroups/myschemas/schemas/myresource/versions/1.0-rc?self"
+            }
+          }
+        }
+      }
+    }
+  }
+}
