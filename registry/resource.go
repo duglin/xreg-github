@@ -31,9 +31,7 @@ func (rc *ResourceCollection) ToObject(ctx *Context) (*Object, error) {
 		}
 
 		ctx.DataPush(resource.ID)
-		ctx.MatchPush(match)
 		resObj, err := resource.ToObject(ctx)
-		ctx.MatchPop()
 		ctx.DataPop()
 
 		if err != nil {
@@ -48,26 +46,6 @@ func (rc *ResourceCollection) ToObject(ctx *Context) (*Object, error) {
 	}
 
 	return obj, nil
-}
-
-func (rc *ResourceCollection) ToJSON(ctx *Context) {
-	ctx.Print("{\n")
-	ctx.Indent()
-
-	for rCount, key := range SortedKeys(rc.Resources) {
-		resource := rc.Resources[key]
-		if rCount > 0 {
-			ctx.Print(",\n")
-		}
-		ctx.DataPush(resource.ID)
-		ctx.Printf("\t\"%s\": ", resource.ID)
-		resource.ToJSON(ctx)
-		ctx.DataPop()
-	}
-
-	ctx.Print("\n")
-	ctx.Outdent()
-	ctx.Print("\t}")
 }
 
 func (rc *ResourceCollection) NewResource(id string) *Resource {
@@ -210,53 +188,4 @@ func (r *Resource) ToObject(ctx *Context) (*Object, error) {
 	}
 
 	return obj, nil
-}
-
-func (r *Resource) ToJSON(ctx *Context) {
-	var latest *Version
-	if r.LatestId != "" {
-		latest = r.VersionCollection.Versions[r.LatestId]
-	}
-	if latest == nil {
-		panic("Help")
-		for _, latest = range r.VersionCollection.Versions {
-			break
-		}
-	}
-
-	ctx.Print("{\n")
-	ctx.Indent()
-
-	ctx.Printf("\t\"id\": \"%s\",\n", r.ID)
-	latest.ToJSONInner(ctx)
-
-	myURI := URLBuild(ctx.DataURL())
-	mySelf := myURI
-	if mySelf[0] != '#' {
-		mySelf += "?self"
-	}
-
-	contentURI := latest.Data["resourceURI"]
-	if contentURI == nil {
-		contentURI = myURI
-	}
-
-	ctx.Printf("\t\"%sURI\": \"%s\",\n",
-		r.ResourceCollection.ResourceModel.Singular,
-		contentURI)
-	ctx.Printf("\t\"self\": \"%s\"", mySelf)
-
-	if ctx.ShouldInline("versions") && len(r.VersionCollection.Versions) > 0 {
-		ctx.Print(",\n")
-		ctx.ModelPush("versions")
-		ctx.DataPush("versions")
-		ctx.Print("\t\"versions\": ")
-		r.VersionCollection.ToJSON(ctx)
-		ctx.DataPop()
-		ctx.ModelPop()
-	}
-
-	ctx.Print("\n")
-	ctx.Outdent()
-	ctx.Print("\t}")
 }

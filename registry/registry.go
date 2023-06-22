@@ -15,7 +15,9 @@ type RegistryFlags struct {
 	InlinePaths []string
 	Self        bool
 	AsDoc       bool
-	Filters     []string
+	OrFilters   [][]string // [OLD][AND]string
+
+	Filters []string // OLD
 }
 
 type Registry struct {
@@ -98,9 +100,9 @@ func (reg *Registry) ToObject(ctx *Context) (*Object, error) {
 	}
 
 	obj.AddProperty("docs", reg.Docs)
-	obj.AddProperty("", "")
 
 	if ctx.ShouldInline("model") {
+		obj.AddProperty("", "")
 		ctx.ModelPush("model")
 		mod, err := reg.Model.ToObject(ctx)
 		if err != nil {
@@ -108,17 +110,13 @@ func (reg *Registry) ToObject(ctx *Context) (*Object, error) {
 		}
 		obj.AddProperty("model", mod)
 		ctx.ModelPop()
-		obj.AddProperty("", "")
 	}
 
-	for i, key := range SortedKeys(reg.Model.Groups) {
+	for _, key := range SortedKeys(reg.Model.Groups) {
 		gType := reg.Model.Groups[key]
 		gCollection := reg.GroupCollections[gType.Plural]
 
 		var err error
-
-		obj.AddProperty(gType.Plural+"Url",
-			URLBuild(ctx.DataURL(), gType.Plural))
 
 		ctx.DataPush(gType.Plural)
 		ctx.ModelPush(gType.Plural)
@@ -134,90 +132,15 @@ func (reg *Registry) ToObject(ctx *Context) (*Object, error) {
 			return nil, err
 		}
 
-		obj.AddProperty(gType.Plural+"Count", groupObj.Len())
-		if ctx.ShouldInline(gType.Plural) {
-			obj.AddProperty(gType.Plural, groupObj)
-		}
-		if i+1 != len(reg.Model.Groups) {
-			obj.AddProperty("", "")
-		}
+		obj.AddProperty(gType.Plural, &Collection{
+			Name:   gType.Plural,
+			URL:    URLBuild(ctx.DataURL(), gType.Plural),
+			Inline: ctx.ShouldInline(gType.Plural),
+			Object: groupObj,
+		})
 	}
 
 	return obj, nil
-}
-
-func (reg *Registry) ToJSON(ctx *Context) {
-	ctx.Print("{\n")
-
-	ctx.Indent()
-
-	ctx.Printf("\t\"id\": \"%s\",\n", reg.ID)
-	if reg.Name != "" {
-		ctx.Printf("\t\"name\": \"%s\",\n", reg.Name)
-	}
-	if reg.Description != "" {
-		ctx.Printf("\t\"description\": \"%s\",\n", reg.Description)
-	}
-	ctx.Printf("\t\"specVersion\": \"%s\",\n", reg.SpecVersion)
-	ctx.Printf("\t\"self\": \"%s\",\n", ctx.DataURL())
-	if len(reg.Tags) > 0 {
-		ctx.Print("\t\"tags\": {\n")
-		ctx.Indent()
-		count := 0
-		for key, value := range reg.Tags {
-			count++
-			ctx.Printf("\t\"%s\": \"%s\"", key, value)
-			if count != len(reg.Tags) {
-				ctx.Print(",")
-			}
-			ctx.Print("\n")
-		}
-		ctx.Outdent()
-		ctx.Print("\t},\n")
-	}
-	if reg.Docs != "" {
-		ctx.Printf("\t\"docs\": \"%s\",\n", reg.Docs)
-	}
-
-	// Add the Registry model
-	if ctx.ShouldInline("model") {
-		ctx.ModelPush("model")
-		ctx.Print("\n")
-		ctx.Print("\t\"model\": ")
-		reg.Model.ToJSON(ctx)
-		ctx.Print(",\n")
-		ctx.ModelPop()
-	}
-
-	for gCount, key := range SortedKeys(reg.Model.Groups) {
-		gType := reg.Model.Groups[key]
-		gCollection := reg.GroupCollections[gType.Plural]
-
-		if gCount > 0 {
-			ctx.Print(",\n")
-		}
-		ctx.Print("\n")
-		ctx.Printf("\t\"%sURL\": \"%s\",\n",
-			gType.Plural,
-			URLBuild(ctx.DataURL(), gType.Plural))
-
-		l := 0
-		if gCollection != nil {
-			l = len(gCollection.Groups)
-		}
-		ctx.Printf("\t\"%sCount\": %d", gType.Plural, l)
-
-		if ctx.ShouldInline(gType.Plural) && l > 0 {
-			ctx.DataPush(gType.Plural)
-			ctx.ModelPush(gType.Plural)
-			ctx.Print(",\n")
-			ctx.Printf("\t\"%s\": ", gType.Plural)
-			gCollection.ToJSON(ctx)
-			ctx.ModelPop()
-			ctx.DataPop()
-		}
-	}
-	ctx.Print("\n}")
 }
 
 func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
@@ -240,11 +163,9 @@ func (r *Registry) Get(path string, rFlags *RegistryFlags) (string, error) {
 	}
 
 	ctx := &Context{
-		Flags:         rFlags,
-		BaseURL:       r.BaseURL,
-		currentIndent: "",
-		indent:        rFlags.Indent,
-		Filters:       filters,
+		Flags:   rFlags,
+		BaseURL: r.BaseURL,
+		Filters: filters,
 	}
 
 	if rFlags.BaseURL != "" {

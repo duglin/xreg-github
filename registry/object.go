@@ -11,6 +11,10 @@ type Jsoner interface {
 	ToJson(bld *strings.Builder, prefix string, indent string)
 }
 
+var JsonerType = reflect.TypeOf((*Jsoner)(nil)).Elem()
+
+// Object
+
 type Object struct {
 	Children []*Child
 }
@@ -52,6 +56,62 @@ func (o *Object) GetProperty(name string) interface{} {
 	return nil
 }
 
+func (o *Object) ToJson(bld *strings.Builder, prefix, indent string) {
+	if o == nil || len(o.Children) == 0 {
+		bld.WriteString("{}")
+		return
+	}
+	bld.WriteString("{\n")
+
+	for i, c := range o.Children {
+		if c.Name == "" {
+			bld.WriteString("\n")
+			continue
+		}
+
+		val := c.Value
+
+		if reflect.TypeOf(val).String() != CollectionType {
+			bld.WriteString(fmt.Sprintf(prefix+indent+"\"%s\": ", c.Name))
+		}
+		if reflect.TypeOf(val).Implements(JsonerType) {
+			(val.(Jsoner)).ToJson(bld, prefix+indent, indent)
+		} else {
+			buf, _ := json.MarshalIndent(val, prefix+indent, indent)
+			bld.WriteString(strings.TrimSpace(string(buf)))
+		}
+		if i+1 != len(o.Children) {
+			bld.WriteString(",")
+		}
+		bld.WriteString("\n")
+	}
+	bld.WriteString(prefix + "}")
+}
+
+// Collection
+type Collection struct {
+	Name   string
+	URL    string
+	Inline bool
+	Object *Object
+}
+
+var CollectionType = reflect.TypeOf((*Collection)(nil)).String()
+
+func (c *Collection) ToJson(bld *strings.Builder, prefix, indent string) {
+	bld.WriteString("\n")
+	bld.WriteString(fmt.Sprintf(prefix+"\"%sUrl\": \"%s\",\n", c.Name, c.URL))
+	bld.WriteString(fmt.Sprintf(prefix+"\"%sCount\": %d", c.Name, len(c.Object.Children)))
+
+	if c.Inline {
+		bld.WriteString(",\n")
+		bld.WriteString(fmt.Sprintf(prefix+"\"%s\": ", c.Name))
+		c.Object.ToJson(bld, prefix, indent)
+	}
+}
+
+// Array
+
 type Array struct {
 	Values []interface{}
 }
@@ -66,35 +126,6 @@ func (a *Array) AddItem(val interface{}) {
 
 func (a *Array) Len() int {
 	return len(a.Values)
-}
-
-var JsonerType = reflect.TypeOf((*Jsoner)(nil)).Elem()
-
-func (o *Object) ToJson(bld *strings.Builder, prefix, indent string) {
-	if len(o.Children) == 0 {
-		bld.WriteString("{}")
-		return
-	}
-	bld.WriteString("{\n")
-	for i, c := range o.Children {
-		if c.Name == "" {
-			bld.WriteString("\n")
-			continue
-		}
-		val := c.Value
-		bld.WriteString(fmt.Sprintf(prefix+indent+"\"%s\": ", c.Name))
-		if reflect.TypeOf(val).Implements(JsonerType) {
-			(val.(Jsoner)).ToJson(bld, prefix+indent, indent)
-		} else {
-			buf, _ := json.MarshalIndent(val, prefix+indent, indent)
-			bld.WriteString(strings.TrimSpace(string(buf)))
-		}
-		if i+1 != len(o.Children) {
-			bld.WriteString(",")
-		}
-		bld.WriteString("\n")
-	}
-	bld.WriteString(prefix + "}")
 }
 
 func (a *Array) ToJson(bld *strings.Builder, prefix, indent string) {
@@ -120,6 +151,8 @@ func (a *Array) ToJson(bld *strings.Builder, prefix, indent string) {
 	}
 	bld.WriteString(prefix + "]")
 }
+
+// Stuff
 
 func test() {
 	obj := NewObject()

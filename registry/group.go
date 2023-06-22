@@ -46,9 +46,7 @@ func (gc *GroupCollection) ToObject(ctx *Context) (*Object, error) {
 		}
 
 		ctx.DataPush(group.ID)
-		ctx.MatchPush(match)
 		groupObj, err := group.ToObject(ctx)
-		ctx.MatchPop()
 		ctx.DataPop()
 		if err != nil {
 			return nil, err
@@ -68,26 +66,6 @@ func (gc *GroupCollection) ToObject(ctx *Context) (*Object, error) {
 	}
 
 	return obj, nil
-}
-
-func (gc *GroupCollection) ToJSON(ctx *Context) {
-	ctx.Print("{\n")
-	ctx.Indent()
-
-	for gCount, key := range SortedKeys(gc.Groups) {
-		group := gc.Groups[key]
-		if gCount > 0 {
-			ctx.Print(",\n")
-		}
-		ctx.DataPush(group.ID)
-		ctx.Printf("\t\"%s\": ", group.ID)
-		group.ToJSON(ctx)
-		ctx.DataPop()
-	}
-
-	ctx.Print("\n")
-	ctx.Outdent()
-	ctx.Print("\t}")
 }
 
 func (gc *GroupCollection) FindGroup(gID string) *Group {
@@ -164,45 +142,6 @@ func (g *Group) ToObject(ctx *Context) (*Object, error) {
 	}
 
 	return obj, nil
-}
-
-func (g *Group) ToJSON(ctx *Context) {
-	ctx.Print("{\n")
-	ctx.Indent()
-
-	ctx.Printf("\t\"id\": \"%s\",\n", g.ID)
-	ctx.Printf("\t\"name\": \"%s\",\n", g.Name)
-	ctx.Printf("\t\"epoch\": %d,\n", g.Epoch)
-	ctx.Printf("\t\"self\": \"%s\",\n", ctx.DataURL())
-
-	for rCount, key := range SortedKeys(g.GroupCollection.GroupModel.Resources) {
-		rType := g.GroupCollection.GroupModel.Resources[key]
-		rColl := g.ResourceCollections[rType.Plural]
-
-		if rCount > 0 {
-			ctx.Print(",\n")
-		}
-		ctx.Printf("\t\"%sURL\": \"%s\",\n",
-			rColl.ResourceModel.Plural,
-			URLBuild(ctx.DataURL(), rColl.ResourceModel.Plural))
-		ctx.Printf("\t\"%sCount\": %d",
-			rColl.ResourceModel.Plural,
-			len(rColl.Resources))
-
-		if ctx.ShouldInline(rColl.ResourceModel.Plural) && len(rColl.Resources) > 0 {
-			ctx.ModelPush(rColl.ResourceModel.Plural)
-			ctx.DataPush(rColl.ResourceModel.Plural)
-			ctx.Print(",\n")
-			ctx.Printf("\t\"%s\": ", rColl.ResourceModel.Plural)
-			rColl.ToJSON(ctx)
-			ctx.DataPop()
-			ctx.ModelPop()
-		}
-	}
-
-	ctx.Print("\n")
-	ctx.Outdent()
-	ctx.Print("\t}")
 }
 
 func (g *Group) FindOrAddResourceCollection(rType string) *ResourceCollection {

@@ -57,54 +57,6 @@ func (m *Model) ToObject(ctx *Context) (*Object, error) {
 	return obj, nil
 }
 
-func (m *Model) ToJSON(ctx *Context) {
-	ctx.Print("{\n")
-	ctx.Indent()
-
-	ctx.Print("\t\"groups\": {\n")
-	ctx.Indent()
-	for gCount, key := range SortedKeys(m.Groups) {
-		group := m.Groups[key]
-		if gCount > 0 {
-			ctx.Print(",\n")
-		}
-
-		ctx.Printf("\t\"%s\": {\n", key)
-		ctx.Indent()
-		ctx.Printf("\t\"singular\": \"%s\",\n", group.Singular)
-		ctx.Printf("\t\"plural\": \"%s\",\n", group.Plural)
-		ctx.Printf("\t\"schema\": \"%s\",\n", group.Schema)
-		ctx.Print("\t\"resources\": {\n")
-		ctx.Indent()
-
-		for rCount, key := range SortedKeys(group.Resources) {
-			res := group.Resources[key]
-			if rCount > 0 {
-				ctx.Print(",")
-			}
-
-			ctx.Printf("\t\"%s\": {\n", key)
-			ctx.Indent()
-			ctx.Printf("\t\"singular\": \"%s\",\n", res.Singular)
-			ctx.Printf("\t\"plural\": \"%s\",\n", res.Plural)
-			ctx.Printf("\t\"versions\": %d\n", res.Versions)
-			ctx.Outdent()
-			ctx.Print("\t}")
-		}
-		ctx.Print("\n")
-
-		ctx.Outdent()
-		ctx.Print("\t}\n")
-		ctx.Outdent()
-		ctx.Print("\t}")
-	}
-	ctx.Print("\n")
-	ctx.Outdent()
-	ctx.Print("\t}\n")
-	ctx.Outdent()
-	ctx.Print("\t}")
-}
-
 func CreateGenericModel(model *Model) *ModelElement {
 	newModel := &ModelElement{}
 

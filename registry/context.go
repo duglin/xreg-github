@@ -5,8 +5,7 @@ import (
 	"log"
 	"reflect"
 	"strings"
-
-	dlog "github.com/duglin/dlog"
+	// dlog "github.com/duglin/dlog"
 )
 
 type Context struct {
@@ -16,47 +15,11 @@ type Context struct {
 	dataStack  []string // URL path entities we walked thru (model+IDs)
 	modelStack []string // resource model entities we walked thru
 
-	currentIndent string
-	indent        string
-
 	buffer      strings.Builder
-	Filters     []*Filter
+	OrFilters   [][]*Filter // [ORs][ANDs]
 	FilterStack []string
-	MatchStack  []int
-}
 
-func (c *Context) Printf(format string, args ...interface{}) {
-	c.Print(fmt.Sprintf(format, args...))
-}
-
-func (c *Context) Print(str string) {
-	if str[0] == '\t' {
-		c.buffer.WriteString(c.currentIndent)
-		str = str[1:]
-	}
-	c.buffer.WriteString(str)
-}
-
-func (c *Context) Result() string {
-	return c.buffer.String()
-}
-
-func (c *Context) Spaces() string {
-	return c.currentIndent
-}
-
-func (c *Context) Indent() string {
-	c.currentIndent += c.indent
-	return c.currentIndent
-}
-
-func (c *Context) Outdent() string {
-	c.currentIndent = c.currentIndent[:len(c.currentIndent)-len(c.indent)]
-	return c.currentIndent
-}
-
-func (c *Context) Sprintf(str string, args ...interface{}) string {
-	return fmt.Sprintf(c.Spaces()+str, args...)
+	Filters []*Filter // OLD
 }
 
 func (c *Context) BaseURLPush(word string) string {
@@ -144,25 +107,6 @@ func (c *Context) FilterPop() string {
 	return word
 }
 
-func (c *Context) MatchPush(match int) int {
-	c.MatchStack = append(c.MatchStack, match)
-	return match
-}
-
-func (c *Context) MatchPop() int {
-	size := len(c.MatchStack)
-	match := c.MatchStack[size-1]
-	c.MatchStack = c.MatchStack[:size-1]
-	return match
-}
-
-func (c *Context) MatchLast() int {
-	if len(c.MatchStack) == 0 {
-		return 0
-	}
-	return c.MatchStack[len(c.MatchStack)-1]
-}
-
 type Filter struct {
 	// 0->id
 	// 1->groupType.id
@@ -172,7 +116,7 @@ type Filter struct {
 	Field string
 	Value string
 
-	Path      string // everything before the "=". Value as stuff after the =
+	Path      string // everything before the "=". Value is stuff after the =
 	HasEquals bool
 
 	ModelPath  string
@@ -222,7 +166,7 @@ func ParseFilterExpr(reg *Registry, paths []string, str string) (*Filter, error)
 		val = "no '='"
 	}
 
-	dlog.SetVerbose(1)
+	// dlog.SetVerbose(1)
 	log.Printf("Filter> Pth:%s  Fld:%s %s", modelPath, parts[fieldStart:], val)
 
 	return &Filter{
