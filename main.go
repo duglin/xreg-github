@@ -255,7 +255,7 @@ func Check(b bool, errStr string) {
 	}
 }
 
-func DoTests() {
+func DoTests() *registry.Registry {
 	// Registry stuff
 	reg := &registry.Registry{
 		ID:          "666-1234-1234",
@@ -284,6 +284,7 @@ func DoTests() {
 	gm1, err := reg.AddGroupModel("myGroups", "myGroup", "schema-url")
 	NoErr(err)
 	_, err = gm1.AddResourceModel("ress", "res", 5)
+	_, err = gm1.AddResourceModel("ress1", "res1", 0)
 	NoErr(err)
 
 	m1 := reg.LoadModel()
@@ -351,7 +352,8 @@ func DoTests() {
 	Check(r2.FindVersion("v3") == nil, "v3 should be nil")
 
 	log.Printf("ALL TESTS PASSED")
-	reg.Delete()
+	// reg.Delete()
+	return reg
 }
 
 func LoadSample() *registry.Registry {
@@ -415,7 +417,8 @@ func ErrFatalf(err error, str string, args ...interface{}) {
 func main() {
 	Token = strings.TrimSpace(Token)
 
-	DoTests()
+	Reg = DoTests()
+	// Reg.Delete()
 
 	Reg = LoadGitRepo("APIs-guru", "openapi-directory")
 	// Reg = LoadSample()

@@ -452,15 +452,22 @@ type Entity struct {
 	Extensions map[string]any
 }
 
+func (e *Entity) sSet(name string, value any) error {
+	return SetProp(e, name, value)
+}
+
 func SetProp(entity any, name string, val any) error {
 	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
 	defer log.VPrintf(3, "<Exit SetProp")
 
 	eField := reflect.ValueOf(entity).Elem().FieldByName("Entity")
+	e := (*Entity)(nil)
 	if !eField.IsValid() {
 		log.Fatalf("Passing a non-entity to SetProp: %#v", entity)
+		// e = entity.(*Entity)
+	} else {
+		e = eField.Addr().Interface().(*Entity)
 	}
-	e := eField.Addr().Interface().(*Entity)
 
 	if e.DbID == "" {
 		log.Fatalf("DbID should not be empty")

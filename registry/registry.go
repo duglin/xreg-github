@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	// "os"
+	"os"
 	"reflect"
 	"strings"
 
@@ -495,7 +495,7 @@ func (rc *ResultsContext) NextObj() *Obj {
 }
 
 func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
-	// w = io.MultiWriter(w, os.Stdout)
+	w = io.MultiWriter(w, os.Stdout)
 
 	path = strings.TrimRight(path, "/")
 
@@ -555,14 +555,12 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 		if obj != nil {
 			log.Printf("d:%d > Obj: L:%d %s %s", di.Depth, obj.Level, obj.Plural, obj.ID)
 		}
-		/*
-			log.Printf("di: gs:%v pre:%d cg:%v end:%q #:%d",
-				di.Groups, len(di.Prefix), di.CurrGroup, di.Ending, di.CollCount)
-			for pdi := di.Parent; pdi != nil; pdi = pdi.Parent {
-				log.Printf("-> pdi: gs:%v pre:%d cg:%v end:%q #:%d",
-					pdi.Groups, len(pdi.Prefix), pdi.CurrGroup, pdi.Ending, pdi.CollCount)
-			}
-		*/
+		log.Printf("di: gs:%v pre:%d cg:%v end:%q #:%d",
+			di.Groups, len(di.Prefix), di.CurrGroup, di.Ending, di.CollCount)
+		for pdi := di.Parent; pdi != nil; pdi = pdi.Parent {
+			log.Printf("-> pdi: gs:%v pre:%d cg:%v end:%q #:%d",
+				pdi.Groups, len(pdi.Prefix), pdi.CurrGroup, pdi.Ending, pdi.CollCount)
+		}
 
 		// End any previous collection if we're exiting its scope
 		if di.CollCount > 0 &&
@@ -589,13 +587,8 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 
 				// Now reset Groups for next object
 				if obj != nil {
-					groups := []string{}
-					if di.Depth == 1 {
-						groups = SortedKeys(reg.Model.Groups[obj.Plural].Resources)
-					} else if di.Depth == 2 {
-						groups = []string{"versions"}
-					}
-					di.Groups = groups
+					di.Groups = di.GroupsSave
+					di.Groups = DeleteStringSlice(di.Groups, di.CurrGroup)
 				}
 
 				di.Prefix = di.Prefix[:len(di.Prefix)-2]
@@ -633,7 +626,7 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 				di.Groups = di.Groups[1:]
 			}
 			if len(di.Groups) > 0 {
-				di.Groups = di.Groups[1:] // Remove next group too
+				di.Groups = di.Groups[1:] // Remove next/requested group too
 			}
 
 			fmt.Fprintf(w, "\n%s%q: {", di.Prefix, obj.Plural)
@@ -662,6 +655,7 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 					CollCount:  0,
 				}
 			}
+			di.Groups = DeleteStringSlice(di.Groups, di.CurrGroup)
 		}
 
 		// Print the obj
@@ -689,6 +683,7 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 
 			// Now reset Groups for next object
 			di.Groups = di.GroupsSave
+			di.Groups = DeleteStringSlice(di.Groups, di.CurrGroup)
 		} else {
 			fmt.Fprintf(w, "%s\n", di.Ending)
 		}
@@ -703,19 +698,27 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 		di.Ending = ""
 
 		// Print well-known attrs first
-		keys := []string{"id", "name", "epoch"}
-		for _, k := range keys {
-			val, ok := obj.Values[k]
+		mapping := [][2]string{
+			{"id", ""},
+			{"name", ""},
+			{"epoch", ""},
+			{"LatestId", "latestId"}}
+		for _, k := range mapping {
+			val, ok := obj.Values[k[0]]
 			if !ok {
 				continue
 			}
+			k1 := k[1]
+			if k1 == "" {
+				k1 = k[0]
+			}
 			if reflect.TypeOf(val).Kind() == reflect.String {
-				fmt.Fprintf(w, "%s\n%s%q: %q", di.Ending, di.Prefix, k, val)
+				fmt.Fprintf(w, "%s\n%s%q: %q", di.Ending, di.Prefix, k1, val)
 			} else {
-				fmt.Fprintf(w, "%s\n%s%q: %v", di.Ending, di.Prefix, k, val)
+				fmt.Fprintf(w, "%s\n%s%q: %v", di.Ending, di.Prefix, k1, val)
 			}
 			di.Ending = ","
-			delete(obj.Values, k)
+			delete(obj.Values, k[0])
 		}
 
 		// Now show everthing else

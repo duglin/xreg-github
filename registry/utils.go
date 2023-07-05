@@ -73,6 +73,16 @@ func SortedKeys(m interface{}) []string {
 	return keys
 }
 
+func DeleteStringSlice(list []string, str string) []string {
+	for i, val := range list {
+		if val == str {
+			list = append(list[:i], list[i+1:]...)
+			return list
+		}
+	}
+	return list
+}
+
 func ErrFatalf(err error, format string, args ...any) {
 	if err == nil {
 		return

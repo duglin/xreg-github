@@ -134,6 +134,11 @@ func (r *Resource) ToJSON(w io.Writer, jd *JSONData) (bool, error) {
 	return true, nil
 }
 
+func (r *Resource) Get(name string) any {
+	v, _ := r.Extensions[name]
+	return v
+}
+
 func (r *Resource) Set(name string, val any) error {
 	if name[0] == '.' {
 		return SetProp(r, name[1:], val)
@@ -142,11 +147,9 @@ func (r *Resource) Set(name string, val any) error {
 	lName := strings.ToLower(name)
 	if lName == "id" || lName == "latestid" || lName == "latesturl" ||
 		lName == "self" {
-		// return SetProp(r, name, val)
 		return SetProp(r, name, val)
 	}
 
-	// return SetProp(r.GetLatest(), name, val)
 	v := r.GetLatest()
 	return SetProp(v, name, val)
 }
