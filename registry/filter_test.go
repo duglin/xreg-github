@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/duglin/log"
+	log "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
 	"github.com/kylelemons/godebug/diff"
 )

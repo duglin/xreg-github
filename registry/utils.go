@@ -2,10 +2,37 @@ package registry
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
+
+	log "github.com/duglin/dlog"
+	"github.com/google/uuid"
 )
+
+func NewUUID() string {
+	return uuid.NewString()[:8]
+}
+
+func NotNilString(val *any) string {
+	if val == nil || *val == nil {
+		return ""
+	}
+
+	b := (*val).([]byte)
+	return string(b)
+}
+
+func NotNilInt(val *any) int {
+	if val == nil || *val == nil {
+		return 0
+	}
+
+	b := (*val).(int64)
+	return int(b)
+}
 
 func JSONEscape(obj interface{}) string {
 	buf, _ := json.Marshal(obj)
@@ -13,7 +40,10 @@ func JSONEscape(obj interface{}) string {
 }
 
 func ToJSON(obj interface{}) string {
-	buf, _ := json.MarshalIndent(obj, "", "  ")
+	buf, err := json.MarshalIndent(obj, "", "  ")
+	if err != nil {
+		log.Fatalf("Error Marshaling: %s", err)
+	}
 	return string(buf)
 }
 
@@ -41,4 +71,85 @@ func SortedKeys(m interface{}) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func ErrFatalf(err error, format string, args ...any) {
+	if err == nil {
+		return
+	}
+	log.Fatalf(format, args...)
+}
+
+func Convert(str string, propType string) any { // type = stringified Kind
+	k, _ := strconv.Atoi(propType)
+
+	if reflect.Kind(k) == reflect.Int {
+		tmpInt, _ := strconv.Atoi(str)
+		return tmpInt
+	} else {
+		return str
+	}
+}
+
+func SetField(res interface{}, name string, value *string, propType string) {
+	k, _ := strconv.Atoi(propType)
+	v := fmt.Sprintf("%v", value)
+	if value != nil {
+		v = fmt.Sprintf("%v", *value)
+	}
+
+	log.VPrintf(3, ">Enter: SetField(%T, %s/%q,%s)", res, name, v,
+		reflect.Kind(k).String())
+	defer log.VPrintf(3, "<")
+
+	var err error
+	val := reflect.ValueOf(res).Elem()
+
+	field := val.FieldByName(name)
+	// Use "Extensions" for invalid fields (meaning not defined in the resource)
+	if !field.IsValid() {
+		field := reflect.ValueOf(res).Elem().FieldByName("Extensions")
+		if !field.IsValid() {
+			log.VPrintf(2, "Can't Set unknown field(%T/%s)", res, name)
+		} else {
+			if field.IsNil() {
+				field.Set(reflect.ValueOf(map[string]any{}))
+			}
+			newValue := reflect.Value{}
+
+			if reflect.Kind(k) == reflect.Int {
+				tmpInt, _ := strconv.Atoi(*value)
+				newValue = reflect.ValueOf(tmpInt)
+			} else {
+				newValue = reflect.ValueOf(*value)
+			}
+			field.SetMapIndex(reflect.ValueOf(name), newValue)
+		}
+	} else {
+		if field.Type().Kind() == reflect.String {
+			tmpVal := ""
+			if value != nil {
+				tmpVal = *value
+			}
+
+			field.SetString(tmpVal)
+			log.VPrintf(4, "set %q to %q", name, reflect.ValueOf(value).Elem())
+		} else if field.Type().Kind() == reflect.Int {
+			tmpInt := 0
+			if value != nil {
+				tmpInt, err = strconv.Atoi(*value)
+				if err != nil {
+					log.Printf("Error converting %q int int: %s", *value, err)
+				}
+			}
+			field.SetInt(int64(tmpInt)) // reflect.ValueOf(value).Elem())
+			log.VPrintf(4, "set %q to %d", name, tmpInt)
+		}
+	}
+}
+
+type JSONData struct {
+	Prefix   string
+	Indent   string
+	Registry *Registry
 }

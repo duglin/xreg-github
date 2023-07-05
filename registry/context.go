@@ -2,10 +2,10 @@ package registry
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
-	// dlog "github.com/duglin/dlog"
+
+	log "github.com/duglin/dlog"
 )
 
 type Context struct {

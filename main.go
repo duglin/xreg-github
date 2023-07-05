@@ -8,14 +8,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	// dlog "github.com/duglin/dlog"
+	log "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
 )
+
+func init() {
+	log.SetVerbose(2)
+}
 
 //go:embed .github
 var Token string
@@ -47,48 +50,31 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	reader := tar.NewReader(gzf)
 
 	reg := &registry.Registry{
-		// BaseURL: "#",
-		// BaseURL: "https://example.com/",
-		BaseURL: "http://soaphub.org:8585/",
-
-		Model: &registry.Model{
-			Groups: map[string]*registry.GroupModel{
-				"apiProviders": &registry.GroupModel{
-					Singular: "apiProvider",
-					Plural:   "apiProviders",
-
-					Resources: map[string]*registry.ResourceModel{
-						"apis": &registry.ResourceModel{
-							Singular: "api",
-							Plural:   "apis",
-							Versions: -1,
-						},
-					},
-				},
-				"schemaGroups": &registry.GroupModel{
-					Singular: "schemaGroup",
-					Plural:   "schemaGroups",
-
-					Resources: map[string]*registry.ResourceModel{
-						"schemas": &registry.ResourceModel{
-							Singular: "schema",
-							Plural:   "schemas",
-							Versions: -1,
-						},
-					},
-				},
-			},
-		},
-
 		ID:          "123-1234-1234",
+		BaseURL:     "http://soaphub.org:8585/",
 		Name:        "APIs-guru Registry",
 		Description: "xRegistry view of github.com/APIs-guru/openapi-directory",
-		SpecVersion: "0.4",
-		Tags: map[string]string{
-			"stage": "production",
-		},
-		Docs: "https://github.com/duglin/xreg-github",
+		SpecVersion: "0.5",
+		Docs:        "https://github.com/duglin/xreg-github",
 	}
+	err := registry.NewRegistryFromStruct(reg)
+	registry.ErrFatalf(err, "Error creating new registry: %s", err)
+	// log.VPrintf(3, "New registry:\n%#v", reg)
+
+	err = reg.Refresh()
+	registry.ErrFatalf(err, "Error refeshing registry: %s", err)
+	// log.VPrintf(3, "New registry:\n%#v", reg)
+
+	// TODO Support "model" being part of the Registry struct above
+
+	g, _ := reg.AddGroupModel("apiProviders", "apiProvider", "")
+	_, err = g.AddResourceModel("apis", "api", 2)
+
+	g, _ = reg.AddGroupModel("schemaGroups", "schemaGroup", "")
+	_, err = g.AddResourceModel("schemas", "schema", 1)
+
+	m := reg.LoadModel()
+	log.VPrintf(3, "Model: %#v\n", m)
 
 	for {
 		header, err := reader.Next()
@@ -120,6 +106,17 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		// org/version/file
 
 		group := reg.FindOrAddGroup("apiProviders", parts[0])
+		group.SetName(group.ID)
+		group.Set("ModifiedBy", "me")
+		group.Set("epoch", 5)
+		group.Set("xxx", 5)
+		group.Set("yyy", "6")
+
+		group.Set("epoch", nil)
+		group.Set("xxx", nil)
+
+		// group2 := reg.FindGroup("apiProviders", parts[0])
+		// log.Printf("Find Group:\n%s", registry.ToJSON(group2))
 
 		resName := "core"
 		verIndex := 1
@@ -131,22 +128,23 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		res := group.FindOrAddResource("apis", resName)
 
 		g2 := reg.FindOrAddGroup("schemaGroups", parts[0])
-		r2 := g2.FindOrAddResource("schemas", resName)
-		v2 := r2.FindOrAddVersion(parts[verIndex])
-		v2.Name = parts[verIndex+1]
-		v2.Format = "openapi/3.0.6"
-
+		g2.Set("name", group.Name)
+		/*
+			r2 := g2.FindOrAddResource("schemas", resName)
+			v2 := r2.FindOrAddVersion(parts[verIndex])
+			v2.Name = parts[verIndex+1]
+			v2.Format = "openapi/3.0.6"
+		*/
 		version := res.FindVersion(parts[verIndex])
 		if version != nil {
-			fmt.Printf("group: %s\nresource: %s\n", parts[0], resName)
 			log.Fatalf("Have more than one file per version: %s\n", header.Name)
 		}
 
 		buf := &bytes.Buffer{}
 		io.Copy(buf, reader)
 		version = res.FindOrAddVersion(parts[verIndex])
-		version.Name = parts[verIndex+1]
-		version.Format = "openapi/3.0.6"
+		version.Set("name", parts[verIndex+1])
+		version.Set("format", "openapi/3.0.6")
 
 		// Don't upload the file contents into the registry. Instead just
 		// give the registry a URL to it and ask it to server it via proxy.
@@ -154,21 +152,24 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		// I wanted the URL to the file to be the registry and not github
 		base := "https://raw.githubusercontent.com/APIs-guru/" +
 			"openapi-directory/main/APIs/"
-		// version.Data["resourceURI"] = base + header.Name[i+6:]
-		// version.Data["resourceContent"] = string(buf.Bytes())
-		version.Data["resourceProxyURI"] = base + header.Name[i+6:]
+		// version.ResourceURL = base + header.Name[i+6:]
+		// version.ResourceContent = buf.Bytes()
+		version.ResourceProxyURL = base + header.Name[i+6:]
 	}
 
 	return reg
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%s %s", r.Method, r.URL)
+	log.VPrintf(2, "%s %s", r.Method, r.URL)
 
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+
+	Reg.NewGet(w)
+	return
 
 	baseURL := fmt.Sprintf("http://%s", r.Host)
 
@@ -239,12 +240,183 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func NoErr(err error) {
+	if err == nil {
+		return
+	}
+	log.Fatalf("%s", err)
+}
+
+func Check(b bool, errStr string) {
+	if !b {
+		log.Fatal(errStr)
+	}
+}
+
+func DoTests() {
+	// Registry stuff
+	reg := &registry.Registry{
+		ID:          "666-1234-1234",
+		BaseURL:     "http://soaphub.org:8585/",
+		Name:        "APIs-guru Registry",
+		Description: "xRegistry view of github.com/APIs-guru/openapi-directory",
+		SpecVersion: "0.5",
+		Docs:        "https://github.com/duglin/xreg-github",
+	}
+
+	// Registry stuff
+	NoErr(registry.NewRegistryFromStruct(reg))
+	NoErr(reg.Refresh())
+
+	reg1 := &registry.Registry{ID: reg.ID}
+	NoErr(reg1.Refresh())
+	if registry.ToJSON(reg) != registry.ToJSON(reg1) {
+		log.Fatalf("\nreg : %v\n!=\nreg1: %v", reg, reg1)
+	}
+
+	reg2, err := registry.GetRegistryByName(reg.Name)
+	NoErr(err)
+	Check(registry.ToJSON(reg) == registry.ToJSON(reg2), "reg2!=reg")
+
+	// Model stuff
+	gm1, err := reg.AddGroupModel("myGroups", "myGroup", "schema-url")
+	NoErr(err)
+	_, err = gm1.AddResourceModel("ress", "res", 5)
+	NoErr(err)
+
+	m1 := reg.LoadModel()
+	Check(m1.Groups["myGroups"].Singular == "myGroup", "myGroups.Singular")
+	Check(m1.Groups["myGroups"].Resources["ress"].Versions == 5, "ress.Vers")
+
+	// Group stuff
+	g1 := reg.FindGroup("myGroups", "g1")
+	Check(g1 == nil, "g1 should be nil")
+	g1 = reg.FindOrAddGroup("myGroups", "g1")
+	Check(g1 != nil, "g1 should not be nil")
+	g1.Set("name", g1.ID)
+	g1.Set("epoch", 5)
+	g1.Set("ext1", "extvalue")
+	g1.Set("ext2", 666)
+	Check(g1.Extensions["ext2"] == 666, "g1.Ext isn't an int")
+	g2 := reg.FindGroup("myGroups", "g1")
+	Check(registry.ToJSON(g1) == registry.ToJSON(g2), "g2 != g1")
+	g2.Set("ext2", nil)
+	g2.Set("epoch", nil)
+	g1.Refresh()
+	Check(registry.ToJSON(g1) == registry.ToJSON(g2), "g1.refresh")
+
+	// Resource stuff
+	r1 := g1.FindResource("ress", "r1")
+	Check(r1 == nil, "r1 should be nil")
+	r1 = g1.FindOrAddResource("ress", "r1")
+	Check(r1 != nil, "r1 should not be nil")
+
+	// Test setting Resource stuff, not Latest version stuff
+	r1.Set(".name", r1.ID)
+	Check(r1.Extensions["name"] == r1.ID, "r1.Name != r1.ID")
+	r1.Set(".Int", 345)
+	Check(r1.Extensions["Int"] == 345, "r1.Int != 345")
+	r3 := g1.FindResource("ress", "r1")
+	Check(registry.ToJSON(r1) == registry.ToJSON(r3), "r3 != r1")
+	Check(r3.Extensions["Int"] == 345, "r3.Int != 345")
+
+	// Version stuff
+	v1 := r1.FindVersion("v1")
+	Check(v1 == nil, "v1 should be nil")
+	v1 = r1.FindOrAddVersion("v1")
+	Check(v1 != nil, "v1 should not be nil")
+	Check(registry.ToJSON(v1) == registry.ToJSON(r1.GetLatest()), "not latest")
+
+	v1.Set("name", v1.ID)
+	v1.Set("epoch", 42)
+	v1.Set("ext1", "someext")
+	v1.Set("ext2", 234)
+	Check(v1.Extensions["ext2"] == 234, "v1.Ext isn't an int")
+	v2 := r1.FindVersion("v1")
+	Check(registry.ToJSON(v1) == registry.ToJSON(v2), "v2 != v1")
+	vlatest := r1.GetLatest()
+	Check(registry.ToJSON(v1) == registry.ToJSON(vlatest), "vlatest != v1")
+
+	// Test Latest version stuff
+	r1.Set("name", r1.ID)
+	r1.Set("epoch", 42)
+	r1.Set("ext1", "someext")
+	r1.Set("ext2", 123)
+	Check(r1.GetLatest().Extensions["ext2"] == 123, "r1.Ext isn't an int")
+	r2 := g1.FindResource("ress", "r1")
+	Check(registry.ToJSON(r1) == registry.ToJSON(r2), "r2 != r1")
+	Check(r1.FindVersion("v3") == nil, "v3 should be nil")
+	Check(r2.FindVersion("v3") == nil, "v3 should be nil")
+
+	log.Printf("ALL TESTS PASSED")
+	reg.Delete()
+}
+
+func LoadSample() *registry.Registry {
+	reg := &registry.Registry{
+		ID:          "987",
+		BaseURL:     "http://soaphub.org:8585/",
+		Name:        "Test Registry",
+		Description: "A test reg",
+		SpecVersion: "0.5",
+		Docs:        "https://github.com/duglin/xreg-github",
+	}
+	err := registry.NewRegistryFromStruct(reg)
+	ErrFatalf(err, "Error creating new registry: %s", err)
+
+	gm, _ := reg.AddGroupModel("agroups", "group", "")
+	_, err = gm.AddResourceModel("ress", "res", 2)
+
+	gm, _ = reg.AddGroupModel("zgroups", "group", "")
+	_, err = gm.AddResourceModel("ress", "res", 2)
+
+	gm, _ = reg.AddGroupModel("endpoints", "endpoint", "")
+	_, err = gm.AddResourceModel("defs", "def", 2)
+	_, err = gm.AddResourceModel("adefs", "def", 2)
+	_, err = gm.AddResourceModel("zdefs", "def", 2)
+
+	g := reg.FindOrAddGroup("endpoints", "e1")
+	g.Set("name", "end1")
+	g.Set("epoch", 1)
+	g.Set("ext", "ext1")
+
+	r := g.FindOrAddResource("defs", "created")
+	v := r.FindOrAddVersion("v1")
+	v.Set("name", "blobCreated")
+	v.Set("epoch", 2)
+
+	v = r.FindOrAddVersion("v2")
+	v.Set("name", "blobCreated")
+	v.Set("epoch", 4)
+	r.Set(".latestId", "v2")
+
+	r = g.FindOrAddResource("defs", "deleted")
+	v = r.FindOrAddVersion("v1.0")
+	v.Set("name", "blobDeleted")
+	v.Set("epoch", 3)
+
+	g = reg.FindOrAddGroup("endpoints", "e2")
+	g.Set("name", "end1")
+	g.Set("epoch", 1)
+	g.Set("ext", "ext1")
+
+	return reg
+}
+
+func ErrFatalf(err error, str string, args ...interface{}) {
+	if err == nil {
+		return
+	}
+	log.Fatalf(str, args...)
+}
+
 func main() {
 	Token = strings.TrimSpace(Token)
-	orgName := "APIs-guru"
-	repoName := "openapi-directory"
 
-	Reg = LoadGitRepo(orgName, repoName)
+	DoTests()
+
+	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+	Reg = LoadSample()
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		Port = tmp

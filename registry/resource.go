@@ -2,7 +2,9 @@ package registry
 
 import (
 	"fmt"
-	// "log"
+	"io"
+
+	log "github.com/duglin/dlog"
 )
 
 type ResourceCollection struct {
@@ -51,6 +53,7 @@ func (rc *ResourceCollection) ToObject(ctx *Context) (*Object, error) {
 func (rc *ResourceCollection) NewResource(id string) *Resource {
 	res := &Resource{
 		ResourceCollection: rc,
+		Group:              rc.Group,
 		ID:                 id,
 		LatestId:           "",
 		VersionCollection:  &VersionCollection{},
@@ -63,42 +66,212 @@ func (rc *ResourceCollection) NewResource(id string) *Resource {
 }
 
 type Resource struct {
+	Entity
 	ResourceCollection *ResourceCollection
+	Group              *Group
 
-	ID          string
-	Name        string
-	Epoch       int
-	Self        string
-	LatestId    string
-	LatestUrl   string
-	Description string
-	Docs        string
-	Tags        map[string]string
-	Format      string
-	CreatedBy   string
-	CreatedOn   string
-	ModifiedBy  string
-	ModifiedOn  string
+	ID        string
+	LatestId  string
+	LatestUrl string
+	Self      string
 
 	VersionCollection *VersionCollection // map[string]*Version // version
 }
 
-func (r *Resource) FindVersion(verString string) *Version {
+func (r *Resource) ToJSON(w io.Writer, jd *JSONData) (bool, error) {
+	ver := r.GetLatest()
+
+	fmt.Fprintf(w, "%s{\n", jd.Prefix)
+	fmt.Fprintf(w, "%s  \"id\": %q,\n", jd.Indent, r.ID)
+	fmt.Fprintf(w, "%s  \"name\": %q,\n", jd.Indent, ver.Name)
+	fmt.Fprintf(w, "%s  \"epoch\": %d,\n", jd.Indent, ver.Epoch)
+	fmt.Fprintf(w, "%s  \"self\": %q,\n", jd.Indent, "...")
+	fmt.Fprintf(w, "%s  \"latestId\": %q,\n", jd.Indent, r.LatestId)
+	fmt.Fprintf(w, "%s  \"latestUrl\": %q", jd.Indent, r.LatestUrl)
+
+	// TODO add Resource stuff
+
+	vCount := 0
+	results, err := NewQuery(`
+			SELECT VersionID from Versions
+			WHERE ResourceID=?`, r.DbID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, row := range results {
+		v := r.FindVersion(NotNilString(row[0])) // v.ID
+		if v == nil {
+			log.Printf("Can't find version %s", NotNilString(row[0]))
+			continue // Should never happen
+		}
+
+		prefix := fmt.Sprintf(",\n")
+		if vCount == 0 {
+			prefix += fmt.Sprintf("\n%s  \"versions\": {\n", jd.Indent)
+		}
+		prefix += fmt.Sprintf("%s    %q: ", jd.Indent, v.ID)
+		shown, err := v.ToJSON(w,
+			&JSONData{prefix, jd.Indent + "    ", jd.Registry})
+		if err != nil {
+			return false, err
+		}
+		if shown {
+			vCount++
+		}
+	}
+	if vCount > 0 {
+		fmt.Fprintf(w, "\n%s  },\n", jd.Indent)
+	} else {
+		fmt.Fprintf(w, ",\n\n")
+	}
+
+	fmt.Fprintf(w, "%s  \"versionsCount\": %d,\n", jd.Indent, vCount)
+	fmt.Fprintf(w, "%s  \"versionsUrl\": \"%s/versions\"", jd.Indent, "...")
+
+	fmt.Fprintf(w, "\n%s}", jd.Indent)
+	return true, nil
+}
+
+func (r *Resource) Set(name string, val any) error {
+	if name[0] == '.' {
+		return SetProp(r, name[1:], val)
+	}
+
+	if name == "ID" || name == "LatestId" || name == "LatestUrl" ||
+		name == "Self" {
+		// return SetProp(r, name, val)
+		return SetProp(r, name, val)
+	}
+
+	// return SetProp(r.GetLatest(), name, val)
+	v := r.GetLatest()
+	return SetProp(v, name, val)
+}
+
+func (r *Resource) Refresh() error {
+	log.VPrintf(3, ">Enter: resource.Refresh(%s)", r.ID)
+	defer log.VPrintf(3, "<Exit: resource.Refresh")
+
+	result, err := Query(`
+	        SELECT PropName, PropValue, PropType
+	        FROM Props WHERE EntityID=? `,
+		r.DbID)
+	defer result.Close()
+
+	if err != nil {
+		log.Printf("Error refreshing Resource(%s): %s", r.ID, err)
+		return fmt.Errorf("Error refreshing Resource(%s): %s", r.ID, err)
+	}
+
+	*r = Resource{ // Erase all existing properties
+		Entity: Entity{
+			RegistryID: r.RegistryID,
+			DbID:       r.DbID,
+		},
+		ID: r.ID,
+	}
+
+	for result.NextRow() {
+		name := NotNilString(result.Data[0])
+		val := NotNilString(result.Data[1])
+		propType := NotNilString(result.Data[2])
+		SetField(r, name, &val, propType)
+	}
+
+	return nil
+}
+
+func (r *Resource) FindVersion(id string) *Version {
+	log.VPrintf(3, ">Enter: FindVersion(%s)", id)
+	defer log.VPrintf(3, "<Exit: FindVersion")
+
+	results, _ := NewQuery(`
+		SELECT v.ID, p.PropName, p.PropValue, p.PropType
+		FROM Versions as v LEFT JOIN Props AS p ON (p.EntityID=v.ID)
+		WHERE v.VersionID=? AND v.ResourceID=?`, id, r.DbID)
+
+	v := (*Version)(nil)
+	for _, row := range results {
+		if v == nil {
+			v = &Version{
+				Entity: Entity{
+					RegistryID: r.RegistryID,
+					DbID:       NotNilString(row[0]),
+				},
+				Resource: r,
+				ID:       id,
+			}
+			log.VPrintf(3, "Found one: %s", v.DbID)
+		}
+		if *row[1] != nil { // We have Props
+			name := NotNilString(row[1])
+			val := NotNilString(row[2])
+			propType := NotNilString(row[3])
+			SetField(v, name, &val, propType)
+		}
+	}
+
+	if v == nil {
+		log.VPrintf(3, "None found")
+	}
+
+	return v
+}
+
+func (r *Resource) OldFindVersion(verString string) *Version {
 	return r.VersionCollection.Versions[verString]
 }
 
 func (r *Resource) GetLatest() *Version {
-	var latest *Version
-	if r.LatestId != "" {
-		latest = r.VersionCollection.Versions[r.LatestId]
+	if r.LatestId == "" {
+		panic("Latest ID is missing")
 	}
-	if latest == nil {
-		panic(fmt.Sprintf("Help cant determine latest for %#v", r))
-	}
-	return latest
+
+	return r.FindVersion(r.LatestId)
 }
 
-func (r *Resource) FindOrAddVersion(verStr string) *Version {
+func (r *Resource) FindOrAddVersion(id string) *Version {
+	log.VPrintf(3, ">Enter: FindOrAddVersion%s)", id)
+	defer log.VPrintf(3, "<Exit: FindOrAddVersion")
+
+	v := r.FindVersion(id)
+	if v != nil {
+		log.VPrintf(3, "Found one")
+		return v
+	}
+
+	v = &Version{
+		Entity: Entity{
+			RegistryID: r.RegistryID,
+			DbID:       NewUUID(),
+		},
+		Resource: r,
+		ID:       id,
+	}
+
+	err := DoOne(`
+		INSERT INTO Versions(ID, VersionID, ResourceID, Path, Abstract)
+		VALUES(?,?,?,?,?)`,
+		v.DbID, id, r.DbID,
+		r.Group.Plural+"/"+r.Group.DbID+"/"+r.Plural+"/"+r.DbID+"/versions/"+id,
+		r.Group.Plural+"/"+r.Plural+"/versions")
+	if err != nil {
+		log.Printf("Error adding version: %s", err)
+		return nil
+	}
+
+	v.Set("id", id)
+
+	if r.LatestId == "" {
+		r.Set("LatestId", id)
+	}
+
+	log.VPrintf(3, "Created new one - dbID: %s", v.DbID)
+	return v
+}
+
+func (r *Resource) OldFindOrAddVersion(verStr string) *Version {
 	ver := r.VersionCollection.Versions[verStr]
 	if ver != nil {
 		return ver
