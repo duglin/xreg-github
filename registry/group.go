@@ -195,8 +195,8 @@ func (g *Group) Refresh() error {
 	return nil
 }
 
-func (g *Group) SetName(val string) error { return g.Set("Name", val) }
-func (g *Group) SetEpoch(val int) error   { return g.Set("Epoch", val) }
+func (g *Group) SetName(val string) error { return g.Set("name", val) }
+func (g *Group) SetEpoch(val int) error   { return g.Set("epoch", val) }
 
 func (g *Group) Set(name string, val any) error {
 	return SetProp(g, name, val)

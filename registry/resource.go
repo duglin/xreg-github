@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	log "github.com/duglin/dlog"
 )
@@ -138,8 +139,9 @@ func (r *Resource) Set(name string, val any) error {
 		return SetProp(r, name[1:], val)
 	}
 
-	if name == "ID" || name == "LatestId" || name == "LatestUrl" ||
-		name == "Self" {
+	lName := strings.ToLower(name)
+	if lName == "id" || lName == "latestid" || lName == "latesturl" ||
+		lName == "self" {
 		// return SetProp(r, name, val)
 		return SetProp(r, name, val)
 	}

@@ -495,7 +495,7 @@ func (rc *ResultsContext) NextObj() *Obj {
 }
 
 func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
-	// w = os.Stdout
+	// w = io.MultiWriter(w, os.Stdout)
 
 	path = strings.TrimRight(path, "/")
 
@@ -513,10 +513,11 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 	}
 
 	type depthInfo struct {
-		Parent *depthInfo
-		Depth  int
-		Groups []string
-		Prefix string
+		Parent     *depthInfo
+		Depth      int
+		Groups     []string
+		GroupsSave []string
+		Prefix     string
 
 		CurrGroup string
 		Ending    string
@@ -532,6 +533,7 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 		Ending:    "",
 		CollCount: 0,
 	}
+	di.GroupsSave = di.Groups
 
 	if path == "" {
 		fmt.Fprintf(w, "%s{\n", jd.Prefix)
@@ -551,8 +553,16 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 		}
 
 		if obj != nil {
-			log.Printf("%d > Obj: %d) %s %s", di.Depth, obj.Level, obj.Plural, obj.ID)
+			log.Printf("d:%d > Obj: L:%d %s %s", di.Depth, obj.Level, obj.Plural, obj.ID)
 		}
+		/*
+			log.Printf("di: gs:%v pre:%d cg:%v end:%q #:%d",
+				di.Groups, len(di.Prefix), di.CurrGroup, di.Ending, di.CollCount)
+			for pdi := di.Parent; pdi != nil; pdi = pdi.Parent {
+				log.Printf("-> pdi: gs:%v pre:%d cg:%v end:%q #:%d",
+					pdi.Groups, len(pdi.Prefix), pdi.CurrGroup, pdi.Ending, pdi.CollCount)
+			}
+		*/
 
 		// End any previous collection if we're exiting its scope
 		if di.CollCount > 0 &&
@@ -599,7 +609,7 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 			fmt.Fprintf(w, "%s\"%sUrl\": \"%s\"",
 				di.Prefix, di.CurrGroup, "...")
 
-			if obj == nil || obj.Level < di.Depth {
+			if obj == nil || obj.Level <= di.Depth {
 				di = di.Parent
 			}
 			di.Ending = ","
@@ -629,30 +639,29 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 			fmt.Fprintf(w, "\n%s%q: {", di.Prefix, obj.Plural)
 
 			if obj.Level == di.Depth {
+				// Resetting child groups
+				di.Groups = di.GroupsSave // Copies items, not just ptr
 				di.CurrGroup = obj.Plural
 				di.Ending = ""
 				di.CollCount = 0
-				fmt.Fprintf(w, "Resetting di.")
 			} else {
+				groups := []string{}
+				if di.Depth == 0 {
+					groups = SortedKeys(reg.Model.Groups[obj.Plural].Resources)
+				} else if di.Depth == 2 {
+					groups = []string{"versions"}
+				}
 				di = &depthInfo{
-					Parent: di,
-					Depth:  di.Depth + 1,
-					// Groups:    groups,
-					Prefix:    di.Prefix + "  ",
-					CurrGroup: obj.Plural,
-					Ending:    "",
-					CollCount: 0,
+					Parent:     di,
+					Depth:      di.Depth + 1,
+					Groups:     groups,
+					GroupsSave: groups,
+					Prefix:     di.Prefix + "  ",
+					CurrGroup:  obj.Plural,
+					Ending:     "",
+					CollCount:  0,
 				}
 			}
-			// Reset groups
-			groups := []string{}
-			if di.Depth == 1 {
-				groups = SortedKeys(reg.Model.Groups[obj.Plural].Resources)
-			} else if di.Depth == 2 {
-				groups = []string{"versions"}
-			}
-			di.Groups = groups
-
 		}
 
 		// Print the obj
@@ -679,13 +688,7 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 			di.Ending = ","
 
 			// Now reset Groups for next object
-			groups := []string{}
-			if di.Depth == 1 {
-				groups = SortedKeys(reg.Model.Groups[obj.Plural].Resources)
-			} else if di.Depth == 2 {
-				groups = []string{"versions"}
-			}
-			di.Groups = groups
+			di.Groups = di.GroupsSave
 		} else {
 			fmt.Fprintf(w, "%s\n", di.Ending)
 		}

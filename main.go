@@ -107,13 +107,15 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 
 		group := reg.FindOrAddGroup("apiProviders", parts[0])
 		group.SetName(group.ID)
-		group.Set("ModifiedBy", "me")
+		group.Set("modifiedBy", "me")
+		group.Set("modifiedAt", "noon")
 		group.Set("epoch", 5)
 		group.Set("xxx", 5)
 		group.Set("yyy", "6")
+		group.Set("zzz", "6")
 
-		group.Set("epoch", nil)
-		group.Set("xxx", nil)
+		group.Set("modifiedAt", nil) // delete prop
+		group.Set("zzz", nil)        // delete prop
 
 		// group2 := reg.FindGroup("apiProviders", parts[0])
 		// log.Printf("Find Group:\n%s", registry.ToJSON(group2))
@@ -415,8 +417,8 @@ func main() {
 
 	DoTests()
 
-	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
-	Reg = LoadSample()
+	Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+	// Reg = LoadSample()
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		Port = tmp
