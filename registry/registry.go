@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	// "os"
 	"reflect"
 	"strings"
 
@@ -495,8 +495,6 @@ func (rc *ResultsContext) NextObj() *Obj {
 }
 
 func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
-	w = io.MultiWriter(w, os.Stdout)
-
 	path = strings.TrimRight(path, "/")
 
 	//  /  GROUPs/  GROUPS/x  GROUPS/x/RESOURCES  GROUPS/x/RESOURCES/y
@@ -506,6 +504,10 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 	if err != nil {
 		return err
 	}
+
+	jw := NewJsonWriter(w, reg, results)
+	err = jw.WriteRegistry()
+	return err
 
 	rc := ResultsContext{
 		results: results,
@@ -555,11 +557,11 @@ func (reg *Registry) NewToJSON(w io.Writer, jd *JSONData, path string) error {
 		if obj != nil {
 			log.Printf("d:%d > Obj: L:%d %s %s", di.Depth, obj.Level, obj.Plural, obj.ID)
 		}
-		log.Printf("di: gs:%v pre:%d cg:%v end:%q #:%d",
-			di.Groups, len(di.Prefix), di.CurrGroup, di.Ending, di.CollCount)
+		// log.Printf("di: gs:%v pre:%d cg:%v end:%q #:%d",
+		// di.Groups, len(di.Prefix), di.CurrGroup, di.Ending, di.CollCount)
 		for pdi := di.Parent; pdi != nil; pdi = pdi.Parent {
-			log.Printf("-> pdi: gs:%v pre:%d cg:%v end:%q #:%d",
-				pdi.Groups, len(pdi.Prefix), pdi.CurrGroup, pdi.Ending, pdi.CollCount)
+			// log.Printf("-> pdi: gs:%v pre:%d cg:%v end:%q #:%d",
+			// pdi.Groups, len(pdi.Prefix), pdi.CurrGroup, pdi.Ending, pdi.CollCount)
 		}
 
 		// End any previous collection if we're exiting its scope
