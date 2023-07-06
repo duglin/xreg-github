@@ -359,14 +359,14 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 	return g
 }
 
-func (reg *Registry) FindOrAddGroup(gType string, gID string) *Group {
-	log.VPrintf(3, ">Enter FindOrAddGroup(%s,%s)", gType, gID)
+func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
+	log.VPrintf(3, ">Enter FindOrAddGroup(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit FindOrAddGroup")
-	if gID == "" {
-		gID = NewUUID()
+	if id == "" {
+		id = NewUUID()
 	}
 
-	g := reg.FindGroup(gType, gID)
+	g := reg.FindGroup(gType, id)
 
 	if g != nil {
 		log.VPrintf(3, "Found one")
@@ -379,13 +379,13 @@ func (reg *Registry) FindOrAddGroup(gType string, gID string) *Group {
 			DbID:       NewUUID(),
 			Plural:     gType,
 		},
-		ID: gID,
+		ID: id,
 	}
 
 	err := DoOne(`
 			INSERT INTO "Groups"(ID, RegistryID, GroupID, ModelID,Path,Abstract)
 			SELECT ?,?,?,ID,?,? FROM ModelEntities WHERE Plural=?`,
-		g.DbID, reg.ID, gID, gType+"/"+g.DbID, gType, gType)
+		g.DbID, reg.ID, g.ID, gType+"/"+g.ID, gType, gType)
 
 	if err != nil {
 		log.Printf("Error adding group: %s", err)
@@ -496,8 +496,6 @@ func (info *RequestInfo) ShouldInline(objPath string) bool {
 
 func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	info.Root = strings.Trim(info.Root, "/")
-
-	//  /  GROUPs/  GROUPS/x  GROUPS/x/RESOURCES  GROUPS/x/RESOURCES/y
 
 	query := "SELECT " +
 		"Level, Plural, ID, PropName, PropValue, PropType, Abstract " +

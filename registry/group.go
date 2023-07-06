@@ -126,8 +126,8 @@ func (g *Group) FindOrAddResource(rType string, id string) *Resource {
 	err := DoOne(`
 		INSERT INTO Resources(ID, ResourceID, GroupID, ModelID, Path, Abstract)
 		SELECT ?,?,?,ID,?,? FROM ModelEntities WHERE Plural=?`,
-		r.DbID, id, g.DbID,
-		g.Plural+"/"+g.DbID+"/"+rType+"/"+r.DbID,
+		r.DbID, r.ID, g.DbID,
+		g.Plural+"/"+g.ID+"/"+rType+"/"+r.ID,
 		g.Plural+"/"+rType,
 		rType)
 	if err != nil {

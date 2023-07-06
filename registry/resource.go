@@ -139,7 +139,7 @@ func (r *Resource) FindOrAddVersion(id string) *Version {
 		INSERT INTO Versions(ID, VersionID, ResourceID, Path, Abstract)
 		VALUES(?,?,?,?,?)`,
 		v.DbID, id, r.DbID,
-		r.Group.Plural+"/"+r.Group.DbID+"/"+r.Plural+"/"+r.DbID+"/versions/"+id,
+		r.Group.Plural+"/"+r.Group.ID+"/"+r.Plural+"/"+r.ID+"/versions/"+v.ID,
 		r.Group.Plural+"/"+r.Plural+"/versions")
 	if err != nil {
 		log.Printf("Error adding version: %s", err)
