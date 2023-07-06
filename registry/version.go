@@ -2,45 +2,10 @@ package registry
 
 import (
 	"fmt"
-	"io"
+	// "io"
 
 	log "github.com/duglin/dlog"
 )
-
-type VersionCollection struct {
-	Resource *Resource
-	Versions map[string]*Version // version
-}
-
-func (vc *VersionCollection) ToObject(ctx *Context) (*Object, error) {
-	obj := NewObject()
-	if vc == nil {
-		return obj, nil
-	}
-
-	for _, key := range SortedKeys(vc.Versions) {
-		ver := vc.Versions[key]
-
-		match, err := ctx.Filter(ver)
-		// log.Printf("versions(%s) match: %d", ver.ID, match)
-		if err != nil {
-			return nil, err
-		}
-		if match == -1 {
-			continue
-		}
-
-		ctx.DataPush(ver.ID)
-		verObj, err := ver.ToObject(ctx)
-		ctx.DataPop()
-		if err != nil {
-			return nil, err
-		}
-		obj.AddProperty(ver.ID, verObj)
-	}
-
-	return obj, nil
-}
 
 type Version struct {
 	Entity
@@ -64,16 +29,6 @@ type Version struct {
 	ResourceContent  []byte // The raw data
 
 	Data map[string]interface{}
-}
-
-func (v *Version) ToJSON(w io.Writer, jd *JSONData) (bool, error) {
-	fmt.Fprintf(w, "%s{\n", jd.Prefix)
-	fmt.Fprintf(w, "%s  \"id\": %q,\n", jd.Indent, v.ID)
-	fmt.Fprintf(w, "%s  \"name\": %q,\n", jd.Indent, v.Name)
-	fmt.Fprintf(w, "%s  \"epoch\": %d,\n", jd.Indent, v.Epoch)
-	fmt.Fprintf(w, "%s  \"self\": %q", jd.Indent, "...")
-	fmt.Fprintf(w, "\n%s}", jd.Indent)
-	return true, nil
 }
 
 func (v *Version) Set(name string, val any) error {
@@ -111,36 +66,4 @@ func (v *Version) Refresh() error {
 	}
 
 	return nil
-}
-
-func (v *Version) ToObject(ctx *Context) (*Object, error) {
-	obj := NewObject()
-	if v == nil {
-		return obj, nil
-	}
-
-	obj.AddProperty("id", v.ID)
-	v.AddToJsonInner(ctx, obj)
-
-	myURI := ctx.DataURL()
-	mySelf := myURI
-	if mySelf[0] != '#' {
-		mySelf += "?self"
-	}
-
-	contentURI := v.ResourceURL
-	if contentURI == "" {
-		contentURI = myURI
-	}
-
-	obj.AddProperty(v.Resource.ResourceCollection.ResourceModel.Singular+"URI",
-		contentURI)
-	obj.AddProperty("self", mySelf)
-
-	return obj, nil
-}
-
-func (v *Version) AddToJsonInner(ctx *Context, obj *Object) {
-	obj.AddProperty("name", v.Name)
-	obj.AddProperty("epoch", v.Epoch)
 }

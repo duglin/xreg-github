@@ -309,11 +309,13 @@ func (ctx *Context) Filter(obj interface{}) (gotOne int, err error) {
 
 		if objType == "Group" {
 			// Search for RESOURCE names
+			/* sql
 			group := obj.(*Group)
 			if group.GroupCollection.GroupModel.Resources[words[0]] != nil {
 				log.Printf("   Found %q, which is ok", words[0])
 				continue
 			}
+			*/
 			// log.Printf("   Check %q against %q", remainder, filter.Value)
 			match := CheckFieldValue(obj, remainder, filter.Value)
 			if match {

@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	_ "embed"
-	"fmt"
+	// "fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -163,83 +163,118 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	log.VPrintf(2, "%s %s", r.Method, r.URL)
+	log.VPrintf(2, "%s %s", r.Method, r.URL.Path)
+
+	info, err := Reg.ParseRequestPath(r.URL.Path)
+	if err != nil {
+		w.WriteHeader(info.ErrCode)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	log.Printf("root: %q abs: %q what: %s", info.Root, info.Abstract, info.What)
 
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	Reg.NewGet(w)
-	return
-
-	baseURL := fmt.Sprintf("http://%s", r.Host)
-
-	rFlags := &registry.RegistryFlags{
-		Indent:      "  ",
-		InlineAll:   false,
-		InlinePaths: []string(nil),
-		Self:        r.URL.Query().Has("self"),
-		AsDoc:       r.URL.Query().Has("doc"),
-		BaseURL:     baseURL,
-		Filters:     r.URL.Query()["filter"],
-	}
+	info.Registry = Reg
 
 	if r.URL.Query().Has("inline") {
 		for _, value := range r.URL.Query()["inline"] {
-			paths := strings.Split(value, ",")
-			for _, p := range paths {
-				p = strings.TrimSpace(p)
-				if p != "" {
-					rFlags.InlinePaths = append(rFlags.InlinePaths, p)
+			for _, p := range strings.Split(value, ",") {
+				if p == "" {
+					info.Inlines = []string{"*"}
+				} else {
+					if err = info.AddInline(p); err != nil {
+						if err != nil {
+							w.WriteHeader(http.StatusBadRequest)
+							w.Write([]byte(err.Error()))
+							return
+						}
+					}
 				}
 			}
 		}
-		if rFlags.InlinePaths == nil {
-			rFlags.InlineAll = true
-		}
 	}
 
-	res, err := Reg.Get(r.URL.Path, rFlags)
-	if err != nil {
+	if err = Reg.NewGet(w, info); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	if r.URL.Query().Has("html") {
-		w.Header().Add("Content-Type", "text/html")
-	}
+	return
 
-	w.WriteHeader(http.StatusOK)
+	/*
+		baseURL := fmt.Sprintf("http://%s", r.Host)
 
-	if r.URL.Query().Has("html") {
-		start := 0
-		w.Write([]byte("<pre>"))
-		for pos := 0; pos+5 < len(res); pos++ {
-			if res[pos] != '"' || res[pos:pos+5] != `"http` {
-				continue
-			}
-			w.Write([]byte(res[start : pos+1]))
-			end := pos + 1
-			for ; end < len(res) && res[end] != '"'; end++ {
-			}
-			start = end
-			url := res[pos+1 : end]
-			org := url
-			if strings.Index(url, "?") < 0 {
-				url += "?" + r.URL.RawQuery
-			} else {
-				url += "&" + r.URL.RawQuery
-			}
-			//repl := fmt.Sprintf(`<a href="%s">%s</a>`, url, org)
-			//w.Write([]byte(repl))
-			fmt.Fprintf(w, `<a href="%s">%s</a>`, url, org)
+		rFlags := &registry.RegistryFlags{
+			Indent:      "  ",
+			InlineAll:   false,
+			InlinePaths: []string(nil),
+			Self:        r.URL.Query().Has("self"),
+			AsDoc:       r.URL.Query().Has("doc"),
+			BaseURL:     baseURL,
+			Filters:     r.URL.Query()["filter"],
 		}
-		w.Write([]byte(res[start:]))
-	} else {
-		w.Write([]byte(res))
-	}
+
+		if r.URL.Query().Has("inline") {
+			for _, value := range r.URL.Query()["inline"] {
+				paths := strings.Split(value, ",")
+				for _, p := range paths {
+					p = strings.TrimSpace(p)
+					if p != "" {
+						rFlags.InlinePaths = append(rFlags.InlinePaths, p)
+					}
+				}
+			}
+			if rFlags.InlinePaths == nil {
+				rFlags.InlineAll = true
+			}
+		}
+
+		res, err := Reg.Get(r.URL.Path, rFlags)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if r.URL.Query().Has("html") {
+			w.Header().Add("Content-Type", "text/html")
+		}
+
+		w.WriteHeader(http.StatusOK)
+
+		if r.URL.Query().Has("html") {
+			start := 0
+			w.Write([]byte("<pre>"))
+			for pos := 0; pos+5 < len(res); pos++ {
+				if res[pos] != '"' || res[pos:pos+5] != `"http` {
+					continue
+				}
+				w.Write([]byte(res[start : pos+1]))
+				end := pos + 1
+				for ; end < len(res) && res[end] != '"'; end++ {
+				}
+				start = end
+				url := res[pos+1 : end]
+				org := url
+				if strings.Index(url, "?") < 0 {
+					url += "?" + r.URL.RawQuery
+				} else {
+					url += "&" + r.URL.RawQuery
+				}
+				//repl := fmt.Sprintf(`<a href="%s">%s</a>`, url, org)
+				//w.Write([]byte(repl))
+				fmt.Fprintf(w, `<a href="%s">%s</a>`, url, org)
+			}
+			w.Write([]byte(res[start:]))
+		} else {
+			w.Write([]byte(res))
+		}
+	*/
 }
 
 func NoErr(err error) {
@@ -383,6 +418,8 @@ func LoadSample() *registry.Registry {
 	g.Set("name", "end1")
 	g.Set("epoch", 1)
 	g.Set("ext", "ext1")
+	g.Set("tags.stage", "dev")
+	g.Set("tags.stale", "true")
 
 	r := g.FindOrAddResource("defs", "created")
 	v := r.FindOrAddVersion("v1")
@@ -420,8 +457,8 @@ func main() {
 	Reg = DoTests()
 	// Reg.Delete()
 
-	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
-	Reg = LoadSample()
+	Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+	// Reg = LoadSample()
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		Port = tmp

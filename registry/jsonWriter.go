@@ -1,32 +1,33 @@
 package registry
 
 import (
+	"encoding/json"
 	"fmt"
 	// log "github.com/duglin/dlog"
 	"io"
-	"reflect"
+	"io/ioutil"
+	// "reflect"
+	"strings"
 )
 
 type JsonWriter struct {
-	writer         io.Writer
-	indent         string
-	plurals        []string   // used coll names in current branch
-	remainingColls [][]string // [level][remaining coll names on this level]
-	reg            *Registry
+	writer      io.Writer
+	info        *RequestInfo
+	indent      string
+	unusedColls [][]string // [level][remaining coll names on this level]
 
-	results   [][]*any
-	resultPos int
-	Obj       *Obj
+	results   [][]*any // results of DB query
+	resultPos int      // index into results array of current row
+	Obj       *Obj     // Current row in the DB results
 }
 
-func NewJsonWriter(w io.Writer, reg *Registry, results [][]*any) *JsonWriter {
+func NewJsonWriter(w io.Writer, info *RequestInfo, results [][]*any) *JsonWriter {
 	return &JsonWriter{
-		writer:         w,
-		indent:         "",
-		plurals:        make([]string, 4),
-		remainingColls: make([][]string, 4),
-		reg:            reg,
-		results:        results,
+		writer:      w,
+		info:        info,
+		indent:      "",
+		unusedColls: make([][]string, 4),
+		results:     results,
 	}
 }
 
@@ -61,12 +62,12 @@ func (jw *JsonWriter) WriteRegistry() error {
 	regObj := &Obj{
 		Level:  0,
 		Plural: "registries",
-		ID:     jw.reg.ID,
+		ID:     jw.info.Registry.ID,
 		Values: map[string]any{
-			"id":          jw.reg.ID,
-			"name":        jw.reg.Name,
-			"description": jw.reg.Description,
-			"specVersion": jw.reg.SpecVersion,
+			"id":          jw.info.Registry.ID,
+			"name":        jw.info.Registry.Name,
+			"description": jw.info.Registry.Description,
+			"specVersion": jw.info.Registry.SpecVersion,
 			"self":        "...",
 		},
 	}
@@ -79,19 +80,32 @@ func (jw *JsonWriter) WriteRegistry() error {
 	return nil
 }
 
-func (jw *JsonWriter) WriteCollectionHeader(extra string) error {
+func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Obj.Plural
 
-	jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Obj.Plural)
-	count, err := jw.WriteCollection()
-	if err != nil {
-		return err
+	saveWriter := jw.writer
+	saveExtra := extra
+
+	if !jw.info.ShouldInline(jw.Obj.Abstract) {
+		jw.writer = ioutil.Discard
 	}
 
-	jw.Printf(",\n%s\"%sCount\": %d,\n", jw.indent, myPlural, count)
+	jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Obj.Plural)
+	extra = ","
+	count, err := jw.WriteCollection()
+	if err != nil {
+		return "", err
+	}
+
+	if jw.writer == ioutil.Discard {
+		jw.writer = saveWriter
+		extra = saveExtra
+	}
+
+	jw.Printf("%s\n%s\"%sCount\": %d,\n", extra, jw.indent, myPlural, count)
 	jw.Printf("%s\"%sUrl\": %q", jw.indent, myPlural, "...")
 
-	return nil
+	return ",", nil
 }
 
 func (jw *JsonWriter) WriteCollection() (int, error) {
@@ -99,23 +113,26 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 	jw.Indent()
 
 	extra := ""
-	myLevel := jw.Obj.Level
-	myPlural := jw.Obj.Plural
+	myLevel := 0
+	myPlural := ""
 	count := 0
 
 	for jw.Obj != nil {
+		if myLevel == 0 {
+			myLevel = jw.Obj.Level
+			myPlural = jw.Obj.Plural
+		}
 		if jw.Obj.Level > myLevel { // Process a child
 			jw.NextObj()
 			continue
 		}
 
 		if jw.Obj.Level < myLevel || jw.Obj.Plural != myPlural {
-			// Process a new parent or a new sibling collection
+			// Stop on a new parent or a new sibling collection
 			break
 		}
 
-		jw.Printf("%s\n", extra)
-		jw.Printf("%s%q: ", jw.indent, jw.Obj.Values["id"])
+		jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Obj.Values["id"])
 		if err := jw.WriteObject(); err != nil {
 			return count, err
 		}
@@ -131,49 +148,63 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 }
 
 func (jw *JsonWriter) WriteObject() error {
+	if jw.Obj == nil {
+		jw.Printf("{}")
+		return nil
+	}
+
+	var err error
 	extra := ""
 	myLevel := jw.Obj.Level
 
 	jw.Printf("{")
 	jw.Indent()
 
-	keys := []string{"id", "name", "description", "specVersion", "self"}
-	for _, key := range SortedKeys(jw.Obj.Values) {
-		match := false
-		for _, k := range keys {
-			if k == key {
-				match = true
-				break
-			}
-		}
-		if !match {
-			keys = append(keys, key)
-		}
-	}
+	keys := []string{"specVersion", "id", "name", "epoch", "self", "latestId",
+		"latestUrl", "description", "docs", "format", // not "tags"
+		"createdBy", "createdOn", "modifiedBy", "modifiedOn"}
 
+	// Write the well-known attributes first, in order
 	for _, key := range keys {
 		val, ok := jw.Obj.Values[key]
-		if !ok {
+		if ok {
+			buf, _ := json.Marshal(val)
+			jw.Printf("%s\n%s%q: %s", extra, jw.indent, key, string(buf))
+			delete(jw.Obj.Values, key)
+			extra = ","
+		}
+	}
+
+	// Now write all extensions - buffering "tags"
+	tags := map[string]any{}
+	for _, key := range SortedKeys(jw.Obj.Values) {
+		val, _ := jw.Obj.Values[key]
+		if strings.HasPrefix(key, "tags.") {
+			tags[key[5:]] = val
 			continue
 		}
-
-		if reflect.TypeOf(val).Kind() == reflect.String {
-			jw.Printf("%s\n%s%q: %q", extra, jw.indent, key, val)
-		} else {
-			jw.Printf("%s\n%s%q: %v", extra, jw.indent, key, val)
-		}
+		buf, _ := json.Marshal(val)
+		jw.Printf("%s\n%s%q: %s", extra, jw.indent, key, string(buf))
 		extra = ","
 	}
-	if extra != "" {
-		extra += "\n"
+
+	// And finally any tags
+	if len(tags) > 0 {
+		buf, _ := json.MarshalIndent(tags, jw.indent, "  ")
+		jw.Printf("%s\n%s\"tags\": %s", extra, jw.indent, string(buf))
+		extra = ","
 	}
 
-	jw.LoadCollections(myLevel) // load it up
+	if extra != "" {
+		extra += "\n" // just because it looks nicer with a blank line
+	}
+
+	jw.LoadCollections(myLevel) // load the list of current collections
 	jw.NextObj()
 
 	if jw.Obj != nil && jw.Obj.Level > myLevel {
 		extra = jw.WritePreCollections(extra, jw.Obj.Plural, myLevel)
-		if err := jw.WriteCollectionHeader(extra); err != nil {
+		if extra, err = jw.WriteCollectionHeader(extra); err != nil {
 			return err
 		}
 	}
@@ -186,16 +217,12 @@ func (jw *JsonWriter) WriteObject() error {
 }
 
 func (jw *JsonWriter) LoadCollections(level int) {
-	if jw.plurals[level] != "" {
-		return // already loaded
-	}
-
 	names := []string{}
 	if level == 0 {
-		names = SortedKeys(jw.reg.Model.Groups)
+		names = SortedKeys(jw.info.Registry.Model.Groups)
 	} else if level == 1 {
-		groupName := jw.plurals[0]
-		names = SortedKeys(jw.reg.Model.Groups[groupName].Resources)
+		gName, _ := strings.CutSuffix(jw.Obj.Abstract, "/")
+		names = SortedKeys(jw.info.Registry.Model.Groups[gName].Resources)
 	} else if level == 2 {
 		names = []string{"versions"}
 	} else if level == 3 {
@@ -203,15 +230,13 @@ func (jw *JsonWriter) LoadCollections(level int) {
 	} else {
 		panic("Too many levels")
 	}
-	jw.remainingColls[level] = names
+	jw.unusedColls[level] = names
 }
 
 func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int) string {
-	jw.plurals[level] = plural
-
-	for i, collName := range jw.remainingColls[level] {
+	for i, collName := range jw.unusedColls[level] {
 		if collName == plural {
-			jw.remainingColls[level] = jw.remainingColls[level][i+1:]
+			jw.unusedColls[level] = jw.unusedColls[level][i+1:]
 			break
 		}
 		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
@@ -222,13 +247,12 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int
 }
 
 func (jw *JsonWriter) WritePostCollections(extra string, level int) string {
-	for _, collName := range jw.remainingColls[level] {
+	for _, collName := range jw.unusedColls[level] {
 		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
 		jw.Printf("%s\"%sUrl\": \"...\"", jw.indent, collName)
 		extra = ","
 	}
 
-	jw.remainingColls[level] = nil
-	jw.plurals[level] = ""
+	jw.unusedColls[level] = nil
 	return extra
 }
