@@ -449,7 +449,14 @@ type Entity struct {
 	RegistryID string
 	DbID       string
 	Plural     string
+	ID         string
 	Extensions map[string]any
+}
+
+func (e *Entity) Get(name string) any {
+	val, _ := e.Extensions[name]
+	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.ID, name, val)
+	return val
 }
 
 func (e *Entity) sSet(name string, value any) error {

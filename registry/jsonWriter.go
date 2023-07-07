@@ -72,18 +72,23 @@ func (jw *JsonWriter) WriteRegistry() error {
 		ID:     jw.info.Registry.ID,
 		Values: map[string]any{
 			"id":          jw.info.Registry.ID,
-			"name":        jw.info.Registry.Name,
-			"description": jw.info.Registry.Description,
 			"specVersion": jw.info.Registry.SpecVersion,
-			// "self":        jw.info.BaseURL,
 		},
+	}
+	if jw.info.Registry.Name != "" {
+		regObj.Values["name"] = jw.info.Registry.Name
+	}
+	if jw.info.Registry.Description != "" {
+		regObj.Values["description"] = jw.info.Registry.Description
+	}
+	if jw.info.Registry.Docs != "" {
+		regObj.Values["docs"] = jw.info.Registry.Docs
 	}
 
 	jw.Obj = regObj
 	if err := jw.WriteObject(); err != nil {
 		return err
 	}
-	jw.Printf("\n")
 	return nil
 }
 
@@ -172,12 +177,21 @@ func (jw *JsonWriter) WriteObject() error {
 	jw.Printf("{")
 	jw.Indent()
 
-	keys := []string{"specVersion", "id", "name", "epoch", "self", "latestId",
-		"latestUrl", "description", "docs", "format", // not "tags"
+	keys := []string{"specVersion", "id", "name", "2.epoch", "self",
+		"2.latestId", "2.latestUrl", "description", "docs",
+		"format", // not "tags"
 		"createdBy", "createdOn", "modifiedBy", "modifiedOn"}
 
 	// Write the well-known attributes first, in order
 	for _, key := range keys {
+		// Skip keys that are level specific and not for this level
+		if key[0] >= '0' && key[0] <= '3' {
+			if key[0] != ('0' + byte(myLevel)) {
+				continue
+			}
+			key = key[2:] // remove "#."
+		}
+
 		val, ok := jw.Obj.Values[key]
 		if !ok && key == "self" {
 			ok = true
@@ -235,7 +249,10 @@ func (jw *JsonWriter) WriteObject() error {
 func (jw *JsonWriter) LoadCollections(level int) {
 	names := []string{}
 	if level == 0 {
-		names = SortedKeys(jw.info.Registry.Model.Groups)
+		if jw.info.Registry.Model != nil && jw.info.Registry.Model.Groups != nil {
+
+			names = SortedKeys(jw.info.Registry.Model.Groups)
+		}
 	} else if level == 1 {
 		gName, _ := strings.CutSuffix(jw.Obj.Abstract, "/")
 		names = SortedKeys(jw.info.Registry.Model.Groups[gName].Resources)

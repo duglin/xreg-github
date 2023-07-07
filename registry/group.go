@@ -2,27 +2,16 @@ package registry
 
 import (
 	"fmt"
-	// "io"
-	// "strings"
 
 	log "github.com/duglin/dlog"
 )
 
 type Group struct {
 	Entity
+}
 
-	ID          string
-	Name        string
-	Epoch       int
-	Self        string
-	Description string
-	Docs        string
-	Tags        map[string]string
-	Format      string
-	CreatedBy   string
-	CreatedOn   string
-	ModifiedBy  string
-	ModifiedOn  string
+func (g *Group) Set(name string, val any) error {
+	return SetProp(g, name, val)
 }
 
 func (g *Group) Refresh() error {
@@ -45,8 +34,8 @@ func (g *Group) Refresh() error {
 			RegistryID: g.RegistryID,
 			DbID:       g.DbID,
 			Plural:     g.Plural,
+			ID:         g.ID,
 		},
-		ID: g.ID,
 	}
 
 	for result.NextRow() {
@@ -57,13 +46,6 @@ func (g *Group) Refresh() error {
 	}
 
 	return nil
-}
-
-func (g *Group) SetName(val string) error { return g.Set("name", val) }
-func (g *Group) SetEpoch(val int) error   { return g.Set("epoch", val) }
-
-func (g *Group) Set(name string, val any) error {
-	return SetProp(g, name, val)
 }
 
 func (g *Group) FindResource(rType string, id string) *Resource {
@@ -83,9 +65,9 @@ func (g *Group) FindResource(rType string, id string) *Resource {
 					RegistryID: g.RegistryID,
 					DbID:       NotNilString(row[0]),
 					Plural:     rType,
+					ID:         id,
 				},
 				Group: g,
-				ID:    id,
 			}
 			log.VPrintf(3, "Found one: %s", r.DbID)
 		}
@@ -118,9 +100,9 @@ func (g *Group) FindOrAddResource(rType string, id string) *Resource {
 			RegistryID: g.RegistryID,
 			DbID:       NewUUID(),
 			Plural:     rType,
+			ID:         id,
 		},
 		Group: g,
-		ID:    id,
 	}
 
 	err := DoOne(`
@@ -137,5 +119,13 @@ func (g *Group) FindOrAddResource(rType string, id string) *Resource {
 	r.Set(".id", r.ID)
 
 	log.VPrintf(3, "Created new one - dbID: %s", r.DbID)
+	return r
+}
+
+func (g *Group) AddResource(rType string, rID string, vID string) *Resource {
+	r := g.FindOrAddResource(rType, rID)
+	if r != nil {
+		r.FindOrAddVersion("v0")
+	}
 	return r
 }

@@ -2,7 +2,6 @@ package registry
 
 import (
 	"fmt"
-	// "io"
 
 	log "github.com/duglin/dlog"
 )
@@ -10,19 +9,6 @@ import (
 type Version struct {
 	Entity
 	Resource *Resource
-
-	ID          string
-	Name        string
-	Epoch       int
-	Self        string
-	Description string
-	Docs        string
-	Tags        map[string]string
-	Format      string
-	CreatedBy   string
-	CreatedOn   string
-	ModifiedBy  string
-	ModifiedOn  string
 
 	ResourceURL      string // Send a redirect back to client
 	ResourceProxyURL string // The URL to the data, but GET and return data
@@ -54,8 +40,8 @@ func (v *Version) Refresh() error {
 		Entity: Entity{
 			RegistryID: v.RegistryID,
 			DbID:       v.DbID,
+			ID:         v.ID,
 		},
-		ID: v.ID,
 	}
 
 	for result.NextRow() {

@@ -2,7 +2,6 @@ package registry
 
 import (
 	"fmt"
-	// "io"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -11,26 +10,16 @@ import (
 type Resource struct {
 	Entity
 	Group *Group
-
-	ID        string
-	LatestId  string
-	LatestUrl string
-	Self      string
-}
-
-func (r *Resource) Get(name string) any {
-	v, _ := r.Extensions[name]
-	return v
 }
 
 func (r *Resource) Set(name string, val any) error {
+	log.VPrintf(4, "r(%s).Set(%s,%v)", r.ID, name, val)
 	if name[0] == '.' {
 		return SetProp(r, name[1:], val)
 	}
 
 	lName := strings.ToLower(name)
-	if lName == "id" || lName == "latestid" || lName == "latesturl" ||
-		lName == "self" {
+	if lName == "id" || lName == "latestid" || lName == "latesturl" {
 		return SetProp(r, name, val)
 	}
 
@@ -57,8 +46,8 @@ func (r *Resource) Refresh() error {
 		Entity: Entity{
 			RegistryID: r.RegistryID,
 			DbID:       r.DbID,
+			ID:         r.ID,
 		},
-		ID: r.ID,
 	}
 
 	for result.NextRow() {
@@ -87,9 +76,9 @@ func (r *Resource) FindVersion(id string) *Version {
 				Entity: Entity{
 					RegistryID: r.RegistryID,
 					DbID:       NotNilString(row[0]),
+					ID:         id,
 				},
 				Resource: r,
-				ID:       id,
 			}
 			log.VPrintf(3, "Found one: %s", v.DbID)
 		}
@@ -109,11 +98,12 @@ func (r *Resource) FindVersion(id string) *Version {
 }
 
 func (r *Resource) GetLatest() *Version {
-	if r.LatestId == "" {
-		panic("Latest ID is missing")
+	val := r.Get("latestId")
+	if val == nil {
+		panic("No latest is set")
 	}
 
-	return r.FindVersion(r.LatestId)
+	return r.FindVersion(val.(string))
 }
 
 func (r *Resource) FindOrAddVersion(id string) *Version {
@@ -130,9 +120,9 @@ func (r *Resource) FindOrAddVersion(id string) *Version {
 		Entity: Entity{
 			RegistryID: r.RegistryID,
 			DbID:       NewUUID(),
+			ID:         id,
 		},
 		Resource: r,
-		ID:       id,
 	}
 
 	err := DoOne(`
@@ -145,11 +135,10 @@ func (r *Resource) FindOrAddVersion(id string) *Version {
 		log.Printf("Error adding version: %s", err)
 		return nil
 	}
-
 	v.Set("id", id)
 
-	if r.LatestId == "" {
-		r.Set("LatestId", id)
+	if r.Get("latestId") == nil {
+		r.Set("latestId", id)
 	}
 
 	log.VPrintf(3, "Created new one - dbID: %s", v.DbID)

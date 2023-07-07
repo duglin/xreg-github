@@ -108,7 +108,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		// org/version/file
 
 		group := reg.FindOrAddGroup("apiProviders", parts[0])
-		group.SetName(group.ID)
+		group.Set("name", group.ID)
 		group.Set("modifiedBy", "me")
 		group.Set("modifiedAt", "noon")
 		group.Set("epoch", 5)
@@ -132,7 +132,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		res := group.FindOrAddResource("apis", resName)
 
 		g2 := reg.FindOrAddGroup("schemaGroups", parts[0])
-		g2.Set("name", group.Name)
+		g2.Set("name", group.Get("name"))
 		/*
 			r2 := g2.FindOrAddResource("schemas", resName)
 			v2 := r2.FindOrAddVersion(parts[verIndex])
@@ -167,7 +167,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 func handler(w http.ResponseWriter, r *http.Request) {
 	log.VPrintf(2, "%s %s", r.Method, r.URL.Path)
 
-	info, err := Reg.ParseRequestPath(r.URL.Path)
+	info, err := Reg.ParseRequest(r)
 	if err != nil {
 		w.WriteHeader(info.ErrCode)
 		w.Write([]byte(err.Error()))
@@ -177,32 +177,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
-	}
-
-	info.Registry = Reg
-	info.BaseURL = "http://" + r.Host
-
-	if r.URL.Query().Has("inline") {
-		for _, value := range r.URL.Query()["inline"] {
-			for _, p := range strings.Split(value, ",") {
-				if p == "" || p == "*" {
-					info.Inlines = []string{"*"}
-				} else {
-					// if we're not at the root then we need to twiddle
-					// the inline path to add the HTTP Path as a prefix
-					if info.Abstract != "" {
-						p = info.Abstract + "." + p
-					}
-					if err = info.AddInline(p); err != nil {
-						if err != nil {
-							w.WriteHeader(http.StatusBadRequest)
-							w.Write([]byte(err.Error()))
-							return
-						}
-					}
-				}
-			}
-		}
 	}
 
 	var out = io.Writer(w)
@@ -305,11 +279,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	*/
 }
 
-func NoErr(err error) {
+func NoErr(name string, err error) {
 	if err == nil {
 		return
 	}
-	log.Fatalf("%s", err)
+	log.Fatalf("%s: %s", name, err)
 }
 
 func Check(b bool, errStr string) {
@@ -318,37 +292,132 @@ func Check(b bool, errStr string) {
 	}
 }
 
+func CheckGet(reg *registry.Registry, name string, URL string, expected string) {
+	buf := bytes.Buffer{}
+	out := io.Writer(&buf)
+
+	req, err := http.NewRequest("GET", URL, nil)
+	NoErr(name, err)
+	info, err := reg.ParseRequest(req)
+	if err != nil {
+		CheckEqual(err.Error(), expected, name)
+		return
+	}
+	Check(info.ErrCode == 0, name+":info.ec != 0")
+	err = reg.NewGet(out, info)
+	NoErr(name, err)
+	CheckEqual(buf.String(), expected, name)
+}
+
+func CheckEqual(str1 string, str2 string, desc string) {
+	if str1 != str2 {
+		pos := 0
+		for pos < len(str1) && pos < len(str2) && str1[pos] == str2[pos] {
+			pos++
+		}
+
+		log.Fatalf("%s - Output mismatch:\n"+
+			"Expected:\n%s\nGot:\n%s\n\nAt: %#v",
+			desc, str2, str1, str1[:pos])
+	}
+}
+
 func DoTests() *registry.Registry {
 	// Registry stuff
 	reg := &registry.Registry{
 		ID:          "666-1234-1234",
 		BaseURL:     "http://soaphub.org:8585/",
-		Name:        "APIs-guru Registry",
-		Description: "xRegistry view of github.com/APIs-guru/openapi-directory",
+		Name:        "testReg",
+		Description: "A test Reg",
 		SpecVersion: "0.5",
-		Docs:        "https://github.com/duglin/xreg-github",
+		Docs:        "docs-url",
 	}
 
-	// Registry stuff
-	NoErr(registry.NewRegistryFromStruct(reg))
-	NoErr(reg.Refresh())
+	NoErr("new reg", registry.NewRegistryFromStruct(reg))
+	NoErr("reg refresh", reg.Refresh())
 
 	reg1 := &registry.Registry{ID: reg.ID}
-	NoErr(reg1.Refresh())
+	NoErr("reg1 refresh", reg1.Refresh())
 	if registry.ToJSON(reg) != registry.ToJSON(reg1) {
 		log.Fatalf("\nreg : %v\n!=\nreg1: %v", reg, reg1)
 	}
 
 	reg2, err := registry.GetRegistryByName(reg.Name)
-	NoErr(err)
+	NoErr("get reg2", err)
 	Check(registry.ToJSON(reg) == registry.ToJSON(reg2), "reg2!=reg")
+
+	CheckGet(reg, "minimal reg", "http://example.com", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "name": "testReg",
+  "self": "http://example.com/",
+  "description": "A test Reg",
+  "docs": "docs-url"
+}
+`)
+	reg.Description = ""
+	reg.Name = ""
+	reg.Docs = ""
+
+	CheckGet(reg, "reg del props", "http://example.com", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/"
+}
+`)
 
 	// Model stuff
 	gm1, err := reg.AddGroupModel("myGroups", "myGroup", "schema-url")
-	NoErr(err)
+	NoErr("add myGroups2", err)
+
+	CheckGet(reg, "one group model", "http://example.com?inline", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {},
+  "myGroupsCount": 0,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "inline *", "http://example.com?inline=*", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {},
+  "myGroupsCount": 0,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "inline by name", "http://example.com?inline=myGroups", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {},
+  "myGroupsCount": 0,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "no inline", "http://example.com", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroupsCount": 0,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "bad inline", "http://example.com?inline=foo",
+		`Bad inline - path: "foo"`)
+
 	_, err = gm1.AddResourceModel("ress", "res", 5)
-	_, err = gm1.AddResourceModel("ress1", "res1", 0)
-	NoErr(err)
+	NoErr("add ress", err)
 
 	m1 := reg.LoadModel()
 	Check(m1.Groups["myGroups"].Singular == "myGroup", "myGroups.Singular")
@@ -371,20 +440,217 @@ func DoTests() *registry.Registry {
 	g1.Refresh()
 	Check(registry.ToJSON(g1) == registry.ToJSON(g2), "g1.refresh")
 
+	CheckGet(reg, "one group", "http://example.com?inline", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {
+    "g1": {
+      "id": "g1",
+      "name": "g1",
+      "self": "http://example.com/myGroups/g1",
+      "ext1": "extvalue",
+
+      "ress": {},
+      "ressCount": 0,
+      "ressUrl": "http://example.com/myGroups/g1/ress"
+    }
+  },
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "one group no inline", "http://example.com", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
 	// Resource stuff
 	r1 := g1.FindResource("ress", "r1")
 	Check(r1 == nil, "r1 should be nil")
+
+	// Technical this is wrong - we need to create a version at the
+	// same time - TODO
+	// use g.AddResource() instead
 	r1 = g1.FindOrAddResource("ress", "r1")
 	Check(r1 != nil, "r1 should not be nil")
 
+	CheckGet(reg, "one res no inline", "http://example.com?inline", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {
+    "g1": {
+      "id": "g1",
+      "name": "g1",
+      "self": "http://example.com/myGroups/g1",
+      "ext1": "extvalue",
+
+      "ress": {
+        "r1": {
+          "id": "r1",
+          "self": "http://example.com/myGroups/g1/ress/r1",
+
+          "versions": {},
+          "versionsCount": 0,
+          "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+        }
+      },
+      "ressCount": 1,
+      "ressUrl": "http://example.com/myGroups/g1/ress"
+    }
+  },
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "1 res,inline 3 level", "http://example.com?inline=myGroups.ress.versions", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {
+    "g1": {
+      "id": "g1",
+      "name": "g1",
+      "self": "http://example.com/myGroups/g1",
+      "ext1": "extvalue",
+
+      "ress": {
+        "r1": {
+          "id": "r1",
+          "self": "http://example.com/myGroups/g1/ress/r1",
+
+          "versions": {},
+          "versionsCount": 0,
+          "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+        }
+      },
+      "ressCount": 1,
+      "ressUrl": "http://example.com/myGroups/g1/ress"
+    }
+  },
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "1 res,inline 1 level", "http://example.com?inline=myGroups.ress", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {
+    "g1": {
+      "id": "g1",
+      "name": "g1",
+      "self": "http://example.com/myGroups/g1",
+      "ext1": "extvalue",
+
+      "ress": {
+        "r1": {
+          "id": "r1",
+          "self": "http://example.com/myGroups/g1/ress/r1",
+
+          "versionsCount": 0,
+          "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+        }
+      },
+      "ressCount": 1,
+      "ressUrl": "http://example.com/myGroups/g1/ress"
+    }
+  },
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "1 res,inline 1 level", "http://example.com?inline=myGroups", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {
+    "g1": {
+      "id": "g1",
+      "name": "g1",
+      "self": "http://example.com/myGroups/g1",
+      "ext1": "extvalue",
+
+      "ressCount": 1,
+      "ressUrl": "http://example.com/myGroups/g1/ress"
+    }
+  },
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "1 deep", "http://example.com/myGroups?inline", `{
+  "g1": {
+    "id": "g1",
+    "name": "g1",
+    "self": "http://example.com/myGroups/g1",
+    "ext1": "extvalue",
+
+    "ress": {
+      "r1": {
+        "id": "r1",
+        "self": "http://example.com/myGroups/g1/ress/r1",
+
+        "versions": {},
+        "versionsCount": 0,
+        "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+      }
+    },
+    "ressCount": 1,
+    "ressUrl": "http://example.com/myGroups/g1/ress"
+  }
+}
+`)
+
 	// Test setting Resource stuff, not Latest version stuff
-	r1.Set(".name", r1.ID)
-	Check(r1.Extensions["name"] == r1.ID, "r1.Name != r1.ID")
+	r1.Set(".name", "unique")
+	Check(r1.Extensions["name"] == "unique", "r1.Name != unique")
 	r1.Set(".Int", 345)
 	Check(r1.Extensions["Int"] == 345, "r1.Int != 345")
 	r3 := g1.FindResource("ress", "r1")
 	Check(registry.ToJSON(r1) == registry.ToJSON(r3), "r3 != r1")
 	Check(r3.Extensions["Int"] == 345, "r3.Int != 345")
+
+	CheckGet(reg, "r1 props", "http://example.com/myGroups?inline", `{
+  "g1": {
+    "id": "g1",
+    "name": "g1",
+    "self": "http://example.com/myGroups/g1",
+    "ext1": "extvalue",
+
+    "ress": {
+      "r1": {
+        "id": "r1",
+        "name": "unique",
+        "self": "http://example.com/myGroups/g1/ress/r1",
+        "Int": 345,
+
+        "versions": {},
+        "versionsCount": 0,
+        "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+      }
+    },
+    "ressCount": 1,
+    "ressUrl": "http://example.com/myGroups/g1/ress"
+  }
+}
+`)
 
 	// Version stuff
 	v1 := r1.FindVersion("v1")
@@ -402,6 +668,44 @@ func DoTests() *registry.Registry {
 	Check(registry.ToJSON(v1) == registry.ToJSON(v2), "v2 != v1")
 	vlatest := r1.GetLatest()
 	Check(registry.ToJSON(v1) == registry.ToJSON(vlatest), "vlatest != v1")
+
+	CheckGet(reg, "r1 props", "http://example.com/myGroups?inline", `{
+  "g1": {
+    "id": "g1",
+    "name": "g1",
+    "self": "http://example.com/myGroups/g1",
+    "ext1": "extvalue",
+
+    "ress": {
+      "r1": {
+        "id": "r1",
+        "name": "v1",
+        "epoch": 42,
+        "self": "http://example.com/myGroups/g1/ress/r1",
+        "latestId": "v1",
+        "Int": 345,
+        "ext1": "someext",
+        "ext2": 234,
+
+        "versions": {
+          "v1": {
+            "id": "v1",
+            "name": "v1",
+            "self": "http://example.com/myGroups/g1/ress/r1/versions/v1",
+            "epoch": 42,
+            "ext1": "someext",
+            "ext2": 234
+          }
+        },
+        "versionsCount": 1,
+        "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+      }
+    },
+    "ressCount": 1,
+    "ressUrl": "http://example.com/myGroups/g1/ress"
+  }
+}
+`)
 
 	// Test Latest version stuff
 	r1.Set("name", r1.ID)
@@ -486,7 +790,7 @@ func main() {
 	// Reg.Delete()
 
 	Reg = LoadGitRepo("APIs-guru", "openapi-directory")
-	Reg = LoadSample()
+	// Reg = LoadSample()
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		Port = tmp

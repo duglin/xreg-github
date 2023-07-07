@@ -4,7 +4,7 @@ import (
 	// "database/sql"
 	"fmt"
 	"io"
-	// "net/http"
+	"net/http"
 	// "os"
 	// "reflect"
 	"strings"
@@ -114,7 +114,7 @@ func (reg *Registry) Save() error {
 		reg.ID = NewUUID()
 	}
 
-	err := DoOne(`
+	err := Do(`
 		REPLACE INTO Registries(ID,Name,BaseURL,Description,SpecVersion,Docs)
 		VALUES(?,?,?,?,?,?)`,
 		reg.ID, Nullify(reg.Name), Nullify(reg.BaseURL),
@@ -339,8 +339,8 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 					RegistryID: reg.ID,
 					DbID:       NotNilString(row[0]),
 					Plural:     gt,
+					ID:         id,
 				},
-				ID: id,
 			}
 			log.VPrintf(3, "Found one: %s", g.DbID)
 		}
@@ -378,8 +378,8 @@ func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
 			RegistryID: reg.ID,
 			DbID:       NewUUID(),
 			Plural:     gType,
+			ID:         id,
 		},
-		ID: id,
 	}
 
 	err := DoOne(`
@@ -482,13 +482,13 @@ func (info *RequestInfo) AddInline(path string) error {
 		}
 	}
 
-	return fmt.Errorf("Bad inline path: %q", path)
+	return fmt.Errorf("Bad inline - path: %q", path)
 }
 
 func (info *RequestInfo) ShouldInline(objPath string) bool {
 	objPath = strings.Replace(objPath, "/", ".", -1)
 	for _, path := range info.Inlines {
-		log.VPrintf(2, "Inline check: %q in %q ?", objPath, path)
+		log.VPrintf(3, "Inline check: %q in %q ?", objPath, path)
 		if path == "*" || objPath == path || strings.HasPrefix(path, objPath) {
 			return true
 		}
@@ -545,6 +545,9 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 		}
 		err = jw.WriteObject()
 	}
+	if err == nil {
+		jw.Print("\n")
+	}
 
 	return err
 }
@@ -566,10 +569,32 @@ type RequestInfo struct {
 	ErrCode      int
 }
 
-func (reg *Registry) ParseRequestPath(path string) (*RequestInfo, error) {
-	path = strings.Trim(path, " /")
+func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
+	path := strings.Trim(r.URL.Path, " /")
 	info := &RequestInfo{
 		OriginalPath: path,
+		Registry:     reg,
+		BaseURL:      "http://" + r.Host,
+	}
+
+	if r.URL.Query().Has("inline") {
+		for _, value := range r.URL.Query()["inline"] {
+			for _, p := range strings.Split(value, ",") {
+				if p == "" || p == "*" {
+					info.Inlines = []string{"*"}
+				} else {
+					// if we're not at the root then we need to twiddle
+					// the inline path to add the HTTP Path as a prefix
+					if info.Abstract != "" {
+						p = info.Abstract + "." + p
+					}
+					if err := info.AddInline(p); err != nil {
+						info.ErrCode = http.StatusBadRequest
+						return info, err
+					}
+				}
+			}
+		}
 	}
 
 	info.Parts = strings.Split(path, "/")
