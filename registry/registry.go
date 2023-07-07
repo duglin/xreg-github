@@ -422,7 +422,8 @@ func readObj(results [][]*any, index int) (*Obj, int) {
 				Level:    lvl,
 				Plural:   plural,
 				ID:       id,
-				Abstract: NotNilString(row[6]),
+				Path:     NotNilString(row[6]),
+				Abstract: NotNilString(row[7]),
 				Values:   map[string]any{},
 			}
 		} else {
@@ -444,6 +445,7 @@ type Obj struct {
 	Level    int
 	Plural   string
 	ID       string
+	Path     string
 	Abstract string
 	Values   map[string]any
 }
@@ -486,7 +488,7 @@ func (info *RequestInfo) AddInline(path string) error {
 func (info *RequestInfo) ShouldInline(objPath string) bool {
 	objPath = strings.Replace(objPath, "/", ".", -1)
 	for _, path := range info.Inlines {
-		log.VPrintf(3, "Inline check: %q in %q ?", objPath, path)
+		log.VPrintf(2, "Inline check: %q in %q ?", objPath, path)
 		if path == "*" || objPath == path || strings.HasPrefix(path, objPath) {
 			return true
 		}
@@ -498,7 +500,7 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	info.Root = strings.Trim(info.Root, "/")
 
 	query := "SELECT " +
-		"Level, Plural, ID, PropName, PropValue, PropType, Abstract " +
+		"Level, Plural, ID, PropName, PropValue, PropType, Path, Abstract " +
 		"FROM FullTree WHERE RegID=? "
 
 	args := []interface{}{reg.ID}
@@ -529,9 +531,12 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 		err = jw.WriteRegistry()
 	} else if info.What == "Coll" {
 		jw.NextObj()
-		if jw.Obj == nil {
-			return fmt.Errorf("not found\n")
-		}
+		/*
+			if jw.Obj == nil {
+				jw.Print("{}\n")
+				// return fmt.Errorf("not found\n")
+			}
+		*/
 		_, err = jw.WriteCollection()
 	} else if info.What == "Entity" {
 		jw.NextObj()
@@ -546,6 +551,7 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 
 type RequestInfo struct {
 	Registry     *Registry
+	BaseURL      string
 	OriginalPath string
 	Parts        []string
 	Root         string

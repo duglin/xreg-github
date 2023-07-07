@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	// log "github.com/duglin/dlog"
 	"io"
 	"io/ioutil"
@@ -14,6 +15,7 @@ type JsonWriter struct {
 	writer      io.Writer
 	info        *RequestInfo
 	indent      string
+	collPaths   []string   // [level] URL path to the root of Colls
 	unusedColls [][]string // [level][remaining coll names on this level]
 
 	results   [][]*any // results of DB query
@@ -26,9 +28,14 @@ func NewJsonWriter(w io.Writer, info *RequestInfo, results [][]*any) *JsonWriter
 		writer:      w,
 		info:        info,
 		indent:      "",
+		collPaths:   make([]string, 4),
 		unusedColls: make([][]string, 4),
 		results:     results,
 	}
+}
+
+func (jw *JsonWriter) Print(str string) {
+	fmt.Fprint(jw.writer, str)
 }
 
 func (jw *JsonWriter) Printf(format string, args ...any) {
@@ -68,7 +75,7 @@ func (jw *JsonWriter) WriteRegistry() error {
 			"name":        jw.info.Registry.Name,
 			"description": jw.info.Registry.Description,
 			"specVersion": jw.info.Registry.SpecVersion,
-			"self":        "...",
+			// "self":        jw.info.BaseURL,
 		},
 	}
 
@@ -82,6 +89,7 @@ func (jw *JsonWriter) WriteRegistry() error {
 
 func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Obj.Plural
+	myURL := fmt.Sprintf("%s/%s", jw.info.BaseURL, path.Dir(jw.Obj.Path))
 
 	saveWriter := jw.writer
 	saveExtra := extra
@@ -103,7 +111,7 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	}
 
 	jw.Printf("%s\n%s\"%sCount\": %d,\n", extra, jw.indent, myPlural, count)
-	jw.Printf("%s\"%sUrl\": %q", jw.indent, myPlural, "...")
+	jw.Printf("%s\"%sUrl\": %q", jw.indent, myPlural, myURL)
 
 	return ",", nil
 }
@@ -122,6 +130,7 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 			myLevel = jw.Obj.Level
 			myPlural = jw.Obj.Plural
 		}
+
 		if jw.Obj.Level > myLevel { // Process a child
 			jw.NextObj()
 			continue
@@ -142,7 +151,10 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 	}
 
 	jw.Outdent()
-	jw.Printf("\n%s}", jw.indent)
+	if extra != "" {
+		jw.Printf("\n%s", jw.indent)
+	}
+	jw.Print("}")
 
 	return count, nil
 }
@@ -167,6 +179,10 @@ func (jw *JsonWriter) WriteObject() error {
 	// Write the well-known attributes first, in order
 	for _, key := range keys {
 		val, ok := jw.Obj.Values[key]
+		if !ok && key == "self" {
+			ok = true
+			val = fmt.Sprintf("%s/%s", jw.info.BaseURL, jw.Obj.Path)
+		}
 		if ok {
 			buf, _ := json.Marshal(val)
 			jw.Printf("%s\n%s%q: %s", extra, jw.indent, key, string(buf))
@@ -231,6 +247,12 @@ func (jw *JsonWriter) LoadCollections(level int) {
 		panic("Too many levels")
 	}
 	jw.unusedColls[level] = names
+
+	p := jw.Obj.Path + "/"
+	if p == "/" {
+		p = ""
+	}
+	jw.collPaths[level] = p
 }
 
 func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int) string {
@@ -239,8 +261,14 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int
 			jw.unusedColls[level] = jw.unusedColls[level][i+1:]
 			break
 		}
+		p := Path2Abstract(jw.collPaths[level] + collName)
+		if jw.info.ShouldInline(p) {
+			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
+			extra = ","
+		}
 		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
-		jw.Printf("%s\"%sUrl\": \"...\"", jw.indent, collName)
+		jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
+			jw.info.BaseURL, jw.collPaths[level], collName)
 		extra = ","
 	}
 	return extra
@@ -248,11 +276,36 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int
 
 func (jw *JsonWriter) WritePostCollections(extra string, level int) string {
 	for _, collName := range jw.unusedColls[level] {
+		p := Path2Abstract(jw.collPaths[level] + collName)
+		if jw.info.ShouldInline(p) {
+			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
+			extra = ","
+		}
 		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
-		jw.Printf("%s\"%sUrl\": \"...\"", jw.indent, collName)
+		jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
+			jw.info.BaseURL, jw.collPaths[level], collName)
 		extra = ","
 	}
 
+	jw.collPaths[level] = ""
 	jw.unusedColls[level] = nil
 	return extra
+}
+
+func Path2Abstract(path string) string {
+	parts := strings.Split(path, "/")
+	addSlash := strings.HasSuffix(path, "/")
+	res := ""
+	for i, part := range parts {
+		if i%2 == 0 {
+			if res != "" {
+				res += "/"
+			}
+			res += part
+		}
+	}
+	if addSlash {
+		res += "/"
+	}
+	return res
 }

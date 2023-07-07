@@ -2,10 +2,12 @@ package main
 
 import (
 	"archive/tar"
+	"regexp"
+	// "bufio"
 	"bytes"
 	"compress/gzip"
 	_ "embed"
-	// "fmt"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -171,7 +173,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	log.Printf("root: %q abs: %q what: %s", info.Root, info.Abstract, info.What)
 
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -179,13 +180,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	info.Registry = Reg
+	info.BaseURL = "http://" + r.Host
 
 	if r.URL.Query().Has("inline") {
 		for _, value := range r.URL.Query()["inline"] {
 			for _, p := range strings.Split(value, ",") {
-				if p == "" {
+				if p == "" || p == "*" {
 					info.Inlines = []string{"*"}
 				} else {
+					// if we're not at the root then we need to twiddle
+					// the inline path to add the HTTP Path as a prefix
+					if info.Abstract != "" {
+						p = info.Abstract + "." + p
+					}
 					if err = info.AddInline(p); err != nil {
 						if err != nil {
 							w.WriteHeader(http.StatusBadRequest)
@@ -198,10 +205,31 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err = Reg.NewGet(w, info); err != nil {
+	var out = io.Writer(w)
+	buf := bytes.Buffer{}
+
+	if r.URL.Query().Has("html") {
+		out = io.Writer(&buf) // bufio.NewWriter(&buf)
+	}
+
+	err = Reg.NewGet(out, info)
+
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
+	}
+
+	if r.URL.Query().Has("html") {
+		w.Header().Add("Content-Type", "text/html")
+
+		re := regexp.MustCompile(`"(http[^"\n]*?)"`)
+		repl := fmt.Sprintf(`"<a href="$1?%s">$1?%s</a>"`,
+			r.URL.RawQuery, r.URL.RawQuery)
+
+		w.Write([]byte("<pre>\n"))
+		w.Write(re.ReplaceAll(buf.Bytes(), []byte(repl)))
+		w.Write([]byte("</pre>\n"))
 	}
 
 	return
@@ -458,7 +486,7 @@ func main() {
 	// Reg.Delete()
 
 	Reg = LoadGitRepo("APIs-guru", "openapi-directory")
-	// Reg = LoadSample()
+	Reg = LoadSample()
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		Port = tmp
