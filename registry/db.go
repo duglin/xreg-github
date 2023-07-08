@@ -194,15 +194,10 @@ var initDB = `
 	USE registry ;
 
 	CREATE TABLE Registries (
-		ID          VARCHAR(255) NOT NULL,	// User defined
-		"Name"      VARCHAR(64),
-		BaseURL     VARCHAR(255),
-		Description VARCHAR(255),
-		SpecVersion VARCHAR(64),
-		Docs		VARCHAR(255),
+		ID          VARCHAR(255) NOT NULL,	// System ID
+		RegistryID	VARCHAR(255) NOT NULL,	// User defined
 
-		PRIMARY KEY (ID),
-		INDEX(NAME)
+		PRIMARY KEY (ID)
 	);
 
 	CREATE TABLE Tags (
@@ -283,7 +278,7 @@ var initDB = `
 
 	CREATE TABLE Props (
 		RegistryID  VARCHAR(64) NOT NULL,
-		EntityID	VARCHAR(64) NOT NULL,		// Group, Res or Ver System ID
+		EntityID	VARCHAR(64) NOT NULL,		// Reg,Group,Res,Ver System ID
 		PropName	VARCHAR(64) NOT NULL,
 		PropValue	VARCHAR(255),
 		PropType	VARCHAR(64) NOT NULL,
@@ -314,7 +309,18 @@ var initDB = `
 
 
 	CREATE VIEW Entities AS
-	SELECT							// Gather Groups
+	SELECT							// Gather Registries
+		r.ID AS RegID,
+		0 AS Level,
+		'registries' AS Plural,
+		NULL AS ParentID,
+		r.ID AS eID,
+		r.RegistryID AS ID,
+		NULL AS Abstract,
+		NULL AS Path
+	FROM Registries AS r
+
+	UNION SELECT							// Gather Groups
 		g.RegistryID AS RegID,
 		1 AS Level,
 		m.Plural AS Plural,
@@ -460,7 +466,35 @@ func (e *Entity) Get(name string) any {
 }
 
 func (e *Entity) sSet(name string, value any) error {
-	return SetProp(e, name, value)
+	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, value)
+	defer log.VPrintf(3, "<Exit SetProp")
+
+	if e.DbID == "" {
+		log.Fatalf("DbID should not be empty")
+	}
+	if e.RegistryID == "" {
+		log.Fatalf("RegistryID should not be empty")
+	}
+
+	var err error
+	if value == nil {
+		err = Do(`DELETE FROM Props WHERE EntityID=? and PropName=?`,
+			e.DbID, name)
+	} else {
+		err = Do(`
+			REPLACE INTO Props( 
+				RegistryID, EntityID, PropName, PropValue, PropType)
+			VALUES( ?,?,?,?,? )`,
+			e.RegistryID, e.DbID, name, value,
+			reflect.ValueOf(value).Type().Kind())
+	}
+
+	if err != nil {
+		log.Printf("Error updating prop(%s/%v): %s", name, value, err)
+		return fmt.Errorf("Error updating prop(%s/%v): %s", name, value, err)
+	}
+	return nil
+	// return SetProp(e, name, value)
 }
 
 func SetProp(entity any, name string, val any) error {
@@ -470,7 +504,7 @@ func SetProp(entity any, name string, val any) error {
 	eField := reflect.ValueOf(entity).Elem().FieldByName("Entity")
 	e := (*Entity)(nil)
 	if !eField.IsValid() {
-		log.Fatalf("Passing a non-entity to SetProp: %#v", entity)
+		panic(fmt.Sprintf("Passing a non-entity to SetProp: %#v", entity))
 		// e = entity.(*Entity)
 	} else {
 		e = eField.Addr().Interface().(*Entity)

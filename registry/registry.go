@@ -25,16 +25,10 @@ type RegistryFlags struct {
 }
 
 type Registry struct {
+	Entity
 	BaseURL      string
 	Model        *Model
 	GenericModel *ModelElement
-
-	ID          string
-	Name        string
-	Description string
-	SpecVersion string
-	Docs        string
-	Tags        map[string]string
 }
 
 var Registries = map[string]*Registry{}
@@ -44,16 +38,30 @@ func NewRegistry(id string) (*Registry, error) {
 		id = NewUUID()
 	}
 
-	if err := DoOne("INSERT INTO Registries(ID) VALUES(?)", id); err != nil {
+	dbID := NewUUID()
+	err := DoOne(`
+		INSERT INTO Registries(ID, RegistryID)
+		VALUES(?,?)`, dbID, id)
+	if err != nil {
 		return nil, err
 	}
 
 	reg := &Registry{
-		ID: id,
+		Entity: Entity{
+			RegistryID: dbID,
+			DbID:       dbID,
+			Plural:     "registries",
+			ID:         id,
+		},
 	}
+	reg.Set("id", reg.ID)
 	Registries[id] = reg
 
 	return reg, nil
+}
+
+func (reg *Registry) Set(name string, val any) error {
+	return SetProp(reg, name, val)
 }
 
 func Nullify(str string) any {
@@ -63,67 +71,50 @@ func Nullify(str string) any {
 	return str
 }
 
-func NewRegistryFromStruct(reg *Registry) error {
-	log.VPrintf(3, "In NewRegistryFromStruct: %#v", reg)
-	Registries[reg.ID] = reg
-	return reg.Save()
-}
-
 func (reg *Registry) Delete() error {
 	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.ID)
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
 
-	return DoOne(`DELETE FROM Registries WHERE ID=?`, reg.ID)
+	return DoOne(`DELETE FROM Registries WHERE ID=?`, reg.DbID)
 }
 
 func (reg *Registry) Refresh() error {
 	log.VPrintf(3, ">Enter: Reg.Refresh(%s)", reg.ID)
 	defer log.VPrintf(3, "<Exit: Reg.Refresh")
 
-	if reg.ID == "" {
+	if reg.DbID == "" {
 		log.Printf("Can't refresh a DB that hasn't been saved")
 		return fmt.Errorf("Can't refresh a DB that hasn't been saved")
 	}
 
-	result, err := QueryRow(`
-		SELECT COALESCE(Name,'') as Name,
-			   COALESCE(BaseURL,'') as BaseURL,
-		       COALESCE(Description,'') as Description,
-			   COALESCE(SpecVersion,'') as SpecVersion,
-			   COALESCE(Docs,'') as Docs
-		FROM Registries WHERE ID=? `, reg.ID)
+	result, err := Query(`
+		SELECT PropName, PropValue, PropType
+		FROM Props WHERE EntityID=? `,
+		reg.DbID)
+	defer result.Close()
 
 	if err != nil {
-		log.Printf("Error refreshing reg: %s", err)
-		return err
+		log.Printf("Error refreshing Registry(%s): %s", reg.ID, err)
+		return fmt.Errorf("Error refreshing Registry(%s): %s", reg.ID, err)
 	}
 
-	if result != nil {
-		reg.Name = NotNilString(result.Data[0])
-		reg.BaseURL = NotNilString(result.Data[1])
-		reg.Description = NotNilString(result.Data[2])
-		reg.SpecVersion = NotNilString(result.Data[3])
-		reg.Docs = NotNilString(result.Data[4])
+	*reg = Registry{ // Erase all existing properties
+		Entity: Entity{
+			RegistryID: reg.DbID,
+			DbID:       reg.DbID,
+			Plural:     reg.Plural,
+			ID:         reg.ID,
+		},
+	}
+
+	for result.NextRow() {
+		name := NotNilString(result.Data[0])
+		val := NotNilString(result.Data[1])
+		propType := NotNilString(result.Data[2])
+		SetField(reg, name, &val, propType)
 	}
 
 	return nil
-}
-
-func (reg *Registry) Save() error {
-	if reg.ID == "" {
-		reg.ID = NewUUID()
-	}
-
-	err := Do(`
-		REPLACE INTO Registries(ID,Name,BaseURL,Description,SpecVersion,Docs)
-		VALUES(?,?,?,?,?,?)`,
-		reg.ID, Nullify(reg.Name), Nullify(reg.BaseURL),
-		Nullify(reg.Description), Nullify(reg.SpecVersion), Nullify(reg.Docs))
-	if err != nil {
-		return err
-	}
-
-	return reg.Refresh()
 }
 
 func (reg *Registry) AddGroupModel(plural string, singular string, schema string) (*GroupModel, error) {
@@ -144,7 +135,7 @@ func (reg *Registry) AddGroupModel(plural string, singular string, schema string
 			SchemaURL,
 			Versions)
 		VALUES(?,?,?,?,?,?,?) `,
-		mID, reg.ID, nil, plural, singular, Nullify(schema), 0)
+		mID, reg.DbID, nil, plural, singular, Nullify(schema), 0)
 	if err != nil {
 		log.Printf("Error inserting group(%s): %s", plural, err)
 		return nil, err
@@ -173,7 +164,9 @@ func (reg *Registry) AddGroupModel(plural string, singular string, schema string
 
 func GetRegistryByID(id string) (*Registry, error) {
 	reg := &Registry{
-		ID: id,
+		Entity: Entity{
+			ID: id,
+		},
 	}
 	err := reg.Refresh()
 	if err != nil {
@@ -183,69 +176,44 @@ func GetRegistryByID(id string) (*Registry, error) {
 	return reg, err
 }
 
-func GetRegistryByName(name string) (*Registry, error) {
-	result, err := QueryRow(`
-		SELECT ID,
-			   COALESCE(Name,'') as Name,
-			   COALESCE(BaseURL,'') as BaseURL,
-		       COALESCE(Description,'') as Description,
-			   COALESCE(SpecVersion,'') as SpecVersion,
-			   COALESCE(Docs,'') as Docs
-		FROM Registries WHERE Name=? `, name)
+func FindRegistry(id string) (*Registry, error) {
+	log.VPrintf(3, ">Enter: FindRegistry(%s)", id)
+	defer log.VPrintf(3, "<Exit: FindRegistry")
+
+	results, err := NewQuery(`
+		SELECT r.ID, p.PropName, p.PropValue, p.PropType
+		FROM Registries as r LEFT JOIN Props AS p ON (p.EntityID=r.ID)
+		WHERE r.RegistryID=?`, id)
+
 	if err != nil {
 		return nil, err
 	}
 
-	reg := &Registry{
-		ID:          NotNilString(result.Data[0]),
-		Name:        NotNilString(result.Data[1]),
-		BaseURL:     NotNilString(result.Data[2]),
-		Description: NotNilString(result.Data[3]),
-		SpecVersion: NotNilString(result.Data[4]),
-		Docs:        NotNilString(result.Data[5]),
+	reg := (*Registry)(nil)
+	for _, row := range results {
+		if reg == nil {
+			reg = &Registry{
+				Entity: Entity{
+					RegistryID: NotNilString(row[0]),
+					DbID:       NotNilString(row[0]),
+					Plural:     "registries",
+					ID:         id,
+				},
+			}
+			log.VPrintf(3, "Found one: %s", reg.DbID)
+		}
+		if *row[1] != nil { // We have Props
+			name := NotNilString(row[1])
+			val := NotNilString(row[2])
+			propType := NotNilString(row[3])
+			SetField(reg, name, &val, propType)
+		}
 	}
-	Registries[reg.ID] = reg
+
+	if reg == nil {
+		log.VPrintf(3, "None found")
+	}
 	return reg, nil
-}
-
-func (reg *Registry) SetName(val string) error {
-	err := DoOne("UPDATE Registries SET Name=? WHERE ID=?", val, reg.ID)
-	if err == nil {
-		reg.Name = val
-	}
-	return err
-}
-
-func (reg *Registry) SetBaseURL(val string) error {
-	err := DoOne("UPDATE Registries SET BaseURL=? WHERE ID=?", val, reg.ID)
-	if err == nil {
-		reg.BaseURL = val
-	}
-	return err
-}
-
-func (reg *Registry) SetDescription(val string) error {
-	err := DoOne("UPDATE Registries SET Description=? WHERE ID=?", val, reg.ID)
-	if err == nil {
-		reg.Description = val
-	}
-	return err
-}
-
-func (reg *Registry) SetSpecVersion(val string) error {
-	err := DoOne("UPDATE Registries SET SpecVersion=? WHERE ID=?", val, reg.ID)
-	if err == nil {
-		reg.SpecVersion = val
-	}
-	return err
-}
-
-func (reg *Registry) SetDocs(val string) error {
-	err := DoOne("UPDATE Registries SET Docs=? WHERE ID=?", val, reg.ID)
-	if err == nil {
-		reg.Docs = val
-	}
-	return err
 }
 
 func (reg *Registry) FindGroupModel(gTypePlural string) *GroupModel {
@@ -271,7 +239,7 @@ func (reg *Registry) LoadModel() *Model {
 			Versions
 		FROM ModelEntities
 		WHERE RegistryID=?
-		ORDER BY ParentID ASC`, reg.ID)
+		ORDER BY ParentID ASC`, reg.DbID)
 	defer result.Close()
 
 	if err != nil {
@@ -336,7 +304,7 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 		if g == nil {
 			g = &Group{
 				Entity: Entity{
-					RegistryID: reg.ID,
+					RegistryID: reg.DbID,
 					DbID:       NotNilString(row[0]),
 					Plural:     gt,
 					ID:         id,
@@ -375,7 +343,7 @@ func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
 
 	g = &Group{
 		Entity: Entity{
-			RegistryID: reg.ID,
+			RegistryID: reg.DbID,
 			DbID:       NewUUID(),
 			Plural:     gType,
 			ID:         id,
@@ -385,7 +353,7 @@ func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
 	err := DoOne(`
 			INSERT INTO "Groups"(ID, RegistryID, GroupID, ModelID,Path,Abstract)
 			SELECT ?,?,?,ID,?,? FROM ModelEntities WHERE Plural=?`,
-		g.DbID, reg.ID, g.ID, gType+"/"+g.ID, gType, gType)
+		g.DbID, reg.DbID, g.ID, gType+"/"+g.ID, gType, gType)
 
 	if err != nil {
 		log.Printf("Error adding group: %s", err)
@@ -503,7 +471,7 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 		"Level, Plural, ID, PropName, PropValue, PropType, Path, Abstract " +
 		"FROM FullTree WHERE RegID=? "
 
-	args := []interface{}{reg.ID}
+	args := []interface{}{reg.DbID}
 
 	if info.What != "Registry" {
 		p := strings.Join(info.Parts, "/")

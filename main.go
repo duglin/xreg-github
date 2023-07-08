@@ -51,18 +51,15 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	gzf, _ := gzip.NewReader(tarStream)
 	reader := tar.NewReader(gzf)
 
-	reg := &registry.Registry{
-		ID:          "123-1234-1234",
-		BaseURL:     "http://soaphub.org:8585/",
-		Name:        "APIs-guru Registry",
-		Description: "xRegistry view of github.com/APIs-guru/openapi-directory",
-		SpecVersion: "0.5",
-		Docs:        "https://github.com/duglin/xreg-github",
-	}
-	err := registry.NewRegistryFromStruct(reg)
+	reg, err := registry.NewRegistry("123-4567-3456")
 	registry.ErrFatalf(err, "Error creating new registry: %s", err)
 	// log.VPrintf(3, "New registry:\n%#v", reg)
 
+	reg.Set("BaseURL", "http://soaphub.org:8585/")
+	reg.Set("name", "APIs-guru Registry")
+	reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory")
+	reg.Set("specVersion", "0.5")
+	reg.Set("docs", "https://github.com/duglin/xreg-github")
 	err = reg.Refresh()
 	registry.ErrFatalf(err, "Error refeshing registry: %s", err)
 	// log.VPrintf(3, "New registry:\n%#v", reg)
@@ -324,25 +321,25 @@ func CheckEqual(str1 string, str2 string, desc string) {
 
 func DoTests() *registry.Registry {
 	// Registry stuff
-	reg := &registry.Registry{
-		ID:          "666-1234-1234",
-		BaseURL:     "http://soaphub.org:8585/",
-		Name:        "testReg",
-		Description: "A test Reg",
-		SpecVersion: "0.5",
-		Docs:        "docs-url",
-	}
-
-	NoErr("new reg", registry.NewRegistryFromStruct(reg))
+	reg, err := registry.NewRegistry("666-1234-1234")
+	NoErr("new reg", err)
 	NoErr("reg refresh", reg.Refresh())
 
-	reg1 := &registry.Registry{ID: reg.ID}
+	// reg.Set("baseURL", "http://soaphub.org:8585")
+	reg.Set("name", "testReg")
+	reg.Set("description", "A test Reg")
+	reg.Set("specVersion", "0.5")
+	reg.Set("docs", "docs-url")
+
+	reg1, err := registry.FindRegistry(reg.ID)
+	NoErr("didn't find reg1", err)
+	Check(reg1 != nil, "reg1 is nil")
 	NoErr("reg1 refresh", reg1.Refresh())
 	if registry.ToJSON(reg) != registry.ToJSON(reg1) {
 		log.Fatalf("\nreg : %v\n!=\nreg1: %v", reg, reg1)
 	}
 
-	reg2, err := registry.GetRegistryByName(reg.Name)
+	reg2, err := registry.FindRegistry(reg.ID)
 	NoErr("get reg2", err)
 	Check(registry.ToJSON(reg) == registry.ToJSON(reg2), "reg2!=reg")
 
@@ -355,9 +352,9 @@ func DoTests() *registry.Registry {
   "docs": "docs-url"
 }
 `)
-	reg.Description = ""
-	reg.Name = ""
-	reg.Docs = ""
+	reg.Set("description", nil)
+	reg.Set("name", nil)
+	reg.Set("docs", nil)
 
 	CheckGet(reg, "reg del props", "http://example.com", `{
   "specVersion": "0.5",
@@ -724,16 +721,14 @@ func DoTests() *registry.Registry {
 }
 
 func LoadSample() *registry.Registry {
-	reg := &registry.Registry{
-		ID:          "987",
-		BaseURL:     "http://soaphub.org:8585/",
-		Name:        "Test Registry",
-		Description: "A test reg",
-		SpecVersion: "0.5",
-		Docs:        "https://github.com/duglin/xreg-github",
-	}
-	err := registry.NewRegistryFromStruct(reg)
+	reg, err := registry.NewRegistry("987")
 	ErrFatalf(err, "Error creating new registry: %s", err)
+
+	reg.Set("BaseURL", "http://soaphub.org:8585/")
+	reg.Set("name", "Test Registry")
+	reg.Set("description", "A test reg")
+	reg.Set("specVersion", "0.5")
+	reg.Set("docs", "https://github.com/duglin/xreg-github")
 
 	gm, _ := reg.AddGroupModel("agroups", "group", "")
 	_, err = gm.AddResourceModel("ress", "res", 2)

@@ -61,7 +61,7 @@ func (g *GroupModel) AddResourceModel(plural string, singular string, versions i
 			SchemaURL,
 			Versions)
 		VALUES(?,?,?,?,?,?,?) `,
-		mID, g.Registry.ID, g.ID, plural, singular, nil, versions)
+		mID, g.Registry.DbID, g.ID, plural, singular, nil, versions)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", plural, err)
 		return nil, err

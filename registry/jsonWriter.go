@@ -66,26 +66,30 @@ func (jw *JsonWriter) NextObj() *Obj {
 }
 
 func (jw *JsonWriter) WriteRegistry() error {
-	regObj := &Obj{
-		Level:  0,
-		Plural: "registries",
-		ID:     jw.info.Registry.ID,
-		Values: map[string]any{
-			"id":          jw.info.Registry.ID,
-			"specVersion": jw.info.Registry.SpecVersion,
-		},
-	}
-	if jw.info.Registry.Name != "" {
-		regObj.Values["name"] = jw.info.Registry.Name
-	}
-	if jw.info.Registry.Description != "" {
-		regObj.Values["description"] = jw.info.Registry.Description
-	}
-	if jw.info.Registry.Docs != "" {
-		regObj.Values["docs"] = jw.info.Registry.Docs
-	}
+	/*
+		regObj := &Obj{
+			Level:  0,
+			Plural: "registries",
+			ID:     jw.info.Registry.ID,
+			Values: map[string]any{
+				"id":          jw.info.Registry.ID,
+				"specVersion": jw.info.Registry.SpecVersion,
+			},
+		}
+		if jw.info.Registry.Name != "" {
+			regObj.Values["name"] = jw.info.Registry.Name
+		}
+		if jw.info.Registry.Description != "" {
+			regObj.Values["description"] = jw.info.Registry.Description
+		}
+		if jw.info.Registry.Docs != "" {
+			regObj.Values["docs"] = jw.info.Registry.Docs
+		}
 
-	jw.Obj = regObj
+		jw.Obj = regObj
+	*/
+	jw.NextObj()
+
 	if err := jw.WriteObject(); err != nil {
 		return err
 	}
