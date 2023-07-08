@@ -170,11 +170,11 @@ var orderedProps = []struct {
 
 			if strings.HasPrefix(key, "tags.") {
 				val, _ := jw.Obj.Values[key]
-				buf, _ := json.Marshal(val)
 				if res == nil {
 					res = map[string]string{}
 				}
-				res[key] = string(buf)
+				// Convert it to a string per the spec
+				res[key] = fmt.Sprintf("%v", val)
 				// Technically we shouldn't remove it but for now it's safe
 				delete(jw.Obj.Values, key)
 			}

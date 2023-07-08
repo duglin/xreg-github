@@ -303,6 +303,10 @@ func CheckGet(reg *registry.Registry, name string, URL string, expected string) 
 	}
 	Check(info.ErrCode == 0, name+":info.ec != 0")
 	err = reg.NewGet(out, info)
+	if err != nil {
+		CheckEqual(err.Error(), expected, name)
+		return
+	}
 	NoErr(name, err)
 	CheckEqual(buf.String(), expected, name)
 }
@@ -875,6 +879,31 @@ func DoTests() *registry.Registry {
 	Check(registry.ToJSON(r1) == registry.ToJSON(r2), "r2 != r1")
 	Check(r1.FindVersion("v3") == nil, "v3 should be nil")
 	Check(r2.FindVersion("v3") == nil, "v3 should be nil")
+
+	CheckGet(reg, "v3 missing",
+		"http://example.com/myGroups/g1/ress/r1/versions/v3",
+		"not found\n")
+
+	// Test tags
+	v1.Set("tags.stage", "dev")
+	v1.Set("tags.stale", "true")
+	v1.Set("tags.int", 3)
+
+	CheckGet(reg, "v2.tags",
+		"http://example.com/myGroups/g1/ress/r1/versions/v1", `{
+  "id": "v1",
+  "name": "r1",
+  "epoch": 68,
+  "self": "http://example.com/myGroups/g1/ress/r1/versions/v1",
+  "tags": {
+    "tags.int": "3",
+    "tags.stage": "dev",
+    "tags.stale": "true"
+  },
+  "ext1": "someext",
+  "ext2": 123
+}
+`)
 
 	log.Printf("ALL TESTS PASSED")
 	// reg.Delete()
