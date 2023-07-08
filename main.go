@@ -412,7 +412,7 @@ func DoTests() *registry.Registry {
 `)
 
 	CheckGet(reg, "bad inline", "http://example.com?inline=foo",
-		`Bad inline - path: "foo"`)
+		`Invalid 'inline' value: "foo"`)
 
 	_, err = gm1.AddResourceModel("ress", "res", 5, true, true)
 	NoErr("add ress", err)
@@ -717,6 +717,58 @@ func DoTests() *registry.Registry {
 }
 `)
 
+	CheckGet(reg, "1 deep+2 level", "http://example.com/myGroups?inline=ress.versions", `{
+  "g1": {
+    "id": "g1",
+    "name": "g1",
+    "self": "http://example.com/myGroups/g1",
+    "ext1": "extvalue",
+
+    "res2sCount": 0,
+    "res2sUrl": "http://example.com/myGroups/g1/res2s",
+    "ress": {
+      "r1": {
+        "id": "r1",
+        "self": "http://example.com/myGroups/g1/ress/r1",
+
+        "versions": {},
+        "versionsCount": 0,
+        "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+      }
+    },
+    "ressCount": 1,
+    "ressUrl": "http://example.com/myGroups/g1/ress"
+  }
+}
+`)
+
+	CheckGet(reg, "1 deep+1 level", "http://example.com/myGroups?inline=ress", `{
+  "g1": {
+    "id": "g1",
+    "name": "g1",
+    "self": "http://example.com/myGroups/g1",
+    "ext1": "extvalue",
+
+    "res2sCount": 0,
+    "res2sUrl": "http://example.com/myGroups/g1/res2s",
+    "ress": {
+      "r1": {
+        "id": "r1",
+        "self": "http://example.com/myGroups/g1/ress/r1",
+
+        "versionsCount": 0,
+        "versionsUrl": "http://example.com/myGroups/g1/ress/r1/versions"
+      }
+    },
+    "ressCount": 1,
+    "ressUrl": "http://example.com/myGroups/g1/ress"
+  }
+}
+`)
+
+	CheckGet(reg, "1 deep+bad", "http://example.com/myGroups?inline=foo",
+		`Invalid 'inline' value: "foo"`)
+
 	// Test setting Resource stuff, not Latest version stuff
 	r1.Set(".name", "unique")
 	Check(r1.Extensions["name"] == "unique", "r1.Name != unique")
@@ -893,7 +945,7 @@ func main() {
 	Reg = DoTests()
 	// Reg.Delete()
 
-	Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
 	// Reg = LoadSample()
 
 	if tmp := os.Getenv("PORT"); tmp != "" {

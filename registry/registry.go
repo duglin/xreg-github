@@ -390,7 +390,12 @@ func (info *RequestInfo) AddInline(path string) error {
 		}
 	}
 
-	return fmt.Errorf("Bad inline - path: %q", path)
+	// Remove Abstract value just to print a nicer error message
+	if info.Abstract != "" && strings.HasPrefix(path, info.Abstract) {
+		path = path[len(info.Abstract)+1:]
+	}
+
+	return fmt.Errorf("Invalid 'inline' value: %q", path)
 }
 
 func (info *RequestInfo) ShouldInline(objPath string) bool {
@@ -489,6 +494,12 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 		ShowModel:    r.URL.Query().Has("model"),
 	}
 
+	err := info.ParseRequestURL()
+	if err != nil {
+		info.ErrCode = http.StatusBadRequest
+		return info, err
+	}
+
 	if r.URL.Query().Has("inline") {
 		for _, value := range r.URL.Query()["inline"] {
 			for _, p := range strings.Split(value, ",") {
@@ -509,18 +520,23 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 		}
 	}
 
+	return info, nil
+}
+
+func (info *RequestInfo) ParseRequestURL() error {
+	path := strings.Trim(info.OriginalPath, " /")
 	info.Parts = strings.Split(path, "/")
 
 	if len(info.Parts) == 1 && info.Parts[0] == "" {
 		info.Parts = nil
 		info.What = "Registry"
-		return info, nil
+		return nil
 	}
 
-	group := reg.Model.Groups[info.Parts[0]]
+	group := info.Registry.Model.Groups[info.Parts[0]]
 	if group == nil && (info.Parts[0] != "model" || len(info.Parts) > 1) {
 		info.ErrCode = 404
-		return info, fmt.Errorf("Unknown Group type: %q", info.Parts[0])
+		return fmt.Errorf("Unknown Group type: %q", info.Parts[0])
 	}
 	info.GroupType = info.Parts[0]
 	info.Root += info.Parts[0]
@@ -528,20 +544,20 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 
 	if len(info.Parts) == 1 {
 		info.What = "Coll"
-		return info, nil
+		return nil
 	}
 
 	info.GroupID = info.Parts[1]
 	info.Root += "/" + info.Parts[1]
 	if len(info.Parts) == 2 {
 		info.What = "Entity"
-		return info, nil
+		return nil
 	}
 
 	res := group.Resources[info.Parts[2]]
 	if res == nil {
 		info.ErrCode = 404
-		return info, fmt.Errorf("Unknown Resource type: %q", info.Parts[0])
+		return fmt.Errorf("Unknown Resource type: %q", info.Parts[0])
 	}
 	info.ResourceType = info.Parts[2]
 	info.Root += "/" + info.Parts[2]
@@ -549,25 +565,25 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 
 	if len(info.Parts) == 3 {
 		info.What = "Coll"
-		return info, nil
+		return nil
 	}
 
 	info.ResourceID = info.Parts[3]
 	info.Root += "/" + info.Parts[3]
 	if len(info.Parts) == 4 {
 		info.What = "Entity"
-		return info, nil
+		return nil
 	}
 
 	if info.Parts[4] != "versions" {
 		info.ErrCode = 404
-		return info, fmt.Errorf("Expected \"versions\", got: %q", info.Parts[4])
+		return fmt.Errorf("Expected \"versions\", got: %q", info.Parts[4])
 	}
 	info.Root += "/versions"
 	info.Abstract += "/versions"
 	if len(info.Parts) == 5 {
 		info.What = "Coll"
-		return info, nil
+		return nil
 	}
 
 	info.VersionID = info.Parts[5]
@@ -575,9 +591,9 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 
 	if len(info.Parts) == 6 {
 		info.What = "Entity"
-		return info, nil
+		return nil
 	}
 
 	info.ErrCode = 404
-	return info, fmt.Errorf("Uknown resource path: %q", path)
+	return fmt.Errorf("Uknown resource path: %q", path)
 }
