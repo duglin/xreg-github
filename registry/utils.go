@@ -16,6 +16,20 @@ func NewUUID() string {
 	return uuid.NewString()[:8]
 }
 
+func IsNil(a any) bool {
+	val := reflect.ValueOf(a)
+	if !val.IsValid() {
+		return true
+	}
+	switch val.Kind() {
+	case reflect.Ptr, reflect.Slice, reflect.Map,
+		reflect.Func, reflect.Interface:
+
+		return val.IsNil()
+	}
+	return false
+}
+
 func NotNilString(val *any) string {
 	if val == nil || *val == nil {
 		return ""
@@ -32,6 +46,14 @@ func NotNilInt(val *any) int {
 
 	b := (*val).(int64)
 	return int(b)
+}
+
+func NotNilBool(val *any) bool {
+	if val == nil || *val == nil {
+		return false
+	}
+
+	return ((*val).(int64)) == 1
 }
 
 func JSONEscape(obj interface{}) string {

@@ -1,8 +1,7 @@
 package registry
 
 import (
-	"fmt"
-	"strings"
+	// "fmt"
 
 	log "github.com/duglin/dlog"
 )
@@ -14,50 +13,16 @@ type Resource struct {
 
 func (r *Resource) Set(name string, val any) error {
 	log.VPrintf(4, "r(%s).Set(%s,%v)", r.ID, name, val)
-	if name[0] == '.' {
+	if name[0] == '.' { // Force it to be on the Resource, not latest Version
 		return SetProp(r, name[1:], val)
 	}
 
-	lName := strings.ToLower(name)
-	if lName == "id" || lName == "latestid" || lName == "latesturl" {
+	if name == "id" || name == "latestId" || name == "latestUrl" {
 		return SetProp(r, name, val)
 	}
 
 	v := r.GetLatest()
 	return SetProp(v, name, val)
-}
-
-func (r *Resource) Refresh() error {
-	log.VPrintf(3, ">Enter: resource.Refresh(%s)", r.ID)
-	defer log.VPrintf(3, "<Exit: resource.Refresh")
-
-	result, err := Query(`
-	        SELECT PropName, PropValue, PropType
-	        FROM Props WHERE EntityID=? `,
-		r.DbID)
-	defer result.Close()
-
-	if err != nil {
-		log.Printf("Error refreshing Resource(%s): %s", r.ID, err)
-		return fmt.Errorf("Error refreshing Resource(%s): %s", r.ID, err)
-	}
-
-	*r = Resource{ // Erase all existing properties
-		Entity: Entity{
-			RegistryID: r.RegistryID,
-			DbID:       r.DbID,
-			ID:         r.ID,
-		},
-	}
-
-	for result.NextRow() {
-		name := NotNilString(result.Data[0])
-		val := NotNilString(result.Data[1])
-		propType := NotNilString(result.Data[2])
-		SetField(r, name, &val, propType)
-	}
-
-	return nil
 }
 
 func (r *Resource) FindVersion(id string) *Version {

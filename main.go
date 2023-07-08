@@ -55,7 +55,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	registry.ErrFatalf(err, "Error creating new registry: %s", err)
 	// log.VPrintf(3, "New registry:\n%#v", reg)
 
-	reg.Set("BaseURL", "http://soaphub.org:8585/")
+	reg.Set("baseURL", "http://soaphub.org:8585/")
 	reg.Set("name", "APIs-guru Registry")
 	reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory")
 	reg.Set("specVersion", "0.5")
@@ -67,10 +67,10 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	// TODO Support "model" being part of the Registry struct above
 
 	g, _ := reg.AddGroupModel("apiProviders", "apiProvider", "")
-	_, err = g.AddResourceModel("apis", "api", 2)
+	_, err = g.AddResourceModel("apis", "api", 2, true, true)
 
 	g, _ = reg.AddGroupModel("schemaGroups", "schemaGroup", "")
-	_, err = g.AddResourceModel("schemas", "schema", 1)
+	_, err = g.AddResourceModel("schemas", "schema", 1, true, true)
 
 	m := reg.LoadModel()
 	log.VPrintf(3, "Model: %#v\n", m)
@@ -153,9 +153,9 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		// I wanted the URL to the file to be the registry and not github
 		base := "https://raw.githubusercontent.com/APIs-guru/" +
 			"openapi-directory/main/APIs/"
-		// version.ResourceURL = base + header.Name[i+6:]
-		// version.ResourceContent = buf.Bytes()
-		version.ResourceProxyURL = base + header.Name[i+6:]
+		// version.Set("resourceURL", base + header.Name[i+6:])
+		// version.Set("resourceContent", buf.Bytes())
+		version.Set("resourceProxyURL", base+header.Name[i+6:])
 	}
 
 	return reg
@@ -194,7 +194,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("html") {
 		w.Header().Add("Content-Type", "text/html")
 
-		re := regexp.MustCompile(`"(http[^"\n]*?)"`)
+		str := fmt.Sprintf(`"(https?://%s[^"\n]*?)"`, r.Host)
+		re := regexp.MustCompile(str)
 		repl := fmt.Sprintf(`"<a href="$1?%s">$1?%s</a>"`,
 			r.URL.RawQuery, r.URL.RawQuery)
 
@@ -413,8 +414,94 @@ func DoTests() *registry.Registry {
 	CheckGet(reg, "bad inline", "http://example.com?inline=foo",
 		`Bad inline - path: "foo"`)
 
-	_, err = gm1.AddResourceModel("ress", "res", 5)
+	_, err = gm1.AddResourceModel("ress", "res", 5, true, true)
 	NoErr("add ress", err)
+
+	CheckGet(reg, "check model", "http://example.com?model", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+  "model": {
+    "groups": {
+      "myGroups": {
+        "plural": "myGroups",
+        "singular": "myGroup",
+        "schema": "schema-url",
+        "resources": {
+          "ress": {
+            "plural": "ress",
+            "singular": "res",
+            "versions": 5,
+            "versionId": true,
+            "latest": true
+          }
+        }
+      }
+    }
+  },
+
+  "myGroupsCount": 0,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "just model", "http://example.com/model", `{
+  "groups": {
+    "myGroups": {
+      "plural": "myGroups",
+      "singular": "myGroup",
+      "schema": "schema-url",
+      "resources": {
+        "ress": {
+          "plural": "ress",
+          "singular": "res",
+          "versions": 5,
+          "versionId": true,
+          "latest": true
+        }
+      }
+    }
+  }
+}
+`)
+
+	_, err = gm1.AddResourceModel("res2s", "res2", 4, false, false)
+	NoErr("add ress", err)
+
+	CheckGet(reg, "model with false", "http://example.com?model", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+  "model": {
+    "groups": {
+      "myGroups": {
+        "plural": "myGroups",
+        "singular": "myGroup",
+        "schema": "schema-url",
+        "resources": {
+          "res2s": {
+            "plural": "res2s",
+            "singular": "res2",
+            "versions": 4,
+            "versionId": false,
+            "latest": false
+          },
+          "ress": {
+            "plural": "ress",
+            "singular": "res",
+            "versions": 5,
+            "versionId": true,
+            "latest": true
+          }
+        }
+      }
+    }
+  },
+
+  "myGroupsCount": 0,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
 
 	m1 := reg.LoadModel()
 	Check(m1.Groups["myGroups"].Singular == "myGroup", "myGroups.Singular")
@@ -449,6 +536,9 @@ func DoTests() *registry.Registry {
       "self": "http://example.com/myGroups/g1",
       "ext1": "extvalue",
 
+      "res2s": {},
+      "res2sCount": 0,
+      "res2sUrl": "http://example.com/myGroups/g1/res2s",
       "ress": {},
       "ressCount": 0,
       "ressUrl": "http://example.com/myGroups/g1/ress"
@@ -491,6 +581,9 @@ func DoTests() *registry.Registry {
       "self": "http://example.com/myGroups/g1",
       "ext1": "extvalue",
 
+      "res2s": {},
+      "res2sCount": 0,
+      "res2sUrl": "http://example.com/myGroups/g1/res2s",
       "ress": {
         "r1": {
           "id": "r1",
@@ -522,6 +615,8 @@ func DoTests() *registry.Registry {
       "self": "http://example.com/myGroups/g1",
       "ext1": "extvalue",
 
+      "res2sCount": 0,
+      "res2sUrl": "http://example.com/myGroups/g1/res2s",
       "ress": {
         "r1": {
           "id": "r1",
@@ -541,7 +636,7 @@ func DoTests() *registry.Registry {
 }
 `)
 
-	CheckGet(reg, "1 res,inline 1 level", "http://example.com?inline=myGroups.ress", `{
+	CheckGet(reg, "1 res,inline 2 level", "http://example.com?inline=myGroups.ress", `{
   "specVersion": "0.5",
   "id": "666-1234-1234",
   "self": "http://example.com/",
@@ -553,6 +648,8 @@ func DoTests() *registry.Registry {
       "self": "http://example.com/myGroups/g1",
       "ext1": "extvalue",
 
+      "res2sCount": 0,
+      "res2sUrl": "http://example.com/myGroups/g1/res2s",
       "ress": {
         "r1": {
           "id": "r1",
@@ -583,6 +680,8 @@ func DoTests() *registry.Registry {
       "self": "http://example.com/myGroups/g1",
       "ext1": "extvalue",
 
+      "res2sCount": 0,
+      "res2sUrl": "http://example.com/myGroups/g1/res2s",
       "ressCount": 1,
       "ressUrl": "http://example.com/myGroups/g1/ress"
     }
@@ -599,6 +698,9 @@ func DoTests() *registry.Registry {
     "self": "http://example.com/myGroups/g1",
     "ext1": "extvalue",
 
+    "res2s": {},
+    "res2sCount": 0,
+    "res2sUrl": "http://example.com/myGroups/g1/res2s",
     "ress": {
       "r1": {
         "id": "r1",
@@ -631,6 +733,9 @@ func DoTests() *registry.Registry {
     "self": "http://example.com/myGroups/g1",
     "ext1": "extvalue",
 
+    "res2s": {},
+    "res2sCount": 0,
+    "res2sUrl": "http://example.com/myGroups/g1/res2s",
     "ress": {
       "r1": {
         "id": "r1",
@@ -673,6 +778,9 @@ func DoTests() *registry.Registry {
     "self": "http://example.com/myGroups/g1",
     "ext1": "extvalue",
 
+    "res2s": {},
+    "res2sCount": 0,
+    "res2sUrl": "http://example.com/myGroups/g1/res2s",
     "ress": {
       "r1": {
         "id": "r1",
@@ -680,6 +788,7 @@ func DoTests() *registry.Registry {
         "epoch": 42,
         "self": "http://example.com/myGroups/g1/ress/r1",
         "latestId": "v1",
+        "latestUrl": "http://example.com/myGroups/g1/ress/r1/versions/v1",
         "Int": 345,
         "ext1": "someext",
         "ext2": 234,
@@ -688,8 +797,8 @@ func DoTests() *registry.Registry {
           "v1": {
             "id": "v1",
             "name": "v1",
-            "self": "http://example.com/myGroups/g1/ress/r1/versions/v1",
             "epoch": 42,
+            "self": "http://example.com/myGroups/g1/ress/r1/versions/v1",
             "ext1": "someext",
             "ext2": 234
           }
@@ -706,7 +815,7 @@ func DoTests() *registry.Registry {
 
 	// Test Latest version stuff
 	r1.Set("name", r1.ID)
-	r1.Set("epoch", 42)
+	r1.Set("epoch", 68)
 	r1.Set("ext1", "someext")
 	r1.Set("ext2", 123)
 	Check(r1.GetLatest().Extensions["ext2"] == 123, "r1.Ext isn't an int")
@@ -731,15 +840,15 @@ func LoadSample() *registry.Registry {
 	reg.Set("docs", "https://github.com/duglin/xreg-github")
 
 	gm, _ := reg.AddGroupModel("agroups", "group", "")
-	_, err = gm.AddResourceModel("ress", "res", 2)
+	_, err = gm.AddResourceModel("ress", "res", 2, true, true)
 
 	gm, _ = reg.AddGroupModel("zgroups", "group", "")
-	_, err = gm.AddResourceModel("ress", "res", 2)
+	_, err = gm.AddResourceModel("ress", "res", 2, true, true)
 
 	gm, _ = reg.AddGroupModel("endpoints", "endpoint", "")
-	_, err = gm.AddResourceModel("defs", "def", 2)
-	_, err = gm.AddResourceModel("adefs", "def", 2)
-	_, err = gm.AddResourceModel("zdefs", "def", 2)
+	_, err = gm.AddResourceModel("defs", "def", 2, true, true)
+	_, err = gm.AddResourceModel("adefs", "def", 2, true, true)
+	_, err = gm.AddResourceModel("zdefs", "def", 2, true, true)
 
 	g := reg.FindOrAddGroup("endpoints", "e1")
 	g.Set("name", "end1")

@@ -65,37 +65,6 @@ func (jw *JsonWriter) NextObj() *Obj {
 	return jw.Obj
 }
 
-func (jw *JsonWriter) WriteRegistry() error {
-	/*
-		regObj := &Obj{
-			Level:  0,
-			Plural: "registries",
-			ID:     jw.info.Registry.ID,
-			Values: map[string]any{
-				"id":          jw.info.Registry.ID,
-				"specVersion": jw.info.Registry.SpecVersion,
-			},
-		}
-		if jw.info.Registry.Name != "" {
-			regObj.Values["name"] = jw.info.Registry.Name
-		}
-		if jw.info.Registry.Description != "" {
-			regObj.Values["description"] = jw.info.Registry.Description
-		}
-		if jw.info.Registry.Docs != "" {
-			regObj.Values["docs"] = jw.info.Registry.Docs
-		}
-
-		jw.Obj = regObj
-	*/
-	jw.NextObj()
-
-	if err := jw.WriteObject(); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Obj.Plural
 	myURL := fmt.Sprintf("%s/%s", jw.info.BaseURL, path.Dir(jw.Obj.Path))
@@ -168,6 +137,63 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 	return count, nil
 }
 
+// This allows for us to choose the order and define custom logic per prop
+var orderedProps = []struct {
+	key    string                // prop name
+	levels string                // only show for these levels
+	fn     func(*JsonWriter) any // we'll Marshal the 'any'
+}{
+	{"specVersion", "", nil},
+	{"id", "", nil},
+	{"name", "", nil},
+	{"epoch", "23", nil},
+	{"self", "", func(jw *JsonWriter) any {
+		return jw.info.BaseURL + "/" + jw.Obj.Path
+	}},
+	{"latestId", "2", nil},
+	{"latestUrl", "2", func(jw *JsonWriter) any {
+		val := jw.Obj.Values["latestId"]
+		if IsNil(val) {
+			return nil
+		}
+		return jw.info.BaseURL + "/" + jw.Obj.Path + "/versions/" + val.(string)
+	}},
+	{"description", "", nil},
+	{"docs", "", nil},
+	{"tags", "", func(jw *JsonWriter) any {
+		var res map[string]string
+
+		for _, key := range SortedKeys(jw.Obj.Values) {
+			if key[0] > 't' {
+				break
+			}
+
+			if strings.HasPrefix(key, "tags.") {
+				val, _ := jw.Obj.Values[key]
+				buf, _ := json.Marshal(val)
+				if res == nil {
+					res = map[string]string{}
+				}
+				res[key] = string(buf)
+				// Technically we shouldn't remove it but for now it's safe
+				delete(jw.Obj.Values, key)
+			}
+		}
+		return res
+	}},
+	{"createdBy", "", nil},
+	{"createdOn", "", nil},
+	{"modifiedBy", "", nil},
+	{"modifiedOn", "", nil},
+	{"model", "0", func(jw *JsonWriter) any {
+		if jw.info.ShowModel {
+			return jw.info.Registry.Model
+		}
+		return nil
+	}},
+	{"baseURL", "-", nil}, // always skip
+}
+
 func (jw *JsonWriter) WriteObject() error {
 	if jw.Obj == nil {
 		jw.Printf("{}")
@@ -181,51 +207,39 @@ func (jw *JsonWriter) WriteObject() error {
 	jw.Printf("{")
 	jw.Indent()
 
-	keys := []string{"specVersion", "id", "name", "2.epoch", "self",
-		"2.latestId", "2.latestUrl", "description", "docs",
-		"format", // not "tags"
-		"createdBy", "createdOn", "modifiedBy", "modifiedOn"}
-
 	// Write the well-known attributes first, in order
-	for _, key := range keys {
-		// Skip keys that are level specific and not for this level
-		if key[0] >= '0' && key[0] <= '3' {
-			if key[0] != ('0' + byte(myLevel)) {
-				continue
-			}
-			key = key[2:] // remove "#."
+	usedProps := map[string]bool{}
+	for _, prop := range orderedProps {
+		usedProps[prop.key] = true
+		// Only show props that are for this level
+		ch := rune('0' + byte(myLevel))
+		if prop.levels != "" && !strings.ContainsRune(prop.levels, ch) {
+			continue
 		}
 
-		val, ok := jw.Obj.Values[key]
-		if !ok && key == "self" {
-			ok = true
-			val = fmt.Sprintf("%s/%s", jw.info.BaseURL, jw.Obj.Path)
+		// Even if it has a func, if there's a val in Values let it override
+		val, ok := jw.Obj.Values[prop.key]
+		if !ok && prop.fn != nil {
+			val = prop.fn(jw)
+			ok = !IsNil(val)
 		}
+
+		// Only write it if we have a value
 		if ok {
-			buf, _ := json.Marshal(val)
-			jw.Printf("%s\n%s%q: %s", extra, jw.indent, key, string(buf))
-			delete(jw.Obj.Values, key)
+			buf, _ := json.MarshalIndent(val, jw.indent, "  ")
+			jw.Printf("%s\n%s%q: %s", extra, jw.indent, prop.key, string(buf))
 			extra = ","
 		}
 	}
 
-	// Now write all extensions - buffering "tags"
-	tags := map[string]any{}
+	// Now write the remaining properties/extensions (sorted)
 	for _, key := range SortedKeys(jw.Obj.Values) {
-		val, _ := jw.Obj.Values[key]
-		if strings.HasPrefix(key, "tags.") {
-			tags[key[5:]] = val
+		if usedProps[key] {
 			continue
 		}
+		val, _ := jw.Obj.Values[key]
 		buf, _ := json.Marshal(val)
 		jw.Printf("%s\n%s%q: %s", extra, jw.indent, key, string(buf))
-		extra = ","
-	}
-
-	// And finally any tags
-	if len(tags) > 0 {
-		buf, _ := json.MarshalIndent(tags, jw.indent, "  ")
-		jw.Printf("%s\n%s\"tags\": %s", extra, jw.indent, string(buf))
 		extra = ","
 	}
 

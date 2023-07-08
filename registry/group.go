@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"fmt"
+	// "fmt"
 
 	log "github.com/duglin/dlog"
 )
@@ -12,40 +12,6 @@ type Group struct {
 
 func (g *Group) Set(name string, val any) error {
 	return SetProp(g, name, val)
-}
-
-func (g *Group) Refresh() error {
-	log.VPrintf(3, ">Enter: group.Refresh(%s)", g.ID)
-	defer log.VPrintf(3, "<Exit: group.Refresh")
-
-	result, err := Query(`
-		SELECT PropName, PropValue, PropType
-		FROM Props WHERE EntityID=? `,
-		g.DbID)
-	defer result.Close()
-
-	if err != nil {
-		log.Printf("Error refreshing Group(%s): %s", g.ID, err)
-		return fmt.Errorf("Error refreshing group(%s): %s", g.ID, err)
-	}
-
-	*g = Group{ // Erase all existing properties
-		Entity: Entity{
-			RegistryID: g.RegistryID,
-			DbID:       g.DbID,
-			Plural:     g.Plural,
-			ID:         g.ID,
-		},
-	}
-
-	for result.NextRow() {
-		name := NotNilString(result.Data[0])
-		val := NotNilString(result.Data[1])
-		propType := NotNilString(result.Data[2])
-		SetField(g, name, &val, propType)
-	}
-
-	return nil
 }
 
 func (g *Group) FindResource(rType string, id string) *Resource {

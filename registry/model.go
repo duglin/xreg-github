@@ -13,32 +13,33 @@ type ModelElement struct {
 }
 
 type GroupModel struct {
-	ID       string
-	Registry *Registry
+	ID       string    `json:"-"`
+	Registry *Registry `json:"-"`
 
 	Plural   string `json:"plural,omitempty"`
 	Singular string `json:"singular,omitempty"`
 	Schema   string `json:"schema,omitempty"`
-	Versions int    `json:"versions"`
 
-	Resources map[string]*ResourceModel // Plural
+	Resources map[string]*ResourceModel `json:"resources,omitempty"` // Plural
 }
 
 type ResourceModel struct {
-	ID         string
-	GroupModel *GroupModel
+	ID         string      `json:"-"`
+	GroupModel *GroupModel `json:"-"`
 
-	Plural   string `json:"plural,omitempty"`
-	Singular string `json:"singular,omitempty"`
-	Versions int    `json:"versions,omitempty"`
+	Plural    string `json:"plural,omitempty"`
+	Singular  string `json:"singular,omitempty"`
+	Versions  int    `json:"versions,omitempty"`
+	VersionId bool   `json:"versionId"`
+	Latest    bool   `json:"latest"`
 }
 
 type Model struct {
-	Registry *Registry
-	Groups   map[string]*GroupModel // Plural
+	Registry *Registry              `json:"-"`
+	Groups   map[string]*GroupModel `json:"groups,omitempty"` // Plural
 }
 
-func (g *GroupModel) AddResourceModel(plural string, singular string, versions int) (*ResourceModel, error) {
+func (g *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool) (*ResourceModel, error) {
 	if plural == "" {
 		return nil, fmt.Errorf("Can't add a group with an empty plural name")
 	}
@@ -59,9 +60,12 @@ func (g *GroupModel) AddResourceModel(plural string, singular string, versions i
 			Plural,
 			Singular,
 			SchemaURL,
-			Versions)
-		VALUES(?,?,?,?,?,?,?) `,
-		mID, g.Registry.DbID, g.ID, plural, singular, nil, versions)
+			Versions,
+			VersionId,
+			Latest)
+		VALUES(?,?,?,?,?,?,?,?,?) `,
+		mID, g.Registry.DbID, g.ID, plural, singular, nil, versions,
+		verId, latest)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", plural, err)
 		return nil, err
@@ -72,6 +76,8 @@ func (g *GroupModel) AddResourceModel(plural string, singular string, versions i
 		Singular:   singular,
 		Plural:     plural,
 		Versions:   versions,
+		VersionId:  verId,
+		Latest:     latest,
 	}
 
 	g.Resources[plural] = r

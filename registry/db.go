@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -221,6 +222,8 @@ var initDB = `
 		Singular	VARCHAR(64),
 		SchemaURL	VARCHAR(255),		// For Groups
 		Versions    INT NOT NULL,		// For Resources
+		VersionId   BOOL NOT NULL,		// For Resources
+		Latest      BOOL NOT NULL,		// For Resources
 
 		PRIMARY KEY(ID),
 		INDEX (RegistryID, ParentID, Plural),
@@ -268,10 +271,10 @@ var initDB = `
 
 		ResourceURL     	VARCHAR(255),
 		ResourceProxyURL	VARCHAR(255),
-		ResourceContent		MEDIUMBLOB,
+		ResourceContentID	VARCHAR(64),
 
 		PRIMARY KEY (ID),
-		INDEX(VersionID),
+		INDEX (VersionID),
 		FOREIGN KEY (ResourceID) REFERENCES Resources(ID) 
 			ON UPDATE CASCADE ON DELETE CASCADE
 	);
@@ -286,6 +289,15 @@ var initDB = `
 		PRIMARY KEY (EntityID, PropName),
 		INDEX (EntityID),
 		FOREIGN KEY (RegistryID) REFERENCES Registries(ID) 
+			ON UPDATE CASCADE ON DELETE CASCADE
+	);
+
+	CREATE TABLE ResourceContents (
+		VersionID		VARCHAR(255),
+		Content			MEDIUMBLOB,
+
+		PRIMARY KEY (VersionID),
+		FOREIGN KEY (VersionID) REFERENCES Versions(ID)
 			ON UPDATE CASCADE ON DELETE CASCADE
 	);
 
@@ -324,7 +336,7 @@ var initDB = `
 		g.RegistryID AS RegID,
 		1 AS Level,
 		m.Plural AS Plural,
-		NULL AS ParentID,
+		g.RegistryID AS ParentID,
 		g.ID AS eID,
 		g.GroupID AS ID,
 		g.Abstract,
@@ -463,6 +475,73 @@ func (e *Entity) Get(name string) any {
 	val, _ := e.Extensions[name]
 	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.ID, name, val)
 	return val
+}
+
+func (e *Entity) Find() (bool, error) {
+	log.VPrintf(3, ">Enter: Find(%s)", e.ID)
+	log.VPrintf(3, "<Exit: Find")
+
+	results, err := NewQuery(`
+		SELECT
+			p.RegistryID AS RegistryID,
+			p.EntityID AS DbID,
+			e.Plural AS Plural,
+			e.ID AS ID,
+			p.PropName AS PropName,
+			p.PropValue AS PropValue,
+			p.PropType AS PropType
+		FROM Props AS p
+		LEFT JOIN Entities AS e ON (e.eID=p.EntityID)
+		WHERE e.ID=?`, e.ID)
+
+	if err != nil {
+		return false, err
+	}
+
+	first := true
+	for _, row := range results {
+		if first {
+			e.RegistryID = NotNilString(row[0])
+			e.DbID = NotNilString(row[1])
+			e.Plural = NotNilString(row[2])
+			e.ID = NotNilString(row[3])
+			first = false
+		}
+	}
+
+	return !first, nil
+}
+
+func (e *Entity) Refresh() error {
+	log.VPrintf(3, ">Enter: Refresh(%s)", e.DbID)
+	defer log.VPrintf(3, "<Exit: Refresh")
+
+	result, err := Query(`
+        SELECT PropName, PropValue, PropType
+        FROM Props WHERE EntityID=? `, e.DbID)
+	defer result.Close()
+
+	if err != nil {
+		log.Printf("Error refreshing props(%s): %s", e.DbID, err)
+		return fmt.Errorf("Error refreshing props(%s): %s", e.DbID, err)
+	}
+
+	e.Extensions = map[string]any{}
+
+	for result.NextRow() {
+		name := NotNilString(result.Data[0])
+		val := NotNilString(result.Data[1])
+		propType := NotNilString(result.Data[2])
+
+		k, _ := strconv.Atoi(propType)
+		if reflect.Kind(k) == reflect.Int {
+			tmpInt, _ := strconv.Atoi(val)
+			e.Extensions[name] = tmpInt
+		} else {
+			e.Extensions[name] = val
+		}
+	}
+	return nil
 }
 
 func (e *Entity) sSet(name string, value any) error {

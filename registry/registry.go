@@ -2,6 +2,7 @@ package registry
 
 import (
 	// "database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -26,7 +27,6 @@ type RegistryFlags struct {
 
 type Registry struct {
 	Entity
-	BaseURL      string
 	Model        *Model
 	GenericModel *ModelElement
 }
@@ -78,45 +78,6 @@ func (reg *Registry) Delete() error {
 	return DoOne(`DELETE FROM Registries WHERE ID=?`, reg.DbID)
 }
 
-func (reg *Registry) Refresh() error {
-	log.VPrintf(3, ">Enter: Reg.Refresh(%s)", reg.ID)
-	defer log.VPrintf(3, "<Exit: Reg.Refresh")
-
-	if reg.DbID == "" {
-		log.Printf("Can't refresh a DB that hasn't been saved")
-		return fmt.Errorf("Can't refresh a DB that hasn't been saved")
-	}
-
-	result, err := Query(`
-		SELECT PropName, PropValue, PropType
-		FROM Props WHERE EntityID=? `,
-		reg.DbID)
-	defer result.Close()
-
-	if err != nil {
-		log.Printf("Error refreshing Registry(%s): %s", reg.ID, err)
-		return fmt.Errorf("Error refreshing Registry(%s): %s", reg.ID, err)
-	}
-
-	*reg = Registry{ // Erase all existing properties
-		Entity: Entity{
-			RegistryID: reg.DbID,
-			DbID:       reg.DbID,
-			Plural:     reg.Plural,
-			ID:         reg.ID,
-		},
-	}
-
-	for result.NextRow() {
-		name := NotNilString(result.Data[0])
-		val := NotNilString(result.Data[1])
-		propType := NotNilString(result.Data[2])
-		SetField(reg, name, &val, propType)
-	}
-
-	return nil
-}
-
 func (reg *Registry) AddGroupModel(plural string, singular string, schema string) (*GroupModel, error) {
 	if plural == "" {
 		return nil, fmt.Errorf("Can't add a group with an empty plural name")
@@ -160,20 +121,6 @@ func (reg *Registry) AddGroupModel(plural string, singular string, schema string
 	reg.Model.Groups[plural] = g
 
 	return g, nil
-}
-
-func GetRegistryByID(id string) (*Registry, error) {
-	reg := &Registry{
-		Entity: Entity{
-			ID: id,
-		},
-	}
-	err := reg.Refresh()
-	if err != nil {
-		reg = nil
-	}
-	Registries[id] = reg
-	return reg, err
 }
 
 func FindRegistry(id string) (*Registry, error) {
@@ -236,7 +183,9 @@ func (reg *Registry) LoadModel() *Model {
 			Plural,
 			Singular,
 			SchemaURL,
-			Versions
+			Versions,
+			VersionId,
+			Latest
 		FROM ModelEntities
 		WHERE RegistryID=?
 		ORDER BY ParentID ASC`, reg.DbID)
@@ -260,7 +209,6 @@ func (reg *Registry) LoadModel() *Model {
 				Plural:   NotNilString(result.Data[3]), // Plural
 				Singular: NotNilString(result.Data[4]), // Singular
 				Schema:   NotNilString(result.Data[5]), // SchemaURL
-				Versions: NotNilInt(result.Data[6]),    // Versions
 
 				Resources: map[string]*ResourceModel{},
 			}
@@ -273,11 +221,13 @@ func (reg *Registry) LoadModel() *Model {
 
 			if g != nil { // should always be true, but...
 				r := &ResourceModel{
-					ID:         NotNilString(result.Data[0]), // ID
+					ID:         NotNilString(result.Data[0]),
 					GroupModel: g,
-					Plural:     NotNilString(result.Data[3]), // Plural
-					Singular:   NotNilString(result.Data[4]), // Singular
-					Versions:   NotNilInt(result.Data[6]),    // Versions
+					Plural:     NotNilString(result.Data[3]),
+					Singular:   NotNilString(result.Data[4]),
+					Versions:   NotNilInt(result.Data[6]),
+					VersionId:  NotNilBool(result.Data[7]),
+					Latest:     NotNilBool(result.Data[8]),
 				}
 
 				g.Resources[r.Plural] = r
@@ -297,7 +247,7 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 		FROM "Groups" AS g
 		JOIN ModelEntities AS m ON (m.ID=g.ModelID)
 		LEFT JOIN Props AS p ON (p.EntityID=g.ID)
-		WHERE g.GroupID=? AND m.Plural=?`, id, gt)
+		WHERE g.RegistryID=? AND g.GroupID=? AND m.Plural=?`, reg.DbID, id, gt)
 
 	g := (*Group)(nil)
 	for _, row := range results {
@@ -363,16 +313,6 @@ func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
 
 	log.VPrintf(3, "Created new one - DbID: %s", g.DbID)
 	return g
-}
-
-func OptF(w io.Writer, f string, prefix string, arg string) {
-	if arg == "" {
-		return
-	}
-	if f[0] == '>' {
-		f = f[1:] + "\n"
-	}
-	fmt.Fprintf(w, f, prefix, arg)
 }
 
 func readObj(results [][]*any, index int) (*Obj, int) {
@@ -467,6 +407,15 @@ func (info *RequestInfo) ShouldInline(objPath string) bool {
 func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	info.Root = strings.Trim(info.Root, "/")
 
+	if info.Abstract == "model" {
+		buf, err := json.MarshalIndent(info.Registry.Model, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "%s\n", string(buf))
+		return nil
+	}
+
 	query := "SELECT " +
 		"Level, Plural, ID, PropName, PropValue, PropType, Path, Abstract " +
 		"FROM FullTree WHERE RegID=? "
@@ -495,24 +444,17 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 
 	jw := NewJsonWriter(w, info, results)
 
-	if info.What == "Registry" {
-		err = jw.WriteRegistry()
-	} else if info.What == "Coll" {
+	if info.What == "Coll" {
 		jw.NextObj()
-		/*
-			if jw.Obj == nil {
-				jw.Print("{}\n")
-				// return fmt.Errorf("not found\n")
-			}
-		*/
 		_, err = jw.WriteCollection()
-	} else if info.What == "Entity" {
+	} else {
 		jw.NextObj()
 		if jw.Obj == nil {
 			return fmt.Errorf("not found\n")
 		}
 		err = jw.WriteObject()
 	}
+
 	if err == nil {
 		jw.Print("\n")
 	}
@@ -534,6 +476,7 @@ type RequestInfo struct {
 	VersionID    string
 	What         string // Registry, Coll, Entity
 	Inlines      []string
+	ShowModel    bool
 	ErrCode      int
 }
 
@@ -543,6 +486,7 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 		OriginalPath: path,
 		Registry:     reg,
 		BaseURL:      "http://" + r.Host,
+		ShowModel:    r.URL.Query().Has("model"),
 	}
 
 	if r.URL.Query().Has("inline") {
@@ -574,7 +518,7 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 	}
 
 	group := reg.Model.Groups[info.Parts[0]]
-	if group == nil {
+	if group == nil && (info.Parts[0] != "model" || len(info.Parts) > 1) {
 		info.ErrCode = 404
 		return info, fmt.Errorf("Unknown Group type: %q", info.Parts[0])
 	}
