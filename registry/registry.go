@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	// "os"
-	// "reflect"
+	"reflect"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -64,13 +65,6 @@ func (reg *Registry) Set(name string, val any) error {
 	return SetProp(reg, name, val)
 }
 
-func Nullify(str string) any {
-	if str == "" {
-		return nil
-	}
-	return str
-}
-
 func (reg *Registry) Delete() error {
 	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.ID)
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
@@ -96,7 +90,7 @@ func (reg *Registry) AddGroupModel(plural string, singular string, schema string
 			SchemaURL,
 			Versions)
 		VALUES(?,?,?,?,?,?,?) `,
-		mID, reg.DbID, nil, plural, singular, Nullify(schema), 0)
+		mID, reg.DbID, nil, plural, singular, schema, 0)
 	if err != nil {
 		log.Printf("Error inserting group(%s): %s", plural, err)
 		return nil, err
@@ -321,13 +315,13 @@ func readObj(results [][]*any, index int) (*Obj, int) {
 	for index < len(results) {
 		row := results[index]
 
-		lvl := int((*row[0]).(int64))
+		level := int((*row[0]).(int64))
 		plural := NotNilString(row[1])
 		id := NotNilString(row[2])
 
 		if obj == nil {
 			obj = &Obj{
-				Level:    lvl,
+				Level:    level,
 				Plural:   plural,
 				ID:       id,
 				Path:     NotNilString(row[6]),
@@ -335,14 +329,23 @@ func readObj(results [][]*any, index int) (*Obj, int) {
 				Values:   map[string]any{},
 			}
 		} else {
-			if obj.Level != lvl || obj.Plural != plural || obj.ID != id {
+			if obj.Level != level || obj.Plural != plural || obj.ID != id {
 				break
 			}
 		}
-		val := NotNilString(row[4])
-		vType := NotNilString(row[5])
 
-		obj.Values[NotNilString(row[3])] = Convert(val, vType)
+		propName := NotNilString(row[3])
+		propVal := NotNilString(row[4])
+		valType := NotNilString(row[5])
+
+		k, _ := strconv.Atoi(valType)
+		if reflect.Kind(k) == reflect.Int {
+			tmpInt, _ := strconv.Atoi(propVal)
+			obj.Values[propName] = tmpInt
+		} else {
+			obj.Values[propName] = propVal
+		}
+
 		index++
 	}
 

@@ -95,34 +95,6 @@ func SortedKeys(m interface{}) []string {
 	return keys
 }
 
-func DeleteStringSlice(list []string, str string) []string {
-	for i, val := range list {
-		if val == str {
-			list = append(list[:i], list[i+1:]...)
-			return list
-		}
-	}
-	return list
-}
-
-func ErrFatalf(err error, format string, args ...any) {
-	if err == nil {
-		return
-	}
-	log.Fatalf(format, args...)
-}
-
-func Convert(str string, propType string) any { // type = stringified Kind
-	k, _ := strconv.Atoi(propType)
-
-	if reflect.Kind(k) == reflect.Int {
-		tmpInt, _ := strconv.Atoi(str)
-		return tmpInt
-	} else {
-		return str
-	}
-}
-
 func SetField(res interface{}, name string, value *string, propType string) {
 	k, _ := strconv.Atoi(propType)
 	v := fmt.Sprintf("%v", value)

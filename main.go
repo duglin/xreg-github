@@ -52,7 +52,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	reader := tar.NewReader(gzf)
 
 	reg, err := registry.NewRegistry("123-4567-3456")
-	registry.ErrFatalf(err, "Error creating new registry: %s", err)
+	ErrFatalf(err, "Error creating new registry: %s", err)
 	// log.VPrintf(3, "New registry:\n%#v", reg)
 
 	reg.Set("baseURL", "http://soaphub.org:8585/")
@@ -61,7 +61,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	reg.Set("specVersion", "0.5")
 	reg.Set("docs", "https://github.com/duglin/xreg-github")
 	err = reg.Refresh()
-	registry.ErrFatalf(err, "Error refeshing registry: %s", err)
+	ErrFatalf(err, "Error refeshing registry: %s", err)
 	// log.VPrintf(3, "New registry:\n%#v", reg)
 
 	// TODO Support "model" being part of the Registry struct above
@@ -288,6 +288,13 @@ func Check(b bool, errStr string) {
 	if !b {
 		log.Fatal(errStr)
 	}
+}
+
+func ErrFatalf(err error, format string, args ...any) {
+	if err == nil {
+		return
+	}
+	log.Fatalf(format, args...)
 }
 
 func CheckGet(reg *registry.Registry, name string, URL string, expected string) {
@@ -959,13 +966,6 @@ func LoadSample() *registry.Registry {
 	g.Set("ext", "ext1")
 
 	return reg
-}
-
-func ErrFatalf(err error, str string, args ...interface{}) {
-	if err == nil {
-		return
-	}
-	log.Fatalf(str, args...)
 }
 
 func main() {
