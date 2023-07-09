@@ -423,6 +423,124 @@ select ft2.* from FullTree as ft right JOIN FullTree as ft2 on(ft2.Path like con
 PARENTS (not NODES):
 select ft2.* from FullTree as ft right JOIN FullTree as ft2 on(ft.Path like concat(ft2.Path,'/%')) where (ft.PropValue=3 and ft.LevelNum=2) or (ft.PropValue=4 and ft.LevelNum=3) group by ft2.eID,ft2.PropName Order by ft2.Path;
 
+( ( exp1 AND expr2 ...) or ( expr3 AND expr4 ) )
+Find IDs that match expr1 OR expr2
+SELECT eID FROM FullTree WHERE ( (expr1) OR (expr2) );
+SELECT eID FROM FullTree WHERE (Level=2 AND PropName='epoch' && PropValue='4');
+
+Given an ID find all Parents (include original ID)
+WITH RECURSIVE cte(eID,ParentID,Path) AS (
+  SELECT eID,ParentID,Path FROM Entities
+  WHERE eID in (
+    -- below find IDs of interes
+	SELECT eID FROM FullTree
+	  WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+    -- end of ID selection
+  )
+  UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
+  INNER JOIN cte ON e.eID=cte.ParentID)
+SELECT * FROM cte ;
+
+Given an ID find all Leaves (with recursion)
+WITH RECURSIVE cte(eID,ParentID,Path) AS (
+  SELECT eID,ParentID,Path FROM Entities
+  WHERE eID='f91a4ec9'
+  UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
+    INNER JOIN cte ON e.ParentID=cte.eID)
+SELECT eID,ParentID,Path FROM cte
+WHERE eID IN (SELECT * FROM Leaves);
+
+Given an ID find all Leaves (w/o recursion)
+  Should use IDs instead of Path to pick-up the Registry itself
+SELECT e2.eID,e2.ParentID,e2.Path FROM Entities AS e1
+RIGHT JOIN Entities AS e2 ON (e2.Path=e1.Path OR e2.Path LIKE
+CONCAT(e1.Path,'%')) WHERE e1.eID in (
+  -- below finds IDs of interest
+  SELECT eID FROM FullTree
+  WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+  -- end of ID selection
+  )
+AND e2.eID IN (SELECT * from Leaves);
+
+Given an ID, find all leaves, and then find all Parents
+-- Finding all parents
+WITH RECURSIVE cte(eID,ParentID,Path) AS (
+  SELECT eID,ParentID,Path FROM Entities
+  WHERE eID in (
+    -- below find IDs of interest (finding all leaves)
+	SELECT e2.eID FROM Entities AS e1
+	RIGHT JOIN Entities AS e2 ON (
+	  e2.RegID=e1.RegID AND
+	  (e2.Path=e1.Path OR e2.Path LIKE CONCAT(e1.Path,'%'))
+	)
+	WHERE e1.eID in (
+	  -- below finds SeachNodes/IDs of interest
+	  -- Add regID into the search
+	    SELECT eID FROM FullTree
+		WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+	  -- end of ID selection
+	)
+	AND e2.eID IN (SELECT * from Leaves)
+    -- end of Leaves/ID selection
+  )
+  UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
+  INNER JOIN cte ON e.eID=cte.ParentID)
+SELECT * FROM cte ;
+
+(expr1 AND expr2)
+WITH RECURSIVE cte(eID,ParentID,Path) AS (
+  SELECT eID,ParentID,Path FROM Entities
+  WHERE eID in (
+    -- below find IDs of interest (finding all leaves)
+	-- start of (expr1 and expr2 and expr3)
+	SELECT list.eID FROM (
+	  SELECT count(*) as cnt,e2.eID,e2.Path FROM Entities AS e1
+	  RIGHT JOIN (
+	    -- below finds SeachNodes/IDs of interest
+	    -- Add regID into the search
+	      SELECT eID,Path FROM FullTree
+		  WHERE (CONCAT(Abstract,'.',ProPName)='myGroups/ress.tags.int')
+		  UNION ALL
+	      SELECT eID,Path FROM FullTree
+		  WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+		  UNION ALL
+		  SELECT eID,Path from FullTree
+		  WHERE (PropName='id' AND PropValue='g1' AND Level=1)
+	    -- end of ID selection
+	  ) as res ON ( res.eID=e1.eID )
+	  JOIN Entities AS e2 ON (
+	    (e2.Path=res.Path OR e2.Path LIKE CONCAT(res.Path,'%'))
+	    AND e2.eID IN (SELECT * from Leaves)
+	  ) GROUP BY e2.eID
+      -- end of Leaves/ID selection
+    ) as list
+    WHERE list.cnt=3
+	-- end of (expr1 and expr2 and expr3)
+
+	-- ADD the next OR expr here
+	UNION
+	-- start of expr4
+    SELECT list.eID FROM (
+      SELECT count(*) as cnt,e2.eID,e2.Path FROM Entities AS e1
+      RIGHT JOIN (
+        -- below finds SeachNodes/IDs of interest
+        -- Add regID into the search
+          SELECT eID,Path FROM FullTree
+          WHERE (PropName='latestId' AND PropValue='v1.0' AND Level=2)
+        -- end of ID selection
+      ) as res ON ( res.eID=e1.eID )
+      JOIN Entities AS e2 ON (
+        (e2.Path=res.Path OR e2.Path LIKE CONCAT(res.Path,'%'))
+        AND e2.eID IN (SELECT * from Leaves)
+      ) GROUP BY e2.eID
+      -- end of Leaves/ID selection
+    ) as list
+    WHERE list.cnt=1
+  )
+  UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
+  INNER JOIN cte ON e.eID=cte.ParentID)
+SELECT * FROM cte ;
+
 
 */
 
