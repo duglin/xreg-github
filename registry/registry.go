@@ -1,14 +1,12 @@
 package registry
 
 import (
-	// "database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
-	// "os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -28,8 +26,7 @@ type RegistryFlags struct {
 
 type Registry struct {
 	Entity
-	Model        *Model
-	GenericModel *ModelElement
+	Model *Model
 }
 
 var Registries = map[string]*Registry{}
