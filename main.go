@@ -912,6 +912,150 @@ func DoTests() *registry.Registry {
 }
 `)
 
+	// Some filtering
+	g2 = reg.FindOrAddGroup("myGroups", "g2")
+	r2 = g2.FindOrAddResource("ress", "r2")
+	v2 = r2.FindOrAddVersion("v1")
+	g2.Set("tags.stage", "dev")
+	r1.Set("tags.stale", "true")
+	v2.Set("tags.v2", "true")
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?filter=myGroups.id=g2", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&filter=myGroups.id=g2", `{
+  "specVersion": "0.5",
+  "id": "666-1234-1234",
+  "self": "http://example.com/",
+
+  "myGroups": {
+    "g2": {
+      "id": "g2",
+      "self": "http://example.com/myGroups/g2",
+      "tags": {
+        "tags.stage": "dev"
+      },
+
+      "res2s": {},
+      "res2sCount": 0,
+      "res2sUrl": "http://example.com/myGroups/g2/res2s",
+      "ress": {
+        "r2": {
+          "id": "r2",
+          "self": "http://example.com/myGroups/g2/ress/r2",
+          "latestId": "v1",
+          "latestUrl": "http://example.com/myGroups/g2/ress/r2/versions/v1",
+          "tags": {
+            "tags.v2": "true"
+          },
+
+          "versions": {
+            "v1": {
+              "id": "v1",
+              "self": "http://example.com/myGroups/g2/ress/r2/versions/v1",
+              "tags": {
+                "tags.v2": "true"
+              }
+            }
+          },
+          "versionsCount": 1,
+          "versionsUrl": "http://example.com/myGroups/g2/ress/r2/versions"
+        }
+      },
+      "ressCount": 1,
+      "ressUrl": "http://example.com/myGroups/g2/ress"
+    }
+  },
+  "myGroupsCount": 1,
+  "myGroupsUrl": "http://example.com/myGroups"
+}
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&noprops&filter=myGroups.tags.stage=dev", `{
+  "myGroups": {
+    "g2": {
+      "res2s": {},
+      "ress": {
+        "r2": {
+          "versions": {
+            "v1": {}}}}}}}
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&noprops&filter=myGroups.id=g1,myGroups.name=g1", `{
+  "myGroups": {
+    "g1": {
+      "res2s": {},
+      "ress": {
+        "r1": {
+          "versions": {
+            "v1": {}}}}}}}
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&noprops&filter=myGroups.id=g1&filter=myGroups.name=g1", `{
+  "myGroups": {
+    "g1": {
+      "res2s": {},
+      "ress": {
+        "r1": {
+          "versions": {
+            "v1": {}}}}}}}
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&noprops&filter=myGroups.id=g1&filter=myGroups.name=g3", `{
+  "myGroups": {
+    "g1": {
+      "res2s": {},
+      "ress": {
+        "r1": {
+          "versions": {
+            "v1": {}}}}}}}
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&noprops&filter=myGroups.id=g1,filter=myGroups.name=g3", `not found
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&noprops&filter=myGroups.ress.tags.v2=true", `{
+  "myGroups": {
+    "g2": {
+      "res2s": {},
+      "ress": {
+        "r2": {
+          "versions": {
+            "v1": {}}}}}}}
+`)
+
+	CheckGet(reg, "filter id",
+		"http://example.com/?inline&noprops&filter=myGroups.ress.latestId=v1", `{
+  "myGroups": {
+    "g1": {
+      "res2s": {},
+      "ress": {
+        "r1": {
+          "versions": {
+            "v1": {}}}}},
+    "g2": {
+      "res2s": {},
+      "ress": {
+        "r2": {
+          "versions": {
+            "v1": {}}}}}}}
+`)
+
 	log.Printf("ALL TESTS PASSED")
 	// reg.Delete()
 	return reg
@@ -974,8 +1118,8 @@ func main() {
 	Reg = DoTests()
 	// Reg.Delete()
 
-	Reg = LoadGitRepo("APIs-guru", "openapi-directory")
-	Reg = LoadSample()
+	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+	// Reg = LoadSample()
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		Port = tmp

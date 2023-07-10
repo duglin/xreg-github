@@ -480,6 +480,7 @@ type RequestInfo struct {
 	Inlines         []string
 	Filters         [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
 	ShowModel       bool
+	HideProps       bool // Hide props - for less verbose testing
 	ErrCode         int
 }
 
@@ -497,6 +498,7 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 		Registry:        reg,
 		BaseURL:         "http://" + r.Host,
 		ShowModel:       r.URL.Query().Has("model"),
+		HideProps:       r.URL.Query().Has("noprops"),
 	}
 
 	err := info.ParseRequestURL()
@@ -543,7 +545,7 @@ func (info *RequestInfo) ParseFilters() error {
 				continue
 			}
 			path, value, found := strings.Cut(expr, "=")
-			path = strings.Replace(path, ".", "/", -1)
+			// path = strings.Replace(path, ".", "/", -1)
 			if info.Abstract != "" {
 				path = info.Abstract + "/" + path
 			}
@@ -695,7 +697,8 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
 				}
 				q += `
         SELECT eID,Path FROM FullTree
-        WHERE (CONCAT(Abstract,'/',PropName)=? AND ` + check + `)`
+        WHERE (CONCAT(REPLACE(Abstract,'/','.'),'.',PropName)=? AND
+               ` + check + `)`
 			} // end of AndFilter
 			q += `
         -- end of expr1
@@ -722,6 +725,35 @@ SELECT DISTINCT eID FROM cte ) ORDER BY Path;
 `
 	}
 
-	log.VPrintf(3, "Query:\n%s\nArgs: %#v\n", q, args)
+	log.VPrintf(2, "Query:\n%s\n\n", SubQuery(q, args))
 	return q, args, nil
 }
+
+func SubQuery(query string, args []interface{}) string {
+	for i, arg := range args {
+		before, after, found := strings.Cut(query, "?")
+		if !found {
+			panic(fmt.Sprintf("Too few ? in query - missing number %d", i+1))
+		}
+		query = fmt.Sprintf("%s'%v'%s", before, arg, after)
+	}
+	if i := strings.Index(query, "?"); i >= 0 {
+		panic(fmt.Sprintf("Extra ? in query at '%s'", query[i:]))
+	}
+	return query
+}
+
+/*
+TODO:
+- Move the logic that takes the Path into account for the query into
+  GenerateQuery
+- Make sure that the Path entity is always in the result set when filtering
+- twiddle the self and XXXUrls to include proper filter and inline stuff
+- see if we can get rid of the recursion stuff
+- should we add "/" to then end of the Path for non-collections, then
+  we can just look for PATH/%  and not PATH + PATH/%
+- add RegID checks to the filtering query
+- can we set the registry's path to "" instead of NULL ?? already did, test it
+- add support for boolean types (set/get/filter)
+
+*/
