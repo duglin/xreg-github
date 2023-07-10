@@ -88,10 +88,8 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 		extra = saveExtra
 	}
 
-	if !jw.info.HideProps {
-		jw.Printf("%s\n%s\"%sCount\": %d,\n", extra, jw.indent, myPlural, count)
-		jw.Printf("%s\"%sUrl\": %q", jw.indent, myPlural, myURL)
-	}
+	jw.Printf("%s\n%s\"%sCount\": %d,\n", extra, jw.indent, myPlural, count)
+	jw.Printf("%s\"%sUrl\": %q", jw.indent, myPlural, myURL)
 
 	return ",", nil
 }
@@ -131,7 +129,7 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 	}
 
 	jw.Outdent()
-	if extra != "" && !jw.info.HideProps {
+	if extra != "" {
 		jw.Printf("\n%s", jw.indent)
 	}
 	jw.Print("}")
@@ -227,7 +225,7 @@ func (jw *JsonWriter) WriteObject() error {
 		}
 
 		// Only write it if we have a value
-		if ok && !jw.info.HideProps {
+		if ok {
 			buf, _ := json.MarshalIndent(val, jw.indent, "  ")
 			jw.Printf("%s\n%s%q: %s", extra, jw.indent, prop.key, string(buf))
 			extra = ","
@@ -236,7 +234,7 @@ func (jw *JsonWriter) WriteObject() error {
 
 	// Now write the remaining properties/extensions (sorted)
 	for _, key := range SortedKeys(jw.Obj.Values) {
-		if usedProps[key] || jw.info.HideProps {
+		if usedProps[key] {
 			continue
 		}
 		val, _ := jw.Obj.Values[key]
@@ -261,11 +259,7 @@ func (jw *JsonWriter) WriteObject() error {
 	extra = jw.WritePostCollections(extra, myLevel)
 
 	jw.Outdent()
-	if !jw.info.HideProps {
-		jw.Printf("\n%s}", jw.indent)
-	} else {
-		jw.Print("}")
-	}
+	jw.Printf("\n%s}", jw.indent)
 
 	return nil
 }
@@ -307,12 +301,11 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int
 			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
 			extra = ","
 		}
-		if !jw.info.HideProps {
-			jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
-			jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
-				jw.info.BaseURL, jw.collPaths[level], collName)
-			extra = ","
-		}
+
+		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
+		jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
+			jw.info.BaseURL, jw.collPaths[level], collName)
+		extra = ","
 	}
 	return extra
 }
@@ -324,12 +317,11 @@ func (jw *JsonWriter) WritePostCollections(extra string, level int) string {
 			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
 			extra = ","
 		}
-		if !jw.info.HideProps {
-			jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
-			jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
-				jw.info.BaseURL, jw.collPaths[level], collName)
-			extra = ","
-		}
+
+		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
+		jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
+			jw.info.BaseURL, jw.collPaths[level], collName)
+		extra = ","
 	}
 
 	jw.collPaths[level] = ""

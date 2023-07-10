@@ -423,21 +423,6 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 
 	query, args, err := GenerateQuery(info)
 
-	if info.What != "Registry" {
-		p := strings.Join(info.Parts, "/")
-		query += "AND "
-
-		if info.What == "Coll" {
-			query += "Path LIKE ?"
-			args = append(args, p+"/%")
-		} else if info.What == "Entity" {
-			query += "(Path=? OR Path LIKE ?)"
-			args = append(args, p, p+"/%")
-		} else {
-			panic("what!")
-		}
-	}
-
 	results, err := NewQuery(query, args...)
 	if err != nil {
 		return err
@@ -498,7 +483,6 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 		Registry:        reg,
 		BaseURL:         "http://" + r.Host,
 		ShowModel:       r.URL.Query().Has("model"),
-		HideProps:       r.URL.Query().Has("noprops"),
 	}
 
 	err := info.ParseRequestURL()
@@ -547,7 +531,7 @@ func (info *RequestInfo) ParseFilters() error {
 			path, value, found := strings.Cut(expr, "=")
 			// path = strings.Replace(path, ".", "/", -1)
 			if info.Abstract != "" {
-				path = info.Abstract + "/" + path
+				path = info.Abstract + "." + path
 			}
 			filter := &FilterExpr{
 				Path:     path,
@@ -649,22 +633,41 @@ func (info *RequestInfo) ParseRequestURL() error {
 func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 	q := ""
 	args := []any{}
-	if len(info.Filters) == 0 {
-		q = "SELECT " +
-			"Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract " +
-			"FROM FullTree WHERE RegID=? "
 
+	addPath := func() string {
+		subsetPath := ""
+		if info.What != "Registry" {
+			p := strings.Join(info.Parts, "/")
+			subsetPath += " AND "
+			if info.What == "Coll" {
+				subsetPath += "Path LIKE ?"
+				args = append(args, p+"/%")
+			} else if info.What == "Entity" {
+				subsetPath += "(Path=? OR Path LIKE ?)"
+				args = append(args, p, p+"/%")
+			} else {
+				panic("what!")
+			}
+		}
+		return subsetPath
+	}
+
+	if len(info.Filters) == 0 {
 		args = []interface{}{info.Registry.DbID}
+
+		q = fmt.Sprintf("SELECT "+
+			"Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract "+
+			"FROM FullTree WHERE RegID=? %s", addPath())
 	} else {
 		args = []interface{}{info.Registry.DbID}
-		q = `
+		q = fmt.Sprintf(`
 SELECT
   Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract
-FROM FullTree WHERE RegID=? AND eID IN (
+FROM FullTree WHERE RegID=? %s AND eID IN (
 WITH RECURSIVE cte(eID,ParentID,Path) AS (
   SELECT eID,ParentID,Path FROM Entities
   WHERE eID in (
-    -- below find IDs of interest (finding all leaves)`
+    -- below find IDs of interest (finding all leaves)`, addPath())
 		firstOr := true
 		for _, OrFilters := range info.Filters {
 			if !firstOr {
@@ -721,11 +724,11 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
   )
   UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
   INNER JOIN cte ON e.eID=cte.ParentID)
-SELECT DISTINCT eID FROM cte ) ORDER BY Path;
+SELECT DISTINCT eID FROM cte ) ORDER BY Path
 `
 	}
 
-	log.VPrintf(2, "Query:\n%s\n\n", SubQuery(q, args))
+	log.VPrintf(3, "Query:\n%s\n\n", SubQuery(q, args))
 	return q, args, nil
 }
 

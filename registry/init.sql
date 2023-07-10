@@ -148,8 +148,8 @@ SELECT							# Gather Registries
 	NULL AS ParentID,
 	r.ID AS eID,
 	r.RegistryID AS ID,
-	NULL AS Abstract,
-	NULL AS Path
+	'' AS Abstract,
+	'' AS Path
 FROM Registries AS r
 
 UNION SELECT							# Gather Groups

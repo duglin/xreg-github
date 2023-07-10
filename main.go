@@ -161,6 +161,26 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	return reg
 }
 
+func removeProps(buf []byte) []byte {
+	re := regexp.MustCompile(`\n[^{}]*\n`)
+	buf = re.ReplaceAll(buf, []byte("\n"))
+
+	re = regexp.MustCompile(`\s"tags": {\s*},*`)
+	buf = re.ReplaceAll(buf, []byte(""))
+
+	re = regexp.MustCompile(`\n *\n`)
+	buf = re.ReplaceAll(buf, []byte("\n"))
+
+	re = regexp.MustCompile(`\n *}\n`)
+	buf = re.ReplaceAll(buf, []byte("}\n"))
+
+	re = regexp.MustCompile(`}[\s,]+}`)
+	buf = re.ReplaceAll(buf, []byte("}}"))
+	buf = re.ReplaceAll(buf, []byte("}}"))
+
+	return buf
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	log.VPrintf(2, "%s %s", r.Method, r.URL.Path)
 
@@ -177,10 +197,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var out = io.Writer(w)
-	buf := bytes.Buffer{}
+	buf := (*bytes.Buffer)(nil)
 
-	if r.URL.Query().Has("html") {
-		out = io.Writer(&buf) // bufio.NewWriter(&buf)
+	if r.URL.Query().Has("html") || r.URL.Query().Has("noprops") {
+		buf = &bytes.Buffer{}
+		out = io.Writer(buf) // bufio.NewWriter(&buf)
 	}
 
 	err = Reg.NewGet(out, info)
@@ -189,6 +210,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
+	}
+
+	if r.URL.Query().Has("noprops") {
+		buf = bytes.NewBuffer(removeProps(buf.Bytes()))
 	}
 
 	if r.URL.Query().Has("html") {
@@ -200,8 +225,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			r.URL.RawQuery, r.URL.RawQuery)
 
 		w.Write([]byte("<pre>\n"))
-		w.Write(re.ReplaceAll(buf.Bytes(), []byte(repl)))
-		w.Write([]byte("</pre>\n"))
+		tmpBuf := re.ReplaceAll(buf.Bytes(), []byte(repl))
+		buf = bytes.NewBuffer(tmpBuf)
+	}
+
+	if buf != nil {
+		w.Write(buf.Bytes())
 	}
 
 	return
@@ -298,8 +327,8 @@ func ErrFatalf(err error, format string, args ...any) {
 }
 
 func CheckGet(reg *registry.Registry, name string, URL string, expected string) {
-	buf := bytes.Buffer{}
-	out := io.Writer(&buf)
+	buf := &bytes.Buffer{}
+	out := io.Writer(buf)
 
 	req, err := http.NewRequest("GET", URL, nil)
 	NoErr(name, err)
@@ -310,11 +339,17 @@ func CheckGet(reg *registry.Registry, name string, URL string, expected string) 
 	}
 	Check(info.ErrCode == 0, name+":info.ec != 0")
 	err = reg.NewGet(out, info)
+
 	if err != nil {
 		CheckEqual(err.Error(), expected, name)
 		return
 	}
 	NoErr(name, err)
+
+	if req.URL.Query().Has("noprops") {
+		buf = bytes.NewBuffer(removeProps(buf.Bytes()))
+	}
+
 	CheckEqual(buf.String(), expected, name)
 }
 
@@ -326,8 +361,8 @@ func CheckEqual(str1 string, str2 string, desc string) {
 		}
 
 		log.Fatalf("%s - Output mismatch:\n"+
-			"Expected:\n%s\nGot:\n%s\n\nAt: %#v",
-			desc, str2, str1, str1[:pos])
+			"Expected:\n%s\nGot:\n%s\n\nAt: %s",
+			desc, str2, str1, str1[pos:])
 	}
 }
 
@@ -931,7 +966,7 @@ func DoTests() *registry.Registry {
 }
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter id inline",
 		"http://example.com/?inline&filter=myGroups.id=g2", `{
   "specVersion": "0.5",
   "id": "666-1234-1234",
@@ -980,7 +1015,7 @@ func DoTests() *registry.Registry {
 }
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter tag level 1",
 		"http://example.com/?inline&noprops&filter=myGroups.tags.stage=dev", `{
   "myGroups": {
     "g2": {
@@ -991,7 +1026,7 @@ func DoTests() *registry.Registry {
             "v1": {}}}}}}}
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter AND same obj",
 		"http://example.com/?inline&noprops&filter=myGroups.id=g1,myGroups.name=g1", `{
   "myGroups": {
     "g1": {
@@ -1002,7 +1037,7 @@ func DoTests() *registry.Registry {
             "v1": {}}}}}}}
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter id OR same obj",
 		"http://example.com/?inline&noprops&filter=myGroups.id=g1&filter=myGroups.name=g1", `{
   "myGroups": {
     "g1": {
@@ -1013,7 +1048,7 @@ func DoTests() *registry.Registry {
             "v1": {}}}}}}}
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter id OR no 2nd match",
 		"http://example.com/?inline&noprops&filter=myGroups.id=g1&filter=myGroups.name=g3", `{
   "myGroups": {
     "g1": {
@@ -1024,11 +1059,11 @@ func DoTests() *registry.Registry {
             "v1": {}}}}}}}
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter id AND no 2nd match",
 		"http://example.com/?inline&noprops&filter=myGroups.id=g1,filter=myGroups.name=g3", `not found
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter tags level 2",
 		"http://example.com/?inline&noprops&filter=myGroups.ress.tags.v2=true", `{
   "myGroups": {
     "g2": {
@@ -1039,7 +1074,7 @@ func DoTests() *registry.Registry {
             "v1": {}}}}}}}
 `)
 
-	CheckGet(reg, "filter id",
+	CheckGet(reg, "filter multi result level 2",
 		"http://example.com/?inline&noprops&filter=myGroups.ress.latestId=v1", `{
   "myGroups": {
     "g1": {
@@ -1054,6 +1089,25 @@ func DoTests() *registry.Registry {
         "r2": {
           "versions": {
             "v1": {}}}}}}}
+`)
+
+	CheckGet(reg, "filter group in filter and path - bad",
+		"http://example.com/myGroups?inline&noprops&filter=myGroups.ress.latestId=v1", `{}
+`)
+	CheckGet(reg, "filter path+level 1",
+		"http://example.com/myGroups?inline&noprops&filter=ress.latestId=v1", `{
+  "g1": {
+    "res2s": {},
+    "ress": {
+      "r1": {
+        "versions": {
+          "v1": {}}}}},
+  "g2": {
+    "res2s": {},
+    "ress": {
+      "r2": {
+        "versions": {
+          "v1": {}}}}}}
 `)
 
 	log.Printf("ALL TESTS PASSED")
