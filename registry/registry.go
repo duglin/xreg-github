@@ -421,11 +421,7 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 		return nil
 	}
 
-	query := "SELECT " +
-		"Level, Plural, ID, PropName, PropValue, PropType, Path, Abstract " +
-		"FROM FullTree WHERE RegID=? "
-
-	args := []interface{}{reg.DbID}
+	query, args, err := GenerateQuery(info)
 
 	if info.What != "Registry" {
 		p := strings.Join(info.Parts, "/")
@@ -468,30 +464,39 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 }
 
 type RequestInfo struct {
-	Registry     *Registry
-	BaseURL      string
-	OriginalPath string
-	Parts        []string
-	Root         string
-	Abstract     string
-	GroupType    string
-	GroupID      string
-	ResourceType string
-	ResourceID   string
-	VersionID    string
-	What         string // Registry, Coll, Entity
-	Inlines      []string
-	ShowModel    bool
-	ErrCode      int
+	Registry        *Registry
+	BaseURL         string
+	OriginalPath    string
+	OriginalRequest *http.Request `json:"-"`
+	Parts           []string
+	Root            string
+	Abstract        string
+	GroupType       string
+	GroupID         string
+	ResourceType    string
+	ResourceID      string
+	VersionID       string
+	What            string // Registry, Coll, Entity
+	Inlines         []string
+	Filters         [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
+	ShowModel       bool
+	ErrCode         int
+}
+
+type FilterExpr struct {
+	Path     string // endpoints.id
+	Value    string // myEndpoint
+	HasEqual bool
 }
 
 func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 	path := strings.Trim(r.URL.Path, " /")
 	info := &RequestInfo{
-		OriginalPath: path,
-		Registry:     reg,
-		BaseURL:      "http://" + r.Host,
-		ShowModel:    r.URL.Query().Has("model"),
+		OriginalPath:    path,
+		OriginalRequest: r,
+		Registry:        reg,
+		BaseURL:         "http://" + r.Host,
+		ShowModel:       r.URL.Query().Has("model"),
 	}
 
 	err := info.ParseRequestURL()
@@ -520,7 +525,48 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 		}
 	}
 
-	return info, nil
+	err = info.ParseFilters()
+
+	return info, err
+}
+
+func (info *RequestInfo) ParseFilters() error {
+	for _, filterQ := range info.OriginalRequest.URL.Query()["filter"] {
+		// ?filter=path.to.attribute[=value],* & filter=...
+
+		filterQ = strings.TrimSpace(filterQ)
+		exprs := strings.Split(filterQ, ",")
+		AndFilters := ([]*FilterExpr)(nil)
+		for _, expr := range exprs {
+			expr = strings.TrimSpace(expr)
+			if expr == "" {
+				continue
+			}
+			path, value, found := strings.Cut(expr, "=")
+			path = strings.Replace(path, ".", "/", -1)
+			if info.Abstract != "" {
+				path = info.Abstract + "/" + path
+			}
+			filter := &FilterExpr{
+				Path:     path,
+				Value:    value,
+				HasEqual: found,
+			}
+
+			if AndFilters == nil {
+				AndFilters = []*FilterExpr{}
+			}
+			AndFilters = append(AndFilters, filter)
+		}
+
+		if AndFilters != nil {
+			if info.Filters == nil {
+				info.Filters = [][]*FilterExpr{}
+			}
+			info.Filters = append(info.Filters, AndFilters)
+		}
+	}
+	return nil
 }
 
 func (info *RequestInfo) ParseRequestURL() error {
@@ -596,4 +642,86 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	info.ErrCode = 404
 	return fmt.Errorf("Uknown resource path: %q", path)
+}
+
+func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
+	q := ""
+	args := []any{}
+	if len(info.Filters) == 0 {
+		q = "SELECT " +
+			"Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract " +
+			"FROM FullTree WHERE RegID=? "
+
+		args = []interface{}{info.Registry.DbID}
+	} else {
+		args = []interface{}{info.Registry.DbID}
+		q = `
+SELECT
+  Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract
+FROM FullTree WHERE RegID=? AND eID IN (
+WITH RECURSIVE cte(eID,ParentID,Path) AS (
+  SELECT eID,ParentID,Path FROM Entities
+  WHERE eID in (
+    -- below find IDs of interest (finding all leaves)`
+		firstOr := true
+		for _, OrFilters := range info.Filters {
+			if !firstOr {
+				q += `
+    UNION -- Adding another OR`
+			}
+			firstOr = false
+			q += `
+    -- start of (expr1 AND expr2 ...)
+    SELECT list.eID FROM (
+      SELECT count(*) as cnt,e2.eID,e2.Path FROM Entities AS e1
+      RIGHT JOIN (
+        -- start of expr1 - below finds SeachNodes/IDs of interest`
+			firstAnd := true
+			andCount := 0
+			for _, filter := range OrFilters { // AndFilters
+				andCount++
+				if !firstAnd {
+					q += `
+        UNION ALL`
+				}
+				firstAnd = false
+				check := ""
+				args = append(args, filter.Path)
+				if filter.HasEqual {
+					args = append(args, filter.Value)
+					check = "PropValue=?"
+				} else {
+					check = "PropValue IS NOT NULL"
+				}
+				q += `
+        SELECT eID,Path FROM FullTree
+        WHERE (CONCAT(Abstract,'/',PropName)=? AND ` + check + `)`
+			} // end of AndFilter
+			q += `
+        -- end of expr1
+      ) AS res ON ( res.eID=e1.eID )
+      JOIN Entities AS e2 ON (
+        (e2.Path=res.Path OR e2.Path LIKE CONCAT(res.Path,'/%'))
+        AND e2.eID IN (SELECT * from Leaves)
+      ) GROUP BY e2.eID
+      -- end of RIGHT JOIN
+    ) as list
+    WHERE list.cnt=?
+    -- end of (expr1 AND expr2 ...)`
+			args = append(args, andCount)
+
+			q += `
+    -- end of (expr1 AND expr2 ...)`
+		} // end of OrFilter
+
+		q += `
+  )
+  UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
+  INNER JOIN cte ON e.eID=cte.ParentID)
+SELECT DISTINCT eID FROM cte ) ORDER BY Path;
+`
+	}
+
+	log.VPrintf(3, "Query:\n%s\nArgs: %#v\n", q, args)
+	return q, args, nil
 }

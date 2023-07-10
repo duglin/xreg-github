@@ -286,7 +286,7 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
 	    -- below finds SeachNodes/IDs of interest
 	    -- Add regID into the search
 	      SELECT eID,Path FROM FullTree
-		  WHERE (CONCAT(Abstract,'.',ProPName)='myGroups/ress.tags.int')
+		  WHERE (CONCAT(Abstract,'.',PropName)='myGroups/ress.tags.int')
 		  UNION ALL
 	      SELECT eID,Path FROM FullTree
 		  WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
