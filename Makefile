@@ -1,5 +1,5 @@
 run:
-	GO111MODULE=off go run main.go
+	GO111MODULE=off go run *.go
 
 mysql:
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password --network host \
