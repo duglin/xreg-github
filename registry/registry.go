@@ -401,7 +401,7 @@ func (info *RequestInfo) AddInline(path string) error {
 func (info *RequestInfo) ShouldInline(objPath string) bool {
 	objPath = strings.Replace(objPath, "/", ".", -1)
 	for _, path := range info.Inlines {
-		log.VPrintf(3, "Inline check: %q in %q ?", objPath, path)
+		log.VPrintf(4, "Inline check: %q in %q ?", objPath, path)
 		if path == "*" || objPath == path || strings.HasPrefix(path, objPath) {
 			return true
 		}
@@ -485,6 +485,8 @@ func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
 		ShowModel:       r.URL.Query().Has("model"),
 	}
 
+	defer func() { log.VPrintf(3, "Info:\n%s\n", ToJSON(info)) }()
+
 	err := info.ParseRequestURL()
 	if err != nil {
 		info.ErrCode = http.StatusBadRequest
@@ -529,7 +531,13 @@ func (info *RequestInfo) ParseFilters() error {
 				continue
 			}
 			path, value, found := strings.Cut(expr, "=")
-			// path = strings.Replace(path, ".", "/", -1)
+
+			if info.What != "Coll" && strings.Index(path, ".") < 0 {
+				info.ErrCode = http.StatusBadRequest
+				return fmt.Errorf("A filter with just an attribute name (%s) "+
+					"isn't allowed in this context", path)
+			}
+
 			if info.Abstract != "" {
 				path = info.Abstract + "." + path
 			}
@@ -638,7 +646,7 @@ func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 		subsetPath := ""
 		if info.What != "Registry" {
 			p := strings.Join(info.Parts, "/")
-			subsetPath += " AND "
+			subsetPath += "\nAND "
 			if info.What == "Coll" {
 				subsetPath += "Path LIKE ?"
 				args = append(args, p+"/%")
@@ -652,42 +660,58 @@ func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 		return subsetPath
 	}
 
+	rootObjQuery := func() string {
+		res := ""
+
+		if info.What != "Coll" {
+			args = append(args, strings.Join(info.Parts, "/"))
+			res = "Path=?\nOR  "
+		}
+
+		return res
+	}
+
 	if len(info.Filters) == 0 {
 		args = []interface{}{info.Registry.DbID}
 
-		q = fmt.Sprintf("SELECT "+
-			"Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract "+
-			"FROM FullTree WHERE RegID=? %s", addPath())
+		q = fmt.Sprintf("SELECT " +
+			"Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract " +
+			"FROM FullTree WHERE RegID=?" + addPath())
 	} else {
 		args = []interface{}{info.Registry.DbID}
 		q = fmt.Sprintf(`
 SELECT
   Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract
-FROM FullTree WHERE RegID=? %s AND eID IN (
-WITH RECURSIVE cte(eID,ParentID,Path) AS (
-  SELECT eID,ParentID,Path FROM Entities
-  WHERE eID in (
-    -- below find IDs of interest (finding all leaves)`, addPath())
+FROM FullTree WHERE
+RegID=?` + addPath() + `
+AND
+(
+` + rootObjQuery() + `
+eID IN ( -- eID from query
+  WITH RECURSIVE cte(eID,ParentID,Path) AS (
+    SELECT eID,ParentID,Path FROM Entities
+    WHERE eID in (
+      -- below find IDs of interest (finding all leaves)`)
 		firstOr := true
 		for _, OrFilters := range info.Filters {
 			if !firstOr {
 				q += `
-    UNION -- Adding another OR`
+      UNION -- Adding another OR`
 			}
 			firstOr = false
 			q += `
-    -- start of (expr1 AND expr2 ...)
-    SELECT list.eID FROM (
-      SELECT count(*) as cnt,e2.eID,e2.Path FROM Entities AS e1
-      RIGHT JOIN (
-        -- start of expr1 - below finds SeachNodes/IDs of interest`
+      -- start of (expr1 AND expr2 ...)
+      SELECT list.eID FROM (
+        SELECT count(*) as cnt,e2.eID,e2.Path FROM Entities AS e1
+        RIGHT JOIN (
+          -- start of expr1 - below finds SeachNodes/IDs of interest`
 			firstAnd := true
 			andCount := 0
 			for _, filter := range OrFilters { // AndFilters
 				andCount++
 				if !firstAnd {
 					q += `
-        UNION ALL`
+          UNION ALL`
 				}
 				firstAnd = false
 				check := ""
@@ -699,32 +723,34 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
 					check = "PropValue IS NOT NULL"
 				}
 				q += `
-        SELECT eID,Path FROM FullTree
-        WHERE (CONCAT(REPLACE(Abstract,'/','.'),'.',PropName)=? AND
+          SELECT eID,Path FROM FullTree
+          WHERE (CONCAT(REPLACE(Abstract,'/','.'),'.',PropName)=? AND
                ` + check + `)`
 			} // end of AndFilter
 			q += `
-        -- end of expr1
-      ) AS res ON ( res.eID=e1.eID )
-      JOIN Entities AS e2 ON (
-        (e2.Path=res.Path OR e2.Path LIKE CONCAT(res.Path,'/%'))
-        AND e2.eID IN (SELECT * from Leaves)
-      ) GROUP BY e2.eID
-      -- end of RIGHT JOIN
-    ) as list
-    WHERE list.cnt=?
-    -- end of (expr1 AND expr2 ...)`
+          -- end of expr1
+        ) AS res ON ( res.eID=e1.eID )
+        JOIN Entities AS e2 ON (
+          (e2.Path=res.Path OR e2.Path LIKE CONCAT(res.Path,'/%'))
+          AND e2.eID IN (SELECT * from Leaves)
+        ) GROUP BY e2.eID
+        -- end of RIGHT JOIN
+      ) as list
+      WHERE list.cnt=?
+      -- end of (expr1 AND expr2 ...)`
 			args = append(args, andCount)
 
 			q += `
-    -- end of (expr1 AND expr2 ...)`
+      -- end of (expr1 AND expr2 ...)`
 		} // end of OrFilter
 
 		q += `
   )
-  UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
-  INNER JOIN cte ON e.eID=cte.ParentID)
-SELECT DISTINCT eID FROM cte ) ORDER BY Path
+    UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
+    INNER JOIN cte ON e.eID=cte.ParentID)
+  SELECT DISTINCT eID FROM cte )
+)
+ORDER BY Path
 `
 	}
 

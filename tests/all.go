@@ -793,7 +793,8 @@ func DoTests() *registry.Registry {
 `)
 
 	CheckGet(reg, "filter id AND no 2nd match",
-		"http://example.com/?inline&noprops&filter=dirs.id=g1,filter=dirs.name=g3", `not found
+		"http://example.com/?inline&noprops&filter=dirs.id=g1,dirs.name=g3", `{
+  "dirs": {}}
 `)
 
 	CheckGet(reg, "filter tags level 2",
