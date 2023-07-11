@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	log "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
@@ -42,7 +43,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		out = io.Writer(buf)
 	}
 
+	saveVerbose := log.GetVerbose()
+	if tmp := r.URL.Query().Get("verbose"); tmp != "" {
+		if v, err := strconv.Atoi(tmp); err == nil {
+			log.SetVerbose(v)
+		}
+	}
+
 	err = Reg.NewGet(out, info)
+
+	if tmp := r.URL.Query().Get("verbose"); tmp != "" {
+		log.SetVerbose(saveVerbose)
+	}
 
 	if buf == nil {
 		// Not buffering so just return
