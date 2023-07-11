@@ -20,6 +20,14 @@ var Port = "8080"
 var Reg = (*registry.Registry)(nil)
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	saveVerbose := log.GetVerbose()
+	if tmp := r.URL.Query().Get("verbose"); tmp != "" {
+		if v, err := strconv.Atoi(tmp); err == nil {
+			log.SetVerbose(v)
+		}
+	}
+	defer log.SetVerbose(saveVerbose)
+
 	log.VPrintf(2, "%s %s", r.Method, r.URL.Path)
 
 	info, err := Reg.ParseRequest(r)
@@ -41,13 +49,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("html") || r.URL.Query().Has("noprops") {
 		buf = &bytes.Buffer{}
 		out = io.Writer(buf)
-	}
-
-	saveVerbose := log.GetVerbose()
-	if tmp := r.URL.Query().Get("verbose"); tmp != "" {
-		if v, err := strconv.Atoi(tmp); err == nil {
-			log.SetVerbose(v)
-		}
 	}
 
 	err = Reg.NewGet(out, info)
@@ -76,6 +77,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("html") {
 		w.Header().Add("Content-Type", "text/html")
 		buf = bytes.NewBuffer(tests.HTMLify(r, buf.Bytes()))
+		w.Write([]byte("<pre>\n"))
 	}
 
 	w.Write(buf.Bytes())
