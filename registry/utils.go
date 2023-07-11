@@ -95,61 +95,51 @@ func SortedKeys(m interface{}) []string {
 	return keys
 }
 
-func SetField(res interface{}, name string, value *string, propType string) {
-	k, _ := strconv.Atoi(propType)
-	v := fmt.Sprintf("%v", value)
-	if value != nil {
-		v = fmt.Sprintf("%v", *value)
+func SetField(res any, name string, value *string, propType string) {
+	log.VPrintf(3, ">Enter: SetField(%T, %s=%s(%s))",
+		res, name, *value, propType)
+	defer log.VPrintf(3, "<Exit: SetField")
+
+	var val any
+	var err error
+
+	field := reflect.ValueOf(res).Elem().FieldByName("Extensions")
+	if !field.IsValid() {
+		panic(fmt.Sprintf("Can't find Extensions: %#v", res))
+	}
+	if field.IsNil() {
+		// Since we're deleting the key anyway we can just return
+		if value == nil {
+			return
+		}
+		field.Set(reflect.ValueOf(map[string]any{}))
 	}
 
-	log.VPrintf(3, ">Enter: SetField(%T, %s/%q,%s)", res, name, v,
-		reflect.Kind(k).String())
-	defer log.VPrintf(3, "<")
+	if value == nil {
+		// delete any existing key from map
+		field.SetMapIndex(reflect.ValueOf(name), reflect.Value{})
+		return
+	}
 
-	var err error
-	val := reflect.ValueOf(res).Elem()
-
-	field := val.FieldByName(name)
-	// Use "Extensions" for invalid fields (meaning not defined in the resource)
-	if !field.IsValid() {
-		field := reflect.ValueOf(res).Elem().FieldByName("Extensions")
-		if !field.IsValid() {
-			log.VPrintf(2, "Can't Set unknown field(%T/%s)", res, name)
-		} else {
-			if field.IsNil() {
-				field.Set(reflect.ValueOf(map[string]any{}))
-			}
-			newValue := reflect.Value{}
-
-			if reflect.Kind(k) == reflect.Int {
-				tmpInt, _ := strconv.Atoi(*value)
-				newValue = reflect.ValueOf(tmpInt)
-			} else {
-				newValue = reflect.ValueOf(*value)
-			}
-			field.SetMapIndex(reflect.ValueOf(name), newValue)
+	if propType == "s" {
+		val = *value
+	} else if propType == "b" {
+		val = (*value == "true")
+	} else if propType == "i" {
+		val, err = strconv.Atoi(*value)
+		if err != nil {
+			panic(fmt.Sprintf("error parsing int: %s", val))
+		}
+	} else if propType == "f" {
+		val, err = strconv.ParseFloat(*value, 64)
+		if err != nil {
+			panic(fmt.Sprintf("error parsing float: %s", val))
 		}
 	} else {
-		if field.Type().Kind() == reflect.String {
-			tmpVal := ""
-			if value != nil {
-				tmpVal = *value
-			}
-
-			field.SetString(tmpVal)
-			log.VPrintf(4, "set %q to %q", name, reflect.ValueOf(value).Elem())
-		} else if field.Type().Kind() == reflect.Int {
-			tmpInt := 0
-			if value != nil {
-				tmpInt, err = strconv.Atoi(*value)
-				if err != nil {
-					log.Printf("Error converting %q int int: %s", *value, err)
-				}
-			}
-			field.SetInt(int64(tmpInt)) // reflect.ValueOf(value).Elem())
-			log.VPrintf(4, "set %q to %d", name, tmpInt)
-		}
+		panic(fmt.Sprintf("bad type: %v", propType))
 	}
+
+	field.SetMapIndex(reflect.ValueOf(name), reflect.ValueOf(val))
 }
 
 type JSONData struct {

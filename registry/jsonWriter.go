@@ -3,12 +3,12 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
-	"path"
-	// log "github.com/duglin/dlog"
 	"io"
 	"io/ioutil"
+	"path"
 	// "reflect"
 	"strings"
+	// log "github.com/duglin/dlog"
 )
 
 type JsonWriter struct {

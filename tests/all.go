@@ -121,7 +121,7 @@ func DoTests() *registry.Registry {
 
 	reg2, err := registry.FindRegistry(reg.ID)
 	NoErr("get reg2", err)
-	Check(registry.ToJSON(reg) == registry.ToJSON(reg2), "reg2!=reg")
+	CheckEqual(registry.ToJSON(reg2), registry.ToJSON(reg), "reg2!=reg")
 
 	CheckGet(reg, "minimal reg", "http://example.com", `{
   "specVersion": "0.5",
@@ -297,11 +297,11 @@ func DoTests() *registry.Registry {
 	g1.Set("ext2", 666)
 	Check(g1.Extensions["ext2"] == 666, "g1.Ext isn't an int")
 	g2 := reg.FindGroup("dirs", "g1")
-	Check(registry.ToJSON(g1) == registry.ToJSON(g2), "g2 != g1")
+	CheckEqual(registry.ToJSON(g2), registry.ToJSON(g1), "g2 != g1")
 	g2.Set("ext2", nil)
 	g2.Set("epoch", nil)
 	g1.Refresh()
-	Check(registry.ToJSON(g1) == registry.ToJSON(g2), "g1.refresh")
+	CheckEqual(registry.ToJSON(g2), registry.ToJSON(g1), "g1.refresh")
 
 	CheckGet(reg, "one group", "http://example.com?inline", `{
   "specVersion": "0.5",
@@ -552,10 +552,19 @@ func DoTests() *registry.Registry {
 	r1.Set(".name", "unique")
 	Check(r1.Extensions["name"] == "unique", "r1.Name != unique")
 	r1.Set(".Int", 345)
+	r1.Set(".Float", 3.14)
+	r1.Set(".BoolT", true)
+	r1.Set(".BoolF", false)
 	Check(r1.Extensions["Int"] == 345, "r1.Int != 345")
+	Check(r1.Extensions["Float"] == 3.14, "r1.Float != 3.14")
+	Check(r1.Extensions["BoolT"] == true, "r1.BoolT != true")
+	Check(r1.Extensions["BoolF"] == false, "r1.BoolF != false")
 	r3 := g1.FindResource("files", "r1")
-	Check(registry.ToJSON(r1) == registry.ToJSON(r3), "r3 != r1")
+	CheckEqual(registry.ToJSON(r3), registry.ToJSON(r1), "r3 != r1")
 	Check(r3.Extensions["Int"] == 345, "r3.Int != 345")
+	Check(r3.Extensions["Float"] == 3.14, "r3.Float != 3.14")
+	Check(r3.Extensions["BoolT"] == true, "r3.BoolT != true")
+	Check(r3.Extensions["BoolF"] == false, "r3.BoolF != false")
 
 	CheckGet(reg, "r1 props", "http://example.com/dirs?inline", `{
   "g1": {
@@ -572,6 +581,9 @@ func DoTests() *registry.Registry {
         "id": "r1",
         "name": "unique",
         "self": "http://example.com/dirs/g1/files/r1",
+        "BoolF": false,
+        "BoolT": true,
+        "Float": 3.14,
         "Int": 345,
 
         "versions": {},
@@ -620,6 +632,9 @@ func DoTests() *registry.Registry {
         "self": "http://example.com/dirs/g1/files/r1",
         "latestId": "v1",
         "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
+        "BoolF": false,
+        "BoolT": true,
+        "Float": 3.14,
         "Int": 345,
         "ext1": "someext",
         "ext2": 234,

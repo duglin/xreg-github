@@ -428,19 +428,31 @@ func (e *Entity) Refresh() error {
 		val := NotNilString(result.Data[1])
 		propType := NotNilString(result.Data[2])
 
-		k, _ := strconv.Atoi(propType)
-		if reflect.Kind(k) == reflect.Int {
-			tmpInt, _ := strconv.Atoi(val)
-			e.Extensions[name] = tmpInt
-		} else {
+		if propType == "s" {
 			e.Extensions[name] = val
+		} else if propType == "b" {
+			e.Extensions[name] = (val == "true")
+		} else if propType == "i" {
+			tmpInt, err := strconv.Atoi(val)
+			if err != nil {
+				panic(fmt.Sprintf("error parsing int: %s", val))
+			}
+			e.Extensions[name] = tmpInt
+		} else if propType == "f" {
+			tmpFloat, err := strconv.ParseFloat(val, 64)
+			if err != nil {
+				panic(fmt.Sprintf("error parsing float: %s", val))
+			}
+			e.Extensions[name] = tmpFloat
+		} else {
+			panic(fmt.Sprintf("bad type: %v", propType))
 		}
 	}
 	return nil
 }
 
-func (e *Entity) sSet(name string, value any) error {
-	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, value)
+func (e *Entity) sSet(name string, val any) error {
+	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
 	defer log.VPrintf(3, "<Exit SetProp")
 
 	if e.DbID == "" {
@@ -451,24 +463,36 @@ func (e *Entity) sSet(name string, value any) error {
 	}
 
 	var err error
-	if value == nil {
+	if val == nil {
 		err = Do(`DELETE FROM Props WHERE EntityID=? and PropName=?`,
 			e.DbID, name)
 	} else {
+		propType := ""
+		k := reflect.ValueOf(val).Type().Kind()
+		if k == reflect.Bool {
+			propType = "b" // boolean
+		} else if k == reflect.String {
+			propType = "s" // string
+		} else if k == reflect.Int {
+			propType = "i" // int
+		} else if k == reflect.Float64 {
+			propType = "f" // float
+		} else {
+			panic(fmt.Sprintf("Bad property kind: %s", k.String()))
+		}
 		err = Do(`
 			REPLACE INTO Props( 
 				RegistryID, EntityID, PropName, PropValue, PropType)
 			VALUES( ?,?,?,?,? )`,
-			e.RegistryID, e.DbID, name, value,
-			reflect.ValueOf(value).Type().Kind())
+			e.RegistryID, e.DbID, name, val, propType)
 	}
 
 	if err != nil {
-		log.Printf("Error updating prop(%s/%v): %s", name, value, err)
-		return fmt.Errorf("Error updating prop(%s/%v): %s", name, value, err)
+		log.Printf("Error updating prop(%s/%v): %s", name, val, err)
+		return fmt.Errorf("Error updating prop(%s/%v): %s", name, val, err)
 	}
 	return nil
-	// return SetProp(e, name, value)
+	// return SetProp(e, name, val)
 }
 
 func SetProp(entity any, name string, val any) error {
@@ -496,12 +520,30 @@ func SetProp(entity any, name string, val any) error {
 		err = Do(`DELETE FROM Props WHERE EntityID=? and PropName=?`,
 			e.DbID, name)
 	} else {
+		dbVal := val
+		propType := ""
+		k := reflect.ValueOf(val).Type().Kind()
+		if k == reflect.Bool {
+			propType = "b" // boolean
+			if val.(bool) {
+				dbVal = "true"
+			} else {
+				dbVal = "false"
+			}
+		} else if k == reflect.String {
+			propType = "s" // string
+		} else if k == reflect.Int {
+			propType = "i" // int
+		} else if k == reflect.Float64 {
+			propType = "f" // float
+		} else {
+			panic(fmt.Sprintf("Bad property kind: %s", k.String()))
+		}
 		err = Do(`
 			REPLACE INTO Props( 
 				RegistryID, EntityID, PropName, PropValue, PropType)
 			VALUES( ?,?,?,?,? )`,
-			e.RegistryID, e.DbID, name, val,
-			reflect.ValueOf(val).Type().Kind())
+			e.RegistryID, e.DbID, name, dbVal, propType)
 	}
 
 	if err != nil {

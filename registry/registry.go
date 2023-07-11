@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
+	// "reflect"
 	"strconv"
 	"strings"
 
@@ -333,14 +333,26 @@ func readObj(results [][]*any, index int) (*Obj, int) {
 
 		propName := NotNilString(row[3])
 		propVal := NotNilString(row[4])
-		valType := NotNilString(row[5])
+		propType := NotNilString(row[5])
 
-		k, _ := strconv.Atoi(valType)
-		if reflect.Kind(k) == reflect.Int {
-			tmpInt, _ := strconv.Atoi(propVal)
-			obj.Values[propName] = tmpInt
-		} else {
+		if propType == "s" {
 			obj.Values[propName] = propVal
+		} else if propType == "b" {
+			obj.Values[propName] = (propVal == "true")
+		} else if propType == "i" {
+			tmpInt, err := strconv.Atoi(propVal)
+			if err != nil {
+				panic(fmt.Sprintf("error parsing int: %s", propVal))
+			}
+			obj.Values[propName] = tmpInt
+		} else if propType == "f" {
+			tmpFloat, err := strconv.ParseFloat(propVal, 64)
+			if err != nil {
+				panic(fmt.Sprintf("error parsing float: %s", propVal))
+			}
+			obj.Values[propName] = tmpFloat
+		} else {
+			panic(fmt.Sprintf("bad type: %v", propType))
 		}
 
 		index++

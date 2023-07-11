@@ -108,7 +108,7 @@ CREATE TABLE Props (
 	EntityID	VARCHAR(64) NOT NULL,		# Reg,Group,Res,Ver System ID
 	PropName	VARCHAR(64) NOT NULL,
 	PropValue	VARCHAR(255),
-	PropType	VARCHAR(64) NOT NULL,
+	PropType	CHAR(1) NOT NULL,			# i(nt), f(loat), b(ool), s(tring)
 
 	PRIMARY KEY (EntityID, PropName),
 	INDEX (EntityID)
