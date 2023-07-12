@@ -79,13 +79,7 @@ func (reg *Registry) AddGroupModel(plural string, singular string, schema string
 	mID := NewUUID()
 	err := DoOne(`
 		INSERT INTO ModelEntities(
-			ID,
-			RegistryID,
-			ParentID,
-			Plural,
-			Singular,
-			SchemaURL,
-			Versions)
+			ID, RegistryID, ParentID, Plural, Singular, SchemaURL, Versions)
 		VALUES(?,?,?,?,?,?,?) `,
 		mID, reg.DbID, nil, plural, singular, schema, 0)
 	if err != nil {
@@ -292,9 +286,11 @@ func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
 	}
 
 	err := DoOne(`
-			INSERT INTO "Groups"(ID, RegistryID, GroupID, ModelID,Path,Abstract)
-			SELECT ?,?,?,ID,?,? FROM ModelEntities WHERE Plural=?`,
-		g.DbID, reg.DbID, g.ID, gType+"/"+g.ID, gType, gType)
+			INSERT INTO "Groups"(ID,RegistryID,GroupID,ModelID,Path,Abstract)
+			SELECT ?,?,?,ID,?,?
+			FROM ModelEntities
+			WHERE RegistryID=? AND Plural=? AND ParentID IS NULL`,
+		g.DbID, reg.DbID, g.ID, gType+"/"+g.ID, gType, reg.DbID, gType)
 
 	if err != nil {
 		log.Printf("Error adding group: %s", err)
@@ -427,7 +423,8 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	if info.Abstract == "model" {
 		buf, err := json.MarshalIndent(info.Registry.Model, "", "  ")
 		if err != nil {
-			return err
+			info.ErrCode = http.StatusInternalServerError
+			return fmt.Errorf("500: " + err.Error())
 		}
 		fmt.Fprintf(w, "%s\n", string(buf))
 		return nil
@@ -437,7 +434,8 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 
 	results, err := NewQuery(query, args...)
 	if err != nil {
-		return err
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
 	}
 
 	jw := NewJsonWriter(w, info, results)
@@ -448,13 +446,17 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	} else {
 		jw.NextObj()
 		if jw.Obj == nil {
-			return fmt.Errorf("not found\n")
+			info.ErrCode = http.StatusNotFound
+			return fmt.Errorf("404: not found\n")
 		}
 		err = jw.WriteObject()
 	}
 
 	if err == nil {
 		jw.Print("\n")
+	} else {
+		info.ErrCode = http.StatusInternalServerError
+		err = fmt.Errorf("500: " + err.Error())
 	}
 
 	return err
@@ -544,11 +546,13 @@ func (info *RequestInfo) ParseFilters() error {
 			}
 			path, value, found := strings.Cut(expr, "=")
 
-			if info.What != "Coll" && strings.Index(path, ".") < 0 {
-				info.ErrCode = http.StatusBadRequest
-				return fmt.Errorf("A filter with just an attribute name (%s) "+
-					"isn't allowed in this context", path)
-			}
+			/*
+				if info.What != "Coll" && strings.Index(path, ".") < 0 {
+					info.ErrCode = http.StatusBadRequest
+					return fmt.Errorf("A filter with just an attribute name (%s) "+
+						"isn't allowed in this context", path)
+				}
+			*/
 
 			if info.Abstract != "" {
 				path = info.Abstract + "." + path
@@ -654,6 +658,7 @@ func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 	q := ""
 	args := []any{}
 
+	// Remove entities that are higher than the GET PATH specified
 	addPath := func() string {
 		subsetPath := ""
 		if info.What != "Registry" {
@@ -672,7 +677,9 @@ func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 		return subsetPath
 	}
 
+	// Make sure we include the root object even if the filter excludes it
 	rootObjQuery := func() string {
+		return ""
 		res := ""
 
 		if info.What != "Coll" {
@@ -702,8 +709,7 @@ AND
 eID IN ( -- eID from query
   WITH RECURSIVE cte(eID,ParentID,Path) AS (
     SELECT eID,ParentID,Path FROM Entities
-    WHERE eID in (
-      -- below find IDs of interest (finding all leaves)`)
+    WHERE eID in ( -- start of the OR Filter groupings`)
 		firstOr := true
 		for _, OrFilters := range info.Filters {
 			if !firstOr {
@@ -712,7 +718,8 @@ eID IN ( -- eID from query
 			}
 			firstOr = false
 			q += `
-      -- start of (expr1 AND expr2 ...)
+      -- start of one Filter AND grouping (expre1 AND expr2)
+      -- below find IDs of interest (then find their leaves)
       SELECT list.eID FROM (
         SELECT count(*) as cnt,e2.eID,e2.Path FROM Entities AS e1
         RIGHT JOIN (
@@ -736,33 +743,31 @@ eID IN ( -- eID from query
 				}
 				q += `
           SELECT eID,Path FROM FullTree
-          WHERE (CONCAT(REPLACE(Abstract,'/','.'),'.',PropName)=? AND
+          WHERE (CONCAT(IF(Abstract<>'',CONCAT(REPLACE(Abstract,'/','.'),'.'),''),PropName)=? AND
                ` + check + `)`
 			} // end of AndFilter
 			q += `
           -- end of expr1
         ) AS res ON ( res.eID=e1.eID )
         JOIN Entities AS e2 ON (
-          (e2.Path=res.Path OR e2.Path LIKE CONCAT(res.Path,'/%'))
+          (e2.Path=res.Path OR e2.Path LIKE
+             CONCAT(IF(res.Path<>'',CONCAT(res.Path,'/'),''),'%'))
           AND e2.eID IN (SELECT * from Leaves)
         ) GROUP BY e2.eID
         -- end of RIGHT JOIN
       ) as list
       WHERE list.cnt=?
-      -- end of (expr1 AND expr2 ...)`
+      -- end of one Filter AND grouping (expr1 AND expr2 ...)`
 			args = append(args, andCount)
-
-			q += `
-      -- end of (expr1 AND expr2 ...)`
 		} // end of OrFilter
 
 		q += `
-  )
+    ) -- end of all OR Filter groupings
     UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
     INNER JOIN cte ON e.eID=cte.ParentID)
   SELECT DISTINCT eID FROM cte )
 )
-ORDER BY Path
+ORDER BY Path ;
 `
 	}
 
