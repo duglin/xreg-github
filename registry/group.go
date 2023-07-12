@@ -73,11 +73,12 @@ func (g *Group) FindOrAddResource(rType string, id string) *Resource {
 
 	err := DoOne(`
 		INSERT INTO Resources(ID, ResourceID, GroupID, ModelID, Path, Abstract)
-		SELECT ?,?,?,ID,?,? FROM ModelEntities WHERE Plural=?`,
+		SELECT ?,?,?,ID,?,?
+		FROM ModelEntities
+		WHERE RegistryID=? AND Plural=?`,
 		r.DbID, r.ID, g.DbID,
-		g.Plural+"/"+g.ID+"/"+rType+"/"+r.ID,
-		g.Plural+"/"+rType,
-		rType)
+		g.Plural+"/"+g.ID+"/"+rType+"/"+r.ID, g.Plural+"/"+rType,
+		g.RegistryID, rType)
 	if err != nil {
 		log.Printf("Error adding resource: %s", err)
 		return nil
@@ -91,7 +92,7 @@ func (g *Group) FindOrAddResource(rType string, id string) *Resource {
 func (g *Group) AddResource(rType string, rID string, vID string) *Resource {
 	r := g.FindOrAddResource(rType, rID)
 	if r != nil {
-		r.FindOrAddVersion("v0")
+		r.FindOrAddVersion(vID)
 	}
 	return r
 }

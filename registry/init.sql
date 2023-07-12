@@ -52,7 +52,7 @@ CREATE TABLE "Groups" (
 	Abstract		VARCHAR(255) NOT NULL,
 
 	PRIMARY KEY (ID),
-	INDEX(GroupID)
+	INDEX(RegistryID, GroupID)
 );
 
 CREATE TRIGGER GroupTrigger BEFORE DELETE ON "Groups"
@@ -71,7 +71,7 @@ CREATE TABLE Resources (
 	Abstract		VARCHAR(255) NOT NULL,
 
 	PRIMARY KEY (ID),
-	INDEX(ResourceID)
+	INDEX(GroupID, ResourceID)
 );
 
 CREATE TRIGGER ResourcesTrigger BEFORE DELETE ON Resources
@@ -93,7 +93,7 @@ CREATE TABLE Versions (
 	ResourceContentID	VARCHAR(64),
 
 	PRIMARY KEY (ID),
-	INDEX (VersionID)
+	INDEX (ResourceID, VersionID)
 );
 
 CREATE TRIGGER VersionsTrigger BEFORE DELETE ON Versions

@@ -32,7 +32,8 @@ func Prepare(str string) (*Prep, error) {
 func (p *Prep) Exec(args ...interface{}) error {
 	_, err := p.Stmt.Exec(args...)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error DB(%s)->%s\n", p.Cmd, err)
+		query := SubQuery(p.Cmd, args)
+		fmt.Fprintf(os.Stderr, "Exec:Error DB(%s)->%s\n", query, err)
 	}
 	return err
 }
@@ -134,7 +135,8 @@ func Do(cmd string, args ...interface{}) error {
 	_, err = ps.Exec(args...)
 
 	if err != nil {
-		log.Printf("Error DB(%s)->%s\n", cmd, err)
+		query := SubQuery(cmd, args)
+		log.Printf("Do:Error DB(%s)->%s\n", query, err)
 	}
 	return err
 }
@@ -147,11 +149,13 @@ func DoOne(cmd string, args ...interface{}) error {
 	result, err := ps.Exec(args...)
 
 	if err != nil {
-		log.Printf("Error DB(%s)->%s\n", cmd, err)
+		query := SubQuery(cmd, args)
+		log.Printf("DoOne:Error DB(%s)->%s\n", query, err)
 	}
 
 	if count, _ := result.RowsAffected(); count != 1 {
-		log.Printf("Error DB(%s) didn't change any rows", cmd)
+		query := SubQuery(cmd, args)
+		log.Printf("DoOne:Error DB(%s) didn't change any rows", query)
 	}
 
 	return err
