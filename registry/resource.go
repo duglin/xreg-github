@@ -11,8 +11,22 @@ type Resource struct {
 	Group *Group
 }
 
+func (r *Resource) Get(name string) any {
+	log.VPrintf(4, "Get: r(%s).Get(%s)", r.ID, name)
+	if name[0] == '.' { // Force it to be on the Resource, not latest Version
+		return r.Entity.Get(name[1:])
+	}
+
+	if name == "id" || name == "latestId" || name == "latestUrl" {
+		return r.Entity.Get(name)
+	}
+
+	v := r.GetLatest()
+	return v.Entity.Get(name)
+}
+
 func (r *Resource) Set(name string, val any) error {
-	log.VPrintf(4, "r(%s).Set(%s,%v)", r.ID, name, val)
+	log.VPrintf(4, "Set: r(%s).Set(%s,%v)", r.ID, name, val)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
 		return SetProp(r, name[1:], val)
 	}

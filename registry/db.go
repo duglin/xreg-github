@@ -151,6 +151,7 @@ func DoOne(cmd string, args ...interface{}) error {
 	if err != nil {
 		query := SubQuery(cmd, args)
 		log.Printf("DoOne:Error DB(%s)->%s\n", query, err)
+		return err
 	}
 
 	if count, _ := result.RowsAffected(); count != 1 {

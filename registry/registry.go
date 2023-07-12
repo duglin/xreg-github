@@ -36,6 +36,13 @@ func NewRegistry(id string) (*Registry, error) {
 		id = NewUUID()
 	}
 
+	if r, err := FindRegistry(id); r != nil {
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("A registry with ID %q alredy exists", id)
+	}
+
 	dbID := NewUUID()
 	err := DoOne(`
 		INSERT INTO Registries(ID, RegistryID)
@@ -440,15 +447,15 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 
 	jw := NewJsonWriter(w, info, results)
 
+	jw.NextObj()
+	if jw.Obj == nil {
+		info.ErrCode = http.StatusNotFound
+		return fmt.Errorf("404: not found\n")
+	}
+
 	if info.What == "Coll" {
-		jw.NextObj()
 		_, err = jw.WriteCollection()
 	} else {
-		jw.NextObj()
-		if jw.Obj == nil {
-			info.ErrCode = http.StatusNotFound
-			return fmt.Errorf("404: not found\n")
-		}
 		err = jw.WriteObject()
 	}
 
@@ -555,7 +562,7 @@ func (info *RequestInfo) ParseFilters() error {
 			*/
 
 			if info.Abstract != "" {
-				path = info.Abstract + "." + path
+				path = strings.Replace(info.Abstract, "/", ".", -1) + "." + path
 			}
 			filter := &FilterExpr{
 				Path:     path,
@@ -682,10 +689,12 @@ func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 		return ""
 		res := ""
 
-		if info.What != "Coll" {
-			args = append(args, strings.Join(info.Parts, "/"))
-			res = "Path=?\nOR  "
-		}
+		/*
+			if info.What != "Coll" {
+				args = append(args, strings.Join(info.Parts, "/"))
+				res = "Path=?\nOR  "
+			}
+		*/
 
 		return res
 	}

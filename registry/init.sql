@@ -8,7 +8,8 @@ CREATE TABLE Registries (
 	ID          VARCHAR(255) NOT NULL,	# System ID
 	RegistryID	VARCHAR(255) NOT NULL,	# User defined
 
-	PRIMARY KEY (ID)
+	PRIMARY KEY (ID),
+	UNIQUE INDEX (RegistryID)
 );
 
 CREATE TRIGGER RegistryTrigger BEFORE DELETE ON Registries

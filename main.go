@@ -87,7 +87,7 @@ func main() {
 	Reg = tests.TestAll()
 	// Reg.Delete()
 
-	// Reg = LoadSample()
+	Reg = LoadSample()
 	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
 
 	if tmp := os.Getenv("PORT"); tmp != "" {

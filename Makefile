@@ -1,3 +1,8 @@
+all: test run
+
+test:
+	(cd tests && GO111MODULE=off go test)
+
 run:
 	GO111MODULE=off go run *.go
 
