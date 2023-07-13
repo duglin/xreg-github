@@ -172,13 +172,13 @@ func LoadSample() *registry.Registry {
 	gm, _ := reg.AddGroupModel("agroups", "group", "")
 	_, err = gm.AddResourceModel("ress", "res", 2, true, true)
 
-	gm, _ = reg.AddGroupModel("zgroups", "group", "")
+	gm, _ = reg.AddGroupModel("zgroups", "zgroup", "")
 	_, err = gm.AddResourceModel("ress", "res", 2, true, true)
 
 	gm, _ = reg.AddGroupModel("endpoints", "endpoint", "")
 	_, err = gm.AddResourceModel("defs", "def", 2, true, true)
-	_, err = gm.AddResourceModel("adefs", "def", 2, true, true)
-	_, err = gm.AddResourceModel("zdefs", "def", 2, true, true)
+	_, err = gm.AddResourceModel("adefs", "adef", 2, true, true)
+	_, err = gm.AddResourceModel("zdefs", "zdef", 2, true, true)
 
 	g := reg.FindOrAddGroup("endpoints", "e1")
 	g.Set("name", "end1")

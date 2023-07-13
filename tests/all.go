@@ -156,8 +156,6 @@ func DoTests() *registry.Registry {
 }
 `)
 
-	// DUG
-
 	// Model stuff
 	gm1, err := reg.AddGroupModel("dirs", "dir", "schema-url")
 	NoErr("add groups2", err)
@@ -172,6 +170,8 @@ func DoTests() *registry.Registry {
   "dirsUrl": "http://example.com/dirs"
 }
 `)
+
+	// DUG
 
 	CheckGet(reg, "inline *", "http://example.com?inline=*", `{
   "specVersion": "0.5",
@@ -684,7 +684,7 @@ func DoTests() *registry.Registry {
 
 	CheckGet(reg, "v3 missing",
 		"http://example.com/dirs/g1/files/r1/versions/v3",
-		"404: not found\n")
+		"404: Not found\n")
 
 	// Test tags
 	v1.Set("tags.stage", "dev")
@@ -820,7 +820,7 @@ func DoTests() *registry.Registry {
 `)
 
 	CheckGet(reg, "filter id AND no 2nd match",
-		"http://example.com/?inline&noprops&filter=dirs.id=g1,dirs.name=g3", `404: not found
+		"http://example.com/?inline&noprops&filter=dirs.id=g1,dirs.name=g3", `404: Not found
 `)
 
 	CheckGet(reg, "filter tags level 2",
@@ -852,7 +852,7 @@ func DoTests() *registry.Registry {
 `)
 
 	CheckGet(reg, "filter group in filter and path - bad",
-		"http://example.com/dirs?inline&noprops&filter=dirs.files.latestId=v1", `404: not found
+		"http://example.com/dirs?inline&noprops&filter=dirs.files.latestId=v1", `{}
 `)
 	CheckGet(reg, "filter path+level 1",
 		"http://example.com/dirs?inline&noprops&filter=files.latestId=v1", `{

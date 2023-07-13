@@ -79,9 +79,11 @@ func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string
 
 	if req.URL.Query().Has("noprops") {
 		buf = bytes.NewBuffer(RemoveProps(buf.Bytes()))
+		// expected = string(RemoveProps([]byte(expected)))
 	}
 	if req.URL.Query().Has("oneline") {
 		buf = bytes.NewBuffer(OneLine(buf.Bytes()))
+		// expected = string(OneLine([]byte(expected)))
 	}
 
 	xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
@@ -94,9 +96,23 @@ func xCheckEqual(t *testing.T, extra string, got string, exp string) {
 			pos++
 		}
 
+		if pos == len(got) {
+			t.Errorf(Caller()+"\n%s"+
+				"Expected:\n%s\nGot:\n%s\nGot ended early at(%d)[%02X]:\n%q",
+				extra, exp, got, pos, exp[pos], got[pos:])
+			return
+		}
+
+		if pos == len(exp) {
+			t.Errorf(Caller()+"\n%s"+
+				"Expected:\n%s\nGot:\n%s\nExp ended early at(%d)[%02X]:\n%q",
+				extra, exp, got, pos, got[pos], got[pos:])
+			return
+		}
+
 		t.Errorf(Caller()+"\n%s"+
-			"Expected:\n%s\nGot:\n%s\n\nDiff at(%d):\n%q",
-			extra, exp, got, pos, got[pos:])
+			"Expected:\n%s\nGot:\n%s\nDiff at(%d)[%x/%x]:\n%q",
+			extra, exp, got, pos, exp[pos], got[pos], got[pos:])
 	}
 }
 

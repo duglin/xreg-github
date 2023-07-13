@@ -187,6 +187,9 @@ var orderedProps = []struct {
 	{"modifiedOn", "", nil},
 	{"model", "0", func(jw *JsonWriter) any {
 		if jw.info.ShowModel {
+			if jw.info.Registry.Model == nil {
+				return &Model{}
+			}
 			return jw.info.Registry.Model
 		}
 		return nil

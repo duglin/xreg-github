@@ -33,7 +33,8 @@ CREATE TABLE ModelEntities (		# Group or Resource (no parent->Group)
 	Latest      BOOL NOT NULL,		# For Resources
 
 	PRIMARY KEY(ID),
-	INDEX (RegistryID, ParentID, Plural)
+	UNIQUE INDEX (RegistryID, ParentID, Plural),
+	CONSTRAINT UC_Singular UNIQUE (RegistryID, ParentID, Singular)
 );
 
 CREATE TRIGGER ModelTrigger BEFORE DELETE ON ModelEntities

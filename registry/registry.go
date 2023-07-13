@@ -83,6 +83,20 @@ func (reg *Registry) AddGroupModel(plural string, singular string, schema string
 	if singular == "" {
 		return nil, fmt.Errorf("Can't add a group with an empty sigular name")
 	}
+
+	if reg.Model != nil {
+		for _, gm := range reg.Model.Groups {
+			if gm.Plural == plural {
+				return nil, fmt.Errorf("GroupModel plural %q already exists",
+					plural)
+			}
+			if gm.Singular == singular {
+				return nil, fmt.Errorf("GroupModel singular %q already exists",
+					singular)
+			}
+		}
+	}
+
 	mID := NewUUID()
 	err := DoOne(`
 		INSERT INTO ModelEntities(
@@ -427,8 +441,20 @@ func (info *RequestInfo) ShouldInline(objPath string) bool {
 func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	info.Root = strings.Trim(info.Root, "/")
 
-	if info.Abstract == "model" {
-		buf, err := json.MarshalIndent(info.Registry.Model, "", "  ")
+	if len(info.Parts) > 0 && info.Parts[0] == "model" {
+		if len(info.Parts) > 1 {
+			info.ErrCode = http.StatusNotFound
+			return fmt.Errorf("404: Not found")
+		}
+		model := info.Registry.Model
+		if model == nil {
+			model = &Model{}
+		}
+		if info.Registry.Model == nil {
+			fmt.Fprint(w, "{}\n")
+			return nil
+		}
+		buf, err := json.MarshalIndent(model, "", "  ")
 		if err != nil {
 			info.ErrCode = http.StatusInternalServerError
 			return fmt.Errorf("500: " + err.Error())
@@ -448,14 +474,14 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	jw := NewJsonWriter(w, info, results)
 
 	jw.NextObj()
-	if jw.Obj == nil {
-		info.ErrCode = http.StatusNotFound
-		return fmt.Errorf("404: not found\n")
-	}
 
 	if info.What == "Coll" {
 		_, err = jw.WriteCollection()
 	} else {
+		if jw.Obj == nil {
+			info.ErrCode = http.StatusNotFound
+			return fmt.Errorf("404: Not found\n")
+		}
 		err = jw.WriteObject()
 	}
 
@@ -593,6 +619,10 @@ func (info *RequestInfo) ParseRequestURL() error {
 	if len(info.Parts) == 1 && info.Parts[0] == "" {
 		info.Parts = nil
 		info.What = "Registry"
+		return nil
+	}
+
+	if len(info.Parts) > 0 && info.Parts[0] == "model" {
 		return nil
 	}
 

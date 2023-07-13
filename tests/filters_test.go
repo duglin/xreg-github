@@ -76,7 +76,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter root, no match",
 			URL:  "?inline&oneline&filter=id=xxx",
 			// Nothing matched so 404
-			Exp: `404: not found`,
+			Exp: `404: Not found`,
 		},
 		{
 			Name: "Get root, filter group coll - match",
@@ -88,7 +88,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get root, filter group coll - no match",
 			URL:  "?inline&oneline&filter=dirs.id=xxx",
 			// Nothing, matched, so 404
-			Exp: `404: not found`,
+			Exp: `404: Not found`,
 		},
 		{
 			Name: "Get/filter group coll - match",
@@ -99,8 +99,7 @@ func TestBasicFilters(t *testing.T) {
 		{
 			Name: "Get/filter group coll - no match",
 			URL:  "dirs?inline&oneline&filter=id=xxx",
-			// Nothing, matched, so 404
-			Exp: `404: not found`,
+			Exp:  "{}",
 		},
 		{
 			Name: "Get/filter group entity - match",
@@ -112,7 +111,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter group entity - no match",
 			URL:  "dirs/d1?inline&oneline&filter=id=xxx",
 			// Nothing, matched, so 404
-			Exp: `404: not found`,
+			Exp: `404: Not found`,
 		},
 		{
 			Name: "Get group entity, filter resource - match",
@@ -124,7 +123,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get group entity, filter resource - no match",
 			URL:  "dirs/d1?inline&oneline&filter=files.id=xxx",
 			// Nothing, matched, so 404
-			Exp: `404: not found`,
+			Exp: `404: Not found`,
 		},
 		{
 			Name: "Get/filter version coll - match",
@@ -134,8 +133,7 @@ func TestBasicFilters(t *testing.T) {
 		{
 			Name: "Get/filter version coll - no match",
 			URL:  "dirs/d1/files/f1/versions?inline&oneline&filter=id=xxx",
-			// Nothing, matched, so 404
-			Exp: `404: not found`,
+			Exp:  "{}",
 		},
 		{
 			Name: "Get/filter version - match",
@@ -150,7 +148,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter version - no match",
 			URL:  "dirs/d1/files/f1/versions/v1?inline&oneline&filter=id=xxx",
 			// Nothing, matched, so 404
-			Exp: `404: not found`,
+			Exp: `404: Not found`,
 		},
 	}
 
