@@ -75,10 +75,17 @@ func (g *Group) FindOrAddResource(rType string, id string) *Resource {
 		INSERT INTO Resources(ID, ResourceID, GroupID, ModelID, Path, Abstract)
 		SELECT ?,?,?,ID,?,?
 		FROM ModelEntities
-		WHERE RegistryID=? AND Plural=?`,
+		WHERE RegistryID=?
+		  AND ParentID IN (SELECT ID FROM ModelEntities
+		                  WHERE RegistryID=?
+						    AND ParentID IS NULL
+							AND Plural=?)
+		  AND Plural=?`,
 		r.DbID, r.ID, g.DbID,
 		g.Plural+"/"+g.ID+"/"+rType+"/"+r.ID, g.Plural+"/"+rType,
-		g.RegistryID, rType)
+		g.RegistryID,
+		g.RegistryID, g.Plural,
+		rType)
 	if err != nil {
 		log.Printf("Error adding resource: %s", err)
 		return nil

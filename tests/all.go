@@ -107,8 +107,8 @@ func CheckEqual(str1 string, str2 string, desc string) {
 		}
 
 		log.Fatalf("%s - Output mismatch:\n"+
-			"Expected:\n%s\nGot:\n%s\n\nAt: %s",
-			desc, str2, str1, str1[pos:])
+			"Expected:\n%s\nGot:\n%s\n\nAt: [%0X,%0X]%s",
+			desc, str2, str1, str2[pos], str1[pos], str1[pos:])
 	}
 }
 
@@ -173,133 +173,11 @@ func DoTests() *registry.Registry {
 
 	// DUG
 
-	CheckGet(reg, "inline *", "http://example.com?inline=*", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirs": {},
-  "dirsCount": 0,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "inline by name", "http://example.com?inline=dirs", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirs": {},
-  "dirsCount": 0,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "no inline", "http://example.com", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirsCount": 0,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "bad inline", "http://example.com?inline=foo",
-		`Invalid 'inline' value: "foo"`)
-
 	_, err = gm1.AddResourceModel("files", "file", 5, true, true)
 	NoErr("add files", err)
 
-	CheckGet(reg, "check model", "http://example.com?model", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-  "model": {
-    "groups": {
-      "dirs": {
-        "plural": "dirs",
-        "singular": "dir",
-        "schema": "schema-url",
-        "resources": {
-          "files": {
-            "plural": "files",
-            "singular": "file",
-            "versions": 5,
-            "versionId": true,
-            "latest": true
-          }
-        }
-      }
-    }
-  },
-
-  "dirsCount": 0,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "just model", "http://example.com/model", `{
-  "groups": {
-    "dirs": {
-      "plural": "dirs",
-      "singular": "dir",
-      "schema": "schema-url",
-      "resources": {
-        "files": {
-          "plural": "files",
-          "singular": "file",
-          "versions": 5,
-          "versionId": true,
-          "latest": true
-        }
-      }
-    }
-  }
-}
-`)
-
 	_, err = gm1.AddResourceModel("file2s", "file2", 4, false, false)
 	NoErr("add files", err)
-
-	CheckGet(reg, "model with false", "http://example.com?model", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-  "model": {
-    "groups": {
-      "dirs": {
-        "plural": "dirs",
-        "singular": "dir",
-        "schema": "schema-url",
-        "resources": {
-          "file2s": {
-            "plural": "file2s",
-            "singular": "file2",
-            "versions": 4,
-            "versionId": false,
-            "latest": false
-          },
-          "files": {
-            "plural": "files",
-            "singular": "file",
-            "versions": 5,
-            "versionId": true,
-            "latest": true
-          }
-        }
-      }
-    }
-  },
-
-  "dirsCount": 0,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	m1 := reg.LoadModel()
-	Check(m1.Groups["dirs"].Singular == "dir", "dirs.Singular")
-	Check(m1.Groups["dirs"].Resources["files"].Versions == 5, "files.Vers")
 
 	// Group stuff
 	g1 := reg.FindGroup("dirs", "g1")

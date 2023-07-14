@@ -286,6 +286,11 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
 	log.VPrintf(3, ">Enter FindOrAddGroup(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit FindOrAddGroup")
+
+	if reg.Model.Groups[gType] == nil {
+		return nil // should return err
+	}
+
 	if id == "" {
 		id = NewUUID()
 	}

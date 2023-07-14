@@ -76,6 +76,20 @@ func (r *Result) NextRow() bool {
 		r.Data[i] = d[i].(*any)
 	}
 
+	if log.GetVerbose() > 3 {
+		dd := []string{}
+		for _, d := range r.Data {
+			str := ""
+			t := reflect.ValueOf(*d).Type().String()
+			if t == "[]uint8" {
+				str = string((*d).([]byte))
+			} else {
+				str = fmt.Sprintf("%v", *d)
+			}
+			dd = append(dd, str)
+		}
+		log.VPrintf(4, "row: %v", dd)
+	}
 	return true
 }
 

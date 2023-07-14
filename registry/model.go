@@ -16,8 +16,8 @@ type GroupModel struct {
 	ID       string    `json:"-"`
 	Registry *Registry `json:"-"`
 
-	Plural   string `json:"plural,omitempty"`
-	Singular string `json:"singular,omitempty"`
+	Plural   string `json:"plural"`
+	Singular string `json:"singular"`
 	Schema   string `json:"schema,omitempty"`
 
 	Resources map[string]*ResourceModel `json:"resources,omitempty"` // Plural
@@ -27,9 +27,9 @@ type ResourceModel struct {
 	ID         string      `json:"-"`
 	GroupModel *GroupModel `json:"-"`
 
-	Plural    string `json:"plural,omitempty"`
-	Singular  string `json:"singular,omitempty"`
-	Versions  int    `json:"versions,omitempty"`
+	Plural    string `json:"plural"`
+	Singular  string `json:"singular"`
+	Versions  int    `json:"versions"`
 	VersionId bool   `json:"versionId"`
 	Latest    bool   `json:"latest"`
 }
@@ -47,7 +47,19 @@ func (g *GroupModel) AddResourceModel(plural string, singular string, versions i
 		return nil, fmt.Errorf("Can't add a group with an empty sigular name")
 	}
 	if versions < 0 {
-		return nil, fmt.Errorf("''versions'(%d) must be >= 0", versions)
+		return nil, fmt.Errorf("'versions'(%d) must be >= 0", versions)
+	}
+
+	for _, r := range g.Resources {
+		if r.Plural == plural {
+			return nil, fmt.Errorf("Resoucre model plural %q already "+
+				"exists for group %q", plural, g.Plural)
+		}
+		if r.Singular == singular {
+			return nil,
+				fmt.Errorf("Resoucre model singular %q already "+
+					"exists for group %q", singular, g.Plural)
+		}
 	}
 
 	mID := NewUUID()

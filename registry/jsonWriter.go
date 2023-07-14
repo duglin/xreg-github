@@ -6,9 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 	"path"
+	// "runtime"
 	// "reflect"
+	log "github.com/duglin/dlog"
 	"strings"
-	// log "github.com/duglin/dlog"
 )
 
 type JsonWriter struct {
@@ -62,6 +63,11 @@ func (jw *JsonWriter) Outdent() {
 
 func (jw *JsonWriter) NextObj() *Obj {
 	jw.Obj, jw.resultPos = readObj(jw.results, jw.resultPos)
+	/*
+		pc, _, line, _ := runtime.Caller(1)
+		log.VPrintf(4, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
+		log.VPrintf(4, "  > Next: %v", jw.Obj)
+	*/
 	return jw.Obj
 }
 
@@ -198,6 +204,9 @@ var orderedProps = []struct {
 }
 
 func (jw *JsonWriter) WriteObject() error {
+	log.VPrintf(3, ">Enter: WriteObj (%v)", jw.Obj)
+	defer log.VPrintf(3, "<Exit: WriteObj")
+
 	if jw.Obj == nil {
 		jw.Printf("{}")
 		return nil
@@ -206,6 +215,7 @@ func (jw *JsonWriter) WriteObject() error {
 	var err error
 	extra := ""
 	myLevel := jw.Obj.Level
+	log.VPrintf(4, "Level: %d", myLevel)
 
 	jw.Printf("{")
 	jw.Indent()
@@ -253,8 +263,9 @@ func (jw *JsonWriter) WriteObject() error {
 	jw.LoadCollections(myLevel) // load the list of current collections
 	jw.NextObj()
 
-	if jw.Obj != nil && jw.Obj.Level > myLevel {
+	for jw.Obj != nil && jw.Obj.Level > myLevel {
 		extra = jw.WritePreCollections(extra, jw.Obj.Plural, myLevel)
+
 		if extra, err = jw.WriteCollectionHeader(extra); err != nil {
 			return err
 		}
