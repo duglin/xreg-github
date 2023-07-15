@@ -180,7 +180,7 @@ func DoTests() *registry.Registry {
 	NoErr("add files", err)
 
 	// Group stuff
-	g1 := reg.FindGroup("dirs", "g1")
+	g1, _ := reg.FindGroup("dirs", "g1")
 	Check(g1 == nil, "g1 should be nil")
 	g1, err = reg.AddGroup("dirs", "g1")
 	NoErr("", err)
@@ -190,7 +190,7 @@ func DoTests() *registry.Registry {
 	g1.Set("ext1", "extvalue")
 	g1.Set("ext2", 666)
 	Check(g1.Extensions["ext2"] == 666, "g1.Ext isn't an int")
-	g2 := reg.FindGroup("dirs", "g1")
+	g2, _ := reg.FindGroup("dirs", "g1")
 	CheckEqual(registry.ToJSON(g2), registry.ToJSON(g1), "g2 != g1")
 	g2.Set("ext2", nil)
 	g2.Set("epoch", nil)
@@ -233,7 +233,7 @@ func DoTests() *registry.Registry {
 `)
 
 	// Resource stuff
-	r1 := g1.FindResource("files", "r1")
+	r1, _ := g1.FindResource("files", "r1")
 	Check(r1 == nil, "r1 should be nil")
 
 	// Technical this is wrong - we need to create a version at the
@@ -484,7 +484,7 @@ func DoTests() *registry.Registry {
 	Check(r1.Extensions["Float"] == 3.14, "r1.Float != 3.14")
 	Check(r1.Extensions["BoolT"] == true, "r1.BoolT != true")
 	Check(r1.Extensions["BoolF"] == false, "r1.BoolF != false")
-	r3 := g1.FindResource("files", "r1")
+	r3, _ := g1.FindResource("files", "r1")
 	CheckEqual(registry.ToJSON(r3), registry.ToJSON(r1), "r3 != r1")
 	Check(r3.Extensions["Int"] == 345, "r3.Int != 345")
 	Check(r3.Extensions["Float"] == 3.14, "r3.Float != 3.14")
@@ -529,18 +529,19 @@ func DoTests() *registry.Registry {
 `)
 
 	// Version stuff
-	v1 := r1.FindVersion("v1")
+	v1, _ := r1.FindVersion("v1")
 	Check(v1 != nil, "v1 should not be nil")
-	Check(registry.ToJSON(v1) == registry.ToJSON(r1.GetLatest()), "not latest")
+	l, _ := r1.GetLatest()
+	Check(registry.ToJSON(v1) == registry.ToJSON(l), "not latest")
 
 	v1.Set("name", v1.ID)
 	v1.Set("epoch", 42)
 	v1.Set("ext1", "someext")
 	v1.Set("ext2", 234)
 	Check(v1.Extensions["ext2"] == 234, "v1.Ext isn't an int")
-	v2 := r1.FindVersion("v1")
+	v2, _ := r1.FindVersion("v1")
 	Check(registry.ToJSON(v1) == registry.ToJSON(v2), "v2 != v1")
-	vlatest := r1.GetLatest()
+	vlatest, _ := r1.GetLatest()
 	Check(registry.ToJSON(v1) == registry.ToJSON(vlatest), "vlatest != v1")
 
 	CheckGet(reg, "r1 props", "http://example.com/dirs?inline", `{
@@ -593,11 +594,14 @@ func DoTests() *registry.Registry {
 	r1.Set("epoch", 68)
 	r1.Set("ext1", "someext")
 	r1.Set("ext2", 123)
-	Check(r1.GetLatest().Extensions["ext2"] == 123, "r1.Ext isn't an int")
-	r2 := g1.FindResource("files", "r1")
+	l, _ = r1.GetLatest()
+	Check(l.Extensions["ext2"] == 123, "r1.Ext isn't an int")
+	r2, _ := g1.FindResource("files", "r1")
 	Check(registry.ToJSON(r1) == registry.ToJSON(r2), "r2 != r1")
-	Check(r1.FindVersion("v3") == nil, "v3 should be nil")
-	Check(r2.FindVersion("v3") == nil, "v3 should be nil")
+	vv, _ := r1.FindVersion("v3")
+	Check(vv == nil, "v3 should be nil")
+	vv, _ = r2.FindVersion("v3")
+	Check(vv == nil, "v3 should be nil")
 
 	CheckGet(reg, "v3 missing",
 		"http://example.com/dirs/g1/files/r1/versions/v3",
@@ -627,7 +631,7 @@ func DoTests() *registry.Registry {
 	// Some filtering
 	g2, _ = reg.AddGroup("dirs", "g2")
 	r2, _ = g2.AddResource("files", "r2", "v1")
-	v2 = r2.FindVersion("v1")
+	v2, _ = r2.FindVersion("v1")
 	g2.Set("tags.stage", "dev")
 	r1.Set("tags.stale", "true")
 	v2.Set("tags.v2", "true")

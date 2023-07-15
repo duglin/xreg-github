@@ -296,8 +296,8 @@ func TestMultModel2Create(t *testing.T) {
         "f1": {
           "id": "f1",
           "self": "http:///dirs1/d1/files/f1",
-          "latestId": "v1",
-          "latestUrl": "http:///dirs1/d1/files/f1/versions/v1",
+          "latestId": "v2",
+          "latestUrl": "http:///dirs1/d1/files/f1/versions/v2",
 
           "versions": {
             "v1": {
@@ -324,8 +324,8 @@ func TestMultModel2Create(t *testing.T) {
         "f2": {
           "id": "f2",
           "self": "http:///dirs1/d2/files/f2",
-          "latestId": "v1",
-          "latestUrl": "http:///dirs1/d2/files/f2/versions/v1",
+          "latestId": "v1.1",
+          "latestUrl": "http:///dirs1/d2/files/f2/versions/v1.1",
 
           "versions": {
             "v1": {

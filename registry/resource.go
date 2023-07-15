@@ -21,7 +21,10 @@ func (r *Resource) Get(name string) any {
 		return r.Entity.Get(name)
 	}
 
-	v := r.GetLatest()
+	v, err := r.GetLatest()
+	if err != nil {
+		panic(err)
+	}
 	return v.Entity.Get(name)
 }
 
@@ -35,18 +38,26 @@ func (r *Resource) Set(name string, val any) error {
 		return SetProp(r, name, val)
 	}
 
-	v := r.GetLatest()
+	v, err := r.GetLatest()
+	if err != nil {
+		panic(err)
+	}
 	return SetProp(v, name, val)
 }
 
-func (r *Resource) FindVersion(id string) *Version {
+// Maybe replace error with a panic? same for other finds??
+func (r *Resource) FindVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: FindVersion(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindVersion")
 
-	results, _ := NewQuery(`
-		SELECT v.ID, p.PropName, p.PropValue, p.PropType
-		FROM Versions as v LEFT JOIN Props AS p ON (p.EntityID=v.ID)
-		WHERE v.VersionID=? AND v.ResourceID=?`, id, r.DbID)
+	results, err := NewQuery(`
+        SELECT v.ID, p.PropName, p.PropValue, p.PropType
+        FROM Versions as v LEFT JOIN Props AS p ON (p.EntityID=v.ID)
+        WHERE v.VersionID=? AND v.ResourceID=?`, id, r.DbID)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error finding version %q: %s", id, err)
+	}
 
 	v := (*Version)(nil)
 	for _, row := range results {
@@ -73,10 +84,11 @@ func (r *Resource) FindVersion(id string) *Version {
 		log.VPrintf(3, "None found")
 	}
 
-	return v
+	return v, nil
 }
 
-func (r *Resource) GetLatest() *Version {
+// Maybe replace error with a panic?
+func (r *Resource) GetLatest() (*Version, error) {
 	val := r.Get("latestId")
 	if val == nil {
 		panic("No latest is set")
@@ -89,7 +101,15 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: AddVersion%s)", id)
 	defer log.VPrintf(3, "<Exit: AddVersion")
 
-	v := &Version{
+	v, err := r.FindVersion(id)
+	if err != nil {
+		return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)
+	}
+	if v != nil {
+		return nil, fmt.Errorf("Version %q already exists", id)
+	}
+
+	v = &Version{
 		Entity: Entity{
 			RegistryID: r.RegistryID,
 			DbID:       NewUUID(),
@@ -98,23 +118,33 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		Resource: r,
 	}
 
-	err := DoOne(`
-		INSERT INTO Versions(ID, VersionID, ResourceID, Path, Abstract)
-		VALUES(?,?,?,?,?)`,
+	err = DoOne(`
+        INSERT INTO Versions(ID, VersionID, ResourceID, Path, Abstract)
+        VALUES(?,?,?,?,?)`,
 		v.DbID, id, r.DbID,
 		r.Group.Plural+"/"+r.Group.ID+"/"+r.Plural+"/"+r.ID+"/versions/"+v.ID,
 		r.Group.Plural+"/"+r.Plural+"/versions")
 	if err != nil {
-		err = fmt.Errorf("Error added version: %s", err)
+		err = fmt.Errorf("Error adding version: %s", err)
 		log.Print(err)
 		return nil, err
 	}
 	v.Set("id", id)
 
-	if r.Get("latestId") == nil {
-		r.Set("latestId", id)
+	err = r.Set("latestId", id)
+	if err != nil {
+		// v.Delete()
+		err = fmt.Errorf("Error setting latestId: %s", err)
+		return v, err
 	}
 
 	log.VPrintf(3, "Created new one - dbID: %s", v.DbID)
 	return v, nil
+}
+
+func (r *Resource) Delete() error {
+	log.VPrintf(3, ">Enter: Resource.Delete(%s)", r.ID)
+	defer log.VPrintf(3, "<Exit: Resource.Delete")
+
+	return DoOne(`DELETE FROM Resources WHERE ID=?`, r.DbID)
 }

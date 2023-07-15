@@ -54,7 +54,8 @@ CREATE TABLE "Groups" (
 	Abstract		VARCHAR(255) NOT NULL,
 
 	PRIMARY KEY (ID),
-	INDEX(RegistryID, GroupID)
+	INDEX(RegistryID, GroupID),
+	UNIQUE INDEX (RegistryID, ModelID, GroupID)
 );
 
 CREATE TRIGGER GroupTrigger BEFORE DELETE ON "Groups"
@@ -73,7 +74,8 @@ CREATE TABLE Resources (
 	Abstract		VARCHAR(255) NOT NULL,
 
 	PRIMARY KEY (ID),
-	INDEX(GroupID, ResourceID)
+	INDEX(GroupID, ResourceID),
+	UNIQUE INDEX (GroupID, ModelID, ResourceID)
 );
 
 CREATE TRIGGER ResourcesTrigger BEFORE DELETE ON Resources
@@ -89,13 +91,15 @@ CREATE TABLE Versions (
 	ResourceID			VARCHAR(64) NOT NULL,	# System ID
 	Path				VARCHAR(255) NOT NULL,
 	Abstract			VARCHAR(255) NOT NULL,
+	CreatedIndex        SERIAL,					# Counter, auto-increments
 
 	ResourceURL     	VARCHAR(255),
 	ResourceProxyURL	VARCHAR(255),
 	ResourceContentID	VARCHAR(64),
 
 	PRIMARY KEY (ID),
-	INDEX (ResourceID, VersionID)
+	INDEX (ResourceID, VersionID),
+	UNIQUE INDEX (ResourceID, VersionID)
 );
 
 CREATE TRIGGER VersionsTrigger BEFORE DELETE ON Versions

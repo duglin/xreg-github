@@ -17,7 +17,7 @@ type Registry struct {
 	Model *Model
 }
 
-var Registries = map[string]*Registry{}
+var Registries = map[string]*Registry{} // User ID->Reg
 
 func NewRegistry(id string) (*Registry, error) {
 	if id == "" {
@@ -127,7 +127,7 @@ func FindRegistry(id string) (*Registry, error) {
 		WHERE r.RegistryID=?`, id)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error finding registry %q: %s", id, err)
 	}
 
 	reg := (*Registry)(nil)
@@ -232,16 +232,19 @@ func (reg *Registry) LoadModel() *Model {
 	return model
 }
 
-func (reg *Registry) FindGroup(gt string, id string) *Group {
+func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gt, id)
 	defer log.VPrintf(3, "<Exit: FindGroup")
 
-	results, _ := NewQuery(`
+	results, err := NewQuery(`
 		SELECT g.ID, p.PropName, p.PropValue, p.PropType
 		FROM "Groups" AS g
 		JOIN ModelEntities AS m ON (m.ID=g.ModelID)
 		LEFT JOIN Props AS p ON (p.EntityID=g.ID)
 		WHERE g.RegistryID=? AND g.GroupID=? AND m.Plural=?`, reg.DbID, id, gt)
+	if err != nil {
+		return nil, fmt.Errorf("Error finding group %q(%s): %s", id, gt, err)
+	}
 
 	g := (*Group)(nil)
 	for _, row := range results {
@@ -253,6 +256,7 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 					Plural:     gt,
 					ID:         id,
 				},
+				Registry: reg,
 			}
 			log.VPrintf(3, "Found one: %s", g.DbID)
 		}
@@ -268,7 +272,7 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 		log.VPrintf(3, "None found")
 	}
 
-	return g
+	return g, nil
 }
 
 func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
@@ -276,23 +280,33 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 	defer log.VPrintf(3, "<Exit AddGroup")
 
 	if reg.Model.Groups[gType] == nil {
-		return nil, fmt.Errorf("Erro adding Group, unknown type: %s", gType)
+		return nil, fmt.Errorf("Error adding Group, unknown type: %s", gType)
 	}
 
 	if id == "" {
 		id = NewUUID()
 	}
 
-	g := &Group{
+	g, err := reg.FindGroup(gType, id)
+	if err != nil {
+		return nil, fmt.Errorf("Error checking for Group(%s) %q: %s",
+			gType, id, err)
+	}
+	if g != nil {
+		return nil, fmt.Errorf("Group %q of type %q already exists", id, gType)
+	}
+
+	g = &Group{
 		Entity: Entity{
 			RegistryID: reg.DbID,
 			DbID:       NewUUID(),
 			Plural:     gType,
 			ID:         id,
 		},
+		Registry: reg,
 	}
 
-	err := DoOne(`
+	err = DoOne(`
 			INSERT INTO "Groups"(ID,RegistryID,GroupID,ModelID,Path,Abstract)
 			SELECT ?,?,?,ID,?,?
 			FROM ModelEntities

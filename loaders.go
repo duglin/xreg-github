@@ -130,11 +130,11 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		g2.Set("name", group.Get("name"))
 		/*
 			r2,_ := g2.AddResource("schemas", resName, parts[verIndex])
-			v2 := r2.FindVersion(parts[verIndex])
+			v2,_ := r2.FindVersion(parts[verIndex])
 			v2.Name = parts[verIndex+1]
 			v2.Format = "openapi/3.0.6"
 		*/
-		version := res.FindVersion(parts[verIndex])
+		version, _ := res.FindVersion(parts[verIndex])
 		if version != nil {
 			log.Fatalf("Have more than one file per version: %s\n", header.Name)
 		}
@@ -188,7 +188,7 @@ func LoadSample() *registry.Registry {
 	g.Set("tags.stale", "true")
 
 	r, _ := g.AddResource("defs", "created", "v1")
-	v := r.FindVersion("v1")
+	v, _ := r.FindVersion("v1")
 	v.Set("name", "blobCreated")
 	v.Set("epoch", 2)
 
@@ -198,7 +198,7 @@ func LoadSample() *registry.Registry {
 	r.Set(".latestId", "v2")
 
 	r, _ = g.AddResource("defs", "deleted", "v1.0")
-	v = r.FindVersion("v1.0")
+	v, _ = r.FindVersion("v1.0")
 	v.Set("name", "blobDeleted")
 	v.Set("epoch", 3)
 

@@ -20,7 +20,7 @@ func TestSetResource(t *testing.T) {
 
 	// Make sure setting it on the version is seen by res.Latest and res
 	file.Set("name", "myName")
-	ver := file.FindVersion("v1")
+	ver, _ := file.FindVersion("v1")
 	val := ver.Get("name")
 	if val != "myName" {
 		t.Errorf("ver.Name is %q, should be 'myName'", val)
@@ -36,14 +36,17 @@ func TestSetVersion(t *testing.T) {
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
-	ver := file.FindVersion("v1")
+	ver, _ := file.FindVersion("v1")
 
 	// /dirs/d1/f1/v1
 
 	// Make sure setting it on the version is seen by res.Latest and res
 	ver.Set("name", "myName")
-	file = dir.FindResource("file", "f1")
-	val := file.GetLatest().Get("name")
+	file, _ = dir.FindResource("files", "f1")
+	l, err := file.GetLatest()
+	xNoErr(t, err)
+	xCheck(t, l != nil, "latest is nil")
+	val := l.Get("name")
 	if val != "myName" {
 		t.Errorf("resource.latest.Name is %q, should be 'myName'", val)
 	}
@@ -53,7 +56,7 @@ func TestSetVersion(t *testing.T) {
 	}
 
 	// Make sure we can also still see it from the version itself
-	ver = file.FindVersion("v1")
+	ver, _ = file.FindVersion("v1")
 	val = ver.Get("name")
 	if val != "myName" {
 		t.Errorf("version.Name is %q, should be 'myName'", val)

@@ -110,6 +110,10 @@ func NewQuery(cmd string, args ...interface{}) ([][]*any, error) {
 }
 
 func Query(cmd string, args ...interface{}) (*Result, error) {
+	if log.GetVerbose() > 3 {
+		log.VPrintf(4, "Query: %s", SubQuery(cmd, args))
+	}
+
 	ps, err := DB.Prepare(cmd)
 	if err != nil {
 		log.Printf("Error Prepping query (%s)->%s\n", cmd, err)
@@ -514,6 +518,7 @@ func (e *Entity) sSet(name string, val any) error {
 	// return SetProp(e, name, val)
 }
 
+// Maybe replace error with a panic?
 func SetProp(entity any, name string, val any) error {
 	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
 	defer log.VPrintf(3, "<Exit SetProp")

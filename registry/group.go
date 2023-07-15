@@ -8,20 +8,28 @@ import (
 
 type Group struct {
 	Entity
+	Registry *Registry
 }
 
 func (g *Group) Set(name string, val any) error {
 	return SetProp(g, name, val)
 }
 
-func (g *Group) FindResource(rType string, id string) *Resource {
+func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	log.VPrintf(3, ">Enter: FindResource(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: FindResource")
 
-	results, _ := NewQuery(`
-	        SELECT r.ID, p.PropName, p.PropValue, p.PropType
-			FROM Resources as r LEFT JOIN Props AS p ON (p.EntityID=r.ID)
-			WHERE r.GroupID=? AND r.ResourceID=?`, g.DbID, id)
+	results, err := NewQuery(`
+                SELECT r.ID, p.PropName, p.PropValue, p.PropType
+                FROM Resources as r
+                LEFT JOIN Props AS p ON (p.EntityID=r.ID)
+                WHERE r.GroupID=? AND r.ResourceID=?
+                AND r.Abstract = CONCAT(?,'/',?)`,
+		g.DbID, id, g.Plural, rType)
+	if err != nil {
+		return nil, fmt.Errorf("Error finding resource %q(%s): %s",
+			id, rType, err)
+	}
 
 	r := (*Resource)(nil)
 	for _, row := range results {
@@ -48,14 +56,30 @@ func (g *Group) FindResource(rType string, id string) *Resource {
 	if r == nil {
 		log.VPrintf(3, "None found")
 	}
-	return r
+	return r, nil
 }
 
 func (g *Group) AddResource(rType string, id string, vID string) (*Resource, error) {
 	log.VPrintf(3, ">Enter: AddResource(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: AddResource")
 
-	r := &Resource{
+	rModel := g.Registry.Model.Groups[g.Plural].Resources[rType]
+	if rModel == nil {
+		return nil, fmt.Errorf("Unknown Resource type (%s) for Group %q",
+			rType, g.Plural)
+	}
+
+	r, err := g.FindResource(rType, id)
+	if err != nil {
+		return nil, fmt.Errorf("Error checking for Resource(%s) %q: %s",
+			rType, id, err)
+	}
+	if r != nil {
+		return nil, fmt.Errorf("Resource %q of type %q already exists",
+			id, rType)
+	}
+
+	r = &Resource{
 		Entity: Entity{
 			RegistryID: g.RegistryID,
 			DbID:       NewUUID(),
@@ -65,16 +89,17 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 		Group: g,
 	}
 
-	err := DoOne(`
-		INSERT INTO Resources(ID, ResourceID, GroupID, ModelID, Path, Abstract)
-		SELECT ?,?,?,ID,?,?
-		FROM ModelEntities
-		WHERE RegistryID=?
-		  AND ParentID IN (SELECT ID FROM ModelEntities
-		                  WHERE RegistryID=?
-						    AND ParentID IS NULL
-							AND Plural=?)
-		  AND Plural=?`,
+	err = DoOne(`
+        INSERT INTO Resources(ID, ResourceID, GroupID, ModelID, Path, Abstract)
+        SELECT ?,?,?,ID,?,?
+        FROM ModelEntities
+        WHERE RegistryID=?
+          AND ParentID IN (
+            SELECT ID FROM ModelEntities
+            WHERE RegistryID=?
+            AND ParentID IS NULL
+            AND Plural=?)
+            AND Plural=?`,
 		r.DbID, r.ID, g.DbID,
 		g.Plural+"/"+g.ID+"/"+rType+"/"+r.ID, g.Plural+"/"+rType,
 		g.RegistryID,
@@ -94,4 +119,11 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 
 	log.VPrintf(3, "Created new one - dbID: %s", r.DbID)
 	return r, err
+}
+
+func (g *Group) Delete() error {
+	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.ID)
+	defer log.VPrintf(3, "<Exit: Group.Delete")
+
+	return DoOne(`DELETE FROM "Groups" WHERE ID=?`, g.DbID)
 }
