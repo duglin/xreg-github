@@ -12,12 +12,12 @@ func TestBasicFilters(t *testing.T) {
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
-	d := reg.FindOrAddGroup("dirs", "d1")
-	f := d.AddResource("files", "f1", "v1")
-	f.FindOrAddVersion("v2")
-	d = reg.FindOrAddGroup("dirs", "d2")
-	f = d.AddResource("files", "f2", "v1")
-	f.FindOrAddVersion("v1.1")
+	d, _ := reg.AddGroup("dirs", "d1")
+	f, _ := d.AddResource("files", "f1", "v1")
+	f.AddVersion("v2")
+	d, _ = reg.AddGroup("dirs", "d2")
+	f, _ = d.AddResource("files", "f2", "v1")
+	f.AddVersion("v1.1")
 
 	// /dirs/d1/f1/v1
 	//            /v2

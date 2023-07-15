@@ -1,7 +1,7 @@
 package registry
 
 import (
-	// "fmt"
+	"fmt"
 
 	log "github.com/duglin/dlog"
 )
@@ -85,17 +85,11 @@ func (r *Resource) GetLatest() *Version {
 	return r.FindVersion(val.(string))
 }
 
-func (r *Resource) FindOrAddVersion(id string) *Version {
-	log.VPrintf(3, ">Enter: FindOrAddVersion%s)", id)
-	defer log.VPrintf(3, "<Exit: FindOrAddVersion")
+func (r *Resource) AddVersion(id string) (*Version, error) {
+	log.VPrintf(3, ">Enter: AddVersion%s)", id)
+	defer log.VPrintf(3, "<Exit: AddVersion")
 
-	v := r.FindVersion(id)
-	if v != nil {
-		log.VPrintf(3, "Found one")
-		return v
-	}
-
-	v = &Version{
+	v := &Version{
 		Entity: Entity{
 			RegistryID: r.RegistryID,
 			DbID:       NewUUID(),
@@ -111,8 +105,9 @@ func (r *Resource) FindOrAddVersion(id string) *Version {
 		r.Group.Plural+"/"+r.Group.ID+"/"+r.Plural+"/"+r.ID+"/versions/"+v.ID,
 		r.Group.Plural+"/"+r.Plural+"/versions")
 	if err != nil {
-		log.Printf("Error adding version: %s", err)
-		return nil
+		err = fmt.Errorf("Error added version: %s", err)
+		log.Print(err)
+		return nil, err
 	}
 	v.Set("id", id)
 
@@ -121,5 +116,5 @@ func (r *Resource) FindOrAddVersion(id string) *Version {
 	}
 
 	log.VPrintf(3, "Created new one - dbID: %s", v.DbID)
-	return v
+	return v, nil
 }

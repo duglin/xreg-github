@@ -13,16 +13,16 @@ func TestBasicInline(t *testing.T) {
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 
-	d := reg.FindOrAddGroup("dirs", "d1")
-	f := d.AddResource("files", "f1", "v1")
-	f.FindOrAddVersion("v2")
-	d = reg.FindOrAddGroup("dirs", "d2")
-	f = d.AddResource("files", "f2", "v1")
-	f.FindOrAddVersion("v1.1")
+	d, _ := reg.AddGroup("dirs", "d1")
+	f, _ := d.AddResource("files", "f1", "v1")
+	f.AddVersion("v2")
+	d, _ = reg.AddGroup("dirs", "d2")
+	f, _ = d.AddResource("files", "f2", "v1")
+	f.AddVersion("v1.1")
 
 	gm2, _ := reg.AddGroupModel("dirs2", "dir2", "")
 	gm2.AddResourceModel("files", "file", 0, true, true)
-	d2 := reg.FindOrAddGroup("dirs2", "d2")
+	d2, _ := reg.AddGroup("dirs2", "d2")
 	d2.AddResource("files", "f2", "v1")
 
 	// /dirs/d1/files/f1/v1

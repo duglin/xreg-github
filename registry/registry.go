@@ -12,18 +12,6 @@ import (
 	log "github.com/duglin/dlog"
 )
 
-type RegistryFlags struct {
-	BaseURL     string
-	Indent      string
-	InlineAll   bool
-	InlinePaths []string
-	Self        bool
-	AsDoc       bool
-	OrFilters   [][]string // [OLD][AND]string
-
-	Filters []string // OLD
-}
-
 type Registry struct {
 	Entity
 	Model *Model
@@ -283,26 +271,19 @@ func (reg *Registry) FindGroup(gt string, id string) *Group {
 	return g
 }
 
-func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
-	log.VPrintf(3, ">Enter FindOrAddGroup(%s,%s)", gType, id)
-	defer log.VPrintf(3, "<Exit FindOrAddGroup")
+func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
+	log.VPrintf(3, ">Enter AddGroup(%s,%s)", gType, id)
+	defer log.VPrintf(3, "<Exit AddGroup")
 
 	if reg.Model.Groups[gType] == nil {
-		return nil // should return err
+		return nil, fmt.Errorf("Erro adding Group, unknown type: %s", gType)
 	}
 
 	if id == "" {
 		id = NewUUID()
 	}
 
-	g := reg.FindGroup(gType, id)
-
-	if g != nil {
-		log.VPrintf(3, "Found one")
-		return g
-	}
-
-	g = &Group{
+	g := &Group{
 		Entity: Entity{
 			RegistryID: reg.DbID,
 			DbID:       NewUUID(),
@@ -319,13 +300,14 @@ func (reg *Registry) FindOrAddGroup(gType string, id string) *Group {
 		g.DbID, reg.DbID, g.ID, gType+"/"+g.ID, gType, reg.DbID, gType)
 
 	if err != nil {
-		log.Printf("Error adding group: %s", err)
-		return nil
+		err = fmt.Errorf("Error adding group: %s", err)
+		log.Print(err)
+		return nil, err
 	}
 	g.Set("id", g.ID)
 
 	log.VPrintf(3, "Created new one - DbID: %s", g.DbID)
-	return g
+	return g, nil
 }
 
 func readObj(results [][]*any, index int) (*Obj, int) {

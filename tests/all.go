@@ -182,7 +182,8 @@ func DoTests() *registry.Registry {
 	// Group stuff
 	g1 := reg.FindGroup("dirs", "g1")
 	Check(g1 == nil, "g1 should be nil")
-	g1 = reg.FindOrAddGroup("dirs", "g1")
+	g1, err = reg.AddGroup("dirs", "g1")
+	NoErr("", err)
 	Check(g1 != nil, "g1 should not be nil")
 	g1.Set("name", g1.ID)
 	g1.Set("epoch", 5)
@@ -238,7 +239,8 @@ func DoTests() *registry.Registry {
 	// Technical this is wrong - we need to create a version at the
 	// same time - TODO
 	// use g.AddResource() instead
-	r1 = g1.FindOrAddResource("files", "r1")
+	r1, err = g1.AddResource("files", "r1", "v1")
+	NoErr("", err)
 	Check(r1 != nil, "r1 should not be nil")
 
 	CheckGet(reg, "one res no inline", "http://example.com?inline", `{
@@ -260,9 +262,16 @@ func DoTests() *registry.Registry {
         "r1": {
           "id": "r1",
           "self": "http://example.com/dirs/g1/files/r1",
+          "latestId": "v1",
+          "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
 
-          "versions": {},
-          "versionsCount": 0,
+          "versions": {
+            "v1": {
+              "id": "v1",
+              "self": "http://example.com/dirs/g1/files/r1/versions/v1"
+            }
+          },
+          "versionsCount": 1,
           "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
         }
       },
@@ -293,9 +302,16 @@ func DoTests() *registry.Registry {
         "r1": {
           "id": "r1",
           "self": "http://example.com/dirs/g1/files/r1",
+          "latestId": "v1",
+          "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
 
-          "versions": {},
-          "versionsCount": 0,
+          "versions": {
+            "v1": {
+              "id": "v1",
+              "self": "http://example.com/dirs/g1/files/r1/versions/v1"
+            }
+          },
+          "versionsCount": 1,
           "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
         }
       },
@@ -326,8 +342,10 @@ func DoTests() *registry.Registry {
         "r1": {
           "id": "r1",
           "self": "http://example.com/dirs/g1/files/r1",
+          "latestId": "v1",
+          "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
 
-          "versionsCount": 0,
+          "versionsCount": 1,
           "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
         }
       },
@@ -377,9 +395,16 @@ func DoTests() *registry.Registry {
       "r1": {
         "id": "r1",
         "self": "http://example.com/dirs/g1/files/r1",
+        "latestId": "v1",
+        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
 
-        "versions": {},
-        "versionsCount": 0,
+        "versions": {
+          "v1": {
+            "id": "v1",
+            "self": "http://example.com/dirs/g1/files/r1/versions/v1"
+          }
+        },
+        "versionsCount": 1,
         "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
       }
     },
@@ -402,9 +427,16 @@ func DoTests() *registry.Registry {
       "r1": {
         "id": "r1",
         "self": "http://example.com/dirs/g1/files/r1",
+        "latestId": "v1",
+        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
 
-        "versions": {},
-        "versionsCount": 0,
+        "versions": {
+          "v1": {
+            "id": "v1",
+            "self": "http://example.com/dirs/g1/files/r1/versions/v1"
+          }
+        },
+        "versionsCount": 1,
         "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
       }
     },
@@ -427,8 +459,10 @@ func DoTests() *registry.Registry {
       "r1": {
         "id": "r1",
         "self": "http://example.com/dirs/g1/files/r1",
+        "latestId": "v1",
+        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
 
-        "versionsCount": 0,
+        "versionsCount": 1,
         "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
       }
     },
@@ -471,13 +505,20 @@ func DoTests() *registry.Registry {
       "r1": {
         "id": "r1",
         "self": "http://example.com/dirs/g1/files/r1",
+        "latestId": "v1",
+        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
         "BoolF": false,
         "BoolT": true,
         "Float": 3.14,
         "Int": 345,
 
-        "versions": {},
-        "versionsCount": 0,
+        "versions": {
+          "v1": {
+            "id": "v1",
+            "self": "http://example.com/dirs/g1/files/r1/versions/v1"
+          }
+        },
+        "versionsCount": 1,
         "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
       }
     },
@@ -489,8 +530,6 @@ func DoTests() *registry.Registry {
 
 	// Version stuff
 	v1 := r1.FindVersion("v1")
-	Check(v1 == nil, "v1 should be nil")
-	v1 = r1.FindOrAddVersion("v1")
 	Check(v1 != nil, "v1 should not be nil")
 	Check(registry.ToJSON(v1) == registry.ToJSON(r1.GetLatest()), "not latest")
 
@@ -586,9 +625,9 @@ func DoTests() *registry.Registry {
 `)
 
 	// Some filtering
-	g2 = reg.FindOrAddGroup("dirs", "g2")
-	r2 = g2.FindOrAddResource("files", "r2")
-	v2 = r2.FindOrAddVersion("v1")
+	g2, _ = reg.AddGroup("dirs", "g2")
+	r2, _ = g2.AddResource("files", "r2", "v1")
+	v2 = r2.FindVersion("v1")
 	g2.Set("tags.stage", "dev")
 	r1.Set("tags.stale", "true")
 	v2.Set("tags.v2", "true")

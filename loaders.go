@@ -102,7 +102,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		// org/service/version/file
 		// org/version/file
 
-		group := reg.FindOrAddGroup("apiProviders", parts[0])
+		group, _ := reg.AddGroup("apiProviders", parts[0])
 		group.Set("name", group.ID)
 		group.Set("modifiedBy", "me")
 		group.Set("modifiedAt", "noon")
@@ -124,13 +124,13 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 			verIndex++
 		}
 
-		res := group.FindOrAddResource("apis", resName)
+		res, _ := group.AddResource("apis", resName, "v1")
 
-		g2 := reg.FindOrAddGroup("schemaGroups", parts[0])
+		g2, _ := reg.AddGroup("schemaGroups", parts[0])
 		g2.Set("name", group.Get("name"))
 		/*
-			r2 := g2.FindOrAddResource("schemas", resName)
-			v2 := r2.FindOrAddVersion(parts[verIndex])
+			r2,_ := g2.AddResource("schemas", resName, parts[verIndex])
+			v2 := r2.FindVersion(parts[verIndex])
 			v2.Name = parts[verIndex+1]
 			v2.Format = "openapi/3.0.6"
 		*/
@@ -141,7 +141,7 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 
 		buf := &bytes.Buffer{}
 		io.Copy(buf, reader)
-		version = res.FindOrAddVersion(parts[verIndex])
+		version, _ = res.AddVersion(parts[verIndex])
 		version.Set("name", parts[verIndex+1])
 		version.Set("format", "openapi/3.0.6")
 
@@ -180,29 +180,29 @@ func LoadSample() *registry.Registry {
 	_, err = gm.AddResourceModel("adefs", "adef", 2, true, true)
 	_, err = gm.AddResourceModel("zdefs", "zdef", 2, true, true)
 
-	g := reg.FindOrAddGroup("endpoints", "e1")
+	g, _ := reg.AddGroup("endpoints", "e1")
 	g.Set("name", "end1")
 	g.Set("epoch", 1)
 	g.Set("ext", "ext1")
 	g.Set("tags.stage", "dev")
 	g.Set("tags.stale", "true")
 
-	r := g.FindOrAddResource("defs", "created")
-	v := r.FindOrAddVersion("v1")
+	r, _ := g.AddResource("defs", "created", "v1")
+	v := r.FindVersion("v1")
 	v.Set("name", "blobCreated")
 	v.Set("epoch", 2)
 
-	v = r.FindOrAddVersion("v2")
+	v, _ = r.AddVersion("v2")
 	v.Set("name", "blobCreated")
 	v.Set("epoch", 4)
 	r.Set(".latestId", "v2")
 
-	r = g.FindOrAddResource("defs", "deleted")
-	v = r.FindOrAddVersion("v1.0")
+	r, _ = g.AddResource("defs", "deleted", "v1.0")
+	v = r.FindVersion("v1.0")
 	v.Set("name", "blobDeleted")
 	v.Set("epoch", 3)
 
-	g = reg.FindOrAddGroup("endpoints", "e2")
+	g, _ = reg.AddGroup("endpoints", "e2")
 	g.Set("name", "end1")
 	g.Set("epoch", 1)
 	g.Set("ext", "ext1")

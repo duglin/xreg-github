@@ -14,8 +14,8 @@ func TestBasicTypes(t *testing.T) {
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 
-	dir := reg.FindOrAddGroup("dirs", "d1")
-	file := dir.AddResource("files", "f1", "v1")
+	dir, _ := reg.AddGroup("dirs", "d1")
+	file, _ := dir.AddResource("files", "f1", "v1")
 	ver := file.FindVersion("v1")
 
 	// /dirs/d1/f1/v1

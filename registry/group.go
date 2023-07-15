@@ -1,7 +1,7 @@
 package registry
 
 import (
-	// "fmt"
+	"fmt"
 
 	log "github.com/duglin/dlog"
 )
@@ -51,17 +51,11 @@ func (g *Group) FindResource(rType string, id string) *Resource {
 	return r
 }
 
-func (g *Group) FindOrAddResource(rType string, id string) *Resource {
-	log.VPrintf(3, ">Enter: FindOrAddResource(%s,%s)", rType, id)
-	defer log.VPrintf(3, "<Exit: FindOrAddResource")
+func (g *Group) AddResource(rType string, id string, vID string) (*Resource, error) {
+	log.VPrintf(3, ">Enter: AddResource(%s,%s)", rType, id)
+	defer log.VPrintf(3, "<Exit: AddResource")
 
-	r := g.FindResource(rType, id)
-	if r != nil {
-		log.VPrintf(3, "Found one")
-		return r
-	}
-
-	r = &Resource{
+	r := &Resource{
 		Entity: Entity{
 			RegistryID: g.RegistryID,
 			DbID:       NewUUID(),
@@ -87,19 +81,17 @@ func (g *Group) FindOrAddResource(rType string, id string) *Resource {
 		g.RegistryID, g.Plural,
 		rType)
 	if err != nil {
-		log.Printf("Error adding resource: %s", err)
-		return nil
+		err = fmt.Errorf("Error adding resource: %s", err)
+		log.Print(err)
+		return nil, err
 	}
 	r.Set(".id", r.ID)
 
-	log.VPrintf(3, "Created new one - dbID: %s", r.DbID)
-	return r
-}
-
-func (g *Group) AddResource(rType string, rID string, vID string) *Resource {
-	r := g.FindOrAddResource(rType, rID)
-	if r != nil {
-		r.FindOrAddVersion(vID)
+	_, err = r.AddVersion(vID)
+	if err != nil {
+		return nil, err
 	}
-	return r
+
+	log.VPrintf(3, "Created new one - dbID: %s", r.DbID)
+	return r, err
 }
