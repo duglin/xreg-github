@@ -60,7 +60,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 	}
 
 	v := (*Version)(nil)
-	for _, row := range results {
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if v == nil {
 			v = &Version{
 				Entity: Entity{

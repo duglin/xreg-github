@@ -45,7 +45,7 @@ func (e *Entity) Find() (bool, error) {
 	}
 
 	first := true
-	for _, row := range results {
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if first {
 			e.RegistryID = NotNilString(row[0])
 			e.DbID = NotNilString(row[1])
@@ -73,7 +73,7 @@ func (e *Entity) Refresh() error {
 
 	e.Extensions = map[string]any{}
 
-	for _, row := range results {
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		name := NotNilString(row[0])
 		val := NotNilString(row[1])
 		propType := NotNilString(row[2])
@@ -242,12 +242,10 @@ type Obj struct {
 	Values   map[string]any
 }
 
-func readObj(results [][]*any, index int) (*Obj, int) {
+func readObj(results *Result) *Obj {
 	obj := (*Obj)(nil)
 
-	for index < len(results) {
-		row := results[index]
-
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		level := int((*row[0]).(int64))
 		plural := NotNilString(row[1])
 		id := NotNilString(row[2])
@@ -263,6 +261,7 @@ func readObj(results [][]*any, index int) (*Obj, int) {
 			}
 		} else {
 			if obj.Level != level || obj.Plural != plural || obj.ID != id {
+				results.Push()
 				break
 			}
 		}
@@ -290,11 +289,9 @@ func readObj(results [][]*any, index int) (*Obj, int) {
 		} else {
 			panic(fmt.Sprintf("bad type: %v", propType))
 		}
-
-		index++
 	}
 
-	return obj, index
+	return obj
 }
 
 /*

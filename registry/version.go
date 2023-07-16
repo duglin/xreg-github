@@ -34,11 +34,13 @@ func (v *Version) Delete() error {
 			v.Resource.ID, err)
 	}
 
-	if len(results) == 0 {
+	row := results.NextRow()
+
+	if row == nil {
 		// No more versions so delete the Resource
 		return v.Resource.Delete()
 	}
 
-	latestID := NotNilString(results[0][0])
+	latestID := NotNilString(row[0])
 	return v.Resource.Set("latestId", latestID)
 }

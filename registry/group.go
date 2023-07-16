@@ -32,7 +32,7 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	}
 
 	r := (*Resource)(nil)
-	for _, row := range results {
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if r == nil {
 			r = &Resource{
 				Entity: Entity{

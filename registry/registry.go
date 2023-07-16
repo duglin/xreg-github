@@ -130,7 +130,7 @@ func FindRegistry(id string) (*Registry, error) {
 	}
 
 	reg := (*Registry)(nil)
-	for _, row := range results {
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if reg == nil {
 			reg = &Registry{
 				Entity: Entity{
@@ -193,7 +193,7 @@ func (reg *Registry) LoadModel() *Model {
 		Groups:   map[string]*GroupModel{},
 	}
 
-	for _, row := range results {
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if *row[2] == nil { // ParentID nil -> new Group
 			g := &GroupModel{ // Plural
 				ID:       NotNilString(row[0]), // ID
@@ -245,7 +245,7 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 	}
 
 	g := (*Group)(nil)
-	for _, row := range results {
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if g == nil {
 			g = &Group{
 				Entity: Entity{

@@ -17,58 +17,73 @@ type Result struct {
 	sqlRows  *sql.Rows
 	colTypes []reflect.Type
 	Data     []*any
+	TempData []any
+	Reuse    bool
 }
 
 func (r *Result) Close() {
-	if r.sqlRows != nil {
-		r.sqlRows.Close()
-	}
+	r.sqlRows.Close()
+	r.Data = nil
+	r.TempData = nil
 	r.sqlRows = nil
 }
 
-func (r *Result) NextRow() bool {
+func (r *Result) Push() {
+	if r.Reuse {
+		panic("Already pushed")
+	}
+	r.Reuse = true
+}
+
+func (r *Result) NextRow() []*any {
+	if r.Data == nil {
+		return nil
+	}
+
+	if r.Reuse {
+		r.Reuse = false
+	} else {
+		// check for error from PullNextRow
+		r.PullNextRow()
+	}
+
+	return r.Data
+}
+
+func (r *Result) PullNextRow() {
 	if r.sqlRows == nil {
-		// Should never be here
-		return false
+		panic("sqlRows is nil")
 	}
 	if r.sqlRows.Next() == false {
-		return false
+		r.Close()
+		return
 	}
 
-	d := []any{}
-	for range r.colTypes {
-		d = append(d, new(any))
-	}
-
-	err := r.sqlRows.Scan(d...)
+	err := r.sqlRows.Scan(r.TempData...) // Can't pass r.Data directly
 	if err != nil {
-		log.Printf("Error scanning DB row: %s", err)
-		return false
+		panic(fmt.Sprintf("Error scanning DB row: %s", err))
+		// should return err.  r.Data = nil ; return err..
 	}
 
-	// Can't explain this but it works
-	for i, _ := range d {
-		r.Data[i] = d[i].(*any)
+	// Move data from TempData to Data
+	for i, _ := range r.Data {
+		r.Data[i] = r.TempData[i].(*any)
 	}
 
 	if log.GetVerbose() > 3 {
 		dd := []string{}
 		for _, d := range r.Data {
-			str := ""
-			t := reflect.ValueOf(*d).Type().String()
-			if t == "[]uint8" {
-				str = string((*d).([]byte))
+			if reflect.ValueOf(*d).Type().String() == "[]uint8" {
+				dd = append(dd, string((*d).([]byte)))
 			} else {
-				str = fmt.Sprintf("%v", *d)
+				dd = append(dd, fmt.Sprintf("%v", *d))
 			}
-			dd = append(dd, str)
 		}
 		log.VPrintf(4, "row: %v", dd)
 	}
-	return true
 }
 
-func Query(cmd string, args ...interface{}) ([][]*any, error) {
+func Query(cmd string, args ...interface{}) (*Result, error) {
 	if log.GetVerbose() > 3 {
 		log.VPrintf(4, "Query: %s", SubQuery(cmd, args))
 	}
@@ -99,16 +114,10 @@ func Query(cmd string, args ...interface{}) ([][]*any, error) {
 	for _, col := range colTypes {
 		result.colTypes = append(result.colTypes, col.ScanType())
 		result.Data = append(result.Data, new(any))
+		result.TempData = append(result.TempData, new(any))
 	}
 
-	data := [][]*any{}
-	for result.NextRow() {
-		newRow := make([]*any, len(result.Data))
-		copy(newRow, result.Data)
-		data = append(data, newRow)
-	}
-
-	return data, nil
+	return result, nil
 }
 
 func Do(cmd string, args ...interface{}) error {
@@ -153,7 +162,7 @@ func init() {
 	// DB, err := sql.Open("mysql", "root:password@tcp(localhost:3306)/")
 	var err error
 
-	DB, err = sql.Open("mysql", "root:password@/")
+	DB, err = sql.Open("mysql", "root:password@/registry")
 	if err != nil {
 		log.Fatalf("Error talking to SQL: %s\n", err)
 	}
@@ -169,7 +178,7 @@ func init() {
 
 		log.VPrintf(4, "CMD: %s", cmd)
 		if _, err := DB.Exec(cmd); err != nil {
-			panic(fmt.Sprintf("Error on: %s", cmd))
+			panic(fmt.Sprintf("Error on: %s\n%s", cmd, err))
 		}
 	}
 	log.VPrintf(2, "Done init'ing DB")
@@ -326,6 +335,4 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
   UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
   INNER JOIN cte ON e.eID=cte.ParentID)
 SELECT * FROM cte ;
-
-
 */

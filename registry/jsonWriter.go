@@ -19,12 +19,11 @@ type JsonWriter struct {
 	collPaths   []string   // [level] URL path to the root of Colls
 	unusedColls [][]string // [level][remaining coll names on this level]
 
-	results   [][]*any // results of DB query
-	resultPos int      // index into results array of current row
-	Obj       *Obj     // Current row in the DB results
+	results *Result // results of DB query
+	Obj     *Obj    // Current row in the DB results
 }
 
-func NewJsonWriter(w io.Writer, info *RequestInfo, results [][]*any) *JsonWriter {
+func NewJsonWriter(w io.Writer, info *RequestInfo, results *Result) *JsonWriter {
 	return &JsonWriter{
 		writer:      w,
 		info:        info,
@@ -62,7 +61,7 @@ func (jw *JsonWriter) Outdent() {
 }
 
 func (jw *JsonWriter) NextObj() *Obj {
-	jw.Obj, jw.resultPos = readObj(jw.results, jw.resultPos)
+	jw.Obj = readObj(jw.results)
 	/*
 		pc, _, line, _ := runtime.Caller(1)
 		log.VPrintf(4, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)

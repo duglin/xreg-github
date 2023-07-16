@@ -3,7 +3,9 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"reflect"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -146,4 +148,15 @@ type JSONData struct {
 	Prefix   string
 	Indent   string
 	Registry *Registry
+}
+
+func ShowStack() {
+	log.VPrintf(2, "-----")
+	for i := 1; i < 20; i++ {
+		pc, file, line, _ := runtime.Caller(i)
+		log.VPrintf(2, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
+		if strings.Contains(file, "main") {
+			break
+		}
+	}
 }
