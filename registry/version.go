@@ -24,7 +24,7 @@ func (v *Version) Delete() error {
 		return fmt.Errorf("Error deleting version %q: %s", v.ID, err)
 	}
 
-	results, err := NewQuery(`
+	results, err := Query(`
         SELECT VersionID FROM Versions
         WHERE ResourceID=?
         ORDER BY CreatedIndex DESC LIMIT 1`,

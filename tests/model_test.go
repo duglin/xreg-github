@@ -223,7 +223,7 @@ func TestModelAPI(t *testing.T) {
 	gm2.AddResourceModel("files", "file", 0, false, true)
 
 	m := reg.LoadModel()
-	xJSONCheck(t, reg.Model, m)
+	xJSONCheck(t, m, reg.Model)
 }
 
 func TestMultModel2Create(t *testing.T) {

@@ -19,7 +19,7 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	log.VPrintf(3, ">Enter: FindResource(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: FindResource")
 
-	results, err := NewQuery(`
+	results, err := Query(`
                 SELECT r.ID, p.PropName, p.PropValue, p.PropType
                 FROM Resources as r
                 LEFT JOIN Props AS p ON (p.EntityID=r.ID)

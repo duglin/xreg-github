@@ -50,7 +50,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: FindVersion(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindVersion")
 
-	results, err := NewQuery(`
+	results, err := Query(`
         SELECT v.ID, p.PropName, p.PropValue, p.PropType
         FROM Versions as v LEFT JOIN Props AS p ON (p.EntityID=v.ID)
         WHERE v.VersionID=? AND v.ResourceID=?`, id, r.DbID)

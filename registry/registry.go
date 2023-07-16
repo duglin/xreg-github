@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	// "reflect"
-	"strconv"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -121,7 +120,7 @@ func FindRegistry(id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistry(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindRegistry")
 
-	results, err := NewQuery(`
+	results, err := Query(`
 		SELECT r.ID, p.PropName, p.PropValue, p.PropType
 		FROM Registries as r LEFT JOIN Props AS p ON (p.EntityID=r.ID)
 		WHERE r.RegistryID=?`, id)
@@ -169,7 +168,7 @@ func (reg *Registry) FindGroupModel(gTypePlural string) *GroupModel {
 func (reg *Registry) LoadModel() *Model {
 	groups := map[string]*GroupModel{} // Model ID -> *GroupModel
 
-	result, err := Query(`
+	results, err := Query(`
 		SELECT
 			ID,
 			RegistryID,
@@ -183,7 +182,6 @@ func (reg *Registry) LoadModel() *Model {
 		FROM ModelEntities
 		WHERE RegistryID=?
 		ORDER BY ParentID ASC`, reg.DbID)
-	defer result.Close()
 
 	if err != nil {
 		log.Printf("Error loading model(%s): %s", reg.ID, err)
@@ -195,33 +193,33 @@ func (reg *Registry) LoadModel() *Model {
 		Groups:   map[string]*GroupModel{},
 	}
 
-	for result.NextRow() {
-		if *result.Data[2] == nil { // ParentID nil -> new Group
+	for _, row := range results {
+		if *row[2] == nil { // ParentID nil -> new Group
 			g := &GroupModel{ // Plural
-				ID:       NotNilString(result.Data[0]), // ID
+				ID:       NotNilString(row[0]), // ID
 				Registry: reg,
-				Plural:   NotNilString(result.Data[3]), // Plural
-				Singular: NotNilString(result.Data[4]), // Singular
-				Schema:   NotNilString(result.Data[5]), // SchemaURL
+				Plural:   NotNilString(row[3]), // Plural
+				Singular: NotNilString(row[4]), // Singular
+				Schema:   NotNilString(row[5]), // SchemaURL
 
 				Resources: map[string]*ResourceModel{},
 			}
 
-			model.Groups[NotNilString(result.Data[3])] = g
-			groups[NotNilString(result.Data[0])] = g
+			model.Groups[NotNilString(row[3])] = g
+			groups[NotNilString(row[0])] = g
 
 		} else { // New Resource
-			g := groups[NotNilString(result.Data[2])] // Parent ID
+			g := groups[NotNilString(row[2])] // Parent ID
 
 			if g != nil { // should always be true, but...
 				r := &ResourceModel{
-					ID:         NotNilString(result.Data[0]),
+					ID:         NotNilString(row[0]),
 					GroupModel: g,
-					Plural:     NotNilString(result.Data[3]),
-					Singular:   NotNilString(result.Data[4]),
-					Versions:   NotNilInt(result.Data[6]),
-					VersionId:  NotNilBool(result.Data[7]),
-					Latest:     NotNilBool(result.Data[8]),
+					Plural:     NotNilString(row[3]),
+					Singular:   NotNilString(row[4]),
+					Versions:   NotNilInt(row[6]),
+					VersionId:  NotNilBool(row[7]),
+					Latest:     NotNilBool(row[8]),
 				}
 
 				g.Resources[r.Plural] = r
@@ -236,7 +234,7 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gt, id)
 	defer log.VPrintf(3, "<Exit: FindGroup")
 
-	results, err := NewQuery(`
+	results, err := Query(`
 		SELECT g.ID, p.PropName, p.PropValue, p.PropType
 		FROM "Groups" AS g
 		JOIN ModelEntities AS m ON (m.ID=g.ModelID)
@@ -324,81 +322,6 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 	return g, nil
 }
 
-func readObj(results [][]*any, index int) (*Obj, int) {
-	obj := (*Obj)(nil)
-
-	for index < len(results) {
-		row := results[index]
-
-		level := int((*row[0]).(int64))
-		plural := NotNilString(row[1])
-		id := NotNilString(row[2])
-
-		if obj == nil {
-			obj = &Obj{
-				Level:    level,
-				Plural:   plural,
-				ID:       id,
-				Path:     NotNilString(row[6]),
-				Abstract: NotNilString(row[7]),
-				Values:   map[string]any{},
-			}
-		} else {
-			if obj.Level != level || obj.Plural != plural || obj.ID != id {
-				break
-			}
-		}
-
-		propName := NotNilString(row[3])
-		propVal := NotNilString(row[4])
-		propType := NotNilString(row[5])
-
-		if propType == "s" {
-			obj.Values[propName] = propVal
-		} else if propType == "b" {
-			obj.Values[propName] = (propVal == "true")
-		} else if propType == "i" {
-			tmpInt, err := strconv.Atoi(propVal)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing int: %s", propVal))
-			}
-			obj.Values[propName] = tmpInt
-		} else if propType == "f" {
-			tmpFloat, err := strconv.ParseFloat(propVal, 64)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing float: %s", propVal))
-			}
-			obj.Values[propName] = tmpFloat
-		} else {
-			panic(fmt.Sprintf("bad type: %v", propType))
-		}
-
-		index++
-	}
-
-	return obj, index
-}
-
-type Obj struct {
-	Level    int
-	Plural   string
-	ID       string
-	Path     string
-	Abstract string
-	Values   map[string]any
-}
-
-type ResultsContext struct {
-	results [][]*any
-	pos     int
-}
-
-func (rc *ResultsContext) NextObj() *Obj {
-	obj, nextPos := readObj(rc.results, rc.pos)
-	rc.pos = nextPos
-	return obj
-}
-
 func (info *RequestInfo) AddInline(path string) error {
 	// use "*" to inline all
 	path = strings.Trim(path, "/.") // To be nice
@@ -466,7 +389,7 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 
 	query, args, err := GenerateQuery(info)
 
-	results, err := NewQuery(query, args...)
+	results, err := Query(query, args...)
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
 		return fmt.Errorf("500: " + err.Error())
