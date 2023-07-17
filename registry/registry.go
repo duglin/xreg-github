@@ -68,10 +68,10 @@ func (reg *Registry) Delete() error {
 
 func (reg *Registry) AddGroupModel(plural string, singular string, schema string) (*GroupModel, error) {
 	if plural == "" {
-		return nil, fmt.Errorf("Can't add a group with an empty plural name")
+		return nil, fmt.Errorf("Can't add a GroupModel with an empty plural name")
 	}
 	if singular == "" {
-		return nil, fmt.Errorf("Can't add a group with an empty sigular name")
+		return nil, fmt.Errorf("Can't add a GroupModel with an empty sigular name")
 	}
 
 	if reg.Model != nil {
@@ -130,7 +130,7 @@ func FindRegistry(id string) (*Registry, error) {
 	defer results.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Error finding registry %q: %s", id, err)
+		return nil, fmt.Errorf("Error finding Registry %q: %s", id, err)
 	}
 
 	reg := (*Registry)(nil)
@@ -248,7 +248,7 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 	defer results.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Error finding group %q(%s): %s", id, gt, err)
+		return nil, fmt.Errorf("Error finding Group %q(%s): %s", id, gt, err)
 	}
 
 	g := (*Group)(nil)
@@ -319,7 +319,7 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 		g.DbID, reg.DbID, g.ID, gType+"/"+g.ID, gType, reg.DbID, gType)
 
 	if err != nil {
-		err = fmt.Errorf("Error adding group: %s", err)
+		err = fmt.Errorf("Error adding Group: %s", err)
 		log.Print(err)
 		return nil, err
 	}

@@ -29,7 +29,7 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	defer results.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Error finding resource %q(%s): %s",
+		return nil, fmt.Errorf("Error finding Resource %q(%s): %s",
 			id, rType, err)
 	}
 
@@ -108,7 +108,7 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 		g.RegistryID, g.Plural,
 		rType)
 	if err != nil {
-		err = fmt.Errorf("Error adding resource: %s", err)
+		err = fmt.Errorf("Error adding Resource: %s", err)
 		log.Print(err)
 		return nil, err
 	}

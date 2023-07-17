@@ -57,7 +57,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 	defer results.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Error finding version %q: %s", id, err)
+		return nil, fmt.Errorf("Error finding Version %q: %s", id, err)
 	}
 
 	v := (*Version)(nil)
@@ -126,7 +126,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		r.Group.Plural+"/"+r.Group.ID+"/"+r.Plural+"/"+r.ID+"/versions/"+v.ID,
 		r.Group.Plural+"/"+r.Plural+"/versions")
 	if err != nil {
-		err = fmt.Errorf("Error adding version: %s", err)
+		err = fmt.Errorf("Error adding Version: %s", err)
 		log.Print(err)
 		return nil, err
 	}

@@ -21,7 +21,7 @@ func (v *Version) Delete() error {
 
 	err := DoOne(`DELETE FROM Versions WHERE ID=?`, v.DbID)
 	if err != nil {
-		return fmt.Errorf("Error deleting version %q: %s", v.ID, err)
+		return fmt.Errorf("Error deleting Version %q: %s", v.ID, err)
 	}
 
 	results, err := Query(`
