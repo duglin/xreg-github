@@ -6,12 +6,25 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"runtime"
 	"testing"
 
 	"github.com/duglin/xreg-github/registry"
 )
+
+func TestMain(m *testing.M) {
+	// call flag.Parse() here if TestMain uses flags
+	registry.DeleteDB("testreg")
+	registry.CreateDB("testreg")
+	registry.OpenDB("testreg")
+
+	rc := m.Run()
+
+	registry.DeleteDB("testreg")
+	os.Exit(rc)
+}
 
 func Caller() string {
 	_, me, _, _ := runtime.Caller(0)

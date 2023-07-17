@@ -22,10 +22,12 @@ type Result struct {
 }
 
 func (r *Result) Close() {
-	r.sqlRows.Close()
+	if r.sqlRows != nil {
+		r.sqlRows.Close()
+		r.sqlRows = nil
+	}
 	r.Data = nil
 	r.TempData = nil
-	r.sqlRows = nil
 }
 
 func (r *Result) Push() {
@@ -121,6 +123,7 @@ func Query(cmd string, args ...interface{}) (*Result, error) {
 }
 
 func Do(cmd string, args ...interface{}) error {
+	log.VPrintf(4, "Do: %q arg: %v", cmd, args)
 	ps, err := DB.Prepare(cmd)
 	if err != nil {
 		return err
@@ -155,33 +158,98 @@ func DoOne(cmd string, args ...interface{}) error {
 	return err
 }
 
+func DBExists(name string) bool {
+	log.VPrintf(3, ">Enter: DBExists %q", name)
+	db, err := sql.Open("mysql", "root:password@/")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(`
+		SELECT SCHEMA_NAME
+		FROM INFORMATION_SCHEMA.SCHEMATA
+		WHERE SCHEMA_NAME=?`, name)
+	if err != nil {
+		panic(err)
+	}
+	found := rows.Next()
+	log.VPrintf(3, "<Exit: found: %v", found)
+	return found
+}
+
 //go:embed init.sql
 var initDB string
 
-func init() {
+func OpenDB(name string) {
+	log.VPrintf(3, ">Enter: OpenDB %q", name)
+	defer log.VPrintf(3, "<Exit: OpenDB")
+
 	// DB, err := sql.Open("mysql", "root:password@tcp(localhost:3306)/")
 	var err error
 
-	DB, err = sql.Open("mysql", "root:password@/registry")
+	DB, err = sql.Open("mysql", "root:password@/"+name)
 	if err != nil {
-		log.Fatalf("Error talking to SQL: %s\n", err)
+		err = fmt.Errorf("Error talking to SQL: %s\n", err)
+		log.Print(err)
+		panic(err)
+		// return err
 	}
+
 	DB.SetMaxOpenConns(5)
 	DB.SetMaxIdleConns(5)
+}
+
+func CreateDB(name string) error {
+	log.VPrintf(3, ">Enter: CreateDB %q", name)
+	defer log.VPrintf(3, "<Exit: CreateDB")
+
+	db, err := sql.Open("mysql", "root:password@/")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	if _, err = db.Exec("CREATE DATABASE " + name); err != nil {
+		panic(err)
+	}
+
+	if _, err = db.Exec("USE " + name); err != nil {
+		panic(err)
+	}
+
+	log.VPrintf(3, "Creating DB")
 
 	for _, cmd := range strings.Split(initDB, ";") {
 		cmd = strings.TrimSpace(cmd)
-		cmd = strings.Replace(cmd, "@", ";", -1)
+		cmd = strings.Replace(cmd, "@", ";", -1) // Can't use ; in file
 		if cmd == "" {
 			continue
 		}
 
 		log.VPrintf(4, "CMD: %s", cmd)
-		if _, err := DB.Exec(cmd); err != nil {
+		if _, err := db.Exec(cmd); err != nil {
 			panic(fmt.Sprintf("Error on: %s\n%s", cmd, err))
 		}
 	}
-	log.VPrintf(2, "Done init'ing DB")
+
+	return nil
+}
+
+func DeleteDB(name string) error {
+	log.VPrintf(3, "Deleting DB %q", name)
+
+	db, err := sql.Open("mysql", "root:password@/")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DROP DATABASE IF EXISTS " + name)
+	if err != nil {
+		panic(err)
+	}
+	return nil
 }
 
 /*

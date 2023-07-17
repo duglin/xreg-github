@@ -4,6 +4,9 @@ test:
 	(cd tests && GO111MODULE=off go test -failfast)
 
 run:
+	GO111MODULE=off go run *.go --recreate
+
+start:
 	GO111MODULE=off go run *.go
 
 mysql:

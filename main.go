@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"io"
 	"net/http"
 	"os"
@@ -18,6 +19,8 @@ func init() {
 
 var Port = "8080"
 var Reg = (*registry.Registry)(nil)
+var DBName = "registry"
+var Verbose = 2
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	saveVerbose := log.GetVerbose()
@@ -84,8 +87,30 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	Reg = tests.TestAll()
-	// Reg.Delete()
+	doDelete := flag.Bool("delete", false, "Delete DB an exit")
+	doRecreate := flag.Bool("recreate", false, "Recreate DB, then run")
+	flag.IntVar(&Verbose, "v", 2, "Verbose level")
+	flag.Parse()
+
+	log.SetVerbose(Verbose)
+
+	if *doDelete || *doRecreate {
+		err := registry.DeleteDB(DBName)
+		if err != nil {
+			panic(err)
+		}
+		if *doDelete {
+			os.Exit(0)
+		}
+	}
+
+	if !registry.DBExists(DBName) {
+		registry.CreateDB(DBName)
+	}
+
+	tests.TestAll()
+
+	registry.OpenDB(DBName)
 
 	Reg = LoadSample()
 	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")

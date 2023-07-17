@@ -29,6 +29,8 @@ func (v *Version) Delete() error {
         WHERE ResourceID=?
         ORDER BY CreatedIndex DESC LIMIT 1`,
 		v.Resource.DbID)
+	defer results.Close()
+
 	if err != nil {
 		return fmt.Errorf("Error finding next latestID for Resource %q: %s",
 			v.Resource.ID, err)

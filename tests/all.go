@@ -11,10 +11,16 @@ import (
 	"github.com/duglin/xreg-github/registry"
 )
 
-func TestAll() *registry.Registry {
-	reg := DoTests()
+func TestAll() {
+	registry.DeleteDB("testreg")
+	registry.CreateDB("testreg")
+	registry.OpenDB("testreg")
+
+	DoTests()
+
+	registry.DeleteDB("testreg")
+
 	log.VPrintf(1, "ALL TESTS PASSED")
-	return reg
 }
 
 func OneLine(buf []byte) []byte {

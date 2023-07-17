@@ -19,6 +19,9 @@ type Registry struct {
 var Registries = map[string]*Registry{} // User ID->Reg
 
 func NewRegistry(id string) (*Registry, error) {
+	log.VPrintf(3, ">Enter: NewRegistry %q", id)
+	defer log.VPrintf(3, "<Exit: NewRegistry")
+
 	if id == "" {
 		id = NewUUID()
 	}
@@ -124,6 +127,7 @@ func FindRegistry(id string) (*Registry, error) {
 		SELECT r.ID, p.PropName, p.PropValue, p.PropType
 		FROM Registries as r LEFT JOIN Props AS p ON (p.EntityID=r.ID)
 		WHERE r.RegistryID=?`, id)
+	defer results.Close()
 
 	if err != nil {
 		return nil, fmt.Errorf("Error finding registry %q: %s", id, err)
@@ -182,6 +186,7 @@ func (reg *Registry) LoadModel() *Model {
 		FROM ModelEntities
 		WHERE RegistryID=?
 		ORDER BY ParentID ASC`, reg.DbID)
+	defer results.Close()
 
 	if err != nil {
 		log.Printf("Error loading model(%s): %s", reg.ID, err)
@@ -240,6 +245,8 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 		JOIN ModelEntities AS m ON (m.ID=g.ModelID)
 		LEFT JOIN Props AS p ON (p.EntityID=g.ID)
 		WHERE g.RegistryID=? AND g.GroupID=? AND m.Plural=?`, reg.DbID, id, gt)
+	defer results.Close()
+
 	if err != nil {
 		return nil, fmt.Errorf("Error finding group %q(%s): %s", id, gt, err)
 	}
@@ -390,6 +397,8 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	query, args, err := GenerateQuery(info)
 
 	results, err := Query(query, args...)
+	defer results.Close()
+
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
 		return fmt.Errorf("500: " + err.Error())

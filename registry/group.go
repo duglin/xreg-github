@@ -26,6 +26,8 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
                 WHERE r.GroupID=? AND r.ResourceID=?
                 AND r.Abstract = CONCAT(?,'/',?)`,
 		g.DbID, id, g.Plural, rType)
+	defer results.Close()
+
 	if err != nil {
 		return nil, fmt.Errorf("Error finding resource %q(%s): %s",
 			id, rType, err)

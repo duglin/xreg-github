@@ -1,8 +1,7 @@
+-- DROP DATABASE IF EXISTS registry ;
+-- CREATE DATABASE registry ;
+-- USE registry ;
 SET GLOBAL sql_mode = 'ANSI_QUOTES' ;
-
-DROP DATABASE IF EXISTS registry ;
-CREATE DATABASE registry ;
-USE registry ;
 
 CREATE TABLE Registries (
 	ID          VARCHAR(255) NOT NULL,	# System ID

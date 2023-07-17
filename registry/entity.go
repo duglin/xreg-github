@@ -39,6 +39,7 @@ func (e *Entity) Find() (bool, error) {
 		FROM Props AS p
 		LEFT JOIN Entities AS e ON (e.eID=p.EntityID)
 		WHERE e.ID=?`, e.ID)
+	defer results.Close()
 
 	if err != nil {
 		return false, err
@@ -65,6 +66,7 @@ func (e *Entity) Refresh() error {
 	results, err := Query(`
         SELECT PropName, PropValue, PropType
         FROM Props WHERE EntityID=? `, e.DbID)
+	defer results.Close()
 
 	if err != nil {
 		log.Printf("Error refreshing props(%s): %s", e.DbID, err)

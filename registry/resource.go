@@ -54,6 +54,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
         SELECT v.ID, p.PropName, p.PropValue, p.PropType
         FROM Versions as v LEFT JOIN Props AS p ON (p.EntityID=v.ID)
         WHERE v.VersionID=? AND v.ResourceID=?`, id, r.DbID)
+	defer results.Close()
 
 	if err != nil {
 		return nil, fmt.Errorf("Error finding version %q: %s", id, err)
