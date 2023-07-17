@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	log "github.com/duglin/dlog"
 	_ "github.com/go-sql-driver/mysql"
@@ -151,6 +152,20 @@ func (e *Entity) sSet(name string, val any) error {
 func SetProp(entity any, name string, val any) error {
 	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
 	defer log.VPrintf(3, "<Exit SetProp")
+
+	// Only allow "." in the name if it's "tags.xxx"
+	preDot, tagName, found := strings.Cut(name, ".")
+	if found {
+		if preDot != "tags" {
+			return fmt.Errorf("Can't use '.' in a property name except for "+
+				"tags: %s", name)
+		}
+		if strings.Index(tagName, ".") >= 0 {
+			return fmt.Errorf("Can't use '.' in a tag name: %s", name)
+		}
+	} else if name == "tags" {
+		return fmt.Errorf("Invalid propery name: %s", name)
+	}
 
 	eField := reflect.ValueOf(entity).Elem().FieldByName("Entity")
 	e := (*Entity)(nil)

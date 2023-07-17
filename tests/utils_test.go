@@ -22,7 +22,9 @@ func TestMain(m *testing.M) {
 
 	rc := m.Run()
 
-	registry.DeleteDB("testreg")
+	if rc == 0 {
+		registry.DeleteDB("testreg")
+	}
 	os.Exit(rc)
 }
 

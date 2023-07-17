@@ -19,6 +19,9 @@ func TestBasicFilters(t *testing.T) {
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
 
+	reg.Set("tags.reg1", "1ger")
+	f.Set("tags.file1", "1elif")
+
 	// /dirs/d1/f1/v1
 	//            /v2
 	//      /d2/f2/v1
@@ -35,6 +38,9 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "id": "TestBasicFilters",
   "self": "http:///",
+  "tags": {
+    "reg1": "1ger"
+  },
 
   "dirsCount": 2,
   "dirsUrl": "http:///dirs"
@@ -149,6 +155,161 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "dirs/d1/files/f1/versions/v1?inline&oneline&filter=id=xxx",
 			// Nothing, matched, so 404
 			Exp: `404: Not found`,
+		},
+
+		// Some tag filters
+		{
+			Name: "Get/filter reg.tags - no match",
+			URL:  "?filter=tags.reg1=xxx",
+			// Nothing, matched, so 404
+			Exp: "404: Not found\n",
+		},
+		{
+			Name: "Get/filter reg.tags - match",
+			URL:  "?filter=tags.reg1=1ger",
+			Exp: `{
+  "id": "TestBasicFilters",
+  "self": "http:///",
+  "tags": {
+    "reg1": "1ger"
+  },
+
+  "dirsCount": 2,
+  "dirsUrl": "http:///dirs"
+}
+`,
+		},
+		{
+			Name: "Get/filter tags",
+			URL:  "?filter=dirs.files.tags.file1=1elif",
+			Exp: `{
+  "id": "TestBasicFilters",
+  "self": "http:///",
+  "tags": {
+    "reg1": "1ger"
+  },
+
+  "dirsCount": 1,
+  "dirsUrl": "http:///dirs"
+}
+`,
+		},
+		{
+			Name: "Get/filter dir file.tags - match",
+			URL:  "?inline&filter=dirs.files.tags.file1=1elif",
+			Exp: `{
+  "id": "TestBasicFilters",
+  "self": "http:///",
+  "tags": {
+    "reg1": "1ger"
+  },
+
+  "dirs": {
+    "d2": {
+      "id": "d2",
+      "self": "http:///dirs/d2",
+
+      "files": {
+        "f2": {
+          "id": "f2",
+          "self": "http:///dirs/d2/files/f2",
+          "latestId": "v1.1",
+          "latestUrl": "http:///dirs/d2/files/f2/versions/v1.1",
+          "tags": {
+            "file1": "1elif"
+          },
+
+          "versions": {
+            "v1": {
+              "id": "v1",
+              "self": "http:///dirs/d2/files/f2/versions/v1"
+            },
+            "v1.1": {
+              "id": "v1.1",
+              "self": "http:///dirs/d2/files/f2/versions/v1.1",
+              "tags": {
+                "file1": "1elif"
+              }
+            }
+          },
+          "versionsCount": 2,
+          "versionsUrl": "http:///dirs/d2/files/f2/versions"
+        }
+      },
+      "filesCount": 1,
+      "filesUrl": "http:///dirs/d2/files"
+    }
+  },
+  "dirsCount": 1,
+  "dirsUrl": "http:///dirs"
+}
+`,
+		},
+		{
+			Name: "Get/filter dir file.tags - no match empty string",
+			URL:  "?inline&filter=dirs.files.tags.file1=",
+			Exp:  "404: Not found\n",
+		},
+		{
+			Name: "Get/filter dir file.tags.xxx - no match empty string",
+			URL:  "?inline&filter=dirs.files.tags.xxx=",
+			Exp:  "404: Not found\n",
+		},
+		{
+			Name: "Get/filter dir file.tags.xxx - no match non-empty string",
+			URL:  "?inline&filter=dirs.files.tags.xxx",
+			Exp:  "404: Not found\n",
+		},
+		{
+			Name: "Get/filter dir file.tags - match non-empty string",
+			URL:  "?inline&filter=dirs.files.tags.file1",
+			Exp: `{
+  "id": "TestBasicFilters",
+  "self": "http:///",
+  "tags": {
+    "reg1": "1ger"
+  },
+
+  "dirs": {
+    "d2": {
+      "id": "d2",
+      "self": "http:///dirs/d2",
+
+      "files": {
+        "f2": {
+          "id": "f2",
+          "self": "http:///dirs/d2/files/f2",
+          "latestId": "v1.1",
+          "latestUrl": "http:///dirs/d2/files/f2/versions/v1.1",
+          "tags": {
+            "file1": "1elif"
+          },
+
+          "versions": {
+            "v1": {
+              "id": "v1",
+              "self": "http:///dirs/d2/files/f2/versions/v1"
+            },
+            "v1.1": {
+              "id": "v1.1",
+              "self": "http:///dirs/d2/files/f2/versions/v1.1",
+              "tags": {
+                "file1": "1elif"
+              }
+            }
+          },
+          "versionsCount": 2,
+          "versionsUrl": "http:///dirs/d2/files/f2/versions"
+        }
+      },
+      "filesCount": 1,
+      "filesUrl": "http:///dirs/d2/files"
+    }
+  },
+  "dirsCount": 1,
+  "dirsUrl": "http:///dirs"
+}
+`,
 		},
 	}
 

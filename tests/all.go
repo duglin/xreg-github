@@ -263,8 +263,6 @@ func DoTests() *registry.Registry {
 	Check(r3.Extensions["BoolT"] == true, "r3.BoolT != true")
 	Check(r3.Extensions["BoolF"] == false, "r3.BoolF != false")
 
-	// DUG
-
 	v1, _ := r1.FindVersion("v1")
 	v2, _ := r1.FindVersion("v1")
 
@@ -280,18 +278,6 @@ func DoTests() *registry.Registry {
 	v1.Set("tags.stale", "true")
 	v1.Set("tags.int", 3)
 
-	CheckGet(reg, "v2.tags",
-		"http://example.com/dirs/g1/files/r1/versions/v1", `{
-  "id": "v1",
-  "self": "http://example.com/dirs/g1/files/r1/versions/v1",
-  "tags": {
-    "tags.int": "3",
-    "tags.stage": "dev",
-    "tags.stale": "true"
-  }
-}
-`)
-
 	// Some filtering
 	g2, _ = reg.AddGroup("dirs", "g2")
 	r2, _ = g2.AddResource("files", "r2", "v1")
@@ -300,66 +286,7 @@ func DoTests() *registry.Registry {
 	r1.Set("tags.stale", "true")
 	v2.Set("tags.v2", "true")
 
-	CheckGet(reg, "filter id",
-		"http://example.com/?filter=dirs.id=g2", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirsCount": 1,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "filter id inline",
-		"http://example.com/?inline&filter=dirs.id=g2", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirs": {
-    "g2": {
-      "id": "g2",
-      "self": "http://example.com/dirs/g2",
-      "tags": {
-        "tags.stage": "dev"
-      },
-
-      "file2s": {},
-      "file2sCount": 0,
-      "file2sUrl": "http://example.com/dirs/g2/file2s",
-      "files": {
-        "r2": {
-          "id": "r2",
-          "self": "http://example.com/dirs/g2/files/r2",
-          "latestId": "v1",
-          "latestUrl": "http://example.com/dirs/g2/files/r2/versions/v1",
-          "tags": {
-            "tags.v2": "true"
-          },
-
-          "versions": {
-            "v1": {
-              "id": "v1",
-              "self": "http://example.com/dirs/g2/files/r2/versions/v1",
-              "tags": {
-                "tags.v2": "true"
-              }
-            }
-          },
-          "versionsCount": 1,
-          "versionsUrl": "http://example.com/dirs/g2/files/r2/versions"
-        }
-      },
-      "filesCount": 1,
-      "filesUrl": "http://example.com/dirs/g2/files"
-    }
-  },
-  "dirsCount": 1,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
+	// DUG
 	CheckGet(reg, "filter tag level 1",
 		"http://example.com/?inline&noprops&filter=dirs.tags.stage=dev", `{
   "dirs": {

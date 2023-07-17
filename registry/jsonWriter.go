@@ -179,7 +179,7 @@ var orderedProps = []struct {
 					res = map[string]string{}
 				}
 				// Convert it to a string per the spec
-				res[key] = fmt.Sprintf("%v", val)
+				res[key[5:]] = fmt.Sprintf("%v", val)
 				// Technically we shouldn't remove it but for now it's safe
 				delete(jw.Obj.Values, key)
 			}

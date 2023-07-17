@@ -106,7 +106,7 @@ func TestRegistryProps(t *testing.T) {
   "description": "a very cool reg",
   "docs": "https://docs.com",
   "tags": {
-    "tags.stage": "dev"
+    "stage": "dev"
   }
 }
 `)

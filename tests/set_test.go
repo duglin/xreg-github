@@ -77,5 +77,213 @@ func TestSetVersion(t *testing.T) {
 	if val != "myName" {
 		t.Errorf("version.Name is %q, should be 'myName'", val)
 	}
+}
 
+func TestSetDots(t *testing.T) {
+	reg, _ := registry.NewRegistry("TestSetDots")
+	// defer reg.Delete()
+
+	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm.AddResourceModel("files", "file", 0, true, true)
+
+	// check some dots in the prop names - and some tags stuff too
+	dir, _ := reg.AddGroup("dirs", "d1")
+	err := dir.Set("tags", "xxx")
+	xCheck(t, err != nil, "tags=xxx should fail")
+	err = dir.Set("tags", nil)
+	xCheck(t, err != nil, "tags=nil should fail")
+	err = dir.Set("tags.xxx.yyy", "xxx")
+	xCheck(t, err != nil, "tags.xxx.yyy=xxx should fail")
+	err = dir.Set("tags.xxx.yyy", nil)
+	xCheck(t, err != nil, "tags.xxx.yyy=nil should fail")
+	err = dir.Set("xxx.yyy", "xxx")
+	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	err = dir.Set("xxx.yyy", nil)
+	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	err = dir.Set("xxx.", "xxx")
+	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	err = dir.Set(".xxx", "xxx")
+	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	err = dir.Set(".xxx.", "xxx")
+	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+}
+
+func TestSetTags(t *testing.T) {
+	reg, _ := registry.NewRegistry("TestSetTags")
+	defer reg.Delete()
+
+	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm.AddResourceModel("files", "file", 0, true, true)
+
+	dir, _ := reg.AddGroup("dirs", "d1")
+	file, _ := dir.AddResource("files", "f1", "v1")
+	ver, _ := file.FindVersion("v1")
+	ver2, _ := file.AddVersion("v2")
+
+	// /dirs/d1/f1/v1
+	err := reg.Set("tags.r2", 123.234) // notice it's not a string
+	xNoErr(t, err)
+	reg.Refresh()
+	xJSONCheck(t, reg.Get("tags.r2"), 123.234) // won't see it as a string until json
+	err = reg.Set("tags.r1", "foo")
+	xNoErr(t, err)
+	reg.Refresh()
+	xJSONCheck(t, reg.Get("tags.r1"), "foo")
+	err = reg.Set("tags.r1", nil)
+	xNoErr(t, err)
+	reg.Refresh()
+	xJSONCheck(t, reg.Get("tags.r1"), nil)
+
+	err = dir.Set("tags.d1", "bar")
+	xNoErr(t, err)
+	dir.Refresh()
+	xJSONCheck(t, dir.Get("tags.d1"), "bar")
+	// test override
+	err = dir.Set("tags.d1", "foo")
+	xNoErr(t, err)
+	dir.Refresh()
+	xJSONCheck(t, dir.Get("tags.d1"), "foo")
+	err = dir.Set("tags.d1", nil)
+	xNoErr(t, err)
+	dir.Refresh()
+	xJSONCheck(t, dir.Get("tags.d1"), nil)
+
+	err = file.Set("tags.f1", "foo")
+	xNoErr(t, err)
+	file.Refresh()
+	xJSONCheck(t, file.Get("tags.f1"), "foo")
+	err = file.Set("tags.f1", nil)
+	xNoErr(t, err)
+	file.Refresh()
+	xJSONCheck(t, file.Get("tags.f1"), nil)
+
+	err = ver.Set("tags.v1", "foo")
+	xNoErr(t, err)
+	ver.Refresh()
+	xJSONCheck(t, ver.Get("tags.v1"), "foo")
+	err = ver.Set("tags.v1", nil)
+	xNoErr(t, err)
+	ver.Refresh()
+	xJSONCheck(t, ver.Get("tags.v1"), nil)
+
+	dir.Set("tags.dd", "dd.foo")
+	file.Set("tags.ff", "ff.bar")
+	ver.Set("tags.vv", 987.234)
+	ver.Set("tags.vv2", "v11")
+	ver2.Set("tags.2nd", "3rd")
+
+	xCheckGet(t, reg, "?inline", `{
+  "id": "TestSetTags",
+  "self": "http:///",
+  "tags": {
+    "r2": "123.234"
+  },
+
+  "dirs": {
+    "d1": {
+      "id": "d1",
+      "self": "http:///dirs/d1",
+      "tags": {
+        "dd": "dd.foo"
+      },
+
+      "files": {
+        "f1": {
+          "id": "f1",
+          "self": "http:///dirs/d1/files/f1",
+          "latestId": "v2",
+          "latestUrl": "http:///dirs/d1/files/f1/versions/v2",
+          "tags": {
+            "2nd": "3rd",
+            "ff": "ff.bar"
+          },
+
+          "versions": {
+            "v1": {
+              "id": "v1",
+              "self": "http:///dirs/d1/files/f1/versions/v1",
+              "tags": {
+                "vv": "987.234",
+                "vv2": "v11"
+              }
+            },
+            "v2": {
+              "id": "v2",
+              "self": "http:///dirs/d1/files/f1/versions/v2",
+              "tags": {
+                "2nd": "3rd",
+                "ff": "ff.bar"
+              }
+            }
+          },
+          "versionsCount": 2,
+          "versionsUrl": "http:///dirs/d1/files/f1/versions"
+        }
+      },
+      "filesCount": 1,
+      "filesUrl": "http:///dirs/d1/files"
+    }
+  },
+  "dirsCount": 1,
+  "dirsUrl": "http:///dirs"
+}
+`)
+
+	file.Set("latestId", ver.ID)
+	xCheckGet(t, reg, "?inline", `{
+  "id": "TestSetTags",
+  "self": "http:///",
+  "tags": {
+    "r2": "123.234"
+  },
+
+  "dirs": {
+    "d1": {
+      "id": "d1",
+      "self": "http:///dirs/d1",
+      "tags": {
+        "dd": "dd.foo"
+      },
+
+      "files": {
+        "f1": {
+          "id": "f1",
+          "self": "http:///dirs/d1/files/f1",
+          "latestId": "v1",
+          "latestUrl": "http:///dirs/d1/files/f1/versions/v1",
+          "tags": {
+            "vv": "987.234",
+            "vv2": "v11"
+          },
+
+          "versions": {
+            "v1": {
+              "id": "v1",
+              "self": "http:///dirs/d1/files/f1/versions/v1",
+              "tags": {
+                "vv": "987.234",
+                "vv2": "v11"
+              }
+            },
+            "v2": {
+              "id": "v2",
+              "self": "http:///dirs/d1/files/f1/versions/v2",
+              "tags": {
+                "2nd": "3rd",
+                "ff": "ff.bar"
+              }
+            }
+          },
+          "versionsCount": 2,
+          "versionsUrl": "http:///dirs/d1/files/f1/versions"
+        }
+      },
+      "filesCount": 1,
+      "filesUrl": "http:///dirs/d1/files"
+    }
+  },
+  "dirsCount": 1,
+  "dirsUrl": "http:///dirs"
+}
+`)
 }
