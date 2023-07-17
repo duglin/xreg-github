@@ -20,7 +20,7 @@ func TestNoModel(t *testing.T) {
 }
 `)
 
-	xCheckGet(t, reg, "/model/foo", "404: Not found")
+	xCheckGet(t, reg, "/model/foo", "404: Not found\n")
 }
 
 func TestGroupModelCreate(t *testing.T) {

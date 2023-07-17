@@ -94,13 +94,13 @@ func TestBasicTypes(t *testing.T) {
 		entity = eField.Addr().Interface().(*registry.Entity)
 
 		for _, prop := range test.Props {
-			// Note that for Resources this will set them on the Resourec
+			// Note that for Resources this will set them on the Resource
 			// and not the latest version. We'll test that in a diff test
 			registry.SetProp(test.Entity, prop.Name, prop.Value)
 		}
 
 		entity.Extensions = map[string]any{} // force delete everything
-		entity.Refresh()                     // and then re-get all props from DB
+		entity.Refresh()                     // and then re-get props from DB
 
 		for _, prop := range test.Props {
 			got := entity.Get(prop.Name)

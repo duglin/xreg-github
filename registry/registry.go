@@ -375,7 +375,7 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	if len(info.Parts) > 0 && info.Parts[0] == "model" {
 		if len(info.Parts) > 1 {
 			info.ErrCode = http.StatusNotFound
-			return fmt.Errorf("404: Not found")
+			return fmt.Errorf("404: Not found\n")
 		}
 		model := info.Registry.Model
 		if model == nil {
@@ -559,8 +559,11 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
-	group := info.Registry.Model.Groups[info.Parts[0]]
-	if group == nil && (info.Parts[0] != "model" || len(info.Parts) > 1) {
+	gModel := (*GroupModel)(nil)
+	if info.Registry.Model != nil && info.Registry.Model.Groups != nil {
+		gModel = info.Registry.Model.Groups[info.Parts[0]]
+	}
+	if gModel == nil && (info.Parts[0] != "model" || len(info.Parts) > 1) {
 		info.ErrCode = 404
 		return fmt.Errorf("Unknown Group type: %q", info.Parts[0])
 	}
@@ -580,10 +583,13 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
-	res := group.Resources[info.Parts[2]]
-	if res == nil {
+	rModel := (*ResourceModel)(nil)
+	if gModel.Resources != nil {
+		rModel = gModel.Resources[info.Parts[2]]
+	}
+	if rModel == nil {
 		info.ErrCode = 404
-		return fmt.Errorf("Unknown Resource type: %q", info.Parts[0])
+		return fmt.Errorf("Unknown Resource type: %q", info.Parts[2])
 	}
 	info.ResourceType = info.Parts[2]
 	info.Root += "/" + info.Parts[2]
@@ -621,7 +627,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	info.ErrCode = 404
-	return fmt.Errorf("Uknown resource path: %q", path)
+	return fmt.Errorf("404: Not found\n")
 }
 
 func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {

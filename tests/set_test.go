@@ -25,6 +25,22 @@ func TestSetResource(t *testing.T) {
 	if val != "myName" {
 		t.Errorf("ver.Name is %q, should be 'myName'", val)
 	}
+
+	name := file.Get("name").(string)
+	xCheckEqual(t, "", name, "myName")
+
+	// Verify that nil and "" are treated differently
+	ver.Set("name", nil)
+	ver2, _ := file.FindVersion(ver.ID)
+	xJSONCheck(t, ver2, ver)
+	val = ver.Get("name")
+	xCheck(t, val == nil, "Setting to nil should return nil")
+
+	ver.Set("name", "")
+	ver2, _ = file.FindVersion(ver.ID)
+	xJSONCheck(t, ver2, ver)
+	val = ver.Get("name")
+	xCheck(t, val == "", "Setting to '' should return ''")
 }
 
 func TestSetVersion(t *testing.T) {

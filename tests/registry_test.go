@@ -12,6 +12,18 @@ func TestCreateRegistry(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg shouldn't be nil")
 
+	// Check basic GET first
+	xCheckGet(t, reg, "/",
+		`{
+  "id": "TestCreateRegistry",
+  "self": "http:///"
+}
+`)
+	xCheckGet(t, reg, "/xxx", "Unknown Group type: \"xxx\"")
+	xCheckGet(t, reg, "xxx", "Unknown Group type: \"xxx\"")
+	xCheckGet(t, reg, "/xxx/yyy", "Unknown Group type: \"xxx\"")
+	xCheckGet(t, reg, "xxx/yyy", "Unknown Group type: \"xxx\"")
+
 	// make sure dups generate an error
 	reg2, err := registry.NewRegistry("TestCreateRegistry")
 	if err == nil || reg2 != nil {

@@ -39,6 +39,21 @@ func TestCreateGroup(t *testing.T) {
 	//      /d2/f2/v1
 	//             v1.1
 
+	// Check basic GET first
+	xCheckGet(t, reg, "/dirs/d1",
+		`{
+  "id": "d1",
+  "self": "http:///dirs/d1",
+
+  "filesCount": 1,
+  "filesUrl": "http:///dirs/d1/files"
+}
+`)
+	xCheckGet(t, reg, "/dirs/xxx", "404: Not found\n")
+	xCheckGet(t, reg, "dirs/xxx", "404: Not found\n")
+	xCheckGet(t, reg, "/dirs/xxx/yyy", "Unknown Resource type: \"yyy\"")
+	xCheckGet(t, reg, "dirs/xxx/yyy", "Unknown Resource type: \"yyy\"")
+
 	g, err := reg.FindGroup("dirs", "d1")
 	xNoErr(t, err)
 	xJSONCheck(t, g, d1)
@@ -57,7 +72,6 @@ func TestCreateGroup(t *testing.T) {
 	xCheck(t, err == nil && r2 == nil, "Finding files/xxx didn't work")
 
 	r2, err = d1.FindResource("xxx", "f1")
-	t.Logf("r2: %v  err: %v", r2, err)
 	xCheck(t, err == nil && r2 == nil, "Finding xxx/f1 didn't work")
 
 	err = d1.Delete()

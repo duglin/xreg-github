@@ -177,8 +177,6 @@ func DoTests() *registry.Registry {
 }
 `)
 
-	// DUG
-
 	_, err = gm1.AddResourceModel("files", "file", 5, true, true)
 	NoErr("add files", err)
 
@@ -249,238 +247,6 @@ func DoTests() *registry.Registry {
 	NoErr("", err)
 	Check(r1 != nil, "r1 should not be nil")
 
-	CheckGet(reg, "one res no inline", "http://example.com?inline", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirs": {
-    "g1": {
-      "id": "g1",
-      "name": "g1",
-      "self": "http://example.com/dirs/g1",
-      "ext1": "extvalue",
-
-      "file2s": {},
-      "file2sCount": 0,
-      "file2sUrl": "http://example.com/dirs/g1/file2s",
-      "files": {
-        "r1": {
-          "id": "r1",
-          "self": "http://example.com/dirs/g1/files/r1",
-          "latestId": "v1",
-          "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-
-          "versions": {
-            "v1": {
-              "id": "v1",
-              "self": "http://example.com/dirs/g1/files/r1/versions/v1"
-            }
-          },
-          "versionsCount": 1,
-          "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-        }
-      },
-      "filesCount": 1,
-      "filesUrl": "http://example.com/dirs/g1/files"
-    }
-  },
-  "dirsCount": 1,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "1 res,inline 3 level", "http://example.com?inline=dirs.files.versions", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirs": {
-    "g1": {
-      "id": "g1",
-      "name": "g1",
-      "self": "http://example.com/dirs/g1",
-      "ext1": "extvalue",
-
-      "file2sCount": 0,
-      "file2sUrl": "http://example.com/dirs/g1/file2s",
-      "files": {
-        "r1": {
-          "id": "r1",
-          "self": "http://example.com/dirs/g1/files/r1",
-          "latestId": "v1",
-          "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-
-          "versions": {
-            "v1": {
-              "id": "v1",
-              "self": "http://example.com/dirs/g1/files/r1/versions/v1"
-            }
-          },
-          "versionsCount": 1,
-          "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-        }
-      },
-      "filesCount": 1,
-      "filesUrl": "http://example.com/dirs/g1/files"
-    }
-  },
-  "dirsCount": 1,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "1 res,inline 2 level", "http://example.com?inline=dirs.files", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirs": {
-    "g1": {
-      "id": "g1",
-      "name": "g1",
-      "self": "http://example.com/dirs/g1",
-      "ext1": "extvalue",
-
-      "file2sCount": 0,
-      "file2sUrl": "http://example.com/dirs/g1/file2s",
-      "files": {
-        "r1": {
-          "id": "r1",
-          "self": "http://example.com/dirs/g1/files/r1",
-          "latestId": "v1",
-          "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-
-          "versionsCount": 1,
-          "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-        }
-      },
-      "filesCount": 1,
-      "filesUrl": "http://example.com/dirs/g1/files"
-    }
-  },
-  "dirsCount": 1,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "1 res,inline 1 level", "http://example.com?inline=dirs", `{
-  "specVersion": "0.5",
-  "id": "666-1234-1234",
-  "self": "http://example.com/",
-
-  "dirs": {
-    "g1": {
-      "id": "g1",
-      "name": "g1",
-      "self": "http://example.com/dirs/g1",
-      "ext1": "extvalue",
-
-      "file2sCount": 0,
-      "file2sUrl": "http://example.com/dirs/g1/file2s",
-      "filesCount": 1,
-      "filesUrl": "http://example.com/dirs/g1/files"
-    }
-  },
-  "dirsCount": 1,
-  "dirsUrl": "http://example.com/dirs"
-}
-`)
-
-	CheckGet(reg, "1 deep", "http://example.com/dirs?inline", `{
-  "g1": {
-    "id": "g1",
-    "name": "g1",
-    "self": "http://example.com/dirs/g1",
-    "ext1": "extvalue",
-
-    "file2s": {},
-    "file2sCount": 0,
-    "file2sUrl": "http://example.com/dirs/g1/file2s",
-    "files": {
-      "r1": {
-        "id": "r1",
-        "self": "http://example.com/dirs/g1/files/r1",
-        "latestId": "v1",
-        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-
-        "versions": {
-          "v1": {
-            "id": "v1",
-            "self": "http://example.com/dirs/g1/files/r1/versions/v1"
-          }
-        },
-        "versionsCount": 1,
-        "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-      }
-    },
-    "filesCount": 1,
-    "filesUrl": "http://example.com/dirs/g1/files"
-  }
-}
-`)
-
-	CheckGet(reg, "1 deep+2 level", "http://example.com/dirs?inline=files.versions", `{
-  "g1": {
-    "id": "g1",
-    "name": "g1",
-    "self": "http://example.com/dirs/g1",
-    "ext1": "extvalue",
-
-    "file2sCount": 0,
-    "file2sUrl": "http://example.com/dirs/g1/file2s",
-    "files": {
-      "r1": {
-        "id": "r1",
-        "self": "http://example.com/dirs/g1/files/r1",
-        "latestId": "v1",
-        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-
-        "versions": {
-          "v1": {
-            "id": "v1",
-            "self": "http://example.com/dirs/g1/files/r1/versions/v1"
-          }
-        },
-        "versionsCount": 1,
-        "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-      }
-    },
-    "filesCount": 1,
-    "filesUrl": "http://example.com/dirs/g1/files"
-  }
-}
-`)
-
-	CheckGet(reg, "1 deep+1 level", "http://example.com/dirs?inline=files", `{
-  "g1": {
-    "id": "g1",
-    "name": "g1",
-    "self": "http://example.com/dirs/g1",
-    "ext1": "extvalue",
-
-    "file2sCount": 0,
-    "file2sUrl": "http://example.com/dirs/g1/file2s",
-    "files": {
-      "r1": {
-        "id": "r1",
-        "self": "http://example.com/dirs/g1/files/r1",
-        "latestId": "v1",
-        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-
-        "versionsCount": 1,
-        "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-      }
-    },
-    "filesCount": 1,
-    "filesUrl": "http://example.com/dirs/g1/files"
-  }
-}
-`)
-
-	CheckGet(reg, "1 deep+bad", "http://example.com/dirs?inline=foo",
-		`Invalid 'inline' value: "foo"`)
-
 	// Test setting Resource stuff, not Latest version stuff
 	r1.Set(".Int", 345)
 	r1.Set(".Float", 3.14)
@@ -497,117 +263,13 @@ func DoTests() *registry.Registry {
 	Check(r3.Extensions["BoolT"] == true, "r3.BoolT != true")
 	Check(r3.Extensions["BoolF"] == false, "r3.BoolF != false")
 
-	CheckGet(reg, "r1 props", "http://example.com/dirs?inline", `{
-  "g1": {
-    "id": "g1",
-    "name": "g1",
-    "self": "http://example.com/dirs/g1",
-    "ext1": "extvalue",
+	// DUG
 
-    "file2s": {},
-    "file2sCount": 0,
-    "file2sUrl": "http://example.com/dirs/g1/file2s",
-    "files": {
-      "r1": {
-        "id": "r1",
-        "self": "http://example.com/dirs/g1/files/r1",
-        "latestId": "v1",
-        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-        "BoolF": false,
-        "BoolT": true,
-        "Float": 3.14,
-        "Int": 345,
-
-        "versions": {
-          "v1": {
-            "id": "v1",
-            "self": "http://example.com/dirs/g1/files/r1/versions/v1"
-          }
-        },
-        "versionsCount": 1,
-        "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-      }
-    },
-    "filesCount": 1,
-    "filesUrl": "http://example.com/dirs/g1/files"
-  }
-}
-`)
-
-	// Version stuff
 	v1, _ := r1.FindVersion("v1")
-	Check(v1 != nil, "v1 should not be nil")
-	l, _ := r1.GetLatest()
-	Check(registry.ToJSON(v1) == registry.ToJSON(l), "not latest")
-
-	v1.Set("name", v1.ID)
-	v1.Set("epoch", 42)
-	v1.Set("ext1", "someext")
-	v1.Set("ext2", 234)
-	Check(v1.Extensions["ext2"] == 234, "v1.Ext isn't an int")
 	v2, _ := r1.FindVersion("v1")
-	Check(registry.ToJSON(v1) == registry.ToJSON(v2), "v2 != v1")
-	vlatest, _ := r1.GetLatest()
-	Check(registry.ToJSON(v1) == registry.ToJSON(vlatest), "vlatest != v1")
-
-	CheckGet(reg, "r1 props", "http://example.com/dirs?inline", `{
-  "g1": {
-    "id": "g1",
-    "name": "g1",
-    "self": "http://example.com/dirs/g1",
-    "ext1": "extvalue",
-
-    "file2s": {},
-    "file2sCount": 0,
-    "file2sUrl": "http://example.com/dirs/g1/file2s",
-    "files": {
-      "r1": {
-        "id": "r1",
-        "name": "v1",
-        "epoch": 42,
-        "self": "http://example.com/dirs/g1/files/r1",
-        "latestId": "v1",
-        "latestUrl": "http://example.com/dirs/g1/files/r1/versions/v1",
-        "BoolF": false,
-        "BoolT": true,
-        "Float": 3.14,
-        "Int": 345,
-        "ext1": "someext",
-        "ext2": 234,
-
-        "versions": {
-          "v1": {
-            "id": "v1",
-            "name": "v1",
-            "epoch": 42,
-            "self": "http://example.com/dirs/g1/files/r1/versions/v1",
-            "ext1": "someext",
-            "ext2": 234
-          }
-        },
-        "versionsCount": 1,
-        "versionsUrl": "http://example.com/dirs/g1/files/r1/versions"
-      }
-    },
-    "filesCount": 1,
-    "filesUrl": "http://example.com/dirs/g1/files"
-  }
-}
-`)
 
 	// Test Latest version stuff
-	r1.Set("name", r1.ID)
-	r1.Set("epoch", 68)
-	r1.Set("ext1", "someext")
-	r1.Set("ext2", 123)
-	l, _ = r1.GetLatest()
-	Check(l.Extensions["ext2"] == 123, "r1.Ext isn't an int")
 	r2, _ := g1.FindResource("files", "r1")
-	Check(registry.ToJSON(r1) == registry.ToJSON(r2), "r2 != r1")
-	vv, _ := r1.FindVersion("v3")
-	Check(vv == nil, "v3 should be nil")
-	vv, _ = r2.FindVersion("v3")
-	Check(vv == nil, "v3 should be nil")
 
 	CheckGet(reg, "v3 missing",
 		"http://example.com/dirs/g1/files/r1/versions/v3",
@@ -621,16 +283,12 @@ func DoTests() *registry.Registry {
 	CheckGet(reg, "v2.tags",
 		"http://example.com/dirs/g1/files/r1/versions/v1", `{
   "id": "v1",
-  "name": "r1",
-  "epoch": 68,
   "self": "http://example.com/dirs/g1/files/r1/versions/v1",
   "tags": {
     "tags.int": "3",
     "tags.stage": "dev",
     "tags.stale": "true"
-  },
-  "ext1": "someext",
-  "ext2": 123
+  }
 }
 `)
 
