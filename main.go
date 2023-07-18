@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -22,6 +23,9 @@ var DBName = "registry"
 var Verbose = 2
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	if Reg == nil {
+		panic("No registry specified")
+	}
 	saveVerbose := log.GetVerbose()
 	if tmp := r.URL.Query().Get("verbose"); tmp != "" {
 		if v, err := strconv.Atoi(tmp); err == nil {
@@ -86,6 +90,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var err error
+
+	newDB := false
 	doDelete := flag.Bool("delete", false, "Delete DB an exit")
 	doRecreate := flag.Bool("recreate", false, "Recreate DB, then run")
 	flag.IntVar(&Verbose, "v", 2, "Verbose level")
@@ -105,12 +112,26 @@ func main() {
 
 	if !registry.DBExists(DBName) {
 		registry.CreateDB(DBName)
+		newDB = true
 	}
 
 	registry.OpenDB(DBName)
 
-	Reg = LoadSample()
-	// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+	if newDB {
+		Reg = LoadSample()
+		// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+	}
+
+	Reg, err = registry.FindRegistry("987")
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	if Reg == nil {
+		fmt.Fprintf(os.Stderr, "No registry loaded\n")
+		os.Exit(1)
+	}
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		Port = tmp

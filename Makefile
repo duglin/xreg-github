@@ -2,15 +2,18 @@ all: run
 
 export GO111MODULE=off
 
-test:
+test: server
 	go clean -testcache
 	go test -failfast github.com/duglin/xreg-github/tests
 
-run: test
-	go run . --recreate
+server: *.go registry/*.go
+	go build -o $@ .
 
-start: test
-	go run .
+run: server test
+	./server --recreate
+
+start: server
+	./server
 
 mysql:
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password --network host \
@@ -21,4 +24,5 @@ mysql-client:
 		mysql --port 3306 --password=password --protocol tcp
 
 clean:
+	rm -f server
 	go clean -cache -testcache

@@ -4,16 +4,15 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	_ "embed"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	log "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
 )
 
-//go:embed .github
 var Token string
 var Secret string
 
@@ -22,6 +21,16 @@ func ErrFatalf(err error, format string, args ...any) {
 		return
 	}
 	log.Fatalf(format, args...)
+}
+
+func init() {
+	if tmp := os.Getenv("githubToken"); tmp != "" {
+		Token = tmp
+	} else {
+		if buf, _ := os.ReadFile(".github"); len(buf) > 0 {
+			Token = string(buf)
+		}
+	}
 }
 
 func LoadGitRepo(orgName string, repoName string) *registry.Registry {
@@ -169,25 +178,24 @@ func LoadSample() *registry.Registry {
 	reg.Set("specVersion", "0.5")
 	reg.Set("docs", "https://github.com/duglin/xreg-github")
 
-	gm, _ := reg.AddGroupModel("agroups", "group", "")
-	_, err = gm.AddResourceModel("ress", "res", 2, true, true)
+	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	_, err = gm.AddResourceModel("files", "file", 2, true, true)
 
-	gm, _ = reg.AddGroupModel("zgroups", "zgroup", "")
-	_, err = gm.AddResourceModel("ress", "res", 2, true, true)
+	g, _ := reg.AddGroup("dirs", "dir1")
+	r, _ := g.AddResource("files", "f1", "v1")
+	r.AddVersion("v2")
 
 	gm, _ = reg.AddGroupModel("endpoints", "endpoint", "")
-	_, err = gm.AddResourceModel("defs", "def", 2, true, true)
-	_, err = gm.AddResourceModel("adefs", "adef", 2, true, true)
-	_, err = gm.AddResourceModel("zdefs", "zdef", 2, true, true)
+	_, err = gm.AddResourceModel("definitions", "definition", 2, true, true)
 
-	g, _ := reg.AddGroup("endpoints", "e1")
+	g, _ = reg.AddGroup("endpoints", "e1")
 	g.Set("name", "end1")
 	g.Set("epoch", 1)
 	g.Set("ext", "ext1")
 	g.Set("tags.stage", "dev")
 	g.Set("tags.stale", "true")
 
-	r, _ := g.AddResource("defs", "created", "v1")
+	r, _ = g.AddResource("definitions", "created", "v1")
 	v, _ := r.FindVersion("v1")
 	v.Set("name", "blobCreated")
 	v.Set("epoch", 2)
@@ -197,7 +205,7 @@ func LoadSample() *registry.Registry {
 	v.Set("epoch", 4)
 	r.Set(".latestId", "v2")
 
-	r, _ = g.AddResource("defs", "deleted", "v1.0")
+	r, _ = g.AddResource("definitions", "deleted", "v1.0")
 	v, _ = r.FindVersion("v1.0")
 	v.Set("name", "blobDeleted")
 	v.Set("epoch", 3)

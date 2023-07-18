@@ -155,7 +155,10 @@ func FindRegistry(id string) (*Registry, error) {
 
 	if reg == nil {
 		log.VPrintf(3, "None found")
+	} else {
+		reg.LoadModel()
 	}
+
 	return reg, nil
 }
 
@@ -192,12 +195,15 @@ func (reg *Registry) LoadModel() *Model {
 		return nil
 	}
 
-	model := &Model{
-		Registry: reg,
-		Groups:   map[string]*GroupModel{},
-	}
+	var model *Model
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
+		if model == nil {
+			model = &Model{
+				Registry: reg,
+				Groups:   map[string]*GroupModel{},
+			}
+		}
 		if *row[2] == nil { // ParentID nil -> new Group
 			g := &GroupModel{ // Plural
 				ID:       NotNilString(row[0]), // ID
@@ -231,6 +237,7 @@ func (reg *Registry) LoadModel() *Model {
 		}
 	}
 
+	reg.Model = model
 	return model
 }
 
