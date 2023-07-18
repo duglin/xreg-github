@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"runtime"
 	"testing"
 
@@ -44,10 +45,11 @@ func Caller() string {
 	return "unknownFile"
 }
 
-func xCheck(t *testing.T, b bool, errStr string) {
+func xCheck(t *testing.T, b bool, errStr string) bool {
 	if !b {
 		t.Errorf("%s: %s", Caller(), errStr)
 	}
+	return b
 }
 
 func ToJSON(obj interface{}) string {
@@ -61,35 +63,33 @@ func ToJSON(obj interface{}) string {
 func xNoErr(t *testing.T, err error) bool {
 	if err != nil {
 		t.Errorf("%s: Unexpected error: %s", Caller(), err)
-		return true
+		return false
 	}
-	return false
+	return true
 }
 
-func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) {
+func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) bool {
 	buf := &bytes.Buffer{}
 	out := io.Writer(buf)
 
 	req, err := http.NewRequest("GET", url, nil)
-	if xNoErr(t, err) {
-		return
+	if !xNoErr(t, err) {
+		return false
 	}
 	info, err := reg.ParseRequest(req)
 	if err != nil {
-		xCheckEqual(t, "URL: "+url+"\n", err.Error(), expected)
-		return
+		return xCheckEqual(t, "URL: "+url+"\n", err.Error(), expected)
 	}
-	Check(info.ErrCode == 0, Caller()+":info.ec != 0")
+	xCheck(t, info.ErrCode == 0, Caller()+":info.ec != 0")
 	if err = reg.NewGet(out, info); err != nil {
 		errMsg := err.Error()
 		if req.URL.Query().Has("oneline") {
 			errMsg = string(OneLine([]byte(errMsg)))
 		}
-		xCheckEqual(t, "URL: "+url+"\n", errMsg, expected)
-		return
+		return xCheckEqual(t, "URL: "+url+"\n", errMsg, expected)
 	}
-	if xNoErr(t, err) {
-		return
+	if !xNoErr(t, err) {
+		return false
 	}
 
 	if req.URL.Query().Has("noprops") {
@@ -101,38 +101,82 @@ func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string
 		// expected = string(OneLine([]byte(expected)))
 	}
 
-	xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
+	return xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
 }
 
-func xCheckEqual(t *testing.T, extra string, got string, exp string) {
-	if got != exp {
-		pos := 0
-		for pos < len(got) && pos < len(exp) && got[pos] == exp[pos] {
-			pos++
-		}
-
-		if pos == len(got) {
-			t.Errorf(Caller()+"\n%s"+
-				"Expected:\n%s\nGot:\n%s\nGot ended early at(%d)[%02X]:\n%q",
-				extra, exp, got, pos, exp[pos], got[pos:])
-			return
-		}
-
-		if pos == len(exp) {
-			t.Errorf(Caller()+"\n%s"+
-				"Expected:\n%s\nGot:\n%s\nExp ended early at(%d)[%02X]:\n%q",
-				extra, exp, got, pos, got[pos], got[pos:])
-			return
-		}
-
-		t.Errorf(Caller()+"\n%s"+
-			"Expected:\n%s\nGot:\n%s\nDiff at(%d)[%x/%x]:\n%q",
-			extra, exp, got, pos, exp[pos], got[pos], got[pos:])
+func xCheckEqual(t *testing.T, extra string, got string, exp string) bool {
+	pos := 0
+	for pos < len(got) && pos < len(exp) && got[pos] == exp[pos] {
+		pos++
 	}
+	if pos == len(got) && pos == len(exp) {
+		return true
+	}
+
+	if pos == len(got) {
+		t.Errorf(Caller()+"\n%s"+
+			"Expected:\n%s\nGot:\n%s\nGot ended early at(%d)[%02X]:\n%q",
+			extra, exp, got, pos, exp[pos], got[pos:])
+		return false
+	}
+
+	if pos == len(exp) {
+		t.Errorf(Caller()+"\n%s"+
+			"Expected:\n%s\nGot:\n%s\nExp ended early at(%d)[%02X]:\n%q",
+			extra, exp, got, pos, got[pos], got[pos:])
+		return false
+	}
+
+	t.Errorf(Caller()+"\n%s"+
+		"Expected:\n%s\nGot:\n%s\nDiff at(%d)[%x/%x]:\n%q",
+		extra, exp, got, pos, exp[pos], got[pos], got[pos:])
+	return false
 }
 
-func xJSONCheck(t *testing.T, gotObj any, expObj any) {
+func xJSONCheck(t *testing.T, gotObj any, expObj any) bool {
 	got := ToJSON(gotObj)
 	exp := ToJSON(expObj)
-	xCheckEqual(t, "", got, exp)
+	return xCheckEqual(t, "", got, exp)
+}
+
+func OneLine(buf []byte) []byte {
+	buf = RemoveProps(buf)
+
+	re := regexp.MustCompile(`[\r\n]*`)
+	buf = re.ReplaceAll(buf, []byte(""))
+	re = regexp.MustCompile(`([^a-zA-Z])\s+([^a-zA-Z])`)
+	buf = re.ReplaceAll(buf, []byte(`$1$2`))
+	re = regexp.MustCompile(`([^a-zA-Z])\s+([^a-zA-Z])`)
+	buf = re.ReplaceAll(buf, []byte(`$1$2`))
+
+	return buf
+}
+
+func RemoveProps(buf []byte) []byte {
+	re := regexp.MustCompile(`\n[^{}]*\n`)
+	buf = re.ReplaceAll(buf, []byte("\n"))
+
+	re = regexp.MustCompile(`\s"tags": {\s*},*`)
+	buf = re.ReplaceAll(buf, []byte(""))
+
+	re = regexp.MustCompile(`\n *\n`)
+	buf = re.ReplaceAll(buf, []byte("\n"))
+
+	re = regexp.MustCompile(`\n *}\n`)
+	buf = re.ReplaceAll(buf, []byte("}\n"))
+
+	re = regexp.MustCompile(`}[\s,]+}`)
+	buf = re.ReplaceAll(buf, []byte("}}"))
+	buf = re.ReplaceAll(buf, []byte("}}"))
+
+	return buf
+}
+
+func HTMLify(r *http.Request, buf []byte) []byte {
+	str := fmt.Sprintf(`"(https?://%s[^"\n]*?)"`, r.Host)
+	re := regexp.MustCompile(str)
+	repl := fmt.Sprintf(`"<a href="$1?%s">$1?%s</a>"`,
+		r.URL.RawQuery, r.URL.RawQuery)
+
+	return re.ReplaceAll(buf, []byte(repl))
 }

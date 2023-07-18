@@ -10,7 +10,6 @@ import (
 
 	log "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
-	"github.com/duglin/xreg-github/tests"
 )
 
 func init() {
@@ -74,12 +73,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Query().Has("noprops") {
-		buf = bytes.NewBuffer(tests.RemoveProps(buf.Bytes()))
+		buf = bytes.NewBuffer(registry.RemoveProps(buf.Bytes()))
 	}
 
 	if r.URL.Query().Has("html") {
 		w.Header().Add("Content-Type", "text/html")
-		buf = bytes.NewBuffer(tests.HTMLify(r, buf.Bytes()))
+		buf = bytes.NewBuffer(registry.HTMLify(r, buf.Bytes()))
 		w.Write([]byte("<pre>\n"))
 	}
 
@@ -107,8 +106,6 @@ func main() {
 	if !registry.DBExists(DBName) {
 		registry.CreateDB(DBName)
 	}
-
-	tests.TestAll()
 
 	registry.OpenDB(DBName)
 

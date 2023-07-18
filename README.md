@@ -26,7 +26,6 @@ $ make mysql-client
 ```
 
 TODOs:
-- test filtering  across groups - OR and AND
 - test filtering for (non)empty values - e.g. filter=id=  filter=id
 - test for filtering case-insensitive string compares
 - test for filtering with string being part of value

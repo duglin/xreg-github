@@ -314,6 +314,117 @@ func TestBasicFilters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		xCheckGet(t, reg, test.URL, test.Exp)
+		pass := xCheckGet(t, reg, test.URL, test.Exp)
+		if !pass {
+			t.Logf("Test name: %s", test.Name)
+		}
+	}
+}
+
+func TestANDORFilters(t *testing.T) {
+	reg, _ := registry.NewRegistry("TestANDORFilters")
+	defer reg.Delete()
+
+	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm.AddResourceModel("files", "file", 0, true, true)
+	d, _ := reg.AddGroup("dirs", "d1")
+	f, _ := d.AddResource("files", "f1", "v1")
+	f.AddVersion("v2")
+	f.Set("name", "f1")
+	d, _ = reg.AddGroup("dirs", "d2")
+	f, _ = d.AddResource("files", "f2", "v1")
+	f.AddVersion("v1.1")
+	f.Set("name", "f2")
+
+	gm, _ = reg.AddGroupModel("schemaGroups", "schemaGroup", "")
+	gm.AddResourceModel("schemas", "schema", 0, true, true)
+	sg, _ := reg.AddGroup("schemaGroups", "sg1")
+	s, _ := sg.AddResource("schemas", "s1", "v1.0")
+	s.AddVersion("v2.0")
+
+	reg.Set("tags.reg1", "1ger")
+	f.Set("tags.file1", "1elif")
+
+	// /dirs/d1/f1/v1     f1.name=f1
+	//            /v2
+	//      /d2/f2/v1     f2.name=f2
+	//             v1.1
+	// /schemaGroups/sg1/schemas/s1/v1.0
+	//                             /v2.0
+
+	tests := []struct {
+		Name string
+		URL  string
+		Exp  string
+	}{
+		{
+			Name: "AND same obj/level - match",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.name=f1",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
+		},
+		{
+			Name: "AND same obj/level - no match",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.name=f2",
+			Exp:  `404: Not found`,
+		},
+		{
+			Name: "OR same obj/level - match",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1&filter=dirs.files.name=f1",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
+		},
+		{
+			Name: "multi result 2 levels down - match",
+			URL:  "?oneline&inline&filter=dirs.files.versions.id=v1",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"schemaGroups":{}}`,
+		},
+		{
+			Name: "path + multi result 2 levels down - match",
+			URL:  "dirs?oneline&inline&filter=files.versions.id=v1",
+			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}`,
+		},
+		{
+			Name: "path + multi result 2 levels down - no match",
+			URL:  "dirs?oneline&inline&filter=files.versions.id=xxx",
+			Exp:  `{}`,
+		},
+
+		// Span group types
+		{
+			Name: "dirs and schemaGroups - match both",
+			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemaGroups.id=sg1",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
+		},
+		{
+			Name: "dirs and schemaGroups - match first",
+			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemaGroups.id=xxx",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
+		},
+		{
+			Name: "dirs and schemaGroups - match second",
+			URL:  "?oneline&inline&filter=dirs.id=xxx&filter=schemaGroups.id=sg1",
+			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
+		},
+		{
+			Name: "dirsOR and schemaGroupsOR - match first",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v1.0,schemaGroups.schemas.versions.id=v2.0",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{}}`,
+		},
+		{
+			Name: "dirsOR and schemaGroupsOR - match second",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestId=v2.0",
+			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
+		},
+		{
+			Name: "dirsOR and schemaGroupsOR - both match",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestId=v2.0",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
+		},
+	}
+
+	for _, test := range tests {
+		pass := xCheckGet(t, reg, test.URL, test.Exp)
+		if !pass {
+			t.Logf("Test name: %s", test.Name)
+		}
 	}
 }

@@ -3,8 +3,10 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"path"
 	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -159,4 +161,46 @@ func ShowStack() {
 			break
 		}
 	}
+}
+
+func OneLine(buf []byte) []byte {
+	buf = RemoveProps(buf)
+
+	re := regexp.MustCompile(`[\r\n]*`)
+	buf = re.ReplaceAll(buf, []byte(""))
+	re = regexp.MustCompile(`([^a-zA-Z])\s+([^a-zA-Z])`)
+	buf = re.ReplaceAll(buf, []byte(`$1$2`))
+	re = regexp.MustCompile(`([^a-zA-Z])\s+([^a-zA-Z])`)
+	buf = re.ReplaceAll(buf, []byte(`$1$2`))
+
+	return buf
+}
+
+func RemoveProps(buf []byte) []byte {
+	re := regexp.MustCompile(`\n[^{}]*\n`)
+	buf = re.ReplaceAll(buf, []byte("\n"))
+
+	re = regexp.MustCompile(`\s"tags": {\s*},*`)
+	buf = re.ReplaceAll(buf, []byte(""))
+
+	re = regexp.MustCompile(`\n *\n`)
+	buf = re.ReplaceAll(buf, []byte("\n"))
+
+	re = regexp.MustCompile(`\n *}\n`)
+	buf = re.ReplaceAll(buf, []byte("}\n"))
+
+	re = regexp.MustCompile(`}[\s,]+}`)
+	buf = re.ReplaceAll(buf, []byte("}}"))
+	buf = re.ReplaceAll(buf, []byte("}}"))
+
+	return buf
+}
+
+func HTMLify(r *http.Request, buf []byte) []byte {
+	str := fmt.Sprintf(`"(https?://%s[^"\n]*?)"`, r.Host)
+	re := regexp.MustCompile(str)
+	repl := fmt.Sprintf(`"<a href="$1?%s">$1?%s</a>"`,
+		r.URL.RawQuery, r.URL.RawQuery)
+
+	return re.ReplaceAll(buf, []byte(repl))
 }
