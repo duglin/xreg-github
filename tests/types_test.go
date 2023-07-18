@@ -99,8 +99,8 @@ func TestBasicTypes(t *testing.T) {
 			registry.SetProp(test.Entity, prop.Name, prop.Value)
 		}
 
-		entity.Extensions = map[string]any{} // force delete everything
-		entity.Refresh()                     // and then re-get props from DB
+		entity.Props = map[string]any{} // force delete everything
+		entity.Refresh()                // and then re-get props from DB
 
 		for _, prop := range test.Props {
 			got := entity.Get(prop.Name)

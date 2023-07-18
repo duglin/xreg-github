@@ -107,9 +107,9 @@ func SetField(res any, name string, value *string, propType string) {
 	var val any
 	var err error
 
-	field := reflect.ValueOf(res).Elem().FieldByName("Extensions")
+	field := reflect.ValueOf(res).Elem().FieldByName("Props")
 	if !field.IsValid() {
-		panic(fmt.Sprintf("Can't find Extensions: %#v", res))
+		panic(fmt.Sprintf("Can't find Props: %#v", res))
 	}
 	if field.IsNil() {
 		// Since we're deleting the key anyway we can just return

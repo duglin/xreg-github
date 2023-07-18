@@ -34,4 +34,3 @@ TODOs:
 - pagination
 - GET of resources blobs - all 3 variants(in DB, URL, proxy URL)
 - PUT/POST operations
-- s/extensions/props/g

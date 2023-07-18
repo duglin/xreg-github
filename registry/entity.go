@@ -15,11 +15,11 @@ type Entity struct {
 	DbSID       string // Entity's SID
 	Plural      string
 	UID         string // Entity's UID
-	Extensions  map[string]any
+	Props       map[string]any
 }
 
 func (e *Entity) Get(name string) any {
-	val, _ := e.Extensions[name]
+	val, _ := e.Props[name]
 	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, name, val)
 	return val
 }
@@ -74,7 +74,7 @@ func (e *Entity) Refresh() error {
 		return fmt.Errorf("Error refreshing props(%s): %s", e.DbSID, err)
 	}
 
-	e.Extensions = map[string]any{}
+	e.Props = map[string]any{}
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		name := NotNilString(row[0])
@@ -82,21 +82,21 @@ func (e *Entity) Refresh() error {
 		propType := NotNilString(row[2])
 
 		if propType == "s" {
-			e.Extensions[name] = val
+			e.Props[name] = val
 		} else if propType == "b" {
-			e.Extensions[name] = (val == "true")
+			e.Props[name] = (val == "true")
 		} else if propType == "i" {
 			tmpInt, err := strconv.Atoi(val)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing int: %s", val))
 			}
-			e.Extensions[name] = tmpInt
+			e.Props[name] = tmpInt
 		} else if propType == "f" {
 			tmpFloat, err := strconv.ParseFloat(val, 64)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing float: %s", val))
 			}
-			e.Extensions[name] = tmpFloat
+			e.Props[name] = tmpFloat
 		} else {
 			panic(fmt.Sprintf("bad type: %v", propType))
 		}
@@ -221,7 +221,7 @@ func SetProp(entity any, name string, val any) error {
 
 	field := reflect.ValueOf(entity).Elem().FieldByName(name)
 	if !field.IsValid() {
-		field := reflect.ValueOf(e).Elem().FieldByName("Extensions")
+		field := reflect.ValueOf(e).Elem().FieldByName("Props")
 		if !field.IsValid() {
 			log.VPrintf(2, "Can't Set unknown field(%s/%s)", e.DbSID, name)
 		} else {

@@ -66,12 +66,12 @@ func TestRefreshRegistry(t *testing.T) {
 	defer reg.Delete()
 	xNoErr(t, err)
 
-	reg.Extensions["xxx"] = "yyy"
+	reg.Props["xxx"] = "yyy"
 
 	err = reg.Refresh()
 	xNoErr(t, err)
 
-	xCheck(t, reg.Extensions["xxx"] == nil, "xxx should not be there")
+	xCheck(t, reg.Props["xxx"] == nil, "xxx should not be there")
 }
 
 func TestFindRegistry(t *testing.T) {
