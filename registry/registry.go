@@ -15,7 +15,7 @@ type Registry struct {
 	Model *Model
 }
 
-var Registries = map[string]*Registry{} // User ID->Reg
+var Registries = map[string]*Registry{} // User UID->Reg
 
 func NewRegistry(id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: NewRegistry %q", id)
@@ -32,23 +32,23 @@ func NewRegistry(id string) (*Registry, error) {
 		return nil, fmt.Errorf("A registry with ID %q alredy exists", id)
 	}
 
-	dbID := NewUUID()
+	dbSID := NewUUID()
 	err := DoOne(`
-		INSERT INTO Registries(ID, RegistryID)
-		VALUES(?,?)`, dbID, id)
+		INSERT INTO Registries(SID, UID)
+		VALUES(?,?)`, dbSID, id)
 	if err != nil {
 		return nil, err
 	}
 
 	reg := &Registry{
 		Entity: Entity{
-			RegistryID: dbID,
-			DbID:       dbID,
-			Plural:     "registries",
-			ID:         id,
+			RegistrySID: dbSID,
+			DbSID:       dbSID,
+			Plural:      "registries",
+			UID:         id,
 		},
 	}
-	reg.Set("id", reg.ID)
+	reg.Set("id", reg.UID)
 	Registries[id] = reg
 
 	return reg, nil
@@ -59,10 +59,10 @@ func (reg *Registry) Set(name string, val any) error {
 }
 
 func (reg *Registry) Delete() error {
-	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.ID)
+	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.UID)
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
 
-	return DoOne(`DELETE FROM Registries WHERE ID=?`, reg.DbID)
+	return DoOne(`DELETE FROM Registries WHERE SID=?`, reg.DbSID)
 }
 
 func (reg *Registry) AddGroupModel(plural string, singular string, schema string) (*GroupModel, error) {
@@ -86,18 +86,18 @@ func (reg *Registry) AddGroupModel(plural string, singular string, schema string
 		}
 	}
 
-	mID := NewUUID()
+	mSID := NewUUID()
 	err := DoOne(`
 		INSERT INTO ModelEntities(
-			ID, RegistryID, ParentID, Plural, Singular, SchemaURL, Versions)
+			SID, RegistrySID, ParentSID, Plural, Singular, SchemaURL, Versions)
 		VALUES(?,?,?,?,?,?,?) `,
-		mID, reg.DbID, nil, plural, singular, schema, 0)
+		mSID, reg.DbSID, nil, plural, singular, schema, 0)
 	if err != nil {
 		log.Printf("Error inserting group(%s): %s", plural, err)
 		return nil, err
 	}
 	g := &GroupModel{
-		ID:       mID,
+		SID:      mSID,
 		Registry: reg,
 		Singular: singular,
 		Plural:   plural,
@@ -123,9 +123,9 @@ func FindRegistry(id string) (*Registry, error) {
 	defer log.VPrintf(3, "<Exit: FindRegistry")
 
 	results, err := Query(`
-		SELECT r.ID, p.PropName, p.PropValue, p.PropType
-		FROM Registries as r LEFT JOIN Props AS p ON (p.EntityID=r.ID)
-		WHERE r.RegistryID=?`, id)
+		SELECT r.SID, p.PropName, p.PropValue, p.PropType
+		FROM Registries as r LEFT JOIN Props AS p ON (p.EntitySID=r.SID)
+		WHERE r.UID=?`, id)
 	defer results.Close()
 
 	if err != nil {
@@ -137,13 +137,13 @@ func FindRegistry(id string) (*Registry, error) {
 		if reg == nil {
 			reg = &Registry{
 				Entity: Entity{
-					RegistryID: NotNilString(row[0]),
-					DbID:       NotNilString(row[0]),
-					Plural:     "registries",
-					ID:         id,
+					RegistrySID: NotNilString(row[0]),
+					DbSID:       NotNilString(row[0]),
+					Plural:      "registries",
+					UID:         id,
 				},
 			}
-			log.VPrintf(3, "Found one: %s", reg.DbID)
+			log.VPrintf(3, "Found one: %s", reg.DbSID)
 		}
 		if *row[1] != nil { // We have Props
 			name := NotNilString(row[1])
@@ -172,13 +172,13 @@ func (reg *Registry) FindGroupModel(gTypePlural string) *GroupModel {
 }
 
 func (reg *Registry) LoadModel() *Model {
-	groups := map[string]*GroupModel{} // Model ID -> *GroupModel
+	groups := map[string]*GroupModel{} // Model SID -> *GroupModel
 
 	results, err := Query(`
 		SELECT
-			ID,
-			RegistryID,
-			ParentID,
+			SID,
+			RegistrySID,
+			ParentSID,
 			Plural,
 			Singular,
 			SchemaURL,
@@ -186,12 +186,12 @@ func (reg *Registry) LoadModel() *Model {
 			VersionId,
 			Latest
 		FROM ModelEntities
-		WHERE RegistryID=?
-		ORDER BY ParentID ASC`, reg.DbID)
+		WHERE RegistrySID=?
+		ORDER BY ParentSID ASC`, reg.DbSID)
 	defer results.Close()
 
 	if err != nil {
-		log.Printf("Error loading model(%s): %s", reg.ID, err)
+		log.Printf("Error loading model(%s): %s", reg.UID, err)
 		return nil
 	}
 
@@ -204,9 +204,9 @@ func (reg *Registry) LoadModel() *Model {
 				Groups:   map[string]*GroupModel{},
 			}
 		}
-		if *row[2] == nil { // ParentID nil -> new Group
+		if *row[2] == nil { // ParentSID nil -> new Group
 			g := &GroupModel{ // Plural
-				ID:       NotNilString(row[0]), // ID
+				SID:      NotNilString(row[0]), // SID
 				Registry: reg,
 				Plural:   NotNilString(row[3]), // Plural
 				Singular: NotNilString(row[4]), // Singular
@@ -219,11 +219,11 @@ func (reg *Registry) LoadModel() *Model {
 			groups[NotNilString(row[0])] = g
 
 		} else { // New Resource
-			g := groups[NotNilString(row[2])] // Parent ID
+			g := groups[NotNilString(row[2])] // Parent SID
 
 			if g != nil { // should always be true, but...
 				r := &ResourceModel{
-					ID:         NotNilString(row[0]),
+					SID:        NotNilString(row[0]),
 					GroupModel: g,
 					Plural:     NotNilString(row[3]),
 					Singular:   NotNilString(row[4]),
@@ -246,11 +246,12 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 	defer log.VPrintf(3, "<Exit: FindGroup")
 
 	results, err := Query(`
-		SELECT g.ID, p.PropName, p.PropValue, p.PropType
+		SELECT g.SID, p.PropName, p.PropValue, p.PropType
 		FROM "Groups" AS g
-		JOIN ModelEntities AS m ON (m.ID=g.ModelID)
-		LEFT JOIN Props AS p ON (p.EntityID=g.ID)
-		WHERE g.RegistryID=? AND g.GroupID=? AND m.Plural=?`, reg.DbID, id, gt)
+		JOIN ModelEntities AS m ON (m.SID=g.ModelSID)
+		LEFT JOIN Props AS p ON (p.EntitySID=g.SID)
+		WHERE g.RegistrySID=? AND g.UID=? AND m.Plural=?`,
+		reg.DbSID, id, gt)
 	defer results.Close()
 
 	if err != nil {
@@ -262,14 +263,14 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 		if g == nil {
 			g = &Group{
 				Entity: Entity{
-					RegistryID: reg.DbID,
-					DbID:       NotNilString(row[0]),
-					Plural:     gt,
-					ID:         id,
+					RegistrySID: reg.DbSID,
+					DbSID:       NotNilString(row[0]),
+					Plural:      gt,
+					UID:         id,
 				},
 				Registry: reg,
 			}
-			log.VPrintf(3, "Found one: %s", g.DbID)
+			log.VPrintf(3, "Found one: %s", g.DbSID)
 		}
 		if *row[1] != nil { // We have Props
 			name := NotNilString(row[1])
@@ -309,29 +310,29 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 
 	g = &Group{
 		Entity: Entity{
-			RegistryID: reg.DbID,
-			DbID:       NewUUID(),
-			Plural:     gType,
-			ID:         id,
+			RegistrySID: reg.DbSID,
+			DbSID:       NewUUID(),
+			Plural:      gType,
+			UID:         id,
 		},
 		Registry: reg,
 	}
 
 	err = DoOne(`
-			INSERT INTO "Groups"(ID,RegistryID,GroupID,ModelID,Path,Abstract)
-			SELECT ?,?,?,ID,?,?
+			INSERT INTO "Groups"(SID,RegistrySID,UID,ModelSID,Path,Abstract)
+			SELECT ?,?,?,SID,?,?
 			FROM ModelEntities
-			WHERE RegistryID=? AND Plural=? AND ParentID IS NULL`,
-		g.DbID, reg.DbID, g.ID, gType+"/"+g.ID, gType, reg.DbID, gType)
+			WHERE RegistrySID=? AND Plural=? AND ParentSID IS NULL`,
+		g.DbSID, reg.DbSID, g.UID, gType+"/"+g.UID, gType, reg.DbSID, gType)
 
 	if err != nil {
 		err = fmt.Errorf("Error adding Group: %s", err)
 		log.Print(err)
 		return nil, err
 	}
-	g.Set("id", g.ID)
+	g.Set("id", g.UID)
 
-	log.VPrintf(3, "Created new one - DbID: %s", g.DbID)
+	log.VPrintf(3, "Created new one - DbSID: %s", g.DbSID)
 	return g, nil
 }
 
@@ -443,10 +444,10 @@ type RequestInfo struct {
 	Root            string
 	Abstract        string
 	GroupType       string
-	GroupID         string
+	GroupUID        string
 	ResourceType    string
-	ResourceID      string
-	VersionID       string
+	ResourceUID     string
+	VersionUID      string
 	What            string // Registry, Coll, Entity
 	Inlines         []string
 	Filters         [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
@@ -582,7 +583,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
-	info.GroupID = info.Parts[1]
+	info.GroupUID = info.Parts[1]
 	info.Root += "/" + info.Parts[1]
 	if len(info.Parts) == 2 {
 		info.What = "Entity"
@@ -606,7 +607,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
-	info.ResourceID = info.Parts[3]
+	info.ResourceUID = info.Parts[3]
 	info.Root += "/" + info.Parts[3]
 	if len(info.Parts) == 4 {
 		info.What = "Entity"
@@ -624,7 +625,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
-	info.VersionID = info.Parts[5]
+	info.VersionUID = info.Parts[5]
 	info.Root += "/" + info.Parts[5]
 
 	if len(info.Parts) == 6 {
@@ -675,25 +676,25 @@ func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 	}
 
 	if len(info.Filters) == 0 {
-		args = []interface{}{info.Registry.DbID}
+		args = []interface{}{info.Registry.DbSID}
 
 		q = fmt.Sprintf("SELECT " +
-			"Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract " +
-			"FROM FullTree WHERE RegID=?" + addPath())
+			"Level,Plural,UID,PropName,PropValue,PropType,Path,Abstract " +
+			"FROM FullTree WHERE RegSID=?" + addPath())
 	} else {
-		args = []interface{}{info.Registry.DbID}
+		args = []interface{}{info.Registry.DbSID}
 		q = fmt.Sprintf(`
 SELECT
-  Level,Plural,ID,PropName,PropValue,PropType,Path,Abstract
+  Level,Plural,UID,PropName,PropValue,PropType,Path,Abstract
 FROM FullTree WHERE
-RegID=?` + addPath() + `
+RegSID=?` + addPath() + `
 AND
 (
 ` + rootObjQuery() + `
-eID IN ( -- eID from query
-  WITH RECURSIVE cte(eID,ParentID,Path) AS (
-    SELECT eID,ParentID,Path FROM Entities
-    WHERE eID in ( -- start of the OR Filter groupings`)
+eSID IN ( -- eSID from query
+  WITH RECURSIVE cte(eSID,ParentSID,Path) AS (
+    SELECT eSID,ParentSID,Path FROM Entities
+    WHERE eSID in ( -- start of the OR Filter groupings`)
 		firstOr := true
 		for _, OrFilters := range info.Filters {
 			if !firstOr {
@@ -703,11 +704,11 @@ eID IN ( -- eID from query
 			firstOr = false
 			q += `
       -- start of one Filter AND grouping (expre1 AND expr2)
-      -- below find IDs of interest (then find their leaves)
-      SELECT list.eID FROM (
-        SELECT count(*) as cnt,e2.eID,e2.Path FROM Entities AS e1
+      -- below find SIDs of interest (then find their leaves)
+      SELECT list.eSID FROM (
+        SELECT count(*) as cnt,e2.eSID,e2.Path FROM Entities AS e1
         RIGHT JOIN (
-          -- start of expr1 - below finds SeachNodes/IDs of interest`
+          -- start of expr1 - below finds SeachNodes/SIDs of interest`
 			firstAnd := true
 			andCount := 0
 			for _, filter := range OrFilters { // AndFilters
@@ -726,18 +727,18 @@ eID IN ( -- eID from query
 					check = "PropValue IS NOT NULL"
 				}
 				q += `
-          SELECT eID,Path FROM FullTree
+          SELECT eSID,Path FROM FullTree
           WHERE (CONCAT(IF(Abstract<>'',CONCAT(REPLACE(Abstract,'/','.'),'.'),''),PropName)=? AND
                ` + check + `)`
 			} // end of AndFilter
 			q += `
           -- end of expr1
-        ) AS res ON ( res.eID=e1.eID )
+        ) AS res ON ( res.eSID=e1.eSID )
         JOIN Entities AS e2 ON (
           (e2.Path=res.Path OR e2.Path LIKE
              CONCAT(IF(res.Path<>'',CONCAT(res.Path,'/'),''),'%'))
-          AND e2.eID IN (SELECT * from Leaves)
-        ) GROUP BY e2.eID
+          AND e2.eSID IN (SELECT * from Leaves)
+        ) GROUP BY e2.eSID
         -- end of RIGHT JOIN
       ) as list
       WHERE list.cnt=?
@@ -747,9 +748,9 @@ eID IN ( -- eID from query
 
 		q += `
     ) -- end of all OR Filter groupings
-    UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
-    INNER JOIN cte ON e.eID=cte.ParentID)
-  SELECT DISTINCT eID FROM cte )
+    UNION ALL SELECT e.eSID,e.ParentSID,e.Path FROM Entities AS e
+    INNER JOIN cte ON e.eSID=cte.ParentSID)
+  SELECT DISTINCT eSID FROM cte )
 )
 ORDER BY Path ;
 `
@@ -782,7 +783,7 @@ TODO:
 - see if we can get rid of the recursion stuff
 - should we add "/" to then end of the Path for non-collections, then
   we can just look for PATH/%  and not PATH + PATH/%
-- add RegID checks to the filtering query
+- add RegSID checks to the filtering query
 - can we set the registry's path to "" instead of NULL ?? already did, test it
 - add support for boolean types (set/get/filter)
 

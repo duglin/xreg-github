@@ -122,7 +122,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 			ErrFatalf(err, "AddGroup: %s", err)
 		}
 
-		group.Set("name", group.ID)
+		group.Set("name", group.UID)
 		group.Set("modifiedBy", "me")
 		group.Set("modifiedAt", "noon")
 		group.Set("epoch", 5)

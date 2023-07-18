@@ -11,35 +11,35 @@ import (
 )
 
 type Entity struct {
-	RegistryID string
-	DbID       string
-	Plural     string
-	ID         string
-	Extensions map[string]any
+	RegistrySID string
+	DbSID       string // Entity's SID
+	Plural      string
+	UID         string // Entity's UID
+	Extensions  map[string]any
 }
 
 func (e *Entity) Get(name string) any {
 	val, _ := e.Extensions[name]
-	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.ID, name, val)
+	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, name, val)
 	return val
 }
 
 func (e *Entity) Find() (bool, error) {
-	log.VPrintf(3, ">Enter: Find(%s)", e.ID)
+	log.VPrintf(3, ">Enter: Find(%s)", e.UID)
 	log.VPrintf(3, "<Exit: Find")
 
 	results, err := Query(`
 		SELECT
-			p.RegistryID AS RegistryID,
-			p.EntityID AS DbID,
+			p.RegistrySID AS RegistrySID,
+			p.EntitySID AS DbSID,
 			e.Plural AS Plural,
-			e.ID AS ID,
+			e.UID AS UID,
 			p.PropName AS PropName,
 			p.PropValue AS PropValue,
 			p.PropType AS PropType
 		FROM Props AS p
-		LEFT JOIN Entities AS e ON (e.eID=p.EntityID)
-		WHERE e.ID=?`, e.ID)
+		LEFT JOIN Entities AS e ON (e.eSID=p.EntitySID)
+		WHERE e.UID=?`, e.UID)
 	defer results.Close()
 
 	if err != nil {
@@ -49,10 +49,10 @@ func (e *Entity) Find() (bool, error) {
 	first := true
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if first {
-			e.RegistryID = NotNilString(row[0])
-			e.DbID = NotNilString(row[1])
+			e.RegistrySID = NotNilString(row[0])
+			e.DbSID = NotNilString(row[1])
 			e.Plural = NotNilString(row[2])
-			e.ID = NotNilString(row[3])
+			e.UID = NotNilString(row[3])
 			first = false
 		}
 	}
@@ -61,17 +61,17 @@ func (e *Entity) Find() (bool, error) {
 }
 
 func (e *Entity) Refresh() error {
-	log.VPrintf(3, ">Enter: Refresh(%s)", e.DbID)
+	log.VPrintf(3, ">Enter: Refresh(%s)", e.DbSID)
 	defer log.VPrintf(3, "<Exit: Refresh")
 
 	results, err := Query(`
         SELECT PropName, PropValue, PropType
-        FROM Props WHERE EntityID=? `, e.DbID)
+        FROM Props WHERE EntitySID=? `, e.DbSID)
 	defer results.Close()
 
 	if err != nil {
-		log.Printf("Error refreshing props(%s): %s", e.DbID, err)
-		return fmt.Errorf("Error refreshing props(%s): %s", e.DbID, err)
+		log.Printf("Error refreshing props(%s): %s", e.DbSID, err)
+		return fmt.Errorf("Error refreshing props(%s): %s", e.DbSID, err)
 	}
 
 	e.Extensions = map[string]any{}
@@ -108,17 +108,17 @@ func (e *Entity) sSet(name string, val any) error {
 	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
 	defer log.VPrintf(3, "<Exit SetProp")
 
-	if e.DbID == "" {
-		log.Fatalf("DbID should not be empty")
+	if e.DbSID == "" {
+		log.Fatalf("DbSID should not be empty")
 	}
-	if e.RegistryID == "" {
-		log.Fatalf("RegistryID should not be empty")
+	if e.RegistrySID == "" {
+		log.Fatalf("RegistrySID should not be empty")
 	}
 
 	var err error
 	if val == nil {
-		err = Do(`DELETE FROM Props WHERE EntityID=? and PropName=?`,
-			e.DbID, name)
+		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
+			e.DbSID, name)
 	} else {
 		propType := ""
 		k := reflect.ValueOf(val).Type().Kind()
@@ -135,9 +135,9 @@ func (e *Entity) sSet(name string, val any) error {
 		}
 		err = Do(`
 			REPLACE INTO Props( 
-				RegistryID, EntityID, PropName, PropValue, PropType)
+				RegistrySID, EntitySID, PropName, PropValue, PropType)
 			VALUES( ?,?,?,?,? )`,
-			e.RegistryID, e.DbID, name, val, propType)
+			e.RegistrySID, e.DbSID, name, val, propType)
 	}
 
 	if err != nil {
@@ -176,17 +176,17 @@ func SetProp(entity any, name string, val any) error {
 		e = eField.Addr().Interface().(*Entity)
 	}
 
-	if e.DbID == "" {
-		log.Fatalf("DbID should not be empty")
+	if e.DbSID == "" {
+		log.Fatalf("DbSID should not be empty")
 	}
-	if e.RegistryID == "" {
-		log.Fatalf("RegistryID should not be empty")
+	if e.RegistrySID == "" {
+		log.Fatalf("RegistrySID should not be empty")
 	}
 
 	var err error
 	if val == nil {
-		err = Do(`DELETE FROM Props WHERE EntityID=? and PropName=?`,
-			e.DbID, name)
+		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
+			e.DbSID, name)
 	} else {
 		dbVal := val
 		propType := ""
@@ -209,9 +209,9 @@ func SetProp(entity any, name string, val any) error {
 		}
 		err = Do(`
 			REPLACE INTO Props( 
-				RegistryID, EntityID, PropName, PropValue, PropType)
+				RegistrySID, EntitySID, PropName, PropValue, PropType)
 			VALUES( ?,?,?,?,? )`,
-			e.RegistryID, e.DbID, name, dbVal, propType)
+			e.RegistrySID, e.DbSID, name, dbVal, propType)
 	}
 
 	if err != nil {
@@ -223,7 +223,7 @@ func SetProp(entity any, name string, val any) error {
 	if !field.IsValid() {
 		field := reflect.ValueOf(e).Elem().FieldByName("Extensions")
 		if !field.IsValid() {
-			log.VPrintf(2, "Can't Set unknown field(%s/%s)", e.DbID, name)
+			log.VPrintf(2, "Can't Set unknown field(%s/%s)", e.DbSID, name)
 		} else {
 			if val == nil {
 				if field.IsNil() {
@@ -253,7 +253,7 @@ func SetProp(entity any, name string, val any) error {
 type Obj struct {
 	Level    int
 	Plural   string
-	ID       string
+	UID      string
 	Path     string
 	Abstract string
 	Values   map[string]any
@@ -265,19 +265,19 @@ func readObj(results *Result) *Obj {
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		level := int((*row[0]).(int64))
 		plural := NotNilString(row[1])
-		id := NotNilString(row[2])
+		uid := NotNilString(row[2])
 
 		if obj == nil {
 			obj = &Obj{
 				Level:    level,
 				Plural:   plural,
-				ID:       id,
+				UID:      uid,
 				Path:     NotNilString(row[6]),
 				Abstract: NotNilString(row[7]),
 				Values:   map[string]any{},
 			}
 		} else {
-			if obj.Level != level || obj.Plural != plural || obj.ID != id {
+			if obj.Level != level || obj.Plural != plural || obj.UID != uid {
 				results.Push()
 				break
 			}

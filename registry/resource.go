@@ -12,7 +12,7 @@ type Resource struct {
 }
 
 func (r *Resource) Get(name string) any {
-	log.VPrintf(4, "Get: r(%s).Get(%s)", r.ID, name)
+	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
 		return r.Entity.Get(name[1:])
 	}
@@ -29,7 +29,7 @@ func (r *Resource) Get(name string) any {
 }
 
 func (r *Resource) Set(name string, val any) error {
-	log.VPrintf(4, "Set: r(%s).Set(%s,%v)", r.ID, name, val)
+	log.VPrintf(4, "Set: r(%s).Set(%s,%v)", r.UID, name, val)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
 		return SetProp(r, name[1:], val)
 	}
@@ -51,9 +51,9 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 	defer log.VPrintf(3, "<Exit: FindVersion")
 
 	results, err := Query(`
-        SELECT v.ID, p.PropName, p.PropValue, p.PropType
-        FROM Versions as v LEFT JOIN Props AS p ON (p.EntityID=v.ID)
-        WHERE v.VersionID=? AND v.ResourceID=?`, id, r.DbID)
+        SELECT v.SID, p.PropName, p.PropValue, p.PropType
+        FROM Versions as v LEFT JOIN Props AS p ON (p.EntitySID=v.SID)
+        WHERE v.UID=? AND v.ResourceSID=?`, id, r.DbSID)
 	defer results.Close()
 
 	if err != nil {
@@ -65,13 +65,13 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 		if v == nil {
 			v = &Version{
 				Entity: Entity{
-					RegistryID: r.RegistryID,
-					DbID:       NotNilString(row[0]),
-					ID:         id,
+					RegistrySID: r.RegistrySID,
+					DbSID:       NotNilString(row[0]),
+					UID:         id,
 				},
 				Resource: r,
 			}
-			log.VPrintf(3, "Found one: %s", v.DbID)
+			log.VPrintf(3, "Found one: %s", v.DbSID)
 		}
 		if *row[1] != nil { // We have Props
 			name := NotNilString(row[1])
@@ -112,18 +112,18 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 
 	v = &Version{
 		Entity: Entity{
-			RegistryID: r.RegistryID,
-			DbID:       NewUUID(),
-			ID:         id,
+			RegistrySID: r.RegistrySID,
+			DbSID:       NewUUID(),
+			UID:         id,
 		},
 		Resource: r,
 	}
 
 	err = DoOne(`
-        INSERT INTO Versions(ID, VersionID, ResourceID, Path, Abstract)
+        INSERT INTO Versions(SID, UID, ResourceSID, Path, Abstract)
         VALUES(?,?,?,?,?)`,
-		v.DbID, id, r.DbID,
-		r.Group.Plural+"/"+r.Group.ID+"/"+r.Plural+"/"+r.ID+"/versions/"+v.ID,
+		v.DbSID, id, r.DbSID,
+		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+v.UID,
 		r.Group.Plural+"/"+r.Plural+"/versions")
 	if err != nil {
 		err = fmt.Errorf("Error adding Version: %s", err)
@@ -139,13 +139,13 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		return v, err
 	}
 
-	log.VPrintf(3, "Created new one - dbID: %s", v.DbID)
+	log.VPrintf(3, "Created new one - dbSID: %s", v.DbSID)
 	return v, nil
 }
 
 func (r *Resource) Delete() error {
-	log.VPrintf(3, ">Enter: Resource.Delete(%s)", r.ID)
+	log.VPrintf(3, ">Enter: Resource.Delete(%s)", r.UID)
 	defer log.VPrintf(3, "<Exit: Resource.Delete")
 
-	return DoOne(`DELETE FROM Resources WHERE ID=?`, r.DbID)
+	return DoOne(`DELETE FROM Resources WHERE SID=?`, r.DbSID)
 }

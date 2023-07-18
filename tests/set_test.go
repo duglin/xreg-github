@@ -31,13 +31,13 @@ func TestSetResource(t *testing.T) {
 
 	// Verify that nil and "" are treated differently
 	ver.Set("name", nil)
-	ver2, _ := file.FindVersion(ver.ID)
+	ver2, _ := file.FindVersion(ver.UID)
 	xJSONCheck(t, ver2, ver)
 	val = ver.Get("name")
 	xCheck(t, val == nil, "Setting to nil should return nil")
 
 	ver.Set("name", "")
-	ver2, _ = file.FindVersion(ver.ID)
+	ver2, _ = file.FindVersion(ver.UID)
 	xJSONCheck(t, ver2, ver)
 	val = ver.Get("name")
 	xCheck(t, val == "", "Setting to '' should return ''")
@@ -229,7 +229,7 @@ func TestSetTags(t *testing.T) {
 }
 `)
 
-	file.Set("latestId", ver.ID)
+	file.Set("latestId", ver.UID)
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetTags",
   "self": "http:///",

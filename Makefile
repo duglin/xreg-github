@@ -6,7 +6,7 @@ test: server
 	go clean -testcache
 	go test -failfast github.com/duglin/xreg-github/tests
 
-server: *.go registry/*.go
+server: *.go registry/*
 	go build -o $@ .
 
 run: server test

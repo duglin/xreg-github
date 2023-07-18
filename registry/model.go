@@ -13,7 +13,7 @@ type ModelElement struct {
 }
 
 type GroupModel struct {
-	ID       string    `json:"-"`
+	SID      string    `json:"-"`
 	Registry *Registry `json:"-"`
 
 	Plural   string `json:"plural"`
@@ -24,7 +24,7 @@ type GroupModel struct {
 }
 
 type ResourceModel struct {
-	ID         string      `json:"-"`
+	SID        string      `json:"-"`
 	GroupModel *GroupModel `json:"-"`
 
 	Plural    string `json:"plural"`
@@ -62,13 +62,13 @@ func (g *GroupModel) AddResourceModel(plural string, singular string, versions i
 		}
 	}
 
-	mID := NewUUID()
+	mSID := NewUUID()
 
 	err := Do(`
 		INSERT INTO ModelEntities(
-			ID,
-			RegistryID,
-			ParentID,
+			SID,
+			RegistrySID,
+			ParentSID,
 			Plural,
 			Singular,
 			SchemaURL,
@@ -76,14 +76,14 @@ func (g *GroupModel) AddResourceModel(plural string, singular string, versions i
 			VersionId,
 			Latest)
 		VALUES(?,?,?,?,?,?,?,?,?) `,
-		mID, g.Registry.DbID, g.ID, plural, singular, nil, versions,
+		mSID, g.Registry.DbSID, g.SID, plural, singular, nil, versions,
 		verId, latest)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", plural, err)
 		return nil, err
 	}
 	r := &ResourceModel{
-		ID:         mID,
+		SID:        mSID,
 		GroupModel: g,
 		Singular:   singular,
 		Plural:     plural,

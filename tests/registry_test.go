@@ -83,7 +83,7 @@ func TestFindRegistry(t *testing.T) {
 	defer reg.Delete()
 	xNoErr(t, err)
 
-	reg2, err := registry.FindRegistry(reg.ID)
+	reg2, err := registry.FindRegistry(reg.UID)
 	xNoErr(t, err)
 	xJSONCheck(t, reg2, reg)
 }

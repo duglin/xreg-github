@@ -16,24 +16,24 @@ func (v *Version) Set(name string, val any) error {
 }
 
 func (v *Version) Delete() error {
-	log.VPrintf(3, ">Enter: Version.Delete(%s)", v.ID)
+	log.VPrintf(3, ">Enter: Version.Delete(%s)", v.UID)
 	defer log.VPrintf(3, "<Exit: Version.Delete")
 
-	err := DoOne(`DELETE FROM Versions WHERE ID=?`, v.DbID)
+	err := DoOne(`DELETE FROM Versions WHERE SID=?`, v.DbSID)
 	if err != nil {
-		return fmt.Errorf("Error deleting Version %q: %s", v.ID, err)
+		return fmt.Errorf("Error deleting Version %q: %s", v.UID, err)
 	}
 
 	results, err := Query(`
-        SELECT VersionID FROM Versions
-        WHERE ResourceID=?
-        ORDER BY CreatedIndex DESC LIMIT 1`,
-		v.Resource.DbID)
+        SELECT UID FROM Versions
+        WHERE ResourceSID=?
+        ORDER BY Counter DESC LIMIT 1`,
+		v.Resource.DbSID)
 	defer results.Close()
 
 	if err != nil {
 		return fmt.Errorf("Error finding next latestID for Resource %q: %s",
-			v.Resource.ID, err)
+			v.Resource.UID, err)
 	}
 
 	row := results.NextRow()

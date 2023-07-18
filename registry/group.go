@@ -20,12 +20,12 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	defer log.VPrintf(3, "<Exit: FindResource")
 
 	results, err := Query(`
-                SELECT r.ID, p.PropName, p.PropValue, p.PropType
+                SELECT r.SID, p.PropName, p.PropValue, p.PropType
                 FROM Resources as r
-                LEFT JOIN Props AS p ON (p.EntityID=r.ID)
-                WHERE r.GroupID=? AND r.ResourceID=?
+                LEFT JOIN Props AS p ON (p.EntitySID=r.SID)
+                WHERE r.GroupSID=? AND r.UID=?
                 AND r.Abstract = CONCAT(?,'/',?)`,
-		g.DbID, id, g.Plural, rType)
+		g.DbSID, id, g.Plural, rType)
 	defer results.Close()
 
 	if err != nil {
@@ -38,14 +38,14 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 		if r == nil {
 			r = &Resource{
 				Entity: Entity{
-					RegistryID: g.RegistryID,
-					DbID:       NotNilString(row[0]),
-					Plural:     rType,
-					ID:         id,
+					RegistrySID: g.RegistrySID,
+					DbSID:       NotNilString(row[0]),
+					Plural:      rType,
+					UID:         id,
 				},
 				Group: g,
 			}
-			log.VPrintf(3, "Found one: %s", r.DbID)
+			log.VPrintf(3, "Found one: %s", r.DbSID)
 		}
 		if *row[1] != nil { // We have Props
 			name := NotNilString(row[1])
@@ -83,49 +83,49 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 
 	r = &Resource{
 		Entity: Entity{
-			RegistryID: g.RegistryID,
-			DbID:       NewUUID(),
-			Plural:     rType,
-			ID:         id,
+			RegistrySID: g.RegistrySID,
+			DbSID:       NewUUID(),
+			Plural:      rType,
+			UID:         id,
 		},
 		Group: g,
 	}
 
 	err = DoOne(`
-        INSERT INTO Resources(ID, ResourceID, GroupID, ModelID, Path, Abstract)
-        SELECT ?,?,?,ID,?,?
+        INSERT INTO Resources(SID, UID, GroupSID, ModelSID, Path, Abstract)
+        SELECT ?,?,?,SID,?,?
         FROM ModelEntities
-        WHERE RegistryID=?
-          AND ParentID IN (
-            SELECT ID FROM ModelEntities
-            WHERE RegistryID=?
-            AND ParentID IS NULL
+        WHERE RegistrySID=?
+          AND ParentSID IN (
+            SELECT SID FROM ModelEntities
+            WHERE RegistrySID=?
+            AND ParentSID IS NULL
             AND Plural=?)
             AND Plural=?`,
-		r.DbID, r.ID, g.DbID,
-		g.Plural+"/"+g.ID+"/"+rType+"/"+r.ID, g.Plural+"/"+rType,
-		g.RegistryID,
-		g.RegistryID, g.Plural,
+		r.DbSID, r.UID, g.DbSID,
+		g.Plural+"/"+g.UID+"/"+rType+"/"+r.UID, g.Plural+"/"+rType,
+		g.RegistrySID,
+		g.RegistrySID, g.Plural,
 		rType)
 	if err != nil {
 		err = fmt.Errorf("Error adding Resource: %s", err)
 		log.Print(err)
 		return nil, err
 	}
-	r.Set(".id", r.ID)
+	r.Set(".id", r.UID)
 
 	_, err = r.AddVersion(vID)
 	if err != nil {
 		return nil, err
 	}
 
-	log.VPrintf(3, "Created new one - dbID: %s", r.DbID)
+	log.VPrintf(3, "Created new one - dbSID: %s", r.DbSID)
 	return r, err
 }
 
 func (g *Group) Delete() error {
-	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.ID)
+	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.UID)
 	defer log.VPrintf(3, "<Exit: Group.Delete")
 
-	return DoOne(`DELETE FROM "Groups" WHERE ID=?`, g.DbID)
+	return DoOne(`DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
 }
