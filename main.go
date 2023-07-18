@@ -118,8 +118,8 @@ func main() {
 	registry.OpenDB(DBName)
 
 	if newDB {
-		Reg = LoadSample()
-		// Reg = LoadGitRepo("APIs-guru", "openapi-directory")
+		Reg = LoadSample(Reg)
+		Reg = LoadAPIGuru(Reg, "APIs-guru", "openapi-directory")
 	}
 
 	Reg, err = registry.FindRegistry("987")

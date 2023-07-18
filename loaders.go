@@ -33,7 +33,8 @@ func init() {
 	}
 }
 
-func LoadGitRepo(orgName string, repoName string) *registry.Registry {
+func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *registry.Registry {
+	var err error
 	log.VPrintf(1, "Loading registry '%s/%s'", orgName, repoName)
 	Token = strings.TrimSpace(Token)
 
@@ -58,20 +59,22 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	gzf, _ := gzip.NewReader(tarStream)
 	reader := tar.NewReader(gzf)
 
-	reg, err := registry.NewRegistry("123-4567-3456")
-	ErrFatalf(err, "Error creating new registry: %s", err)
-	// log.VPrintf(3, "New registry:\n%#v", reg)
+	if reg == nil {
+		reg, err = registry.NewRegistry("123-4567-3456")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+		// log.VPrintf(3, "New registry:\n%#v", reg)
 
-	reg.Set("baseURL", "http://soaphub.org:8585/")
-	reg.Set("name", "APIs-guru Registry")
-	reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory")
-	reg.Set("specVersion", "0.5")
-	reg.Set("docs", "https://github.com/duglin/xreg-github")
-	err = reg.Refresh()
-	ErrFatalf(err, "Error refeshing registry: %s", err)
-	// log.VPrintf(3, "New registry:\n%#v", reg)
+		reg.Set("baseURL", "http://soaphub.org:8585/")
+		reg.Set("name", "APIs-guru Registry")
+		reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory")
+		reg.Set("specVersion", "0.5")
+		reg.Set("docs", "https://github.com/duglin/xreg-github")
+		err = reg.Refresh()
+		ErrFatalf(err, "Error refeshing registry: %s", err)
+		// log.VPrintf(3, "New registry:\n%#v", reg)
 
-	// TODO Support "model" being part of the Registry struct above
+		// TODO Support "model" being part of the Registry struct above
+	}
 
 	g, _ := reg.AddGroupModel("apiProviders", "apiProvider", "")
 	_, err = g.AddResourceModel("apis", "api", 2, true, true)
@@ -111,7 +114,14 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 		// org/service/version/file
 		// org/version/file
 
-		group, _ := reg.AddGroup("apiProviders", parts[0])
+		group, err := reg.FindGroup("apiProviders", parts[0])
+		ErrFatalf(err, "FindGroup: %s", err)
+
+		if group == nil {
+			group, err = reg.AddGroup("apiProviders", parts[0])
+			ErrFatalf(err, "AddGroup: %s", err)
+		}
+
 		group.Set("name", group.ID)
 		group.Set("modifiedBy", "me")
 		group.Set("modifiedAt", "noon")
@@ -135,7 +145,13 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 
 		res, _ := group.AddResource("apis", resName, "v1")
 
-		g2, _ := reg.AddGroup("schemaGroups", parts[0])
+		g2, err := reg.FindGroup("schemaGroups", parts[0])
+		ErrFatalf(err, "FindGroup(%s/%s): %s", "schemaGroups", parts[0], err)
+
+		if g2 == nil {
+			g2, err = reg.AddGroup("schemaGroups", parts[0])
+			ErrFatalf(err, "AddGroup(%s/%s): %s", "schemaGroups", parts[0], err)
+		}
 		g2.Set("name", group.Get("name"))
 		/*
 			r2,_ := g2.AddResource("schemas", resName, parts[verIndex])
@@ -168,9 +184,12 @@ func LoadGitRepo(orgName string, repoName string) *registry.Registry {
 	return reg
 }
 
-func LoadSample() *registry.Registry {
-	reg, err := registry.NewRegistry("987")
-	ErrFatalf(err, "Error creating new registry: %s", err)
+func LoadSample(reg *registry.Registry) *registry.Registry {
+	var err error
+	if reg == nil {
+		reg, err = registry.NewRegistry("987")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+	}
 
 	reg.Set("BaseURL", "http://soaphub.org:8585/")
 	reg.Set("name", "Test Registry")
