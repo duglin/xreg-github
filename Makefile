@@ -1,13 +1,15 @@
-all: test run
+all: run
+
+export GO111MODULE=off
 
 test:
-	(cd tests && GO111MODULE=off go test -failfast)
+	go test -failfast github.com/duglin/xreg-github/tests
 
-run:
-	GO111MODULE=off go run *.go --recreate
+run: test
+	go run *.go --recreate
 
-start:
-	GO111MODULE=off go run *.go
+start: test
+	go run *.go
 
 mysql:
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password --network host \
