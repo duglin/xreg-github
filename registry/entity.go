@@ -154,14 +154,11 @@ func SetProp(entity any, name string, val any) error {
 	defer log.VPrintf(3, "<Exit SetProp")
 
 	// Only allow "." in the name if it's "tags.xxx"
-	preDot, tagName, found := strings.Cut(name, ".")
+	preDot, _, found := strings.Cut(name, ".")
 	if found {
 		if preDot != "tags" {
 			return fmt.Errorf("Can't use '.' in a property name except for "+
 				"tags: %s", name)
-		}
-		if strings.Index(tagName, ".") >= 0 {
-			return fmt.Errorf("Can't use '.' in a tag name: %s", name)
 		}
 	} else if name == "tags" {
 		return fmt.Errorf("Invalid propery name: %s", name)

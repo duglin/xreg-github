@@ -708,7 +708,7 @@ eSID IN ( -- eSID from query
       SELECT list.eSID FROM (
         SELECT count(*) as cnt,e2.eSID,e2.Path FROM Entities AS e1
         RIGHT JOIN (
-          -- start of expr1 - below finds SeachNodes/SIDs of interest`
+          -- start of expr1 - below finds SearchNodes/SIDs of interest`
 			firstAnd := true
 			andCount := 0
 			for _, filter := range OrFilters { // AndFilters
@@ -726,9 +726,10 @@ eSID IN ( -- eSID from query
 				} else {
 					check = "PropValue IS NOT NULL"
 				}
+				// BINARY means case-sensitive for that operand
 				q += `
           SELECT eSID,Path FROM FullTree
-          WHERE (CONCAT(IF(Abstract<>'',CONCAT(REPLACE(Abstract,'/','.'),'.'),''),PropName)=? AND
+          WHERE (BINARY CONCAT(IF(Abstract<>'',CONCAT(REPLACE(Abstract,'/','.'),'.'),''),PropName)=? AND
                ` + check + `)`
 			} // end of AndFilter
 			q += `
@@ -761,15 +762,23 @@ ORDER BY Path ;
 }
 
 func SubQuery(query string, args []interface{}) string {
-	for i, arg := range args {
-		before, after, found := strings.Cut(query, "?")
-		if !found {
-			panic(fmt.Sprintf("Too few ? in query - missing number %d", i+1))
+	argNum := 0
+
+	for pos := 0; pos < len(query); pos++ {
+		if ch := query[pos]; ch != '?' {
+			continue
 		}
-		query = fmt.Sprintf("%s'%v'%s", before, arg, after)
+		if argNum >= len(args) {
+			panic(fmt.Sprintf("Extra ? in query at %q", query[pos:]))
+		}
+
+		val := fmt.Sprintf("%v", args[argNum])
+		query = fmt.Sprintf("%s'%s'%s", query[:pos], val, query[pos+1:])
+		pos += len(val) + 1 // one more will be added due to pos++
+		argNum++
 	}
-	if i := strings.Index(query, "?"); i >= 0 {
-		panic(fmt.Sprintf("Extra ? in query at '%s'", query[i:]))
+	if argNum != len(args) {
+		panic(fmt.Sprintf("Too many args passed into %q", query))
 	}
 	return query
 }

@@ -81,7 +81,7 @@ func TestSetVersion(t *testing.T) {
 
 func TestSetDots(t *testing.T) {
 	reg, _ := registry.NewRegistry("TestSetDots")
-	// defer reg.Delete()
+	defer reg.Delete()
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
@@ -90,11 +90,29 @@ func TestSetDots(t *testing.T) {
 	dir, _ := reg.AddGroup("dirs", "d1")
 	err := dir.Set("tags", "xxx")
 	xCheck(t, err != nil, "tags=xxx should fail")
+
+	// dots are ok as tag names
+	err = dir.Set("tags.xxx.yyy", "xxx")
+	xNoErr(t, err)
+	err = dir.Set("tags.many.dots", "hello")
+	xCheck(t, dir.Get("tags.many.dots") == "hello", "many.dots should work")
+	dir.Refresh()
+	xCheck(t, dir.Get("tags.many.dots") == "hello", "many.dots should work")
+	xCheckGet(t, reg, "/dirs/d1", `{
+  "id": "d1",
+  "self": "http:///dirs/d1",
+  "tags": {
+    "many.dots": "hello",
+    "xxx.yyy": "xxx"
+  },
+
+  "filesCount": 0,
+  "filesUrl": "http:///dirs/d1/files"
+}
+`)
+
 	err = dir.Set("tags", nil)
 	xCheck(t, err != nil, "tags=nil should fail")
-	err = dir.Set("tags.xxx.yyy", "xxx")
-	xCheck(t, err != nil, "tags.xxx.yyy=xxx should fail")
-	err = dir.Set("tags.xxx.yyy", nil)
 	xCheck(t, err != nil, "tags.xxx.yyy=nil should fail")
 	err = dir.Set("xxx.yyy", "xxx")
 	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
