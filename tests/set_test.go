@@ -8,7 +8,7 @@ import (
 
 func TestSetResource(t *testing.T) {
 	reg, _ := registry.NewRegistry("TestSetResource")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
@@ -45,7 +45,7 @@ func TestSetResource(t *testing.T) {
 
 func TestSetVersion(t *testing.T) {
 	reg, _ := registry.NewRegistry("TestSetVersion")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
@@ -81,7 +81,7 @@ func TestSetVersion(t *testing.T) {
 
 func TestSetDots(t *testing.T) {
 	reg, _ := registry.NewRegistry("TestSetDots")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
@@ -128,7 +128,7 @@ func TestSetDots(t *testing.T) {
 
 func TestSetTags(t *testing.T) {
 	reg, _ := registry.NewRegistry("TestSetTags")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)

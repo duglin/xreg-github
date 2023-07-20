@@ -8,7 +8,7 @@ import (
 
 func TestNoModel(t *testing.T) {
 	reg, err := registry.NewRegistry("TestNoModel")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
@@ -25,7 +25,7 @@ func TestNoModel(t *testing.T) {
 
 func TestGroupModelCreate(t *testing.T) {
 	reg, err := registry.NewRegistry("TestGroupModelCreate")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
@@ -68,7 +68,7 @@ func TestGroupModelCreate(t *testing.T) {
 
 func TestResourceModelCreate(t *testing.T) {
 	reg, err := registry.NewRegistry("TestResourceModels")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
@@ -139,7 +139,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 func TestMultModelCreate(t *testing.T) {
 	reg, err := registry.NewRegistry("TestMultModelCreate")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
@@ -212,7 +212,7 @@ func TestMultModelCreate(t *testing.T) {
 
 func TestModelAPI(t *testing.T) {
 	reg, err := registry.NewRegistry("TestModelAPI")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
@@ -228,7 +228,7 @@ func TestModelAPI(t *testing.T) {
 
 func TestMultModel2Create(t *testing.T) {
 	reg, err := registry.NewRegistry("TestMultModel2Create")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 

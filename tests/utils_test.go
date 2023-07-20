@@ -29,6 +29,12 @@ func TestMain(m *testing.M) {
 	os.Exit(rc)
 }
 
+func PassDeleteReg(t *testing.T, reg *registry.Registry) {
+	if !t.Failed() {
+		reg.Delete()
+	}
+}
+
 func Caller() string {
 	_, me, _, _ := runtime.Caller(0)
 

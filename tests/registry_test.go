@@ -8,7 +8,7 @@ import (
 
 func TestCreateRegistry(t *testing.T) {
 	reg, err := registry.NewRegistry("TestCreateRegistry")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg shouldn't be nil")
 
@@ -36,7 +36,7 @@ func TestCreateRegistry(t *testing.T) {
 		"Finding TestCreateRegistry should have worked")
 
 	reg3, err = registry.NewRegistry("")
-	defer reg3.Delete()
+	defer PassDeleteReg(t, reg3)
 	xNoErr(t, err)
 	xCheck(t, reg3 != nil, "reg3 shouldn't be nil")
 	xCheck(t, reg3 != reg, "reg3 should be different from reg")
@@ -63,7 +63,7 @@ func TestDeleteRefistry(t *testing.T) {
 
 func TestRefreshRegistry(t *testing.T) {
 	reg, err := registry.NewRegistry("TestRefreshRegistry")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 
 	reg.Props["xxx"] = "yyy"
@@ -80,7 +80,7 @@ func TestFindRegistry(t *testing.T) {
 		"Shouldn't have found TestFindRegistry")
 
 	reg, err = registry.NewRegistry("TestFindRegistry")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xNoErr(t, err)
 
 	reg2, err := registry.FindRegistry(reg.UID)
@@ -90,7 +90,7 @@ func TestFindRegistry(t *testing.T) {
 
 func TestRegistryProps(t *testing.T) {
 	reg, _ := registry.NewRegistry("TestCreateRegistry")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 
 	reg.Set("specVersion", "x.y")
 	reg.Set("name", "nameIt")

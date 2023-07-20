@@ -9,7 +9,7 @@ import (
 
 func TestCreateGroup(t *testing.T) {
 	reg, err := registry.NewRegistry("TestCreateGroup")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil && err == nil, "can't create reg")
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")

@@ -9,7 +9,7 @@ import (
 
 func TestBasicTypes(t *testing.T) {
 	reg, _ := registry.NewRegistry("TestBasicFilters")
-	defer reg.Delete()
+	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
