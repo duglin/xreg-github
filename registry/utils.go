@@ -153,11 +153,11 @@ type JSONData struct {
 }
 
 func ShowStack() {
-	log.VPrintf(2, "-----")
+	log.VPrintf(0, "-----")
 	for i := 1; i < 20; i++ {
 		pc, file, line, _ := runtime.Caller(i)
-		log.VPrintf(2, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
-		if strings.Contains(file, "main") {
+		log.VPrintf(0, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
+		if strings.Contains(file, "main") || strings.Contains(file, "testing") {
 			break
 		}
 	}

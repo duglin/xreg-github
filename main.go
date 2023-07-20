@@ -118,11 +118,12 @@ func main() {
 	registry.OpenDB(DBName)
 
 	if newDB {
-		Reg = LoadSample(Reg)
-		Reg = LoadAPIGuru(Reg, "APIs-guru", "openapi-directory")
+		Reg = LoadDirsSample(Reg)
+		// Reg = LoadEndpointsSample(Reg)
+		// Reg = LoadAPIGuru(Reg, "APIs-guru", "openapi-directory")
 	}
 
-	Reg, err = registry.FindRegistry("987")
+	Reg, err = registry.FindRegistry("SampleRegistry")
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)

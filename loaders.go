@@ -184,37 +184,56 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 	return reg
 }
 
-func LoadSample(reg *registry.Registry) *registry.Registry {
+func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	var err error
 	if reg == nil {
-		reg, err = registry.NewRegistry("987")
+		reg, err = registry.NewRegistry("SampleRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
-	}
 
-	reg.Set("BaseURL", "http://soaphub.org:8585/")
-	reg.Set("name", "Test Registry")
-	reg.Set("description", "A test reg")
-	reg.Set("specVersion", "0.5")
-	reg.Set("docs", "https://github.com/duglin/xreg-github")
+		reg.Set("baseURL", "http://soaphub.org:8585/")
+		reg.Set("name", "Test Registry")
+		reg.Set("description", "A test reg")
+		reg.Set("specVersion", "0.5")
+		reg.Set("docs", "https://github.com/duglin/xreg-github")
+
+		reg.Set("tags.stage", "prod")
+	}
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	_, err = gm.AddResourceModel("files", "file", 2, true, true)
 
 	g, _ := reg.AddGroup("dirs", "dir1")
+	g.Set("tags.private", "true")
 	r, _ := g.AddResource("files", "f1", "v1")
 	r.AddVersion("v2")
 
-	gm, _ = reg.AddGroupModel("endpoints", "endpoint", "")
+	return reg
+}
+
+func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
+	var err error
+	if reg == nil {
+		reg, err = registry.NewRegistry("SampleRegistry")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+
+		reg.Set("baseURL", "http://soaphub.org:8585/")
+		reg.Set("name", "Test Registry")
+		reg.Set("description", "A test reg")
+		reg.Set("specVersion", "0.5")
+		reg.Set("docs", "https://github.com/duglin/xreg-github")
+	}
+
+	gm, _ := reg.AddGroupModel("endpoints", "endpoint", "")
 	_, err = gm.AddResourceModel("definitions", "definition", 2, true, true)
 
-	g, _ = reg.AddGroup("endpoints", "e1")
+	g, _ := reg.AddGroup("endpoints", "e1")
 	g.Set("name", "end1")
 	g.Set("epoch", 1)
 	g.Set("ext", "ext1")
 	g.Set("tags.stage", "dev")
 	g.Set("tags.stale", "true")
 
-	r, _ = g.AddResource("definitions", "created", "v1")
+	r, _ := g.AddResource("definitions", "created", "v1")
 	v, _ := r.FindVersion("v1")
 	v.Set("name", "blobCreated")
 	v.Set("epoch", 2)
