@@ -252,6 +252,28 @@ func DeleteDB(name string) error {
 	return nil
 }
 
+func SubQuery(query string, args []interface{}) string {
+	argNum := 0
+
+	for pos := 0; pos < len(query); pos++ {
+		if ch := query[pos]; ch != '?' {
+			continue
+		}
+		if argNum >= len(args) {
+			panic(fmt.Sprintf("Extra ? in query at %q", query[pos:]))
+		}
+
+		val := fmt.Sprintf("%v", args[argNum])
+		query = fmt.Sprintf("%s'%s'%s", query[:pos], val, query[pos+1:])
+		pos += len(val) + 1 // one more will be added due to pos++
+		argNum++
+	}
+	if argNum != len(args) {
+		panic(fmt.Sprintf("Too many args passed into %q", query))
+	}
+	return query
+}
+
 /*
 select * from FullTree
 where

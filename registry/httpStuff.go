@@ -2,6 +2,7 @@ package registry
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -85,7 +86,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch strings.ToUpper(r.Method) {
 	case "GET":
-		err = Reg.HTTPGet(out, info)
+		err = HTTPGet(out, info)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(fmt.Sprintf("HTTP method %q not supported", r.Method)))
@@ -123,4 +124,207 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}
+}
+
+func HTTPGETModel(w io.Writer, info *RequestInfo) error {
+	if len(info.Parts) > 1 {
+		info.ErrCode = http.StatusNotFound
+		return fmt.Errorf("404: Not found\n")
+	}
+
+	model := info.Registry.Model
+	if model == nil {
+		model = &Model{}
+	}
+
+	buf, err := json.MarshalIndent(model, "", "  ")
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	fmt.Fprintf(w, "%s\n", string(buf))
+	return nil
+}
+
+func HTTPGETContent(w io.Writer, info *RequestInfo) error {
+	query := `
+SELECT
+  RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+FROM FullTree WHERE RegSID=? AND `
+	args := []any{info.Registry.DbSID}
+
+	path := strings.Join(info.Parts, "/")
+
+	if info.VersionUID == "" {
+		query += `(Path=? OR Path LIKE ?)`
+		args = append(args, path, path+"/%")
+	} else {
+		query += `Path=?`
+		args = append(args, path)
+	}
+	query += " ORDER BY Path"
+
+	log.VPrintf(3, "Query:\n%s", SubQuery(query, args))
+
+	results, err := Query(query, args...)
+	defer results.Close()
+
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	entity := readNextEntity(results)
+	if entity == nil {
+		info.ErrCode = http.StatusNotFound
+		return fmt.Errorf("404: Not found\n")
+	}
+
+	var version *Entity
+	versionsCount := 0
+	if info.VersionUID == "" {
+		// We're on a Resource, so go find the right Version
+		vID := entity.Get("latestId").(string)
+		for {
+			v := readNextEntity(results)
+			if v == nil && version == nil {
+				info.ErrCode = http.StatusInternalServerError
+				return fmt.Errorf("500: Can't find version: %s", vID)
+			}
+			if v == nil {
+				break
+			}
+			versionsCount++
+			if v.UID == vID {
+				version = v
+			}
+		}
+	} else {
+		version = entity
+	}
+
+	log.VPrintf(3, "Entity: %#v", entity)
+	log.VPrintf(3, "Version: %#v", version)
+
+	headerIt := func(e *Entity, info *RequestInfo, key string, val any) error {
+		str := ""
+		if key == "tags" {
+			buf, _ := json.Marshal(val)
+			str = string(buf)
+		} else {
+			str = fmt.Sprintf("%v", val)
+		}
+		info.OriginalResponse.Header()["xRegistry-"+key] = []string{str}
+		return nil
+	}
+
+	err = entity.SerializeProps(info, headerIt)
+	if err != nil {
+		panic(err)
+	}
+
+	if info.VersionUID == "" {
+		info.OriginalResponse.Header()["xRegistry-versionsCount"] =
+			[]string{fmt.Sprintf("%d", versionsCount)}
+		info.OriginalResponse.Header()["xRegistry-versionsUrl"] =
+			[]string{info.BaseURL + "/" + entity.Path + "/versions"}
+	}
+
+	url := ""
+	if val := entity.Get("#resourceURL"); val != nil {
+		url = val.(string)
+	}
+	if url != "" {
+		info.OriginalResponse.Header().Add("Location", url)
+		info.OriginalResponse.WriteHeader(http.StatusSeeOther)
+		/*
+			http.Redirect(info.OriginalResponse, info.OriginalRequest, url,
+				http.StatusSeeOther)
+		*/
+		return nil
+	}
+
+	if val := entity.Get("#resourceProxyURL"); val != nil {
+		url = val.(string)
+	}
+	if url != "" {
+		// Just act as a proxy and copy the remote resource as our response
+		resp, err := http.Get(url)
+		if err != nil {
+			info.ErrCode = http.StatusInternalServerError
+			return fmt.Errorf("500: " + err.Error())
+		}
+		if resp.StatusCode/100 != 2 {
+			info.ErrCode = resp.StatusCode
+			return fmt.Errorf("%s: Remote error", resp.Status)
+		}
+
+		// Copy all HTTP headers
+		for header, value := range resp.Header {
+			info.OriginalResponse.Header()[header] = value
+		}
+
+		// Now copy the body
+		_, err = io.Copy(w, resp.Body)
+		if err != nil {
+			info.ErrCode = http.StatusInternalServerError
+			return fmt.Errorf("500: " + err.Error())
+		}
+		return nil
+	}
+
+	buf := version.Get("#resource")
+	if buf == nil {
+		// No data so just return
+		info.OriginalResponse.WriteHeader(200) // http.StatusNoContent)
+		return nil
+	}
+	info.OriginalResponse.Write(buf.([]byte))
+
+	return nil
+}
+
+func HTTPGet(w io.Writer, info *RequestInfo) error {
+	info.Root = strings.Trim(info.Root, "/")
+
+	if len(info.Parts) > 0 && info.Parts[0] == "model" {
+		return HTTPGETModel(w, info)
+	}
+
+	if info.What == "Entity" && info.ResourceUID != "" && !info.ShowMeta {
+		return HTTPGETContent(w, info)
+	}
+
+	query, args, err := GenerateQuery(info)
+
+	results, err := Query(query, args...)
+	defer results.Close()
+
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	jw := NewJsonWriter(w, info, results)
+	jw.NextEntity()
+
+	if info.What == "Coll" {
+		_, err = jw.WriteCollection()
+	} else {
+		if jw.Entity == nil {
+			info.ErrCode = http.StatusNotFound
+			return fmt.Errorf("404: Not found\n")
+		}
+		err = jw.WriteEntity()
+	}
+
+	if err == nil {
+		jw.Print("\n")
+	} else {
+		info.ErrCode = http.StatusInternalServerError
+		err = fmt.Errorf("500: " + err.Error())
+	}
+
+	return err
 }
