@@ -20,7 +20,7 @@ type JsonWriter struct {
 	unusedColls [][]string // [level][remaining coll names on this level]
 
 	results *Result // results of DB query
-	Obj     *Obj    // Current row in the DB results
+	Entity  *Entity // Current row in the DB results
 }
 
 func NewJsonWriter(w io.Writer, info *RequestInfo, results *Result) *JsonWriter {
@@ -60,28 +60,28 @@ func (jw *JsonWriter) Outdent() {
 	}
 }
 
-func (jw *JsonWriter) NextObj() *Obj {
-	jw.Obj = readObj(jw.results)
+func (jw *JsonWriter) NextEntity() *Entity {
+	jw.Entity = readNextEntity(jw.results)
 	/*
 		pc, _, line, _ := runtime.Caller(1)
 		log.VPrintf(4, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
-		log.VPrintf(4, "  > Next: %v", jw.Obj)
+		log.VPrintf(4, "  > Next: %v", jw.Entity)
 	*/
-	return jw.Obj
+	return jw.Entity
 }
 
 func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
-	myPlural := jw.Obj.Plural
-	myURL := fmt.Sprintf("%s/%s", jw.info.BaseURL, path.Dir(jw.Obj.Path))
+	myPlural := jw.Entity.Plural
+	myURL := fmt.Sprintf("%s/%s", jw.info.BaseURL, path.Dir(jw.Entity.Path))
 
 	saveWriter := jw.writer
 	saveExtra := extra
 
-	if !jw.info.ShouldInline(jw.Obj.Abstract) {
+	if !jw.info.ShouldInline(jw.Entity.Abstract) {
 		jw.writer = ioutil.Discard
 	}
 
-	jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Obj.Plural)
+	jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Entity.Plural)
 	extra = ","
 	count, err := jw.WriteCollection()
 	if err != nil {
@@ -108,24 +108,24 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 	myPlural := ""
 	count := 0
 
-	for jw.Obj != nil {
+	for jw.Entity != nil {
 		if myLevel == 0 {
-			myLevel = jw.Obj.Level
-			myPlural = jw.Obj.Plural
+			myLevel = jw.Entity.Level
+			myPlural = jw.Entity.Plural
 		}
 
-		if jw.Obj.Level > myLevel { // Process a child
-			jw.NextObj()
+		if jw.Entity.Level > myLevel { // Process a child
+			jw.NextEntity()
 			continue
 		}
 
-		if jw.Obj.Level < myLevel || jw.Obj.Plural != myPlural {
+		if jw.Entity.Level < myLevel || jw.Entity.Plural != myPlural {
 			// Stop on a new parent or a new sibling collection
 			break
 		}
 
-		jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Obj.Values["id"])
-		if err := jw.WriteObject(); err != nil {
+		jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Entity.Props["id"])
+		if err := jw.WriteEntity(); err != nil {
 			return count, err
 		}
 
@@ -142,128 +142,44 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 	return count, nil
 }
 
-// This allows for us to choose the order and define custom logic per prop
-var orderedProps = []struct {
-	key    string                // prop name
-	levels string                // only show for these levels
-	fn     func(*JsonWriter) any // we'll Marshal the 'any'
-}{
-	{"specVersion", "", nil},
-	{"id", "", nil},
-	{"name", "", nil},
-	{"epoch", "23", nil},
-	{"self", "", func(jw *JsonWriter) any {
-		return jw.info.BaseURL + "/" + jw.Obj.Path
-	}},
-	{"latestId", "2", nil},
-	{"latestUrl", "2", func(jw *JsonWriter) any {
-		val := jw.Obj.Values["latestId"]
-		if IsNil(val) {
-			return nil
-		}
-		return jw.info.BaseURL + "/" + jw.Obj.Path + "/versions/" + val.(string)
-	}},
-	{"description", "", nil},
-	{"docs", "", nil},
-	{"tags", "", func(jw *JsonWriter) any {
-		var res map[string]string
+func (jw *JsonWriter) WriteEntity() error {
+	log.VPrintf(3, ">Enter: WriteEntity (%v)", jw.Entity)
+	defer log.VPrintf(3, "<Exit: WriteEntity")
 
-		for _, key := range SortedKeys(jw.Obj.Values) {
-			if key[0] > 't' {
-				break
-			}
-
-			if strings.HasPrefix(key, "tags.") {
-				val, _ := jw.Obj.Values[key]
-				if res == nil {
-					res = map[string]string{}
-				}
-				// Convert it to a string per the spec
-				res[key[5:]] = fmt.Sprintf("%v", val)
-				// Technically we shouldn't remove it but for now it's safe
-				delete(jw.Obj.Values, key)
-			}
-		}
-		return res
-	}},
-	{"createdBy", "", nil},
-	{"createdOn", "", nil},
-	{"modifiedBy", "", nil},
-	{"modifiedOn", "", nil},
-	{"model", "0", func(jw *JsonWriter) any {
-		if jw.info.ShowModel {
-			if jw.info.Registry.Model == nil {
-				return &Model{}
-			}
-			return jw.info.Registry.Model
-		}
-		return nil
-	}},
-	{"baseURL", "-", nil}, // always skip
-}
-
-func (jw *JsonWriter) WriteObject() error {
-	log.VPrintf(3, ">Enter: WriteObj (%v)", jw.Obj)
-	defer log.VPrintf(3, "<Exit: WriteObj")
-
-	if jw.Obj == nil {
+	if jw.Entity == nil {
 		jw.Printf("{}")
 		return nil
 	}
 
-	var err error
 	extra := ""
-	myLevel := jw.Obj.Level
+	myLevel := jw.Entity.Level
 	log.VPrintf(4, "Level: %d", myLevel)
 
 	jw.Printf("{")
 	jw.Indent()
 
-	// Write the well-known attributes first, in order
-	usedProps := map[string]bool{}
-	for _, prop := range orderedProps {
-		usedProps[prop.key] = true
-		// Only show props that are for this level
-		ch := rune('0' + byte(myLevel))
-		if prop.levels != "" && !strings.ContainsRune(prop.levels, ch) {
-			continue
-		}
-
-		// Even if it has a func, if there's a val in Values let it override
-		val, ok := jw.Obj.Values[prop.key]
-		if !ok && prop.fn != nil {
-			val = prop.fn(jw)
-			ok = !IsNil(val)
-		}
-
-		// Only write it if we have a value
-		if ok {
-			buf, _ := json.MarshalIndent(val, jw.indent, "  ")
-			jw.Printf("%s\n%s%q: %s", extra, jw.indent, prop.key, string(buf))
-			extra = ","
-		}
-	}
-
-	// Now write the remaining properties/extensions (sorted)
-	for _, key := range SortedKeys(jw.Obj.Values) {
-		if usedProps[key] {
-			continue
-		}
-		val, _ := jw.Obj.Values[key]
-		buf, _ := json.Marshal(val)
+	jsonIt := func(e *Entity, info *RequestInfo, key string, val any) error {
+		buf, _ := json.MarshalIndent(val, jw.indent, "  ")
 		jw.Printf("%s\n%s%q: %s", extra, jw.indent, key, string(buf))
 		extra = ","
+		return nil
 	}
 
+	err := jw.Entity.SerializeProps(jw.info, jsonIt)
+	if err != nil {
+		panic(err)
+	}
+
+	// Now show all of the nested collections
 	if extra != "" {
 		extra += "\n" // just because it looks nicer with a blank line
 	}
 
 	jw.LoadCollections(myLevel) // load the list of current collections
-	jw.NextObj()
+	jw.NextEntity()
 
-	for jw.Obj != nil && jw.Obj.Level > myLevel {
-		extra = jw.WritePreCollections(extra, jw.Obj.Plural, myLevel)
+	for jw.Entity != nil && jw.Entity.Level > myLevel {
+		extra = jw.WritePreCollections(extra, jw.Entity.Plural, myLevel)
 
 		if extra, err = jw.WriteCollectionHeader(extra); err != nil {
 			return err
@@ -271,6 +187,7 @@ func (jw *JsonWriter) WriteObject() error {
 	}
 	extra = jw.WritePostCollections(extra, myLevel)
 
+	// And finally done with this Entity
 	jw.Outdent()
 	jw.Printf("\n%s}", jw.indent)
 
@@ -285,7 +202,7 @@ func (jw *JsonWriter) LoadCollections(level int) {
 			names = SortedKeys(jw.info.Registry.Model.Groups)
 		}
 	} else if level == 1 {
-		gName, _ := strings.CutSuffix(jw.Obj.Abstract, "/")
+		gName, _ := strings.CutSuffix(jw.Entity.Abstract, "/")
 		names = SortedKeys(jw.info.Registry.Model.Groups[gName].Resources)
 	} else if level == 2 {
 		names = []string{"versions"}
@@ -296,7 +213,7 @@ func (jw *JsonWriter) LoadCollections(level int) {
 	}
 	jw.unusedColls[level] = names
 
-	p := jw.Obj.Path + "/"
+	p := jw.Entity.Path + "/"
 	if p == "/" {
 		p = ""
 	}

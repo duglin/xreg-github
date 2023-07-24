@@ -42,7 +42,7 @@ func (r *Resource) Set(name string, val any) error {
 	if err != nil {
 		panic(err)
 	}
-	return SetProp(v, name, val)
+	return v.Set(name, val)
 }
 
 // Maybe replace error with a panic? same for other finds??
@@ -68,6 +68,10 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 					RegistrySID: r.RegistrySID,
 					DbSID:       NotNilString(row[0]),
 					UID:         id,
+
+					Level:    3,
+					Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
+					Abstract: r.Group.Plural + "/" + r.Plural + "/versions",
 				},
 				Resource: r,
 			}
@@ -115,6 +119,10 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 			RegistrySID: r.RegistrySID,
 			DbSID:       NewUUID(),
 			UID:         id,
+
+			Level:    3,
+			Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
+			Abstract: r.Group.Plural + "/" + r.Plural + "/versions",
 		},
 		Resource: r,
 	}
@@ -131,6 +139,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		return nil, err
 	}
 	v.Set("id", id)
+	// v.Set("epoch", 1)
 
 	err = r.Set("latestId", id)
 	if err != nil {
@@ -148,4 +157,15 @@ func (r *Resource) Delete() error {
 	defer log.VPrintf(3, "<Exit: Resource.Delete")
 
 	return DoOne(`DELETE FROM Resources WHERE SID=?`, r.DbSID)
+}
+
+// This neesd to match the merging algorithm in the 'LatestProps' view in SQL
+func (r *Resource) MergeProps(entity *Entity) {
+	for k, v := range entity.Props {
+		// Grab all of the Version's Props except 'id'
+		if k == "id" {
+			continue
+		}
+		r.Props[k] = v
+	}
 }

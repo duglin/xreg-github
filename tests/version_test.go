@@ -2,14 +2,12 @@ package tests
 
 import (
 	"testing"
-
-	"github.com/duglin/xreg-github/registry"
 )
 
 func TestCreateVersion(t *testing.T) {
-	reg, err := registry.NewRegistry("TestCreateVersion")
+	reg := NewRegistry("TestCreateVersion")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil && err == nil, "can't create reg")
+	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
@@ -46,10 +44,10 @@ func TestCreateVersion(t *testing.T) {
 	//      /d2/f1/v1.1
 
 	// Check basic GET first
-	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/v1",
+	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/v1?meta",
 		`{
   "id": "v1",
-  "self": "http:///dirs/d1/files/f1/versions/v1"
+  "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1"
 }
 `)
 	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/xxx", "404: Not found\n")
@@ -93,14 +91,14 @@ func TestCreateVersion(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{},"v3":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
-	xCheckGet(t, reg, "/dirs/d1/files/f1", `{
+	xCheckGet(t, reg, "/dirs/d1/files/f1?meta", `{
   "id": "f1",
-  "self": "http:///dirs/d1/files/f1",
+  "self": "http://localhost:8080/dirs/d1/files/f1",
   "latestId": "v3",
-  "latestUrl": "http:///dirs/d1/files/f1/versions/v3",
+  "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v3",
 
   "versionsCount": 3,
-  "versionsUrl": "http:///dirs/d1/files/f1/versions"
+  "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
 }
 `)
 	vt, err = f1.FindVersion("v2")

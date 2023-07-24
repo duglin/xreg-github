@@ -2,12 +2,10 @@ package tests
 
 import (
 	"testing"
-
-	"github.com/duglin/xreg-github/registry"
 )
 
 func TestSetResource(t *testing.T) {
-	reg, _ := registry.NewRegistry("TestSetResource")
+	reg := NewRegistry("TestSetResource")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
@@ -44,7 +42,7 @@ func TestSetResource(t *testing.T) {
 }
 
 func TestSetVersion(t *testing.T) {
-	reg, _ := registry.NewRegistry("TestSetVersion")
+	reg := NewRegistry("TestSetVersion")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
@@ -80,7 +78,7 @@ func TestSetVersion(t *testing.T) {
 }
 
 func TestSetDots(t *testing.T) {
-	reg, _ := registry.NewRegistry("TestSetDots")
+	reg := NewRegistry("TestSetDots")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
@@ -100,14 +98,14 @@ func TestSetDots(t *testing.T) {
 	xCheck(t, dir.Get("tags.many.dots") == "hello", "many.dots should work")
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
-  "self": "http:///dirs/d1",
+  "self": "http://localhost:8080/dirs/d1",
   "tags": {
     "many.dots": "hello",
     "xxx.yyy": "xxx"
   },
 
   "filesCount": 0,
-  "filesUrl": "http:///dirs/d1/files"
+  "filesUrl": "http://localhost:8080/dirs/d1/files"
 }
 `)
 
@@ -127,7 +125,7 @@ func TestSetDots(t *testing.T) {
 }
 
 func TestSetTags(t *testing.T) {
-	reg, _ := registry.NewRegistry("TestSetTags")
+	reg := NewRegistry("TestSetTags")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
@@ -192,7 +190,7 @@ func TestSetTags(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetTags",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "tags": {
     "r2": "123.234"
   },
@@ -200,7 +198,7 @@ func TestSetTags(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "self": "http:///dirs/d1",
+      "self": "http://localhost:8080/dirs/d1",
       "tags": {
         "dd": "dd.foo"
       },
@@ -208,9 +206,9 @@ func TestSetTags(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http:///dirs/d1/files/f1",
+          "self": "http://localhost:8080/dirs/d1/files/f1",
           "latestId": "v2",
-          "latestUrl": "http:///dirs/d1/files/f1/versions/v2",
+          "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
           "tags": {
             "2nd": "3rd",
             "ff": "ff.bar"
@@ -219,7 +217,7 @@ func TestSetTags(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http:///dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
               "tags": {
                 "vv": "987.234",
                 "vv2": "v11"
@@ -227,7 +225,7 @@ func TestSetTags(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "self": "http:///dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
               "tags": {
                 "2nd": "3rd",
                 "ff": "ff.bar"
@@ -235,22 +233,22 @@ func TestSetTags(t *testing.T) {
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http:///dirs/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http:///dirs/d1/files"
+      "filesUrl": "http://localhost:8080/dirs/d1/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http:///dirs"
+  "dirsUrl": "http://localhost:8080/dirs"
 }
 `)
 
 	file.Set("latestId", ver.UID)
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetTags",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "tags": {
     "r2": "123.234"
   },
@@ -258,7 +256,7 @@ func TestSetTags(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "self": "http:///dirs/d1",
+      "self": "http://localhost:8080/dirs/d1",
       "tags": {
         "dd": "dd.foo"
       },
@@ -266,9 +264,9 @@ func TestSetTags(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http:///dirs/d1/files/f1",
+          "self": "http://localhost:8080/dirs/d1/files/f1",
           "latestId": "v1",
-          "latestUrl": "http:///dirs/d1/files/f1/versions/v1",
+          "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
           "tags": {
             "vv": "987.234",
             "vv2": "v11"
@@ -277,7 +275,7 @@ func TestSetTags(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http:///dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
               "tags": {
                 "vv": "987.234",
                 "vv2": "v11"
@@ -285,7 +283,7 @@ func TestSetTags(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "self": "http:///dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
               "tags": {
                 "2nd": "3rd",
                 "ff": "ff.bar"
@@ -293,15 +291,15 @@ func TestSetTags(t *testing.T) {
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http:///dirs/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http:///dirs/d1/files"
+      "filesUrl": "http://localhost:8080/dirs/d1/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http:///dirs"
+  "dirsUrl": "http://localhost:8080/dirs"
 }
 `)
 }

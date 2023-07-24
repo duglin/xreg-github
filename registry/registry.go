@@ -29,7 +29,7 @@ func NewRegistry(id string) (*Registry, error) {
 		if err != nil {
 			return nil, err
 		}
-		return nil, fmt.Errorf("A registry with ID %q alredy exists", id)
+		return nil, fmt.Errorf("A registry with ID %q already exists", id)
 	}
 
 	dbSID := NewUUID()
@@ -46,6 +46,10 @@ func NewRegistry(id string) (*Registry, error) {
 			DbSID:       dbSID,
 			Plural:      "registries",
 			UID:         id,
+
+			Level:    0,
+			Path:     "",
+			Abstract: "",
 		},
 	}
 	reg.Set("id", reg.UID)
@@ -141,6 +145,10 @@ func FindRegistry(id string) (*Registry, error) {
 					DbSID:       NotNilString(row[0]),
 					Plural:      "registries",
 					UID:         id,
+
+					Level:    0,
+					Path:     "",
+					Abstract: "",
 				},
 			}
 			log.VPrintf(3, "Found one: %s", reg.DbSID)
@@ -241,8 +249,8 @@ func (reg *Registry) LoadModel() *Model {
 	return model
 }
 
-func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
-	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gt, id)
+func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
+	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gType, id)
 	defer log.VPrintf(3, "<Exit: FindGroup")
 
 	results, err := Query(`
@@ -251,11 +259,11 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 		JOIN ModelEntities AS m ON (m.SID=g.ModelSID)
 		LEFT JOIN Props AS p ON (p.EntitySID=g.SID)
 		WHERE g.RegistrySID=? AND g.UID=? AND m.Plural=?`,
-		reg.DbSID, id, gt)
+		reg.DbSID, id, gType)
 	defer results.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Error finding Group %q(%s): %s", id, gt, err)
+		return nil, fmt.Errorf("Error finding Group %q(%s): %s", id, gType, err)
 	}
 
 	g := (*Group)(nil)
@@ -265,8 +273,12 @@ func (reg *Registry) FindGroup(gt string, id string) (*Group, error) {
 				Entity: Entity{
 					RegistrySID: reg.DbSID,
 					DbSID:       NotNilString(row[0]),
-					Plural:      gt,
+					Plural:      gType,
 					UID:         id,
+
+					Level:    1,
+					Path:     gType + "/" + id,
+					Abstract: gType,
 				},
 				Registry: reg,
 			}
@@ -314,6 +326,10 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 			DbSID:       NewUUID(),
 			Plural:      gType,
 			UID:         id,
+
+			Level:    1,
+			Path:     gType + "/" + id,
+			Abstract: gType,
 		},
 		Registry: reg,
 	}
@@ -365,40 +381,191 @@ func (info *RequestInfo) AddInline(path string) error {
 	return fmt.Errorf("Invalid 'inline' value: %q", path)
 }
 
-func (info *RequestInfo) ShouldInline(objPath string) bool {
-	objPath = strings.Replace(objPath, "/", ".", -1)
+func (info *RequestInfo) ShouldInline(entityPath string) bool {
+	entityPath = strings.Replace(entityPath, "/", ".", -1)
 	for _, path := range info.Inlines {
-		log.VPrintf(4, "Inline check: %q in %q ?", objPath, path)
-		if path == "*" || objPath == path || strings.HasPrefix(path, objPath) {
+		log.VPrintf(4, "Inline check: %q in %q ?", entityPath, path)
+		if path == "*" || entityPath == path || strings.HasPrefix(path, entityPath) {
 			return true
 		}
 	}
 	return false
 }
 
-func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
-	info.Root = strings.Trim(info.Root, "/")
+func (reg *Registry) GETModel(w io.Writer, info *RequestInfo) error {
+	if len(info.Parts) > 1 {
+		info.ErrCode = http.StatusNotFound
+		return fmt.Errorf("404: Not found\n")
+	}
 
-	if len(info.Parts) > 0 && info.Parts[0] == "model" {
-		if len(info.Parts) > 1 {
-			info.ErrCode = http.StatusNotFound
-			return fmt.Errorf("404: Not found\n")
+	model := info.Registry.Model
+	if model == nil {
+		model = &Model{}
+	}
+
+	if info.Registry.Model == nil {
+		fmt.Fprint(w, "{}\n")
+		return nil
+	}
+
+	buf, err := json.MarshalIndent(model, "", "  ")
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	fmt.Fprintf(w, "%s\n", string(buf))
+	return nil
+}
+
+func (reg *Registry) GETContent(w io.Writer, info *RequestInfo) error {
+	query := `
+SELECT
+  RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+FROM FullTree WHERE RegSID=? AND `
+	args := []any{info.Registry.DbSID}
+
+	path := strings.Join(info.Parts, "/")
+
+	if info.VersionUID == "" {
+		query += `(Path=? OR Path LIKE ?)`
+		args = append(args, path, path+"/%")
+	} else {
+		query += `Path=?`
+		args = append(args, path)
+	}
+	query += " ORDER BY Path"
+
+	log.VPrintf(3, "Query:\n%s", SubQuery(query, args))
+
+	results, err := Query(query, args...)
+	defer results.Close()
+
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	entity := readNextEntity(results)
+	if entity == nil {
+		info.ErrCode = http.StatusNotFound
+		return fmt.Errorf("404: Not found\n")
+	}
+
+	var version *Entity
+	versionsCount := 0
+	if info.VersionUID == "" {
+		// We're on a Resource, so go find the right Version
+		vID := entity.Get("latestId").(string)
+		for {
+			v := readNextEntity(results)
+			if v == nil && version == nil {
+				info.ErrCode = http.StatusInternalServerError
+				return fmt.Errorf("500: Can't find version: %s", vID)
+			}
+			if v == nil {
+				break
+			}
+			versionsCount++
+			if v.UID == vID {
+				version = v
+			}
 		}
-		model := info.Registry.Model
-		if model == nil {
-			model = &Model{}
+	} else {
+		version = entity
+	}
+
+	log.VPrintf(3, "Entity: %#v", entity)
+	log.VPrintf(3, "Version: %#v", version)
+
+	headerIt := func(e *Entity, info *RequestInfo, key string, val any) error {
+		str := ""
+		if key == "tags" {
+			buf, _ := json.Marshal(val)
+			str = string(buf)
+		} else {
+			str = fmt.Sprintf("%v", val)
 		}
-		if info.Registry.Model == nil {
-			fmt.Fprint(w, "{}\n")
-			return nil
-		}
-		buf, err := json.MarshalIndent(model, "", "  ")
+		info.OriginalResponse.Header()["xRegistry-"+key] = []string{str}
+		return nil
+	}
+
+	err = entity.SerializeProps(info, headerIt)
+	if err != nil {
+		panic(err)
+	}
+
+	if info.VersionUID == "" {
+		info.OriginalResponse.Header()["xRegistry-versionsCount"] =
+			[]string{fmt.Sprintf("%d", versionsCount)}
+		info.OriginalResponse.Header()["xRegistry-versionsUrl"] =
+			[]string{info.BaseURL + "/" + entity.Path + "/versions"}
+	}
+
+	url := ""
+	if val := entity.Get("#resourceURL"); val != nil {
+		url = val.(string)
+	}
+	if url != "" {
+		info.OriginalResponse.Header().Add("Location", url)
+		info.OriginalResponse.WriteHeader(http.StatusSeeOther)
+		/*
+			http.Redirect(info.OriginalResponse, info.OriginalRequest, url,
+				http.StatusSeeOther)
+		*/
+		return nil
+	}
+
+	if val := entity.Get("#resourceProxyURL"); val != nil {
+		url = val.(string)
+	}
+	if url != "" {
+		// Just act as a proxy and copy the remote resource as our response
+		resp, err := http.Get(url)
 		if err != nil {
 			info.ErrCode = http.StatusInternalServerError
 			return fmt.Errorf("500: " + err.Error())
 		}
-		fmt.Fprintf(w, "%s\n", string(buf))
+		if resp.StatusCode/100 != 2 {
+			info.ErrCode = resp.StatusCode
+			return fmt.Errorf(fmt.Sprintf("%s: Remote error", resp.Status))
+		}
+
+		// Copy all HTTP headers
+		for header, value := range resp.Header {
+			info.OriginalResponse.Header()[header] = value
+		}
+
+		// Now copy the body
+		_, err = io.Copy(w, resp.Body)
+		if err != nil {
+			info.ErrCode = http.StatusInternalServerError
+			return fmt.Errorf("500: " + err.Error())
+		}
 		return nil
+	}
+
+	buf := version.Get("#resource")
+	if buf == nil {
+		// No data so just return
+		info.OriginalResponse.WriteHeader(200) // http.StatusNoContent)
+		return nil
+	}
+	info.OriginalResponse.Write(buf.([]byte))
+
+	return nil
+}
+
+func (reg *Registry) HTTPGet(w io.Writer, info *RequestInfo) error {
+	// TODO: see if we can reduce this down to just one query
+	info.Root = strings.Trim(info.Root, "/")
+
+	if len(info.Parts) > 0 && info.Parts[0] == "model" {
+		return reg.GETModel(w, info)
+	}
+
+	if info.What == "Entity" && info.ResourceUID != "" && !info.ShowMeta {
+		return reg.GETContent(w, info)
 	}
 
 	query, args, err := GenerateQuery(info)
@@ -412,17 +579,16 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 	}
 
 	jw := NewJsonWriter(w, info, results)
-
-	jw.NextObj()
+	jw.NextEntity()
 
 	if info.What == "Coll" {
 		_, err = jw.WriteCollection()
 	} else {
-		if jw.Obj == nil {
+		if jw.Entity == nil {
 			info.ErrCode = http.StatusNotFound
 			return fmt.Errorf("404: Not found\n")
 		}
-		err = jw.WriteObject()
+		err = jw.WriteEntity()
 	}
 
 	if err == nil {
@@ -436,24 +602,25 @@ func (reg *Registry) NewGet(w io.Writer, info *RequestInfo) error {
 }
 
 type RequestInfo struct {
-	Registry        *Registry
-	BaseURL         string
-	OriginalPath    string
-	OriginalRequest *http.Request `json:"-"`
-	Parts           []string
-	Root            string
-	Abstract        string
-	GroupType       string
-	GroupUID        string
-	ResourceType    string
-	ResourceUID     string
-	VersionUID      string
-	What            string // Registry, Coll, Entity
-	Inlines         []string
-	Filters         [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
-	ShowModel       bool
-	HideProps       bool // Hide props - for less verbose testing
-	ErrCode         int
+	Registry         *Registry
+	BaseURL          string
+	OriginalPath     string
+	OriginalRequest  *http.Request       `json:"-"`
+	OriginalResponse http.ResponseWriter `json:"-"`
+	Parts            []string
+	Root             string
+	Abstract         string
+	GroupType        string
+	GroupUID         string
+	ResourceType     string
+	ResourceUID      string
+	VersionUID       string
+	What             string // Registry, Coll, Entity
+	Inlines          []string
+	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
+	ShowModel        bool
+	ShowMeta         bool
+	ErrCode          int
 }
 
 type FilterExpr struct {
@@ -462,14 +629,16 @@ type FilterExpr struct {
 	HasEqual bool
 }
 
-func (reg *Registry) ParseRequest(r *http.Request) (*RequestInfo, error) {
+func (reg *Registry) ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) {
 	path := strings.Trim(r.URL.Path, " /")
 	info := &RequestInfo{
-		OriginalPath:    path,
-		OriginalRequest: r,
-		Registry:        reg,
-		BaseURL:         "http://" + r.Host,
-		ShowModel:       r.URL.Query().Has("model"),
+		OriginalPath:     path,
+		OriginalRequest:  r,
+		OriginalResponse: w,
+		Registry:         reg,
+		BaseURL:          "http://" + r.Host,
+		ShowModel:        r.URL.Query().Has("model"),
+		ShowMeta:         r.URL.Query().Has("meta"),
 	}
 
 	defer func() { log.VPrintf(3, "Info:\n%s\n", ToJSON(info)) }()
@@ -638,30 +807,11 @@ func (info *RequestInfo) ParseRequestURL() error {
 }
 
 func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
-	q := ""
+	query := ""
 	args := []any{}
 
-	// Remove entities that are higher than the GET PATH specified
-	addPath := func() string {
-		subsetPath := ""
-		if info.What != "Registry" {
-			p := strings.Join(info.Parts, "/")
-			subsetPath += "\nAND "
-			if info.What == "Coll" {
-				subsetPath += "Path LIKE ?"
-				args = append(args, p+"/%")
-			} else if info.What == "Entity" {
-				subsetPath += "(Path=? OR Path LIKE ?)"
-				args = append(args, p, p+"/%")
-			} else {
-				panic("what!")
-			}
-		}
-		return subsetPath
-	}
-
-	// Make sure we include the root object even if the filter excludes it
-	rootObjQuery := func() string {
+	// Make sure we include the root entity even if the filter excludes it
+	rootEntityQuery := func() string {
 		return ""
 		res := ""
 
@@ -675,34 +825,42 @@ func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
 		return res
 	}
 
-	if len(info.Filters) == 0 {
-		args = []interface{}{info.Registry.DbSID}
-
-		q = fmt.Sprintf("SELECT " +
-			"Level,Plural,UID,PropName,PropValue,PropType,Path,Abstract " +
-			"FROM FullTree WHERE RegSID=?" + addPath())
-	} else {
-		args = []interface{}{info.Registry.DbSID}
-		q = fmt.Sprintf(`
+	args = []interface{}{info.Registry.DbSID}
+	query = `
 SELECT
-  Level,Plural,UID,PropName,PropValue,PropType,Path,Abstract
-FROM FullTree WHERE
-RegSID=?` + addPath() + `
+  RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+FROM FullTree WHERE RegSID=?`
+
+	// Remove entities that are higher than the GET PATH specified
+	if info.What != "Registry" {
+		p := strings.Join(info.Parts, "/")
+		query += "\nAND "
+		if info.What == "Coll" {
+			query += "Path LIKE ?"
+			args = append(args, p+"/%")
+		} else if info.What == "Entity" {
+			query += "(Path=? OR Path LIKE ?)"
+			args = append(args, p, p+"/%")
+		}
+	}
+
+	if len(info.Filters) != 0 {
+		query += `
 AND
 (
-` + rootObjQuery() + `
+` + rootEntityQuery() + `
 eSID IN ( -- eSID from query
   WITH RECURSIVE cte(eSID,ParentSID,Path) AS (
     SELECT eSID,ParentSID,Path FROM Entities
-    WHERE eSID in ( -- start of the OR Filter groupings`)
+    WHERE eSID in ( -- start of the OR Filter groupings`
 		firstOr := true
 		for _, OrFilters := range info.Filters {
 			if !firstOr {
-				q += `
+				query += `
       UNION -- Adding another OR`
 			}
 			firstOr = false
-			q += `
+			query += `
       -- start of one Filter AND grouping (expre1 AND expr2)
       -- below find SIDs of interest (then find their leaves)
       SELECT list.eSID FROM (
@@ -714,12 +872,12 @@ eSID IN ( -- eSID from query
 			for _, filter := range OrFilters { // AndFilters
 				andCount++
 				if !firstAnd {
-					q += `
+					query += `
           UNION ALL`
 				}
 				firstAnd = false
 				check := ""
-				args = append(args, filter.Path)
+				args = append(args, info.Registry.DbSID, filter.Path)
 				if filter.HasEqual {
 					args = append(args, filter.Value)
 					check = "PropValue=?"
@@ -727,12 +885,14 @@ eSID IN ( -- eSID from query
 					check = "PropValue IS NOT NULL"
 				}
 				// BINARY means case-sensitive for that operand
-				q += `
+				query += `
           SELECT eSID,Path FROM FullTree
-          WHERE (BINARY CONCAT(IF(Abstract<>'',CONCAT(REPLACE(Abstract,'/','.'),'.'),''),PropName)=? AND
+          WHERE
+            RegSID=? AND
+            (BINARY CONCAT(IF(Abstract<>'',CONCAT(REPLACE(Abstract,'/','.'),'.'),''),PropName)=? AND
                ` + check + `)`
 			} // end of AndFilter
-			q += `
+			query += `
           -- end of expr1
         ) AS res ON ( res.eSID=e1.eSID )
         JOIN Entities AS e2 ON (
@@ -747,7 +907,7 @@ eSID IN ( -- eSID from query
 			args = append(args, andCount)
 		} // end of OrFilter
 
-		q += `
+		query += `
     ) -- end of all OR Filter groupings
     UNION ALL SELECT e.eSID,e.ParentSID,e.Path FROM Entities AS e
     INNER JOIN cte ON e.eSID=cte.ParentSID)
@@ -757,8 +917,8 @@ ORDER BY Path ;
 `
 	}
 
-	log.VPrintf(3, "Query:\n%s\n\n", SubQuery(q, args))
-	return q, args, nil
+	log.VPrintf(3, "Query:\n%s\n\n", SubQuery(query, args))
+	return query, args, nil
 }
 
 func SubQuery(query string, args []interface{}) string {
@@ -792,7 +952,6 @@ TODO:
 - see if we can get rid of the recursion stuff
 - should we add "/" to then end of the Path for non-collections, then
   we can just look for PATH/%  and not PATH + PATH/%
-- add RegSID checks to the filtering query
 - can we set the registry's path to "" instead of NULL ?? already did, test it
 - add support for boolean types (set/get/filter)
 

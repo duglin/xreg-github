@@ -2,12 +2,11 @@ package tests
 
 import (
 	"testing"
-
-	"github.com/duglin/xreg-github/registry"
+	// "github.com/duglin/xreg-github/registry"
 )
 
 func TestBasicFilters(t *testing.T) {
-	reg, _ := registry.NewRegistry("TestBasicFilters")
+	reg := NewRegistry("TestBasicFilters")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
@@ -37,13 +36,13 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?",
 			Exp: `{
   "id": "TestBasicFilters",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "tags": {
     "reg1": "1ger"
   },
 
   "dirsCount": 2,
-  "dirsUrl": "http:///dirs"
+  "dirsUrl": "http://localhost:8080/dirs"
 }
 `,
 		},
@@ -143,16 +142,16 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version - match",
-			URL:  "dirs/d1/files/f1/versions/v1?inline&filter=id=v1",
+			URL:  "dirs/d1/files/f1/versions/v1?inline&filter=id=v1&meta",
 			Exp: `{
   "id": "v1",
-  "self": "http:///dirs/d1/files/f1/versions/v1"
+  "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1"
 }
 `,
 		},
 		{
 			Name: "Get/filter version - no match",
-			URL:  "dirs/d1/files/f1/versions/v1?inline&oneline&filter=id=xxx",
+			URL:  "dirs/d1/files/f1/versions/v1?inline&oneline&filter=id=xxx&meta",
 			// Nothing, matched, so 404
 			Exp: `404: Not found`,
 		},
@@ -169,13 +168,13 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?filter=tags.reg1=1ger",
 			Exp: `{
   "id": "TestBasicFilters",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "tags": {
     "reg1": "1ger"
   },
 
   "dirsCount": 2,
-  "dirsUrl": "http:///dirs"
+  "dirsUrl": "http://localhost:8080/dirs"
 }
 `,
 		},
@@ -184,13 +183,13 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?filter=dirs.files.tags.file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "tags": {
     "reg1": "1ger"
   },
 
   "dirsCount": 1,
-  "dirsUrl": "http:///dirs"
+  "dirsUrl": "http://localhost:8080/dirs"
 }
 `,
 		},
@@ -199,7 +198,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?inline&filter=dirs.files.tags.file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "tags": {
     "reg1": "1ger"
   },
@@ -207,14 +206,14 @@ func TestBasicFilters(t *testing.T) {
   "dirs": {
     "d2": {
       "id": "d2",
-      "self": "http:///dirs/d2",
+      "self": "http://localhost:8080/dirs/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http:///dirs/d2/files/f2",
+          "self": "http://localhost:8080/dirs/d2/files/f2",
           "latestId": "v1.1",
-          "latestUrl": "http:///dirs/d2/files/f2/versions/v1.1",
+          "latestUrl": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
           "tags": {
             "file1": "1elif"
           },
@@ -222,26 +221,26 @@ func TestBasicFilters(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http:///dirs/d2/files/f2/versions/v1"
+              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
-              "self": "http:///dirs/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
               "tags": {
                 "file1": "1elif"
               }
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http:///dirs/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8080/dirs/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http:///dirs/d2/files"
+      "filesUrl": "http://localhost:8080/dirs/d2/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http:///dirs"
+  "dirsUrl": "http://localhost:8080/dirs"
 }
 `,
 		},
@@ -265,7 +264,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?inline&filter=dirs.files.tags.file1",
 			Exp: `{
   "id": "TestBasicFilters",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "tags": {
     "reg1": "1ger"
   },
@@ -273,14 +272,14 @@ func TestBasicFilters(t *testing.T) {
   "dirs": {
     "d2": {
       "id": "d2",
-      "self": "http:///dirs/d2",
+      "self": "http://localhost:8080/dirs/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http:///dirs/d2/files/f2",
+          "self": "http://localhost:8080/dirs/d2/files/f2",
           "latestId": "v1.1",
-          "latestUrl": "http:///dirs/d2/files/f2/versions/v1.1",
+          "latestUrl": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
           "tags": {
             "file1": "1elif"
           },
@@ -288,26 +287,26 @@ func TestBasicFilters(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http:///dirs/d2/files/f2/versions/v1"
+              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
-              "self": "http:///dirs/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
               "tags": {
                 "file1": "1elif"
               }
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http:///dirs/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8080/dirs/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http:///dirs/d2/files"
+      "filesUrl": "http://localhost:8080/dirs/d2/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http:///dirs"
+  "dirsUrl": "http://localhost:8080/dirs"
 }
 `,
 		},
@@ -322,7 +321,7 @@ func TestBasicFilters(t *testing.T) {
 }
 
 func TestANDORFilters(t *testing.T) {
-	reg, _ := registry.NewRegistry("TestANDORFilters")
+	reg := NewRegistry("TestANDORFilters")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")

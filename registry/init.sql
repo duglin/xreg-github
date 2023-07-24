@@ -120,7 +120,6 @@ CREATE TABLE Versions (
     ResourceContentSID  VARCHAR(64),
 
     PRIMARY KEY (SID),
-    INDEX (ResourceSID, UID),
     UNIQUE INDEX (ResourceSID, UID)
 );
 

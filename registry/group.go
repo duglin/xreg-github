@@ -42,6 +42,10 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 					DbSID:       NotNilString(row[0]),
 					Plural:      rType,
 					UID:         id,
+
+					Level:    2,
+					Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
+					Abstract: g.Plural + "/" + rType,
 				},
 				Group: g,
 			}
@@ -87,6 +91,10 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 			DbSID:       NewUUID(),
 			Plural:      rType,
 			UID:         id,
+
+			Level:    2,
+			Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
+			Abstract: g.Plural + "/" + rType,
 		},
 		Group: g,
 	}

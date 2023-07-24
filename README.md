@@ -35,3 +35,4 @@ TODOs:
 - GET of resources blobs - all 3 variants(in DB, URL, proxy URL)
 - PUT/POST operations
 - see if we can prepend Path with / or append it with /
+- Don't allow creation of Resource w/o version - for HTTP PUT

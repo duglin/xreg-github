@@ -16,9 +16,39 @@ type Entity struct {
 	Plural      string
 	UID         string // Entity's UID
 	Props       map[string]any
+
+	// These were added just for convinience and so we can use the same
+	// struct for traversing the SQL results
+	Level    int
+	Path     string
+	Abstract string
 }
 
 func (e *Entity) Get(name string) any {
+	if name == "#resource" {
+		results, err := Query(`
+            SELECT Content
+            FROM ResourceContents
+            WHERE VersionSID=?`, e.DbSID)
+		defer results.Close()
+
+		if err != nil {
+			return fmt.Errorf("Error finding contents %q: %s", e.DbSID, err)
+		}
+
+		row := results.NextRow()
+		if row == nil {
+			// No data so just return
+			return nil
+		}
+
+		if results.NextRow() != nil {
+			panic("too many results")
+		}
+
+		return (*(row[0])).([]byte)
+	}
+
 	val, _ := e.Props[name]
 	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, name, val)
 	return val
@@ -180,6 +210,15 @@ func SetProp(entity any, name string, val any) error {
 		log.Fatalf("RegistrySID should not be empty")
 	}
 
+	// #resource is special and is saved in it's own table
+	if name == "#resource" {
+		// The actual contents
+		err := DoOne(`
+            INSERT INTO ResourceContents(VersionSID, Content)
+            VALUES(?,?)`, e.DbSID, val)
+		return err
+	}
+
 	var err error
 	if val == nil {
 		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
@@ -216,6 +255,7 @@ func SetProp(entity any, name string, val any) error {
 		return fmt.Errorf("Error updating prop(%s/%v): %s", name, val, err)
 	}
 
+	// Technically this is old, we should just assume everything is in Props
 	field := reflect.ValueOf(entity).Elem().FieldByName(name)
 	if !field.IsValid() {
 		field := reflect.ValueOf(e).Elem().FieldByName("Props")
@@ -247,76 +287,172 @@ func SetProp(entity any, name string, val any) error {
 	return nil
 }
 
-type Obj struct {
-	Level    int
-	Plural   string
-	UID      string
-	Path     string
-	Abstract string
-	Values   map[string]any
-}
+func readNextEntity(results *Result) *Entity {
+	entity := (*Entity)(nil)
 
-func readObj(results *Result) *Obj {
-	obj := (*Obj)(nil)
-
+	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1      2     3    4     5         6         7     8      9
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		level := int((*row[0]).(int64))
-		plural := NotNilString(row[1])
-		uid := NotNilString(row[2])
+		// log.Printf("Row(%d): %#v", len(row), row)
+		level := int((*row[1]).(int64))
+		plural := NotNilString(row[2])
+		uid := NotNilString(row[4])
 
-		if obj == nil {
-			obj = &Obj{
+		if entity == nil {
+			entity = &Entity{
+				RegistrySID: NotNilString(row[0]),
+				DbSID:       NotNilString(row[3]),
+				Plural:      plural,
+				UID:         uid,
+				Props:       map[string]any{},
+
 				Level:    level,
-				Plural:   plural,
-				UID:      uid,
-				Path:     NotNilString(row[6]),
-				Abstract: NotNilString(row[7]),
-				Values:   map[string]any{},
+				Path:     NotNilString(row[8]),
+				Abstract: NotNilString(row[9]),
 			}
 		} else {
-			if obj.Level != level || obj.Plural != plural || obj.UID != uid {
+			// If the next row isn't part of the current Entity then
+			// push it back into the result set so we'll grab it the next time
+			// we're called. And exit.
+			if entity.Level != level || entity.Plural != plural || entity.UID != uid {
 				results.Push()
 				break
 			}
 		}
 
-		propName := NotNilString(row[3])
-		propVal := NotNilString(row[4])
-		propType := NotNilString(row[5])
+		propName := NotNilString(row[5])
+		propVal := NotNilString(row[6])
+		propType := NotNilString(row[7])
 
 		if propType == "s" {
-			obj.Values[propName] = propVal
+			entity.Props[propName] = propVal
 		} else if propType == "b" {
-			obj.Values[propName] = (propVal == "true")
+			entity.Props[propName] = (propVal == "true")
 		} else if propType == "i" {
 			tmpInt, err := strconv.Atoi(propVal)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing int: %s", propVal))
 			}
-			obj.Values[propName] = tmpInt
+			entity.Props[propName] = tmpInt
 		} else if propType == "f" {
 			tmpFloat, err := strconv.ParseFloat(propVal, 64)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing float: %s", propVal))
 			}
-			obj.Values[propName] = tmpFloat
+			entity.Props[propName] = tmpFloat
 		} else {
 			panic(fmt.Sprintf("bad type: %v", propType))
 		}
 	}
 
-	return obj
+	return entity
 }
 
-/*
-type ResultsContext struct {
-	results [][]*any
-	pos     int
+// This allows for us to choose the order and define custom logic per prop
+var orderedProps = []struct {
+	key    string                          // prop name
+	levels string                          // only show for these levels
+	fn     func(*Entity, *RequestInfo) any // caller will Marshal the 'any'
+}{
+	{"specVersion", "", nil},
+	{"id", "", nil},
+	{"name", "", nil},
+	{"epoch", "23", nil},
+	{"self", "", func(e *Entity, info *RequestInfo) any {
+		return info.BaseURL + "/" + e.Path
+	}},
+	{"latestId", "2", nil},
+	{"latestUrl", "2", func(e *Entity, info *RequestInfo) any {
+		val := e.Props["latestId"]
+		if IsNil(val) {
+			return nil
+		}
+		return info.BaseURL + "/" + e.Path + "/versions/" + val.(string)
+	}},
+	{"description", "", nil},
+	{"docs", "", nil},
+	{"tags", "", func(e *Entity, info *RequestInfo) any {
+		var res map[string]string
+
+		for _, key := range SortedKeys(e.Props) {
+			if key[0] > 't' {
+				break
+			}
+
+			if strings.HasPrefix(key, "tags.") {
+				val, _ := e.Props[key]
+				if res == nil {
+					res = map[string]string{}
+				}
+				// Convert it to a string per the spec
+				res[key[5:]] = fmt.Sprintf("%v", val)
+			}
+		}
+		return res
+	}},
+	{"createdBy", "", nil},
+	{"createdOn", "", nil},
+	{"modifiedBy", "", nil},
+	{"modifiedOn", "", nil},
+	{"model", "0", func(e *Entity, info *RequestInfo) any {
+		if info.ShowModel {
+			if info.Registry.Model == nil {
+				return &Model{}
+			}
+			return info.Registry.Model
+		}
+		return nil
+	}},
 }
 
-func (rc *ResultsContext) NextObj() *Obj {
-	obj, nextPos := readObj(rc.results, rc.pos)
-	rc.pos = nextPos
-	return obj
+// This is used to serialize Prop regardless of the format.
+func (e *Entity) SerializeProps(info *RequestInfo,
+	fn func(*Entity, *RequestInfo, string, any) error) error {
+
+	usedProps := map[string]bool{}
+
+	for _, prop := range orderedProps {
+		usedProps[prop.key] = true
+
+		// Only show props that are for this level
+		ch := rune('0' + byte(e.Level))
+		if prop.levels != "" && !strings.ContainsRune(prop.levels, ch) {
+			continue
+		}
+
+		// Even if it has a func, if there's a val in Values let it override
+		val, ok := e.Props[prop.key]
+		if !ok && prop.fn != nil {
+			val = prop.fn(e, info)
+		}
+
+		// Only write it if we have a value
+		if !IsNil(val) {
+			err := fn(e, info, prop.key, val)
+			if err != nil {
+				log.Printf("Error serializing %q(%v): %s", prop.key, val, err)
+				return err
+			}
+		}
+	}
+
+	// Now write the remaining properties (sorted)
+	for _, key := range SortedKeys(e.Props) {
+		// Keys that start with '#' are for internal use only
+		if key[0] == '#' {
+			continue
+		}
+		// "tags." is special and we know we did it above
+		if usedProps[key] || strings.HasPrefix(key, "tags.") {
+			continue
+		}
+		val, _ := e.Props[key]
+		err := fn(e, info, key, val)
+		if err != nil {
+			log.Printf("Error serializing %q(%v): %s", key, val, err)
+			return err
+		}
+	}
+
+	return nil
 }
-*/

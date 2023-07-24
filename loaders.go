@@ -64,7 +64,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		// log.VPrintf(3, "New registry:\n%#v", reg)
 
-		reg.Set("baseURL", "http://soaphub.org:8585/")
+		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "APIs-guru Registry")
 		reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory")
 		reg.Set("specVersion", "0.5")
@@ -177,8 +177,8 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		base := "https://raw.githubusercontent.com/APIs-guru/" +
 			"openapi-directory/main/APIs/"
 		// version.Set("resourceURL", base + header.Name[i+6:])
-		// version.Set("resourceContent", buf.Bytes())
-		version.Set("resourceProxyURL", base+header.Name[i+6:])
+		// version.Set("resource", buf.Bytes())
+		version.Set("#resourceProxyURL", base+header.Name[i+6:])
 	}
 
 	return reg
@@ -190,7 +190,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		reg, err = registry.NewRegistry("SampleRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 
-		reg.Set("baseURL", "http://soaphub.org:8585/")
+		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Test Registry")
 		reg.Set("description", "A test reg")
 		reg.Set("specVersion", "0.5")
@@ -216,7 +216,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		reg, err = registry.NewRegistry("SampleRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 
-		reg.Set("baseURL", "http://soaphub.org:8585/")
+		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Test Registry")
 		reg.Set("description", "A test reg")
 		reg.Set("specVersion", "0.5")

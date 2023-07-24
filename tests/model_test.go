@@ -2,20 +2,17 @@ package tests
 
 import (
 	"testing"
-
-	"github.com/duglin/xreg-github/registry"
 )
 
 func TestNoModel(t *testing.T) {
-	reg, err := registry.NewRegistry("TestNoModel")
+	reg := NewRegistry("TestNoModel")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
 	xCheckGet(t, reg, "/model", "{}\n")
 	xCheckGet(t, reg, "?model", `{
   "id": "TestNoModel",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "model": {}
 }
 `)
@@ -24,9 +21,8 @@ func TestNoModel(t *testing.T) {
 }
 
 func TestGroupModelCreate(t *testing.T) {
-	reg, err := registry.NewRegistry("TestGroupModelCreate")
+	reg := NewRegistry("TestGroupModelCreate")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
 	gm, err := reg.AddGroupModel("dirs", "dir", "schema-url")
@@ -67,9 +63,8 @@ func TestGroupModelCreate(t *testing.T) {
 }
 
 func TestResourceModelCreate(t *testing.T) {
-	reg, err := registry.NewRegistry("TestResourceModels")
+	reg := NewRegistry("TestResourceModels")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
 	gm, err := reg.AddGroupModel("dirs", "dir", "dirs-url")
@@ -138,9 +133,8 @@ func TestResourceModelCreate(t *testing.T) {
 }
 
 func TestMultModelCreate(t *testing.T) {
-	reg, err := registry.NewRegistry("TestMultModelCreate")
+	reg := NewRegistry("TestMultModelCreate")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
 	gm1, err := reg.AddGroupModel("gms1", "gm1", "gm1-url")
@@ -211,9 +205,8 @@ func TestMultModelCreate(t *testing.T) {
 }
 
 func TestModelAPI(t *testing.T) {
-	reg, err := registry.NewRegistry("TestModelAPI")
+	reg := NewRegistry("TestModelAPI")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
 	gm, _ := reg.AddGroupModel("dirs1", "dir1", "")
@@ -227,9 +220,8 @@ func TestModelAPI(t *testing.T) {
 }
 
 func TestMultModel2Create(t *testing.T) {
-	reg, err := registry.NewRegistry("TestMultModel2Create")
+	reg := NewRegistry("TestMultModel2Create")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg created didn't work")
 
 	gm, _ := reg.AddGroupModel("dirs1", "dir1", "")
@@ -255,7 +247,7 @@ func TestMultModel2Create(t *testing.T) {
 
 	xCheckGet(t, reg, "?model&inline", `{
   "id": "TestMultModel2Create",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "model": {
     "groups": {
       "dirs1": {
@@ -290,91 +282,91 @@ func TestMultModel2Create(t *testing.T) {
   "dirs1": {
     "d1": {
       "id": "d1",
-      "self": "http:///dirs1/d1",
+      "self": "http://localhost:8080/dirs1/d1",
 
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http:///dirs1/d1/files/f1",
+          "self": "http://localhost:8080/dirs1/d1/files/f1",
           "latestId": "v2",
-          "latestUrl": "http:///dirs1/d1/files/f1/versions/v2",
+          "latestUrl": "http://localhost:8080/dirs1/d1/files/f1/versions/v2",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http:///dirs1/d1/files/f1/versions/v1"
+              "self": "http://localhost:8080/dirs1/d1/files/f1/versions/v1"
             },
             "v2": {
               "id": "v2",
-              "self": "http:///dirs1/d1/files/f1/versions/v2"
+              "self": "http://localhost:8080/dirs1/d1/files/f1/versions/v2"
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http:///dirs1/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8080/dirs1/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http:///dirs1/d1/files"
+      "filesUrl": "http://localhost:8080/dirs1/d1/files"
     },
     "d2": {
       "id": "d2",
-      "self": "http:///dirs1/d2",
+      "self": "http://localhost:8080/dirs1/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http:///dirs1/d2/files/f2",
+          "self": "http://localhost:8080/dirs1/d2/files/f2",
           "latestId": "v1.1",
-          "latestUrl": "http:///dirs1/d2/files/f2/versions/v1.1",
+          "latestUrl": "http://localhost:8080/dirs1/d2/files/f2/versions/v1.1",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http:///dirs1/d2/files/f2/versions/v1"
+              "self": "http://localhost:8080/dirs1/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
-              "self": "http:///dirs1/d2/files/f2/versions/v1.1"
+              "self": "http://localhost:8080/dirs1/d2/files/f2/versions/v1.1"
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http:///dirs1/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8080/dirs1/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http:///dirs1/d2/files"
+      "filesUrl": "http://localhost:8080/dirs1/d2/files"
     }
   },
   "dirs1Count": 2,
-  "dirs1Url": "http:///dirs1",
+  "dirs1Url": "http://localhost:8080/dirs1",
   "dirs2": {
     "d2": {
       "id": "d2",
-      "self": "http:///dirs2/d2",
+      "self": "http://localhost:8080/dirs2/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http:///dirs2/d2/files/f2",
+          "self": "http://localhost:8080/dirs2/d2/files/f2",
           "latestId": "v1",
-          "latestUrl": "http:///dirs2/d2/files/f2/versions/v1",
+          "latestUrl": "http://localhost:8080/dirs2/d2/files/f2/versions/v1",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http:///dirs2/d2/files/f2/versions/v1"
+              "self": "http://localhost:8080/dirs2/d2/files/f2/versions/v1"
             }
           },
           "versionsCount": 1,
-          "versionsUrl": "http:///dirs2/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8080/dirs2/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http:///dirs2/d2/files"
+      "filesUrl": "http://localhost:8080/dirs2/d2/files"
     }
   },
   "dirs2Count": 1,
-  "dirs2Url": "http:///dirs2"
+  "dirs2Url": "http://localhost:8080/dirs2"
 }
 `)
 

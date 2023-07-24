@@ -2,14 +2,12 @@ package tests
 
 import (
 	"testing"
-
-	"github.com/duglin/xreg-github/registry"
 )
 
 func TestCreateResource(t *testing.T) {
-	reg, err := registry.NewRegistry("TestCreateResource")
+	reg := NewRegistry("TestCreateResource")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil && err == nil, "can't create reg")
+	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
@@ -41,15 +39,15 @@ func TestCreateResource(t *testing.T) {
 	//      /d2/f2/v1
 
 	// Check basic GET first
-	xCheckGet(t, reg, "/dirs/d1/files/f1",
+	xCheckGet(t, reg, "/dirs/d1/files/f1?meta",
 		`{
   "id": "f1",
-  "self": "http:///dirs/d1/files/f1",
+  "self": "http://localhost:8080/dirs/d1/files/f1",
   "latestId": "v2",
-  "latestUrl": "http:///dirs/d1/files/f1/versions/v2",
+  "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
 
   "versionsCount": 2,
-  "versionsUrl": "http:///dirs/d1/files/f1/versions"
+  "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
 }
 `)
 	xCheckGet(t, reg, "/dirs/d1/files/xxx", "404: Not found\n")
@@ -79,9 +77,9 @@ func TestCreateResource(t *testing.T) {
 }
 
 func TestResourceSet(t *testing.T) {
-	reg, err := registry.NewRegistry("TestResourceSet")
+	reg := NewRegistry("TestResourceSet")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil && err == nil, "can't create reg")
+	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)

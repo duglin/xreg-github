@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	gourl "net/url"
 	"os"
 	"path"
 	"regexp"
@@ -21,7 +22,14 @@ func TestMain(m *testing.M) {
 	registry.CreateDB("testreg")
 	registry.OpenDB("testreg")
 
+	// Start HTTP server
+	server := registry.NewServer(nil, 8080).Start()
+
+	// Run the tests
 	rc := m.Run()
+
+	// Shutdown HTTP server
+	server.Close()
 
 	if rc == 0 {
 		registry.DeleteDB("testreg")
@@ -29,9 +37,24 @@ func TestMain(m *testing.M) {
 	os.Exit(rc)
 }
 
+func NewRegistry(name string) *registry.Registry {
+	var err error
+	registry.Reg, err = registry.NewRegistry(name)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating registry %q: %s", name, err)
+		os.Exit(1)
+	}
+	return registry.Reg
+}
+
 func PassDeleteReg(t *testing.T, reg *registry.Registry) {
 	if !t.Failed() {
-		reg.Delete()
+		if os.Getenv("NO_DELETE_REGISTRY") == "" {
+			// We do this to make sure that we can support more than
+			// one registry in the DB at a time
+			reg.Delete()
+		}
+		registry.Reg = nil
 	}
 }
 
@@ -75,36 +98,22 @@ func xNoErr(t *testing.T, err error) bool {
 }
 
 func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) bool {
-	buf := &bytes.Buffer{}
-	out := io.Writer(buf)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if !xNoErr(t, err) {
-		return false
-	}
-	info, err := reg.ParseRequest(req)
-	if err != nil {
-		return xCheckEqual(t, "URL: "+url+"\n", err.Error(), expected)
-	}
-	xCheck(t, info.ErrCode == 0, Caller()+":info.ec != 0")
-	if err = reg.NewGet(out, info); err != nil {
-		errMsg := err.Error()
-		if req.URL.Query().Has("oneline") {
-			errMsg = string(OneLine([]byte(errMsg)))
-		}
-		return xCheckEqual(t, "URL: "+url+"\n", errMsg, expected)
-	}
+	res, err := http.Get("http://localhost:8080/" + url)
 	if !xNoErr(t, err) {
 		return false
 	}
 
-	if req.URL.Query().Has("noprops") {
+	body, err := io.ReadAll(res.Body)
+	buf := bytes.NewBuffer(body)
+	daURL, _ := gourl.Parse(url)
+
+	if daURL.Query().Has("noprops") {
 		buf = bytes.NewBuffer(RemoveProps(buf.Bytes()))
 		// expected = string(RemoveProps([]byte(expected)))
 	}
-	if req.URL.Query().Has("oneline") {
+	if daURL.Query().Has("oneline") {
 		buf = bytes.NewBuffer(OneLine(buf.Bytes()))
-		// expected = string(OneLine([]byte(expected)))
+		expected = string(OneLine([]byte(expected)))
 	}
 
 	return xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
@@ -185,4 +194,9 @@ func HTMLify(r *http.Request, buf []byte) []byte {
 		r.URL.RawQuery, r.URL.RawQuery)
 
 	return re.ReplaceAll(buf, []byte(repl))
+}
+
+func NotNilString(val any) string {
+	b := (val).([]byte)
+	return string(b)
 }

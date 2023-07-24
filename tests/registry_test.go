@@ -7,16 +7,15 @@ import (
 )
 
 func TestCreateRegistry(t *testing.T) {
-	reg, err := registry.NewRegistry("TestCreateRegistry")
+	reg := NewRegistry("TestCreateRegistry")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	// Check basic GET first
 	xCheckGet(t, reg, "/",
 		`{
   "id": "TestCreateRegistry",
-  "self": "http:///"
+  "self": "http://localhost:8080/"
 }
 `)
 	xCheckGet(t, reg, "/xxx", "Unknown Group type: \"xxx\"")
@@ -43,7 +42,7 @@ func TestCreateRegistry(t *testing.T) {
 
 	xCheckGet(t, reg, "", `{
   "id": "TestCreateRegistry",
-  "self": "http:///"
+  "self": "http://localhost:8080/"
 }
 `)
 }
@@ -89,7 +88,7 @@ func TestFindRegistry(t *testing.T) {
 }
 
 func TestRegistryProps(t *testing.T) {
-	reg, _ := registry.NewRegistry("TestCreateRegistry")
+	reg := NewRegistry("TestRegistryProps")
 	defer PassDeleteReg(t, reg)
 
 	reg.Set("specVersion", "x.y")
@@ -100,9 +99,9 @@ func TestRegistryProps(t *testing.T) {
 
 	xCheckGet(t, reg, "", `{
   "specVersion": "x.y",
-  "id": "TestCreateRegistry",
+  "id": "TestRegistryProps",
   "name": "nameIt",
-  "self": "http:///",
+  "self": "http://localhost:8080/",
   "description": "a very cool reg",
   "docs": "https://docs.com",
   "tags": {

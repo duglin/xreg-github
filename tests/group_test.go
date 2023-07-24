@@ -2,15 +2,13 @@ package tests
 
 import (
 	"testing"
-
 	// log "github.com/duglin/dlog"
-	"github.com/duglin/xreg-github/registry"
 )
 
 func TestCreateGroup(t *testing.T) {
-	reg, err := registry.NewRegistry("TestCreateGroup")
+	reg := NewRegistry("TestCreateGroup")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil && err == nil, "can't create reg")
+	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
@@ -43,10 +41,10 @@ func TestCreateGroup(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1",
 		`{
   "id": "d1",
-  "self": "http:///dirs/d1",
+  "self": "http://localhost:8080/dirs/d1",
 
   "filesCount": 1,
-  "filesUrl": "http:///dirs/d1/files"
+  "filesUrl": "http://localhost:8080/dirs/d1/files"
 }
 `)
 	xCheckGet(t, reg, "/dirs/xxx", "404: Not found\n")
