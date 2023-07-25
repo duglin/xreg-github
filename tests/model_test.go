@@ -2,6 +2,8 @@ package tests
 
 import (
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 func TestNoModel(t *testing.T) {
@@ -25,7 +27,7 @@ func TestGroupModelCreate(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg created didn't work")
 
-	gm, err := reg.AddGroupModel("dirs", "dir", "schema-url")
+	gm, err := reg.Model.AddGroupModel("dirs", "dir", "schema-url")
 	xNoErr(t, err)
 	xCheck(t, gm != nil, "gm created didn't work")
 	xCheckGet(t, reg, "/model", `{
@@ -39,26 +41,64 @@ func TestGroupModelCreate(t *testing.T) {
 }
 `)
 
+	reg.Model.SetSchema("model-schema-url")
+	xCheckGet(t, reg, "/model", `{
+  "schema": "model-schema-url",
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "schema-url"
+    }
+  }
+}
+`)
+
+	reg.LoadModel()
+	xCheckGet(t, reg, "/model", `{
+  "schema": "model-schema-url",
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "schema-url"
+    }
+  }
+}
+`)
+
+	reg.Model.SetSchema("")
+	xCheckGet(t, reg, "/model", `{
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "schema-url"
+    }
+  }
+}
+`)
+
 	// Now error checking
-	gm, err = reg.AddGroupModel("dirs1", "", "schema-url") // missing value
+	gm, err = reg.Model.AddGroupModel("dirs1", "", "schema-url") // missing value
 	xCheck(t, gm == nil && err != nil, "gm should have failed")
 
-	gm, err = reg.AddGroupModel("", "", "schema-url") // missing value
+	gm, err = reg.Model.AddGroupModel("", "", "schema-url") // missing value
 	xCheck(t, gm == nil && err != nil, "gm should have failed")
 
-	gm, err = reg.AddGroupModel("", "", "") // missing value
+	gm, err = reg.Model.AddGroupModel("", "", "") // missing value
 	xCheck(t, gm == nil && err != nil, "gm should have failed")
 
-	gm, err = reg.AddGroupModel("", "dir1", "") // missing value
+	gm, err = reg.Model.AddGroupModel("", "dir1", "") // missing value
 	xCheck(t, gm == nil && err != nil, "gm should have failed")
 
-	gm, err = reg.AddGroupModel("dirs", "dir", "schema-url") // dup
+	gm, err = reg.Model.AddGroupModel("dirs", "dir", "schema-url") // dup
 	xCheck(t, gm == nil && err != nil, "gm should have failed")
 
-	gm, err = reg.AddGroupModel("dirs1", "dir", "") // dup
+	gm, err = reg.Model.AddGroupModel("dirs1", "dir", "") // dup
 	xCheck(t, gm == nil && err != nil, "gm should have failed")
 
-	gm, err = reg.AddGroupModel("dirs", "dir1", "") // dup
+	gm, err = reg.Model.AddGroupModel("dirs", "dir1", "") // dup
 	xCheck(t, gm == nil && err != nil, "gm should have failed")
 }
 
@@ -67,7 +107,7 @@ func TestResourceModelCreate(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg created didn't work")
 
-	gm, err := reg.AddGroupModel("dirs", "dir", "dirs-url")
+	gm, err := reg.Model.AddGroupModel("dirs", "dir", "dirs-url")
 	xNoErr(t, err)
 	xCheck(t, gm != nil, "gm should have worked")
 
@@ -90,7 +130,7 @@ func TestResourceModelCreate(t *testing.T) {
 	rm2, err = gm.AddResourceModel("files2", "file2", -1, true, true)
 	xCheck(t, rm2 == nil && err != nil, "rm2 should have failed")
 
-	gm2, err := reg.AddGroupModel("dirs2", "dir2", "dirs-url")
+	gm2, err := reg.Model.AddGroupModel("dirs2", "dir2", "dirs-url")
 	xNoErr(t, err)
 	xCheck(t, gm != nil, "gm2 should have worked")
 
@@ -130,6 +170,311 @@ func TestResourceModelCreate(t *testing.T) {
   }
 }
 `)
+
+	rm2.Delete()
+	xCheckGet(t, reg, "/model", `{
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "dirs-url",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "versions": 5,
+          "versionId": true,
+          "latest": true
+        }
+      }
+    },
+    "dirs2": {
+      "plural": "dirs2",
+      "singular": "dir2",
+      "schema": "dirs-url"
+    }
+  }
+}
+`)
+
+	reg.LoadModel()
+	xCheckGet(t, reg, "/model", `{
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "dirs-url",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "versions": 5,
+          "versionId": true,
+          "latest": true
+        }
+      }
+    },
+    "dirs2": {
+      "plural": "dirs2",
+      "singular": "dir2",
+      "schema": "dirs-url"
+    }
+  }
+}
+`)
+
+	gm2.Delete()
+	xCheckGet(t, reg, "/model", `{
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "dirs-url",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "versions": 5,
+          "versionId": true,
+          "latest": true
+        }
+      }
+    }
+  }
+}
+`)
+
+	reg.LoadModel()
+	xCheckGet(t, reg, "/model", `{
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "dirs-url",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "versions": 5,
+          "versionId": true,
+          "latest": true
+        }
+      }
+    }
+  }
+}
+`)
+
+	newModel := &registry.Model{
+		Groups: map[string]*registry.GroupModel{
+			"dirs": &registry.GroupModel{
+				Plural:   "dirs",
+				Singular: "dir",
+				Schema:   "dirs-url",
+				Resources: map[string]*registry.ResourceModel{
+					"files": &registry.ResourceModel{
+						Plural:    "files",
+						Singular:  "file",
+						Versions:  6,
+						VersionId: false,
+						Latest:    false,
+					},
+				},
+			},
+		},
+	}
+
+	reg.Model.ApplyNewModel(newModel)
+	xCheckGet(t, reg, "/model", `{
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "schema": "dirs-url",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "versions": 6,
+          "versionId": false,
+          "latest": false
+        }
+      }
+    }
+  }
+}
+`)
+
+	reg.LoadModel()
+	g, _ := reg.AddGroup("dirs", "dir1")
+	g.AddResource("files", "f1", "v1")
+
+	xCheckGet(t, reg, "?model&inline=dirs.files", `{
+  "id": "TestResourceModels",
+  "self": "http://localhost:8080/",
+  "model": {
+    "groups": {
+      "dirs": {
+        "plural": "dirs",
+        "singular": "dir",
+        "schema": "dirs-url",
+        "resources": {
+          "files": {
+            "plural": "files",
+            "singular": "file",
+            "versions": 6,
+            "versionId": false,
+            "latest": false
+          }
+        }
+      }
+    }
+  },
+
+  "dirs": {
+    "dir1": {
+      "id": "dir1",
+      "self": "http://localhost:8080/dirs/dir1",
+
+      "files": {
+        "f1": {
+          "id": "f1",
+          "self": "http://localhost:8080/dirs/dir1/files/f1",
+          "latestId": "v1",
+          "latestUrl": "http://localhost:8080/dirs/dir1/files/f1/versions/v1",
+
+          "versionsCount": 1,
+          "versionsUrl": "http://localhost:8080/dirs/dir1/files/f1/versions"
+        }
+      },
+      "filesCount": 1,
+      "filesUrl": "http://localhost:8080/dirs/dir1/files"
+    }
+  },
+  "dirsCount": 1,
+  "dirsUrl": "http://localhost:8080/dirs"
+}
+`)
+
+	newModel = &registry.Model{
+		Groups: map[string]*registry.GroupModel{
+			"dirs": &registry.GroupModel{
+				Plural:   "dirs",
+				Singular: "dir",
+				Schema:   "dirs-url",
+				Resources: map[string]*registry.ResourceModel{
+					"files2": &registry.ResourceModel{
+						Plural:    "files2",
+						Singular:  "file",
+						Versions:  6,
+						VersionId: false,
+						Latest:    false,
+					},
+				},
+			},
+		},
+	}
+
+	reg.Model.ApplyNewModel(newModel)
+	xCheckGet(t, reg, "?model&inline=dirs", `{
+  "id": "TestResourceModels",
+  "self": "http://localhost:8080/",
+  "model": {
+    "groups": {
+      "dirs": {
+        "plural": "dirs",
+        "singular": "dir",
+        "schema": "dirs-url",
+        "resources": {
+          "files2": {
+            "plural": "files2",
+            "singular": "file",
+            "versions": 6,
+            "versionId": false,
+            "latest": false
+          }
+        }
+      }
+    }
+  },
+
+  "dirs": {
+    "dir1": {
+      "id": "dir1",
+      "self": "http://localhost:8080/dirs/dir1",
+
+      "files2Count": 0,
+      "files2Url": "http://localhost:8080/dirs/dir1/files2"
+    }
+  },
+  "dirsCount": 1,
+  "dirsUrl": "http://localhost:8080/dirs"
+}
+`)
+
+	newModel = &registry.Model{
+		Groups: map[string]*registry.GroupModel{
+			"dirs": &registry.GroupModel{
+				Plural:   "dirs",
+				Singular: "dir",
+				Schema:   "dirs-url2",
+			},
+		},
+	}
+
+	reg.Model.ApplyNewModel(newModel)
+	xCheckGet(t, reg, "?model&inline=dirs", `{
+  "id": "TestResourceModels",
+  "self": "http://localhost:8080/",
+  "model": {
+    "groups": {
+      "dirs": {
+        "plural": "dirs",
+        "singular": "dir",
+        "schema": "dirs-url2"
+      }
+    }
+  },
+
+  "dirs": {
+    "dir1": {
+      "id": "dir1",
+      "self": "http://localhost:8080/dirs/dir1"
+    }
+  },
+  "dirsCount": 1,
+  "dirsUrl": "http://localhost:8080/dirs"
+}
+`)
+
+	newModel = &registry.Model{
+		Groups: map[string]*registry.GroupModel{
+			"dirs2": &registry.GroupModel{
+				Plural:   "dirs2",
+				Singular: "dir2",
+				Schema:   "dirs-url",
+			},
+		},
+	}
+	reg.Model.ApplyNewModel(newModel)
+	xCheckGet(t, reg, "?model&inline=", `{
+  "id": "TestResourceModels",
+  "self": "http://localhost:8080/",
+  "model": {
+    "groups": {
+      "dirs2": {
+        "plural": "dirs2",
+        "singular": "dir2",
+        "schema": "dirs-url"
+      }
+    }
+  },
+
+  "dirs2": {},
+  "dirs2Count": 0,
+  "dirs2Url": "http://localhost:8080/dirs2"
+}
+`)
 }
 
 func TestMultModelCreate(t *testing.T) {
@@ -137,7 +482,7 @@ func TestMultModelCreate(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg created didn't work")
 
-	gm1, err := reg.AddGroupModel("gms1", "gm1", "gm1-url")
+	gm1, err := reg.Model.AddGroupModel("gms1", "gm1", "gm1-url")
 	xCheck(t, gm1 != nil && err == nil, "gm1 should have worked")
 
 	rm1, err := gm1.AddResourceModel("rms1", "rm1", 0, true, true)
@@ -146,7 +491,7 @@ func TestMultModelCreate(t *testing.T) {
 	rm2, err := gm1.AddResourceModel("rms2", "rm2", 1, true, true)
 	xCheck(t, rm2 != nil && err == nil, "rm2 should have worked")
 
-	gm2, err := reg.AddGroupModel("gms2", "gm2", "gm1-url")
+	gm2, err := reg.Model.AddGroupModel("gms2", "gm2", "gm1-url")
 	xCheck(t, gm1 != nil && err == nil, "gm1 should have worked")
 
 	rm21, err := gm2.AddResourceModel("rms1", "rm1", 2, true, true)
@@ -209,10 +554,10 @@ func TestModelAPI(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg created didn't work")
 
-	gm, _ := reg.AddGroupModel("dirs1", "dir1", "")
+	gm, _ := reg.Model.AddGroupModel("dirs1", "dir1", "")
 	gm.AddResourceModel("files", "file", 2, true, false)
 
-	gm2, _ := reg.AddGroupModel("dirs2", "dir2", "")
+	gm2, _ := reg.Model.AddGroupModel("dirs2", "dir2", "")
 	gm2.AddResourceModel("files", "file", 0, false, true)
 
 	m := reg.LoadModel()
@@ -224,7 +569,7 @@ func TestMultModel2Create(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg created didn't work")
 
-	gm, _ := reg.AddGroupModel("dirs1", "dir1", "")
+	gm, _ := reg.Model.AddGroupModel("dirs1", "dir1", "")
 	gm.AddResourceModel("files", "file", 2, true, false)
 
 	d, _ := reg.AddGroup("dirs1", "d1")
@@ -234,7 +579,7 @@ func TestMultModel2Create(t *testing.T) {
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
 
-	gm2, _ := reg.AddGroupModel("dirs2", "dir2", "")
+	gm2, _ := reg.Model.AddGroupModel("dirs2", "dir2", "")
 	gm2.AddResourceModel("files", "file", 0, false, true)
 	d2, _ := reg.AddGroup("dirs2", "d2")
 	d2.AddResource("files", "f2", "v1")
@@ -370,26 +715,26 @@ func TestMultModel2Create(t *testing.T) {
 }
 `)
 
-	gm, _ = reg.AddGroupModel("dirs0", "dir0", "")
+	gm, _ = reg.Model.AddGroupModel("dirs0", "dir0", "")
 	gm.AddResourceModel("files", "file", 2, true, false)
-	gm, _ = reg.AddGroupModel("dirs3", "dir3", "")
+	gm, _ = reg.Model.AddGroupModel("dirs3", "dir3", "")
 	gm.AddResourceModel("files", "file", 2, true, false)
 
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs0":{},"dirs1":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}},"dirs2":{"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"dirs3":{}}`)
 
-	gm, _ = reg.AddGroupModel("dirs15", "dir15", "")
+	gm, _ = reg.Model.AddGroupModel("dirs15", "dir15", "")
 	gm.AddResourceModel("files", "file", 2, true, false)
 
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs0":{},"dirs1":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}},"dirs15":{},"dirs2":{"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"dirs3":{}}`)
 
-	gm, _ = reg.AddGroupModel("dirs01", "dir01", "")
-	gm, _ = reg.AddGroupModel("dirs02", "dir02", "")
-	gm, _ = reg.AddGroupModel("dirs14", "dir014", "")
-	gm, _ = reg.AddGroupModel("dirs16", "dir016", "")
-	gm, _ = reg.AddGroupModel("dirs4", "dir4", "")
-	gm, _ = reg.AddGroupModel("dirs5", "dir5", "")
+	gm, _ = reg.Model.AddGroupModel("dirs01", "dir01", "")
+	gm, _ = reg.Model.AddGroupModel("dirs02", "dir02", "")
+	gm, _ = reg.Model.AddGroupModel("dirs14", "dir014", "")
+	gm, _ = reg.Model.AddGroupModel("dirs16", "dir016", "")
+	gm, _ = reg.Model.AddGroupModel("dirs4", "dir4", "")
+	gm, _ = reg.Model.AddGroupModel("dirs5", "dir5", "")
 
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs0":{},"dirs01":{},"dirs02":{},"dirs1":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}},"dirs14":{},"dirs15":{},"dirs16":{},"dirs2":{"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"dirs3":{},"dirs4":{},"dirs5":{}}`)

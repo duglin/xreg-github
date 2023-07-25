@@ -8,7 +8,7 @@ func TestBasicInline(t *testing.T) {
 	reg := NewRegistry("TestBasicInline")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 
 	d, _ := reg.AddGroup("dirs", "d1")
@@ -18,7 +18,7 @@ func TestBasicInline(t *testing.T) {
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
 
-	gm2, _ := reg.AddGroupModel("dirs2", "dir2", "")
+	gm2, _ := reg.Model.AddGroupModel("dirs2", "dir2", "")
 	gm2.AddResourceModel("files", "file", 0, true, true)
 	d2, _ := reg.AddGroup("dirs2", "d2")
 	d2.AddResource("files", "f2", "v1")

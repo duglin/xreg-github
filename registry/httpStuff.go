@@ -82,8 +82,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("html") || r.URL.Query().Has("noprops") {
 		buf = &bytes.Buffer{}
 		out = io.Writer(buf)
+
+		defer func() {
+			if r.URL.Query().Has("noprops") {
+				buf = bytes.NewBuffer(RemoveProps(buf.Bytes()))
+			}
+			if r.URL.Query().Has("oneline") {
+				buf = bytes.NewBuffer(OneLine(buf.Bytes()))
+			}
+
+			if r.URL.Query().Has("html") {
+				w.Header().Add("Content-Type", "text/html")
+				w.Write([]byte("<pre>\n"))
+				buf = bytes.NewBuffer(HTMLify(r, buf.Bytes()))
+			}
+
+			w.Write(buf.Bytes())
+		}()
 	}
 
+	// These should only return an error if they didn't already
+	// send a response back to the client.
 	switch strings.ToUpper(r.Method) {
 	case "GET":
 		err = HTTPGet(out, info)
@@ -93,35 +112,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if buf == nil {
-		// Not buffering so just return
-		if err != nil {
-			if info.ErrCode != 0 {
-				w.WriteHeader(info.ErrCode)
-			} else {
-				w.WriteHeader(http.StatusBadRequest)
-			}
-			w.Write([]byte(err.Error()))
-		}
-		return
-	}
-
-	if r.URL.Query().Has("noprops") {
-		buf = bytes.NewBuffer(RemoveProps(buf.Bytes()))
-	}
-	if r.URL.Query().Has("oneline") {
-		buf = bytes.NewBuffer(OneLine(buf.Bytes()))
-	}
-
-	if r.URL.Query().Has("html") {
-		w.Header().Add("Content-Type", "text/html")
-		w.Write([]byte("<pre>\n"))
-		buf = bytes.NewBuffer(HTMLify(r, buf.Bytes()))
-	}
-
-	w.Write(buf.Bytes())
-
 	if err != nil {
+		if info.ErrCode != 0 {
+			w.WriteHeader(info.ErrCode)
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		w.Write([]byte(err.Error()))
 	}
 }
@@ -143,6 +139,7 @@ func HTTPGETModel(w io.Writer, info *RequestInfo) error {
 		return fmt.Errorf("500: " + err.Error())
 	}
 
+	info.OriginalResponse.Header().Add("Content-Type", "application/json")
 	fmt.Fprintf(w, "%s\n", string(buf))
 	return nil
 }
@@ -280,7 +277,7 @@ FROM FullTree WHERE RegSID=? AND `
 		info.OriginalResponse.WriteHeader(200) // http.StatusNoContent)
 		return nil
 	}
-	info.OriginalResponse.Write(buf.([]byte))
+	w.Write(buf.([]byte))
 
 	return nil
 }
@@ -297,7 +294,6 @@ func HTTPGet(w io.Writer, info *RequestInfo) error {
 	}
 
 	query, args, err := GenerateQuery(info)
-
 	results, err := Query(query, args...)
 	defer results.Close()
 
@@ -309,13 +305,18 @@ func HTTPGet(w io.Writer, info *RequestInfo) error {
 	jw := NewJsonWriter(w, info, results)
 	jw.NextEntity()
 
-	if info.What == "Coll" {
-		_, err = jw.WriteCollection()
-	} else {
+	if info.What != "Coll" {
+		// Collections will need to print the {}, so don't error for them
 		if jw.Entity == nil {
 			info.ErrCode = http.StatusNotFound
 			return fmt.Errorf("404: Not found\n")
 		}
+	}
+
+	info.OriginalResponse.Header().Add("Content-Type", "application/json")
+	if info.What == "Coll" {
+		_, err = jw.WriteCollection()
+	} else {
 		err = jw.WriteEntity()
 	}
 

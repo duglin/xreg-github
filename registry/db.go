@@ -152,7 +152,8 @@ func DoOne(cmd string, args ...interface{}) error {
 
 	if count, _ := result.RowsAffected(); count != 1 {
 		query := SubQuery(cmd, args)
-		log.Printf("DoOne:Error DB(%s) didn't change exactly 1 row", query)
+		log.Printf("DoOne:Error DB(%s) didn't change exactly 1 row(%d)",
+			query, count)
 	}
 
 	return err

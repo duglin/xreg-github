@@ -9,7 +9,7 @@ func TestBasicFilters(t *testing.T) {
 	reg := NewRegistry("TestBasicFilters")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
@@ -324,7 +324,7 @@ func TestANDORFilters(t *testing.T) {
 	reg := NewRegistry("TestANDORFilters")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
@@ -335,7 +335,7 @@ func TestANDORFilters(t *testing.T) {
 	f.AddVersion("v1.1")
 	f.Set("name", "f2")
 
-	gm, _ = reg.AddGroupModel("schemaGroups", "schemaGroup", "")
+	gm, _ = reg.Model.AddGroupModel("schemaGroups", "schemaGroup", "")
 	gm.AddResourceModel("schemas", "schema", 0, true, true)
 	sg, _ := reg.AddGroup("schemaGroups", "sg1")
 	s, _ := sg.AddResource("schemas", "s1", "v1.0")

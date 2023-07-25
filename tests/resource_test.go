@@ -9,7 +9,7 @@ func TestCreateResource(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
-	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 	d1, _ := reg.AddGroup("dirs", "d1")
 
@@ -81,7 +81,7 @@ func TestResourceSet(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
-	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 	d1, _ := reg.AddGroup("dirs", "d1")
 	f1, _ := d1.AddResource("files", "f1", "v1")

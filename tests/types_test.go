@@ -11,7 +11,7 @@ func TestBasicTypes(t *testing.T) {
 	reg := NewRegistry("TestBasicTypes")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.AddGroupModel("dirs", "dir", "")
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 
 	dir, _ := reg.AddGroup("dirs", "d1")

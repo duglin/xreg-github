@@ -39,7 +39,20 @@ FOR EACH ROW
 BEGIN
     DELETE FROM Props WHERE EntitySID=OLD.SID @
     DELETE FROM "Groups" WHERE RegistrySID=OLD.SID @
-    DELETE FROM ModelEntities WHERE RegistrySID=OLD.SID @
+    DELETE FROM Models WHERE RegistrySID=OLD.SID @
+END ;
+
+CREATE TABLE Models (
+    RegistrySID VARCHAR(64),
+    "Schema"    VARCHAR(255),
+
+    PRIMARY KEY (RegistrySID)
+);
+
+CREATE TRIGGER ModelsTrigger BEFORE DELETE ON Models
+FOR EACH ROW
+BEGIN
+    DELETE FROM ModelEntities WHERE RegistrySID=OLD.RegistrySID @
 END ;
 
 CREATE TABLE ModelEntities (        # Group or Resource (no parent->Group)

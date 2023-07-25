@@ -50,6 +50,18 @@ func NewRegistry(id string) (*Registry, error) {
 			Abstract: "",
 		},
 	}
+	reg.Model = &Model{
+		Registry: reg,
+		Groups:   map[string]*GroupModel{},
+	}
+
+	err = DoOne(`
+		INSERT INTO Models(RegistrySID, "Schema")
+		VALUES(?,NULL)`, dbSID)
+	if err != nil {
+		return nil, err
+	}
+
 	reg.Set("id", reg.UID)
 	Registries[id] = reg
 
@@ -65,59 +77,6 @@ func (reg *Registry) Delete() error {
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
 
 	return DoOne(`DELETE FROM Registries WHERE SID=?`, reg.DbSID)
-}
-
-func (reg *Registry) AddGroupModel(plural string, singular string, schema string) (*GroupModel, error) {
-	if plural == "" {
-		return nil, fmt.Errorf("Can't add a GroupModel with an empty plural name")
-	}
-	if singular == "" {
-		return nil, fmt.Errorf("Can't add a GroupModel with an empty sigular name")
-	}
-
-	if reg.Model != nil {
-		for _, gm := range reg.Model.Groups {
-			if gm.Plural == plural {
-				return nil, fmt.Errorf("GroupModel plural %q already exists",
-					plural)
-			}
-			if gm.Singular == singular {
-				return nil, fmt.Errorf("GroupModel singular %q already exists",
-					singular)
-			}
-		}
-	}
-
-	mSID := NewUUID()
-	err := DoOne(`
-		INSERT INTO ModelEntities(
-			SID, RegistrySID, ParentSID, Plural, Singular, SchemaURL, Versions)
-		VALUES(?,?,?,?,?,?,?) `,
-		mSID, reg.DbSID, nil, plural, singular, schema, 0)
-	if err != nil {
-		log.Printf("Error inserting group(%s): %s", plural, err)
-		return nil, err
-	}
-	g := &GroupModel{
-		SID:      mSID,
-		Registry: reg,
-		Singular: singular,
-		Plural:   plural,
-		Schema:   schema,
-
-		Resources: map[string]*ResourceModel{},
-	}
-
-	if reg.Model == nil {
-		reg.Model = &Model{
-			Registry: reg,
-			Groups:   map[string]*GroupModel{},
-		}
-	}
-
-	reg.Model.Groups[plural] = g
-
-	return g, nil
 }
 
 func FindRegistry(id string) (*Registry, error) {
@@ -168,83 +127,8 @@ func FindRegistry(id string) (*Registry, error) {
 	return reg, nil
 }
 
-func (reg *Registry) FindGroupModel(gTypePlural string) *GroupModel {
-	for _, gModel := range reg.Model.Groups {
-		if strings.EqualFold(gModel.Plural, gTypePlural) {
-			return gModel
-		}
-	}
-	return nil
-}
-
 func (reg *Registry) LoadModel() *Model {
-	groups := map[string]*GroupModel{} // Model SID -> *GroupModel
-
-	results, err := Query(`
-		SELECT
-			SID,
-			RegistrySID,
-			ParentSID,
-			Plural,
-			Singular,
-			SchemaURL,
-			Versions,
-			VersionId,
-			Latest
-		FROM ModelEntities
-		WHERE RegistrySID=?
-		ORDER BY ParentSID ASC`, reg.DbSID)
-	defer results.Close()
-
-	if err != nil {
-		log.Printf("Error loading model(%s): %s", reg.UID, err)
-		return nil
-	}
-
-	var model *Model
-
-	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		if model == nil {
-			model = &Model{
-				Registry: reg,
-				Groups:   map[string]*GroupModel{},
-			}
-		}
-		if *row[2] == nil { // ParentSID nil -> new Group
-			g := &GroupModel{ // Plural
-				SID:      NotNilString(row[0]), // SID
-				Registry: reg,
-				Plural:   NotNilString(row[3]), // Plural
-				Singular: NotNilString(row[4]), // Singular
-				Schema:   NotNilString(row[5]), // SchemaURL
-
-				Resources: map[string]*ResourceModel{},
-			}
-
-			model.Groups[NotNilString(row[3])] = g
-			groups[NotNilString(row[0])] = g
-
-		} else { // New Resource
-			g := groups[NotNilString(row[2])] // Parent SID
-
-			if g != nil { // should always be true, but...
-				r := &ResourceModel{
-					SID:        NotNilString(row[0]),
-					GroupModel: g,
-					Plural:     NotNilString(row[3]),
-					Singular:   NotNilString(row[4]),
-					Versions:   NotNilInt(row[6]),
-					VersionId:  NotNilBool(row[7]),
-					Latest:     NotNilBool(row[8]),
-				}
-
-				g.Resources[r.Plural] = r
-			}
-		}
-	}
-
-	reg.Model = model
-	return model
+	return LoadModel(reg)
 }
 
 func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
