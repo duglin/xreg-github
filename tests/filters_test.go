@@ -226,6 +226,7 @@ func TestBasicFilters(t *testing.T) {
             "v1.1": {
               "id": "v1.1",
               "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
+              "latest": true,
               "tags": {
                 "file1": "1elif"
               }
@@ -292,6 +293,7 @@ func TestBasicFilters(t *testing.T) {
             "v1.1": {
               "id": "v1.1",
               "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
+              "latest": true,
               "tags": {
                 "file1": "1elif"
               }

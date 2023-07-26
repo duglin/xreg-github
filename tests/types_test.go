@@ -175,6 +175,7 @@ func TestBasicTypes(t *testing.T) {
             "v1": {
               "id": "v1",
               "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
+              "latest": true,
               "verBool1": true,
               "verBool2": false,
               "verFloat1": 456.5,

@@ -31,51 +31,51 @@ func TestGroupModelCreate(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, gm != nil, "gm created didn't work")
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "schema-url"
     }
-  }
+  ]
 }
 `)
 
 	reg.Model.SetSchema("model-schema-url")
 	xCheckGet(t, reg, "/model", `{
   "schema": "model-schema-url",
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "schema-url"
     }
-  }
+  ]
 }
 `)
 
 	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
   "schema": "model-schema-url",
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "schema-url"
     }
-  }
+  ]
 }
 `)
 
 	reg.Model.SetSchema("")
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "schema-url"
     }
-  }
+  ]
 }
 `)
 
@@ -138,130 +138,130 @@ func TestResourceModelCreate(t *testing.T) {
 	xCheck(t, rm != nil && err == nil, "gm2/rm2 should have worked")
 
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "dirs-url",
-      "resources": {
-        "files": {
+      "resources": [
+        {
           "plural": "files",
           "singular": "file",
           "versions": 5,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     },
-    "dirs2": {
+    {
       "plural": "dirs2",
       "singular": "dir2",
       "schema": "dirs-url",
-      "resources": {
-        "files": {
+      "resources": [
+        {
           "plural": "files",
           "singular": "file",
           "versions": 0,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     }
-  }
+  ]
 }
 `)
 
 	rm2.Delete()
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "dirs-url",
-      "resources": {
-        "files": {
+      "resources": [
+        {
           "plural": "files",
           "singular": "file",
           "versions": 5,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     },
-    "dirs2": {
+    {
       "plural": "dirs2",
       "singular": "dir2",
       "schema": "dirs-url"
     }
-  }
+  ]
 }
 `)
 
 	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "dirs-url",
-      "resources": {
-        "files": {
+      "resources": [
+        {
           "plural": "files",
           "singular": "file",
           "versions": 5,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     },
-    "dirs2": {
+    {
       "plural": "dirs2",
       "singular": "dir2",
       "schema": "dirs-url"
     }
-  }
+  ]
 }
 `)
 
 	gm2.Delete()
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "dirs-url",
-      "resources": {
-        "files": {
+      "resources": [
+        {
           "plural": "files",
           "singular": "file",
           "versions": 5,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     }
-  }
+  ]
 }
 `)
 
 	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "dirs-url",
-      "resources": {
-        "files": {
+      "resources": [
+        {
           "plural": "files",
           "singular": "file",
           "versions": 5,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     }
-  }
+  ]
 }
 `)
 
@@ -286,22 +286,22 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "dirs": {
+  "groups": [
+    {
       "plural": "dirs",
       "singular": "dir",
       "schema": "dirs-url",
-      "resources": {
-        "files": {
+      "resources": [
+        {
           "plural": "files",
           "singular": "file",
           "versions": 6,
           "versionId": false,
           "latest": false
         }
-      }
+      ]
     }
-  }
+  ]
 }
 `)
 
@@ -313,22 +313,22 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "self": "http://localhost:8080/",
   "model": {
-    "groups": {
-      "dirs": {
+    "groups": [
+      {
         "plural": "dirs",
         "singular": "dir",
         "schema": "dirs-url",
-        "resources": {
-          "files": {
+        "resources": [
+          {
             "plural": "files",
             "singular": "file",
             "versions": 6,
             "versionId": false,
             "latest": false
           }
-        }
+        ]
       }
-    }
+    ]
   },
 
   "dirs": {
@@ -380,22 +380,22 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "self": "http://localhost:8080/",
   "model": {
-    "groups": {
-      "dirs": {
+    "groups": [
+      {
         "plural": "dirs",
         "singular": "dir",
         "schema": "dirs-url",
-        "resources": {
-          "files2": {
+        "resources": [
+          {
             "plural": "files2",
             "singular": "file",
             "versions": 6,
             "versionId": false,
             "latest": false
           }
-        }
+        ]
       }
-    }
+    ]
   },
 
   "dirs": {
@@ -413,6 +413,7 @@ func TestResourceModelCreate(t *testing.T) {
 `)
 
 	newModel = &registry.Model{
+		Schema: "reg-model-schema",
 		Groups: map[string]*registry.GroupModel{
 			"dirs": &registry.GroupModel{
 				Plural:   "dirs",
@@ -427,13 +428,14 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "self": "http://localhost:8080/",
   "model": {
-    "groups": {
-      "dirs": {
+    "schema": "reg-model-schema",
+    "groups": [
+      {
         "plural": "dirs",
         "singular": "dir",
         "schema": "dirs-url2"
       }
-    }
+    ]
   },
 
   "dirs": {
@@ -461,13 +463,13 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "self": "http://localhost:8080/",
   "model": {
-    "groups": {
-      "dirs2": {
+    "groups": [
+      {
         "plural": "dirs2",
         "singular": "dir2",
         "schema": "dirs-url"
       }
-    }
+    ]
   },
 
   "dirs2": {},
@@ -501,50 +503,50 @@ func TestMultModelCreate(t *testing.T) {
 	xCheck(t, rm22 != nil && err == nil, "rm12 should have worked")
 
 	xCheckGet(t, reg, "/model", `{
-  "groups": {
-    "gms1": {
+  "groups": [
+    {
       "plural": "gms1",
       "singular": "gm1",
       "schema": "gm1-url",
-      "resources": {
-        "rms1": {
+      "resources": [
+        {
           "plural": "rms1",
           "singular": "rm1",
           "versions": 0,
           "versionId": true,
           "latest": true
         },
-        "rms2": {
+        {
           "plural": "rms2",
           "singular": "rm2",
           "versions": 1,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     },
-    "gms2": {
+    {
       "plural": "gms2",
       "singular": "gm2",
       "schema": "gm1-url",
-      "resources": {
-        "rms1": {
+      "resources": [
+        {
           "plural": "rms1",
           "singular": "rm1",
           "versions": 2,
           "versionId": true,
           "latest": true
         },
-        "rms2": {
+        {
           "plural": "rms2",
           "singular": "rm2",
           "versions": 3,
           "versionId": true,
           "latest": true
         }
-      }
+      ]
     }
-  }
+  ]
 }
 `)
 }
@@ -594,34 +596,34 @@ func TestMultModel2Create(t *testing.T) {
   "id": "TestMultModel2Create",
   "self": "http://localhost:8080/",
   "model": {
-    "groups": {
-      "dirs1": {
+    "groups": [
+      {
         "plural": "dirs1",
         "singular": "dir1",
-        "resources": {
-          "files": {
+        "resources": [
+          {
             "plural": "files",
             "singular": "file",
             "versions": 2,
             "versionId": true,
             "latest": false
           }
-        }
+        ]
       },
-      "dirs2": {
+      {
         "plural": "dirs2",
         "singular": "dir2",
-        "resources": {
-          "files": {
+        "resources": [
+          {
             "plural": "files",
             "singular": "file",
             "versions": 0,
             "versionId": false,
             "latest": true
           }
-        }
+        ]
       }
-    }
+    ]
   },
 
   "dirs1": {
@@ -643,7 +645,8 @@ func TestMultModel2Create(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "self": "http://localhost:8080/dirs1/d1/files/f1/versions/v2"
+              "self": "http://localhost:8080/dirs1/d1/files/f1/versions/v2",
+              "latest": true
             }
           },
           "versionsCount": 2,
@@ -671,7 +674,8 @@ func TestMultModel2Create(t *testing.T) {
             },
             "v1.1": {
               "id": "v1.1",
-              "self": "http://localhost:8080/dirs1/d2/files/f2/versions/v1.1"
+              "self": "http://localhost:8080/dirs1/d2/files/f2/versions/v1.1",
+              "latest": true
             }
           },
           "versionsCount": 2,
@@ -699,7 +703,8 @@ func TestMultModel2Create(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs2/d2/files/f2/versions/v1"
+              "self": "http://localhost:8080/dirs2/d2/files/f2/versions/v1",
+              "latest": true
             }
           },
           "versionsCount": 1,

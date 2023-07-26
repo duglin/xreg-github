@@ -185,6 +185,10 @@ func (m *Model) FindGroupModel(gTypePlural string) *GroupModel {
 }
 
 func (m *Model) ApplyNewModel(newM *Model) error {
+	if newM.Schema != m.Schema {
+		m.SetSchema(newM.Schema)
+	}
+
 	// Find all old groups that need to be deleted
 	for gmPlural, gm := range m.Groups {
 		if newGM, ok := newM.Groups[gmPlural]; !ok {

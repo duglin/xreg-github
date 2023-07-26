@@ -23,7 +23,6 @@ type HTTPTest struct {
 }
 
 func xCheckHTTP(t *testing.T, test *HTTPTest) {
-	return
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -50,7 +49,7 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 		name, value, _ := strings.Cut(header, ":")
 		name = strings.TrimSpace(name)
 		value = strings.TrimSpace(value)
-		xCheckEqual(t, "Header:"+name, res.Header.Get(name), value)
+		xCheckEqual(t, "Header:"+name+"\n", res.Header.Get(name), value)
 	}
 
 	resBody, _ := io.ReadAll(res.Body)
@@ -101,13 +100,73 @@ func TestHTTPModel(t *testing.T) {
 		URL:        "/model",
 		Method:     "PUT",
 		ReqHeaders: []string{},
+		ReqBody:    `{}`,
+
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "Create model - just schema",
+		URL:        "/model",
+		Method:     "PUT",
+		ReqHeaders: []string{},
 		ReqBody: `{
   "schema": "model.schema"
 }`,
 
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
-		ResBody: `{}
+		ResBody: `{
+  "schema": "model.schema"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "Create model - full",
+		URL:        "/model",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "groups": [
+    {
+      "plural": "dirs",
+      "singular": "dir",
+      "resources": [
+        {
+          "plural": "files",
+          "singular": "file",
+          "versions": 1,
+          "versionId": true,
+          "latest": true
+        }
+      ]
+    }
+  ]
+}`,
+
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "groups": [
+    {
+      "plural": "dirs",
+      "singular": "dir",
+      "resources": [
+        {
+          "plural": "files",
+          "singular": "file",
+          "versions": 1,
+          "versionId": true,
+          "latest": true
+        }
+      ]
+    }
+  ]
+}
 `,
 	})
 }

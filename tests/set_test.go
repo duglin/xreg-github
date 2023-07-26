@@ -226,6 +226,7 @@ func TestSetTags(t *testing.T) {
             "v2": {
               "id": "v2",
               "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
+              "latest": true,
               "tags": {
                 "2nd": "3rd",
                 "ff": "ff.bar"
@@ -245,7 +246,7 @@ func TestSetTags(t *testing.T) {
 }
 `)
 
-	file.Set("latestId", ver.UID)
+	file.SetLatest(ver)
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetTags",
   "self": "http://localhost:8080/",
@@ -276,6 +277,7 @@ func TestSetTags(t *testing.T) {
             "v1": {
               "id": "v1",
               "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
+              "latest": true,
               "tags": {
                 "vv": "987.234",
                 "vv2": "v11"

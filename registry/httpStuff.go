@@ -106,6 +106,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch strings.ToUpper(r.Method) {
 	case "GET":
 		err = HTTPGet(out, info)
+	case "PUT":
+		err = HTTPPut(out, info)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(fmt.Sprintf("HTTP method %q not supported", r.Method)))
@@ -133,7 +135,9 @@ func HTTPGETModel(w io.Writer, info *RequestInfo) error {
 		model = &Model{}
 	}
 
-	buf, err := json.MarshalIndent(model, "", "  ")
+	httpModel := ModelToHTTPModel(model)
+
+	buf, err := json.MarshalIndent(httpModel, "", "  ")
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
 		return fmt.Errorf("500: " + err.Error())
@@ -328,4 +332,135 @@ func HTTPGet(w io.Writer, info *RequestInfo) error {
 	}
 
 	return err
+}
+
+func HTTPPut(w io.Writer, info *RequestInfo) error {
+	info.Root = strings.Trim(info.Root, "/")
+
+	if len(info.Parts) > 0 && info.Parts[0] == "model" {
+		return HTTPPUTModel(w, info)
+	}
+
+	return nil
+}
+
+type HTTPResourceModel struct {
+	Plural    string `json:"plural,omitempty"`
+	Singular  string `json:"singular,omitempty"`
+	Versions  int    `json:"versions"`
+	VersionId bool   `json:"versionId"`
+	Latest    bool   `json:"latest"`
+}
+
+type HTTPGroupModel struct {
+	Plural   string `json:"plural,omitempty"`
+	Singular string `json:"singular,omitempty"`
+	Schema   string `json:"schema,omitempty"`
+
+	Resources []HTTPResourceModel `json:"resources,omitempty"`
+}
+
+type HTTPModel struct {
+	Schema string           `json:"schema,omitempty"`
+	Groups []HTTPGroupModel `json:"groups,omitempty"`
+}
+
+func (httpModel *HTTPModel) ToModel() *Model {
+	model := &Model{
+		Schema: httpModel.Schema,
+	}
+
+	for _, g := range httpModel.Groups {
+		if model.Groups == nil {
+			model.Groups = map[string]*GroupModel{}
+		}
+		newG := &GroupModel{
+			Plural:   g.Plural,
+			Singular: g.Singular,
+			Schema:   g.Schema,
+		}
+		model.Groups[newG.Plural] = newG
+
+		for _, r := range g.Resources {
+			if newG.Resources == nil {
+				newG.Resources = map[string]*ResourceModel{}
+			}
+			newR := &ResourceModel{
+				Plural:    r.Plural,
+				Singular:  r.Singular,
+				Versions:  r.Versions,
+				VersionId: r.VersionId,
+				Latest:    r.Latest,
+			}
+			newG.Resources[newR.Plural] = newR
+		}
+	}
+
+	return model
+}
+
+func ModelToHTTPModel(m *Model) *HTTPModel {
+	httpModel := &HTTPModel{
+		Schema: m.Schema,
+	}
+
+	// To ensure consistent - especially when diffing the output
+	for _, groupKey := range SortedKeys(m.Groups) {
+		group := m.Groups[groupKey]
+		newG := HTTPGroupModel{
+			Plural:   group.Plural,
+			Singular: group.Singular,
+			Schema:   group.Schema,
+		}
+
+		for _, resKey := range SortedKeys(group.Resources) {
+			resource := group.Resources[resKey]
+			newR := HTTPResourceModel{
+				Plural:    resource.Plural,
+				Singular:  resource.Singular,
+				Versions:  resource.Versions,
+				VersionId: resource.VersionId,
+				Latest:    resource.Latest,
+			}
+			newG.Resources = append(newG.Resources, newR)
+		}
+
+		httpModel.Groups = append(httpModel.Groups, newG)
+	}
+
+	return httpModel
+}
+
+func HTTPPUTModel(w io.Writer, info *RequestInfo) error {
+	if len(info.Parts) > 1 {
+		info.ErrCode = http.StatusNotFound
+		return fmt.Errorf("404: Not found\n")
+	}
+
+	reqBody, err := io.ReadAll(info.OriginalRequest.Body)
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	tmpModel := HTTPModel{}
+	err = json.Unmarshal(reqBody, &tmpModel)
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	model := tmpModel.ToModel()
+	if err != nil {
+		info.ErrCode = http.StatusInternalServerError
+		return fmt.Errorf("500: " + err.Error())
+	}
+
+	err = info.Registry.Model.ApplyNewModel(model)
+	if err != nil {
+		info.ErrCode = http.StatusBadRequest
+		return fmt.Errorf("400: " + err.Error())
+	}
+
+	return HTTPGETModel(w, info)
 }

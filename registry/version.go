@@ -44,5 +44,10 @@ func (v *Version) Delete() error {
 	}
 
 	latestID := NotNilString(row[0])
-	return v.Resource.Set("latestId", latestID)
+
+	v, err = v.Resource.FindVersion(latestID)
+	if err != nil {
+		return err
+	}
+	return v.Resource.SetLatest(v)
 }

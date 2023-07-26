@@ -1,7 +1,5 @@
 all: run
 
-export GO111MODULE=off
-
 test: server
 	@go clean -testcache
 	go test -failfast github.com/duglin/xreg-github/tests

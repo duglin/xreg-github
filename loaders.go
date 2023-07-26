@@ -241,7 +241,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	v, _ = r.AddVersion("v2")
 	v.Set("name", "blobCreated")
 	v.Set("epoch", 4)
-	r.Set(".latestId", "v2")
+	r.SetLatest(v)
 
 	r, _ = g.AddResource("definitions", "deleted", "v1.0")
 	v, _ = r.FindVersion("v1.0")

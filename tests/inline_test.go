@@ -74,7 +74,8 @@ func TestBasicInline(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2"
+              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
+              "latest": true
             }
           },
           "versionsCount": 2,
@@ -102,7 +103,8 @@ func TestBasicInline(t *testing.T) {
             },
             "v1.1": {
               "id": "v1.1",
-              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1"
+              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
+              "latest": true
             }
           },
           "versionsCount": 2,
@@ -130,7 +132,8 @@ func TestBasicInline(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs2/d2/files/f2/versions/v1"
+              "self": "http://localhost:8080/dirs2/d2/files/f2/versions/v1",
+              "latest": true
             }
           },
           "versionsCount": 1,

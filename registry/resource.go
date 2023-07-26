@@ -31,10 +31,18 @@ func (r *Resource) Get(name string) any {
 func (r *Resource) Set(name string, val any) error {
 	log.VPrintf(4, "Set: r(%s).Set(%s,%v)", r.UID, name, val)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
+		if name == ".latestId" {
+			log.Printf("Shouldn't be setting .latestId directly-1")
+			panic("can't set .latestId directly")
+		}
 		return SetProp(r, name[1:], val)
 	}
 
 	if name == "id" || name == "latestId" || name == "latestUrl" {
+		if name == "latestId" {
+			log.Printf("Shouldn't be setting .latestId directly-2")
+			panic("can't set .latestId directly")
+		}
 		return SetProp(r, name, val)
 	}
 
@@ -96,10 +104,24 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 func (r *Resource) GetLatest() (*Version, error) {
 	val := r.Get("latestId")
 	if val == nil {
-		panic("No latest is set")
+		return nil, nil
+		// panic("No latest is set")
 	}
 
 	return r.FindVersion(val.(string))
+}
+
+func (r *Resource) SetLatest(newLatest *Version) error {
+	oldLatest, err := r.GetLatest()
+	if err != nil {
+		panic("Error getting latest: " + err.Error())
+	}
+	if oldLatest != nil {
+		oldLatest.Set("latest", nil)
+	}
+
+	SetProp(r, "latestId", newLatest.UID)
+	return newLatest.Set("latest", true)
 }
 
 func (r *Resource) AddVersion(id string) (*Version, error) {
@@ -141,7 +163,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 	v.Set("id", id)
 	// v.Set("epoch", 1)
 
-	err = r.Set("latestId", id)
+	err = r.SetLatest(v)
 	if err != nil {
 		// v.Delete()
 		err = fmt.Errorf("Error setting latestId: %s", err)

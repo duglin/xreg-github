@@ -361,6 +361,7 @@ var orderedProps = []struct {
 	{"self", "", func(e *Entity, info *RequestInfo) any {
 		return info.BaseURL + "/" + e.Path
 	}},
+	{"latest", "3", nil},
 	{"latestId", "2", nil},
 	{"latestUrl", "2", func(e *Entity, info *RequestInfo) any {
 		val := e.Props["latestId"]
@@ -396,10 +397,12 @@ var orderedProps = []struct {
 	{"modifiedOn", "", nil},
 	{"model", "0", func(e *Entity, info *RequestInfo) any {
 		if info.ShowModel {
-			if info.Registry.Model == nil {
-				return &Model{}
+			model := info.Registry.Model
+			if model == nil {
+				model = &Model{}
 			}
-			return info.Registry.Model
+			httpModel := ModelToHTTPModel(model)
+			return httpModel
 		}
 		return nil
 	}},
