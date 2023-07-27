@@ -120,6 +120,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 		oldLatest.Set("latest", nil)
 	}
 
+	// TODO: do both of these in one transaction to make it atomic
 	SetProp(r, "latestId", newLatest.UID)
 	return newLatest.Set("latest", true)
 }
