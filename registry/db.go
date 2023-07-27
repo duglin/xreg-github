@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -12,6 +13,19 @@ import (
 )
 
 var DB *sql.DB
+
+var DBHOST = "localhost"
+var DBPORT = "3306"
+
+func init() {
+	if tmp := os.Getenv("DBHOST"); tmp != "" {
+		DBHOST = tmp
+	}
+	if tmp := os.Getenv("DBPORT"); tmp != "" {
+		DBPORT = tmp
+	}
+	log.VPrintf(1, "DB: %s:%s", DBHOST, DBPORT)
+}
 
 type Result struct {
 	sqlRows  *sql.Rows
@@ -161,7 +175,7 @@ func DoOne(cmd string, args ...interface{}) error {
 
 func DBExists(name string) bool {
 	log.VPrintf(3, ">Enter: DBExists %q", name)
-	db, err := sql.Open("mysql", "root:password@/")
+	db, err := sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/")
 	if err != nil {
 		panic(err)
 	}
@@ -189,7 +203,7 @@ func OpenDB(name string) {
 	// DB, err := sql.Open("mysql", "root:password@tcp(localhost:3306)/")
 	var err error
 
-	DB, err = sql.Open("mysql", "root:password@/"+name)
+	DB, err = sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/"+name)
 	if err != nil {
 		err = fmt.Errorf("Error talking to SQL: %s\n", err)
 		log.Print(err)
@@ -205,7 +219,7 @@ func CreateDB(name string) error {
 	log.VPrintf(3, ">Enter: CreateDB %q", name)
 	defer log.VPrintf(3, "<Exit: CreateDB")
 
-	db, err := sql.Open("mysql", "root:password@/")
+	db, err := sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/")
 	if err != nil {
 		panic(err)
 	}
@@ -240,7 +254,7 @@ func CreateDB(name string) error {
 func DeleteDB(name string) error {
 	log.VPrintf(3, "Deleting DB %q", name)
 
-	db, err := sql.Open("mysql", "root:password@/")
+	db, err := sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/")
 	if err != nil {
 		panic(err)
 	}

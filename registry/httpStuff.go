@@ -50,7 +50,10 @@ func (s *Server) Start() *Server {
 
 func (s *Server) Serve() {
 	log.VPrintf(1, "Listening on %d", s.Port)
-	s.HTTPServer.ListenAndServe()
+	err := s.HTTPServer.ListenAndServe()
+	if err != http.ErrServerClosed {
+		log.Printf("Serve: %s", err)
+	}
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
