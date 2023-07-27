@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: xreg-server
+  name: xreg-server
+spec:
+  containers:
+  - image: duglin/xreg-server
+    imagePullPolicy: Never
+    name: xreg-server
+    command: [ "/server" ]
+    args: [ "--recreate" ]
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+    env:
+    - name: DBHOST
+      value: mysql
+    - name: DBPORT
+      value: "3306"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: xreg-server
+spec:
+  ports:
+  - nodePort: 32000
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: xreg-server
+  sessionAffinity: None
+  type: NodePort
+
