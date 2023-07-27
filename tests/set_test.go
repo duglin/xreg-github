@@ -98,14 +98,14 @@ func TestSetDots(t *testing.T) {
 	xCheck(t, dir.Get("labels.many.dots") == "hello", "many.dots should work")
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
-  "self": "http://localhost:8080/dirs/d1",
+  "self": "http://localhost:8181/dirs/d1",
   "labels": {
     "many.dots": "hello",
     "xxx.yyy": "xxx"
   },
 
   "filesCount": 0,
-  "filesUrl": "http://localhost:8080/dirs/d1/files"
+  "filesUrl": "http://localhost:8181/dirs/d1/files"
 }
 `)
 
@@ -190,7 +190,7 @@ func TestSetLabels(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetLabels",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "labels": {
     "r2": "123.234"
   },
@@ -198,7 +198,7 @@ func TestSetLabels(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "self": "http://localhost:8080/dirs/d1",
+      "self": "http://localhost:8181/dirs/d1",
       "labels": {
         "dd": "dd.foo"
       },
@@ -206,9 +206,9 @@ func TestSetLabels(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http://localhost:8080/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1",
           "latestId": "v2",
-          "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
+          "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
           "labels": {
             "2nd": "3rd",
             "ff": "ff.bar"
@@ -217,7 +217,7 @@ func TestSetLabels(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
               "labels": {
                 "vv": "987.234",
                 "vv2": "v11"
@@ -225,7 +225,7 @@ func TestSetLabels(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
               "latest": true,
               "labels": {
                 "2nd": "3rd",
@@ -234,22 +234,22 @@ func TestSetLabels(t *testing.T) {
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs/d1/files"
+      "filesUrl": "http://localhost:8181/dirs/d1/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http://localhost:8080/dirs"
+  "dirsUrl": "http://localhost:8181/dirs"
 }
 `)
 
 	file.SetLatest(ver)
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetLabels",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "labels": {
     "r2": "123.234"
   },
@@ -257,7 +257,7 @@ func TestSetLabels(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "self": "http://localhost:8080/dirs/d1",
+      "self": "http://localhost:8181/dirs/d1",
       "labels": {
         "dd": "dd.foo"
       },
@@ -265,9 +265,9 @@ func TestSetLabels(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http://localhost:8080/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1",
           "latestId": "v1",
-          "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
+          "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
           "labels": {
             "vv": "987.234",
             "vv2": "v11"
@@ -276,7 +276,7 @@ func TestSetLabels(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
               "latest": true,
               "labels": {
                 "vv": "987.234",
@@ -285,7 +285,7 @@ func TestSetLabels(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
               "labels": {
                 "2nd": "3rd",
                 "ff": "ff.bar"
@@ -293,15 +293,15 @@ func TestSetLabels(t *testing.T) {
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs/d1/files"
+      "filesUrl": "http://localhost:8181/dirs/d1/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http://localhost:8080/dirs"
+  "dirsUrl": "http://localhost:8181/dirs"
 }
 `)
 }

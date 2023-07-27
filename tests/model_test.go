@@ -14,7 +14,7 @@ func TestNoModel(t *testing.T) {
 	xCheckGet(t, reg, "/model", "{}\n")
 	xCheckGet(t, reg, "?model", `{
   "id": "TestNoModel",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "model": {}
 }
 `)
@@ -311,7 +311,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	xCheckGet(t, reg, "?model&inline=dirs/files", `{
   "id": "TestResourceModels",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "model": {
     "groups": [
       {
@@ -334,25 +334,25 @@ func TestResourceModelCreate(t *testing.T) {
   "dirs": {
     "dir1": {
       "id": "dir1",
-      "self": "http://localhost:8080/dirs/dir1",
+      "self": "http://localhost:8181/dirs/dir1",
 
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http://localhost:8080/dirs/dir1/files/f1",
+          "self": "http://localhost:8181/dirs/dir1/files/f1",
           "latestId": "v1",
-          "latestUrl": "http://localhost:8080/dirs/dir1/files/f1/versions/v1",
+          "latestUrl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
 
           "versionsCount": 1,
-          "versionsUrl": "http://localhost:8080/dirs/dir1/files/f1/versions"
+          "versionsUrl": "http://localhost:8181/dirs/dir1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs/dir1/files"
+      "filesUrl": "http://localhost:8181/dirs/dir1/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http://localhost:8080/dirs"
+  "dirsUrl": "http://localhost:8181/dirs"
 }
 `)
 
@@ -378,7 +378,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
   "id": "TestResourceModels",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "model": {
     "groups": [
       {
@@ -401,14 +401,14 @@ func TestResourceModelCreate(t *testing.T) {
   "dirs": {
     "dir1": {
       "id": "dir1",
-      "self": "http://localhost:8080/dirs/dir1",
+      "self": "http://localhost:8181/dirs/dir1",
 
       "files2Count": 0,
-      "files2Url": "http://localhost:8080/dirs/dir1/files2"
+      "files2Url": "http://localhost:8181/dirs/dir1/files2"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http://localhost:8080/dirs"
+  "dirsUrl": "http://localhost:8181/dirs"
 }
 `)
 
@@ -426,7 +426,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
   "id": "TestResourceModels",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "model": {
     "schema": "reg-model-schema",
     "groups": [
@@ -441,11 +441,11 @@ func TestResourceModelCreate(t *testing.T) {
   "dirs": {
     "dir1": {
       "id": "dir1",
-      "self": "http://localhost:8080/dirs/dir1"
+      "self": "http://localhost:8181/dirs/dir1"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http://localhost:8080/dirs"
+  "dirsUrl": "http://localhost:8181/dirs"
 }
 `)
 
@@ -461,7 +461,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=", `{
   "id": "TestResourceModels",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "model": {
     "groups": [
       {
@@ -474,7 +474,7 @@ func TestResourceModelCreate(t *testing.T) {
 
   "dirs2": {},
   "dirs2Count": 0,
-  "dirs2Url": "http://localhost:8080/dirs2"
+  "dirs2Url": "http://localhost:8181/dirs2"
 }
 `)
 }
@@ -594,7 +594,7 @@ func TestMultModel2Create(t *testing.T) {
 
 	xCheckGet(t, reg, "?model&inline", `{
   "id": "TestMultModel2Create",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "model": {
     "groups": [
       {
@@ -629,94 +629,94 @@ func TestMultModel2Create(t *testing.T) {
   "dirs1": {
     "d1": {
       "id": "d1",
-      "self": "http://localhost:8080/dirs1/d1",
+      "self": "http://localhost:8181/dirs1/d1",
 
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http://localhost:8080/dirs1/d1/files/f1",
+          "self": "http://localhost:8181/dirs1/d1/files/f1",
           "latestId": "v2",
-          "latestUrl": "http://localhost:8080/dirs1/d1/files/f1/versions/v2",
+          "latestUrl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs1/d1/files/f1/versions/v1"
+              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1"
             },
             "v2": {
               "id": "v2",
-              "self": "http://localhost:8080/dirs1/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
               "latest": true
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http://localhost:8080/dirs1/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8181/dirs1/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs1/d1/files"
+      "filesUrl": "http://localhost:8181/dirs1/d1/files"
     },
     "d2": {
       "id": "d2",
-      "self": "http://localhost:8080/dirs1/d2",
+      "self": "http://localhost:8181/dirs1/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http://localhost:8080/dirs1/d2/files/f2",
+          "self": "http://localhost:8181/dirs1/d2/files/f2",
           "latestId": "v1.1",
-          "latestUrl": "http://localhost:8080/dirs1/d2/files/f2/versions/v1.1",
+          "latestUrl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs1/d2/files/f2/versions/v1"
+              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
-              "self": "http://localhost:8080/dirs1/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
               "latest": true
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http://localhost:8080/dirs1/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8181/dirs1/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs1/d2/files"
+      "filesUrl": "http://localhost:8181/dirs1/d2/files"
     }
   },
   "dirs1Count": 2,
-  "dirs1Url": "http://localhost:8080/dirs1",
+  "dirs1Url": "http://localhost:8181/dirs1",
   "dirs2": {
     "d2": {
       "id": "d2",
-      "self": "http://localhost:8080/dirs2/d2",
+      "self": "http://localhost:8181/dirs2/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http://localhost:8080/dirs2/d2/files/f2",
+          "self": "http://localhost:8181/dirs2/d2/files/f2",
           "latestId": "v1",
-          "latestUrl": "http://localhost:8080/dirs2/d2/files/f2/versions/v1",
+          "latestUrl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs2/d2/files/f2/versions/v1",
+              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
               "latest": true
             }
           },
           "versionsCount": 1,
-          "versionsUrl": "http://localhost:8080/dirs2/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8181/dirs2/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs2/d2/files"
+      "filesUrl": "http://localhost:8181/dirs2/d2/files"
     }
   },
   "dirs2Count": 1,
-  "dirs2Url": "http://localhost:8080/dirs2"
+  "dirs2Url": "http://localhost:8181/dirs2"
 }
 `)
 

@@ -113,7 +113,7 @@ func TestBasicTypes(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestBasicTypes",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "regBool1": true,
   "regBool2": false,
   "regFloat1": 123.5,
@@ -129,7 +129,7 @@ func TestBasicTypes(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "self": "http://localhost:8080/dirs/d1",
+      "self": "http://localhost:8181/dirs/d1",
       "dirBool1": true,
       "dirBool2": false,
       "dirFloat1": 234.5,
@@ -145,9 +145,9 @@ func TestBasicTypes(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http://localhost:8080/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1",
           "latestId": "v1",
-          "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
+          "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
           "fileBool1": true,
           "fileBool2": false,
           "fileFloat1": 345.5,
@@ -174,7 +174,7 @@ func TestBasicTypes(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
               "latest": true,
               "verBool1": true,
               "verBool2": false,
@@ -190,15 +190,15 @@ func TestBasicTypes(t *testing.T) {
             }
           },
           "versionsCount": 1,
-          "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs/d1/files"
+      "filesUrl": "http://localhost:8181/dirs/d1/files"
     }
   },
   "dirsCount": 1,
-  "dirsUrl": "http://localhost:8080/dirs"
+  "dirsUrl": "http://localhost:8181/dirs"
 }
 `)
 }

@@ -23,7 +23,8 @@ func TestMain(m *testing.M) {
 	registry.OpenDB("testreg")
 
 	// Start HTTP server
-	server := registry.NewServer(nil, 8080).Start()
+
+	server := registry.NewServer(nil, 8181).Start()
 
 	// Run the tests
 	rc := m.Run()
@@ -98,7 +99,7 @@ func xNoErr(t *testing.T, err error) bool {
 }
 
 func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) bool {
-	res, err := http.Get("http://localhost:8080/" + url)
+	res, err := http.Get("http://localhost:8181/" + url)
 	if !xNoErr(t, err) {
 		return false
 	}

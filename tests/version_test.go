@@ -47,7 +47,7 @@ func TestCreateVersion(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/v1?meta",
 		`{
   "id": "v1",
-  "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1"
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
 }
 `)
 	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/xxx", "404: Not found\n")
@@ -93,12 +93,12 @@ func TestCreateVersion(t *testing.T) {
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{},"v3":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
 	xCheckGet(t, reg, "/dirs/d1/files/f1?meta", `{
   "id": "f1",
-  "self": "http://localhost:8080/dirs/d1/files/f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1",
   "latestId": "v3",
-  "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v3",
+  "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v3",
 
   "versionsCount": 3,
-  "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
+  "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 	vt, err = f1.FindVersion("v2")

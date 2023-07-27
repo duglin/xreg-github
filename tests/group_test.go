@@ -41,10 +41,10 @@ func TestCreateGroup(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1",
 		`{
   "id": "d1",
-  "self": "http://localhost:8080/dirs/d1",
+  "self": "http://localhost:8181/dirs/d1",
 
   "filesCount": 1,
-  "filesUrl": "http://localhost:8080/dirs/d1/files"
+  "filesUrl": "http://localhost:8181/dirs/d1/files"
 }
 `)
 	xCheckGet(t, reg, "/dirs/xxx", "404: Not found\n")

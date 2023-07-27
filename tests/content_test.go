@@ -124,8 +124,11 @@ func CompareContentMeta(t *testing.T, test *Test) {
 	t.Logf("\n*** TESTING: URL: %s", test.URL)
 	u := test.URL
 
-	metaResp, err := http.Get("http://localhost:8080/" + u + "?meta")
+	metaResp, err := http.Get("http://localhost:8181/" + u + "?meta")
 	xNoErr(t, err)
+	if metaResp == nil {
+		return
+	}
 	metaBody, err := io.ReadAll(metaResp.Body)
 	xNoErr(t, err)
 	metaProps := map[string]any{}
@@ -138,7 +141,7 @@ func CompareContentMeta(t *testing.T, test *Test) {
 			return http.ErrUseLastResponse
 		}}
 
-	res, err := client.Get("http://localhost:8080/" + u)
+	res, err := client.Get("http://localhost:8181/" + u)
 	xNoErr(t, err)
 	xCheck(t, res.StatusCode == test.Code,
 		fmt.Sprintf("\nTest: %s\nBad http code: %d", u, res.StatusCode))

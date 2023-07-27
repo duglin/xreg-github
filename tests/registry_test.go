@@ -15,7 +15,7 @@ func TestCreateRegistry(t *testing.T) {
 	xCheckGet(t, reg, "/",
 		`{
   "id": "TestCreateRegistry",
-  "self": "http://localhost:8080/"
+  "self": "http://localhost:8181/"
 }
 `)
 	xCheckGet(t, reg, "/xxx", "Unknown Group type: \"xxx\"")
@@ -42,7 +42,7 @@ func TestCreateRegistry(t *testing.T) {
 
 	xCheckGet(t, reg, "", `{
   "id": "TestCreateRegistry",
-  "self": "http://localhost:8080/"
+  "self": "http://localhost:8181/"
 }
 `)
 }
@@ -101,7 +101,7 @@ func TestRegistryProps(t *testing.T) {
   "specVersion": "x.y",
   "id": "TestRegistryProps",
   "name": "nameIt",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "description": "a very cool reg",
   "docs": "https://docs.com",
   "labels": {

@@ -39,12 +39,12 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?",
 			Exp: `{
   "id": "TestBasicInline",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
 
   "dirsCount": 2,
-  "dirsUrl": "http://localhost:8080/dirs",
+  "dirsUrl": "http://localhost:8181/dirs",
   "dirs2Count": 1,
-  "dirs2Url": "http://localhost:8080/dirs2"
+  "dirs2Url": "http://localhost:8181/dirs2"
 }
 `,
 		},
@@ -53,99 +53,99 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?inline",
 			Exp: `{
   "id": "TestBasicInline",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
 
   "dirs": {
     "d1": {
       "id": "d1",
-      "self": "http://localhost:8080/dirs/d1",
+      "self": "http://localhost:8181/dirs/d1",
 
       "files": {
         "f1": {
           "id": "f1",
-          "self": "http://localhost:8080/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1",
           "latestId": "v2",
-          "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
+          "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1"
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
             },
             "v2": {
               "id": "v2",
-              "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
               "latest": true
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http://localhost:8080/dirs/d1/files/f1/versions"
+          "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs/d1/files"
+      "filesUrl": "http://localhost:8181/dirs/d1/files"
     },
     "d2": {
       "id": "d2",
-      "self": "http://localhost:8080/dirs/d2",
+      "self": "http://localhost:8181/dirs/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http://localhost:8080/dirs/d2/files/f2",
+          "self": "http://localhost:8181/dirs/d2/files/f2",
           "latestId": "v1.1",
-          "latestUrl": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
+          "latestUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1"
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
-              "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
               "latest": true
             }
           },
           "versionsCount": 2,
-          "versionsUrl": "http://localhost:8080/dirs/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8181/dirs/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs/d2/files"
+      "filesUrl": "http://localhost:8181/dirs/d2/files"
     }
   },
   "dirsCount": 2,
-  "dirsUrl": "http://localhost:8080/dirs",
+  "dirsUrl": "http://localhost:8181/dirs",
   "dirs2": {
     "d2": {
       "id": "d2",
-      "self": "http://localhost:8080/dirs2/d2",
+      "self": "http://localhost:8181/dirs2/d2",
 
       "files": {
         "f2": {
           "id": "f2",
-          "self": "http://localhost:8080/dirs2/d2/files/f2",
+          "self": "http://localhost:8181/dirs2/d2/files/f2",
           "latestId": "v1",
-          "latestUrl": "http://localhost:8080/dirs2/d2/files/f2/versions/v1",
+          "latestUrl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
 
           "versions": {
             "v1": {
               "id": "v1",
-              "self": "http://localhost:8080/dirs2/d2/files/f2/versions/v1",
+              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
               "latest": true
             }
           },
           "versionsCount": 1,
-          "versionsUrl": "http://localhost:8080/dirs2/d2/files/f2/versions"
+          "versionsUrl": "http://localhost:8181/dirs2/d2/files/f2/versions"
         }
       },
       "filesCount": 1,
-      "filesUrl": "http://localhost:8080/dirs2/d2/files"
+      "filesUrl": "http://localhost:8181/dirs2/d2/files"
     }
   },
   "dirs2Count": 1,
-  "dirs2Url": "http://localhost:8080/dirs2"
+  "dirs2Url": "http://localhost:8181/dirs2"
 }
 `,
 		},

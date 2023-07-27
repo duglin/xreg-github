@@ -31,7 +31,7 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 	if test.ReqBody != "" {
 		body = bytes.NewReader([]byte(test.ReqBody))
 	}
-	req, err := http.NewRequest(test.Method, "http://localhost:8080/"+test.URL, body)
+	req, err := http.NewRequest(test.Method, "http://localhost:8181/"+test.URL, body)
 	xNoErr(t, err)
 	for _, header := range test.ReqHeaders {
 		name, value, _ := strings.Cut(header, ":")
@@ -74,7 +74,7 @@ func TestHTTPModel(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "id": "TestHTTPModel",
-  "self": "http://localhost:8080/",
+  "self": "http://localhost:8181/",
   "model": {}
 }
 `,
