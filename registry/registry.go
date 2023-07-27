@@ -244,10 +244,10 @@ func (info *RequestInfo) AddInline(path string) error {
 			return nil
 		}
 		for _, res := range group.Resources {
-			if path == group.Plural+"."+res.Plural ||
-				path == group.Plural+"."+res.Plural+"."+res.Singular ||
-				path == group.Plural+"."+res.Plural+".versions" ||
-				path == group.Plural+"."+res.Plural+".versions."+res.Singular {
+			if path == group.Plural+"/"+res.Plural ||
+				path == group.Plural+"/"+res.Plural+"/"+res.Singular ||
+				path == group.Plural+"/"+res.Plural+"/versions" ||
+				path == group.Plural+"/"+res.Plural+"/versions."+res.Singular {
 
 				info.Inlines = append(info.Inlines, path)
 				return nil
@@ -264,7 +264,7 @@ func (info *RequestInfo) AddInline(path string) error {
 }
 
 func (info *RequestInfo) ShouldInline(entityPath string) bool {
-	entityPath = strings.Replace(entityPath, "/", ".", -1)
+	// entityPath = strings.Replace(entityPath, "/", ".", -1)
 	for _, path := range info.Inlines {
 		log.VPrintf(4, "Inline check: %q in %q ?", entityPath, path)
 		if path == "*" || entityPath == path || strings.HasPrefix(path, entityPath) {
@@ -331,7 +331,7 @@ func (reg *Registry) ParseRequest(w http.ResponseWriter, r *http.Request) (*Requ
 					// if we're not at the root then we need to twiddle
 					// the inline path to add the HTTP Path as a prefix
 					if info.Abstract != "" {
-						p = info.Abstract + "." + p
+						p = info.Abstract + "/" + p
 					}
 					if err := info.AddInline(p); err != nil {
 						info.ErrCode = http.StatusBadRequest
@@ -362,7 +362,7 @@ func (info *RequestInfo) ParseFilters() error {
 			path, value, found := strings.Cut(expr, "=")
 
 			/*
-				if info.What != "Coll" && strings.Index(path, ".") < 0 {
+				if info.What != "Coll" && strings.Index(path, "/") < 0 {
 					info.ErrCode = http.StatusBadRequest
 					return fmt.Errorf("A filter with just an attribute name (%s) "+
 						"isn't allowed in this context", path)
@@ -370,7 +370,8 @@ func (info *RequestInfo) ParseFilters() error {
 			*/
 
 			if info.Abstract != "" {
-				path = strings.Replace(info.Abstract, "/", ".", -1) + "." + path
+				// path = strings.Replace(info.Abstract, "/", ".", -1) + "." + path
+				path = info.Abstract + "/" + path
 			}
 			filter := &FilterExpr{
 				Path:     path,
@@ -562,7 +563,7 @@ eSID IN ( -- eSID from query
           SELECT eSID,Path FROM FullTree
           WHERE
             RegSID=? AND
-            (BINARY CONCAT(IF(Abstract<>'',CONCAT(REPLACE(Abstract,'/','.'),'.'),''),PropName)=? AND
+            (BINARY CONCAT(IF(Abstract<>'',CONCAT(Abstract,'/'),''),PropName)=? AND
                ` + check + `)`
 			} // end of AndFilter
 			query += `
