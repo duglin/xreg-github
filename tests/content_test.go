@@ -21,11 +21,11 @@ func TestResourceContents(t *testing.T) {
 	f1, _ := d1.AddResource("files", "f1", "v1")
 
 	f1.Set("name", "file1")
-	f1.Set("tags.str1", "foo")
-	f1.Set("tags.str2", "")
-	f1.Set("tags.int", 6)
-	f1.Set("tags.bool", true)
-	f1.Set("tags.float", 123.456)
+	f1.Set("labels.str1", "foo")
+	f1.Set("labels.str2", "")
+	f1.Set("labels.int", 6)
+	f1.Set("labels.bool", true)
+	f1.Set("labels.float", 123.456)
 	f1.Set("str1", "foo")
 	f1.Set("str2", "")
 	f1.Set("int1", 6)
@@ -146,7 +146,6 @@ func CompareContentMeta(t *testing.T, test *Test) {
 	xNoErr(t, err)
 
 	// Make sure any headers have the expected text someplace
-	t.Logf("res.Headers: %#v", res.Header)
 	for _, header := range test.Headers {
 		name, value, _ := strings.Cut(header, ":")
 		name = strings.TrimSpace(name)
@@ -166,6 +165,8 @@ func CompareContentMeta(t *testing.T, test *Test) {
 		}
 	}
 
+	headerLabels := map[string]string{}
+
 	for name, value := range res.Header {
 		name = strings.ToLower(name)
 		// t.Logf("Header: %s", name)
@@ -173,6 +174,11 @@ func CompareContentMeta(t *testing.T, test *Test) {
 			continue
 		}
 		name = name[len("xregistry-"):]
+
+		if strings.HasPrefix(name, "labels-") {
+			headerLabels[name[7:]] = value[0]
+			continue
+		}
 
 		foundIt := false
 		for propName, propValue := range metaProps {
@@ -185,12 +191,7 @@ func CompareContentMeta(t *testing.T, test *Test) {
 
 			// TODO will need to sort the maps before diff'ing
 			str := ""
-			if name == "tags" {
-				buf, _ := json.Marshal(propValue)
-				str = string(buf)
-			} else {
-				str = fmt.Sprintf("%v", propValue)
-			}
+			str = fmt.Sprintf("%v", propValue)
 			// t.Logf("Checking %q: %q vs %q", name, str, value[0])
 			xCheckEqual(t, "", value[0], str)
 			break
@@ -200,7 +201,33 @@ func CompareContentMeta(t *testing.T, test *Test) {
 		}
 	}
 
+	var metaLabels map[string]interface{}
+	if tmp := metaProps["labels"]; tmp != nil {
+		metaLabels = tmp.(map[string]interface{})
+	}
+
+	for k, v := range headerLabels {
+		metaVal, ok := metaLabels[k]
+		if !ok {
+			t.Errorf("metaLabel %v is missing: %s", k, u)
+			continue
+		}
+
+		metaStr := fmt.Sprintf("%v", metaVal)
+		if v != metaStr {
+			t.Errorf("metaLabel %v value mismatch(%q vs %q): %s",
+				k, v, metaStr, u)
+		}
+		delete(metaLabels, k)
+	}
+	if len(metaLabels) != 0 {
+		t.Errorf("Extra metaLabels: %v for url: %q", metaLabels, u)
+	}
+
 	for propName, _ := range metaProps {
+		if propName == "labels" {
+			continue
+		}
 		t.Errorf("Extra prop %q in ?meata, not in header: %s", propName, u)
 	}
 }

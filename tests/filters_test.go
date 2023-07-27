@@ -18,8 +18,8 @@ func TestBasicFilters(t *testing.T) {
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
 
-	reg.Set("tags.reg1", "1ger")
-	f.Set("tags.file1", "1elif")
+	reg.Set("labels.reg1", "1ger")
+	f.Set("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1
 	//            /v2
@@ -37,7 +37,7 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "id": "TestBasicFilters",
   "self": "http://localhost:8080/",
-  "tags": {
+  "labels": {
     "reg1": "1ger"
   },
 
@@ -158,18 +158,18 @@ func TestBasicFilters(t *testing.T) {
 
 		// Some tag filters
 		{
-			Name: "Get/filter reg.tags - no match",
-			URL:  "?filter=tags.reg1=xxx",
+			Name: "Get/filter reg.labels - no match",
+			URL:  "?filter=labels.reg1=xxx",
 			// Nothing, matched, so 404
 			Exp: "404: Not found\n",
 		},
 		{
-			Name: "Get/filter reg.tags - match",
-			URL:  "?filter=tags.reg1=1ger",
+			Name: "Get/filter reg.labels - match",
+			URL:  "?filter=labels.reg1=1ger",
 			Exp: `{
   "id": "TestBasicFilters",
   "self": "http://localhost:8080/",
-  "tags": {
+  "labels": {
     "reg1": "1ger"
   },
 
@@ -179,12 +179,12 @@ func TestBasicFilters(t *testing.T) {
 `,
 		},
 		{
-			Name: "Get/filter tags",
-			URL:  "?filter=dirs.files.tags.file1=1elif",
+			Name: "Get/filter labels",
+			URL:  "?filter=dirs.files.labels.file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
   "self": "http://localhost:8080/",
-  "tags": {
+  "labels": {
     "reg1": "1ger"
   },
 
@@ -194,12 +194,12 @@ func TestBasicFilters(t *testing.T) {
 `,
 		},
 		{
-			Name: "Get/filter dir file.tags - match",
-			URL:  "?inline&filter=dirs.files.tags.file1=1elif",
+			Name: "Get/filter dir file.labels - match",
+			URL:  "?inline&filter=dirs.files.labels.file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
   "self": "http://localhost:8080/",
-  "tags": {
+  "labels": {
     "reg1": "1ger"
   },
 
@@ -214,7 +214,7 @@ func TestBasicFilters(t *testing.T) {
           "self": "http://localhost:8080/dirs/d2/files/f2",
           "latestId": "v1.1",
           "latestUrl": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
-          "tags": {
+          "labels": {
             "file1": "1elif"
           },
 
@@ -227,7 +227,7 @@ func TestBasicFilters(t *testing.T) {
               "id": "v1.1",
               "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
               "latest": true,
-              "tags": {
+              "labels": {
                 "file1": "1elif"
               }
             }
@@ -246,27 +246,27 @@ func TestBasicFilters(t *testing.T) {
 `,
 		},
 		{
-			Name: "Get/filter dir file.tags - no match empty string",
-			URL:  "?inline&filter=dirs.files.tags.file1=",
+			Name: "Get/filter dir file.labels - no match empty string",
+			URL:  "?inline&filter=dirs.files.labels.file1=",
 			Exp:  "404: Not found\n",
 		},
 		{
-			Name: "Get/filter dir file.tags.xxx - no match empty string",
-			URL:  "?inline&filter=dirs.files.tags.xxx=",
+			Name: "Get/filter dir file.labels.xxx - no match empty string",
+			URL:  "?inline&filter=dirs.files.labels.xxx=",
 			Exp:  "404: Not found\n",
 		},
 		{
-			Name: "Get/filter dir file.tags.xxx - no match non-empty string",
-			URL:  "?inline&filter=dirs.files.tags.xxx",
+			Name: "Get/filter dir file.labels.xxx - no match non-empty string",
+			URL:  "?inline&filter=dirs.files.labels.xxx",
 			Exp:  "404: Not found\n",
 		},
 		{
-			Name: "Get/filter dir file.tags - match non-empty string",
-			URL:  "?inline&filter=dirs.files.tags.file1",
+			Name: "Get/filter dir file.labels - match non-empty string",
+			URL:  "?inline&filter=dirs.files.labels.file1",
 			Exp: `{
   "id": "TestBasicFilters",
   "self": "http://localhost:8080/",
-  "tags": {
+  "labels": {
     "reg1": "1ger"
   },
 
@@ -281,7 +281,7 @@ func TestBasicFilters(t *testing.T) {
           "self": "http://localhost:8080/dirs/d2/files/f2",
           "latestId": "v1.1",
           "latestUrl": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
-          "tags": {
+          "labels": {
             "file1": "1elif"
           },
 
@@ -294,7 +294,7 @@ func TestBasicFilters(t *testing.T) {
               "id": "v1.1",
               "self": "http://localhost:8080/dirs/d2/files/f2/versions/v1.1",
               "latest": true,
-              "tags": {
+              "labels": {
                 "file1": "1elif"
               }
             }
@@ -343,8 +343,8 @@ func TestANDORFilters(t *testing.T) {
 	s, _ := sg.AddResource("schemas", "s1", "v1.0")
 	s.AddVersion("v2.0")
 
-	reg.Set("tags.reg1", "1ger")
-	f.Set("tags.file1", "1elif")
+	reg.Set("labels.reg1", "1ger")
+	f.Set("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1     f1.name=f1
 	//            /v2

@@ -210,12 +210,15 @@ FROM FullTree WHERE RegSID=? AND `
 
 	headerIt := func(e *Entity, info *RequestInfo, key string, val any) error {
 		str := ""
-		if key == "tags" {
-			buf, _ := json.Marshal(val)
-			str = string(buf)
-		} else {
-			str = fmt.Sprintf("%v", val)
+		if key == "labels" {
+			header := info.OriginalResponse.Header()
+			for name, value := range val.(map[string]string) {
+				header["xRegistry-labels-"+name] = []string{value}
+			}
+			return nil
 		}
+		str = fmt.Sprintf("%v", val)
+
 		info.OriginalResponse.Header()["xRegistry-"+key] = []string{str}
 		return nil
 	}

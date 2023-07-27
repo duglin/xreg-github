@@ -196,16 +196,18 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("specVersion", "0.5")
 		reg.Set("docs", "https://github.com/duglin/xreg-github")
 
-		reg.Set("tags.stage", "prod")
+		reg.Set("labels.stage", "prod")
 	}
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	_, err = gm.AddResourceModel("files", "file", 2, true, true)
 
 	g, _ := reg.AddGroup("dirs", "dir1")
-	g.Set("tags.private", "true")
+	g.Set("labels.private", "true")
 	r, _ := g.AddResource("files", "f1", "v1")
 	r.AddVersion("v2")
+	r.Set("labels.stage", "dev")
+	r.Set("labels.none", "")
 
 	return reg
 }
@@ -230,8 +232,8 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	g.Set("name", "end1")
 	g.Set("epoch", 1)
 	g.Set("ext", "ext1")
-	g.Set("tags.stage", "dev")
-	g.Set("tags.stale", "true")
+	g.Set("labels.stage", "dev")
+	g.Set("labels.stale", "true")
 
 	r, _ := g.AddResource("definitions", "created", "v1")
 	v, _ := r.FindVersion("v1")

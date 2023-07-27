@@ -320,7 +320,7 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
   WHERE eID in (
     -- below find IDs of interes
 	SELECT eID FROM FullTree
-	  WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+	  WHERE (PropName='labels.int' AND PropValue=3 AND Level=2)
     -- end of ID selection
   )
   UNION ALL SELECT e.eID,e.ParentID,e.Path FROM Entities AS e
@@ -343,7 +343,7 @@ RIGHT JOIN Entities AS e2 ON (e2.Path=e1.Path OR e2.Path LIKE
 CONCAT(e1.Path,'%')) WHERE e1.eID in (
   -- below finds IDs of interest
   SELECT eID FROM FullTree
-  WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+  WHERE (PropName='labels.int' AND PropValue=3 AND Level=2)
   -- end of ID selection
   )
 AND e2.eID IN (SELECT * from Leaves);
@@ -363,7 +363,7 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
 	  -- below finds SeachNodes/IDs of interest
 	  -- Add regID into the search
 	    SELECT eID FROM FullTree
-		WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+		WHERE (PropName='labels.int' AND PropValue=3 AND Level=2)
 	  -- end of ID selection
 	)
 	AND e2.eID IN (SELECT * from Leaves)
@@ -385,10 +385,10 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
 	    -- below finds SeachNodes/IDs of interest
 	    -- Add regID into the search
 	      SELECT eID,Path FROM FullTree
-		  WHERE (CONCAT(Abstract,'.',PropName)='myGroups/ress.tags.int')
+		  WHERE (CONCAT(Abstract,'.',PropName)='myGroups/ress.labels.int')
 		  UNION ALL
 	      SELECT eID,Path FROM FullTree
-		  WHERE (PropName='tags.int' AND PropValue=3 AND Level=2)
+		  WHERE (PropName='labels.int' AND PropValue=3 AND Level=2)
 		  UNION ALL
 		  SELECT eID,Path from FullTree
 		  WHERE (PropName='id' AND PropValue='g1' AND Level=1)

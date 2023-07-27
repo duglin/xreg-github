@@ -84,22 +84,22 @@ func TestSetDots(t *testing.T) {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
 	gm.AddResourceModel("files", "file", 0, true, true)
 
-	// check some dots in the prop names - and some tags stuff too
+	// check some dots in the prop names - and some labels stuff too
 	dir, _ := reg.AddGroup("dirs", "d1")
-	err := dir.Set("tags", "xxx")
-	xCheck(t, err != nil, "tags=xxx should fail")
+	err := dir.Set("labels", "xxx")
+	xCheck(t, err != nil, "labels=xxx should fail")
 
 	// dots are ok as tag names
-	err = dir.Set("tags.xxx.yyy", "xxx")
+	err = dir.Set("labels.xxx.yyy", "xxx")
 	xNoErr(t, err)
-	err = dir.Set("tags.many.dots", "hello")
-	xCheck(t, dir.Get("tags.many.dots") == "hello", "many.dots should work")
+	err = dir.Set("labels.many.dots", "hello")
+	xCheck(t, dir.Get("labels.many.dots") == "hello", "many.dots should work")
 	dir.Refresh()
-	xCheck(t, dir.Get("tags.many.dots") == "hello", "many.dots should work")
+	xCheck(t, dir.Get("labels.many.dots") == "hello", "many.dots should work")
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
   "self": "http://localhost:8080/dirs/d1",
-  "tags": {
+  "labels": {
     "many.dots": "hello",
     "xxx.yyy": "xxx"
   },
@@ -109,9 +109,9 @@ func TestSetDots(t *testing.T) {
 }
 `)
 
-	err = dir.Set("tags", nil)
-	xCheck(t, err != nil, "tags=nil should fail")
-	xCheck(t, err != nil, "tags.xxx.yyy=nil should fail")
+	err = dir.Set("labels", nil)
+	xCheck(t, err != nil, "labels=nil should fail")
+	xCheck(t, err != nil, "labels.xxx.yyy=nil should fail")
 	err = dir.Set("xxx.yyy", "xxx")
 	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
 	err = dir.Set("xxx.yyy", nil)
@@ -124,8 +124,8 @@ func TestSetDots(t *testing.T) {
 	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
 }
 
-func TestSetTags(t *testing.T) {
-	reg := NewRegistry("TestSetTags")
+func TestSetLabels(t *testing.T) {
+	reg := NewRegistry("TestSetLabels")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
@@ -137,61 +137,61 @@ func TestSetTags(t *testing.T) {
 	ver2, _ := file.AddVersion("v2")
 
 	// /dirs/d1/f1/v1
-	err := reg.Set("tags.r2", 123.234) // notice it's not a string
+	err := reg.Set("labels.r2", 123.234) // notice it's not a string
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("tags.r2"), 123.234) // won't see it as a string until json
-	err = reg.Set("tags.r1", "foo")
+	xJSONCheck(t, reg.Get("labels.r2"), 123.234) // won't see it as a string until json
+	err = reg.Set("labels.r1", "foo")
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("tags.r1"), "foo")
-	err = reg.Set("tags.r1", nil)
+	xJSONCheck(t, reg.Get("labels.r1"), "foo")
+	err = reg.Set("labels.r1", nil)
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("tags.r1"), nil)
+	xJSONCheck(t, reg.Get("labels.r1"), nil)
 
-	err = dir.Set("tags.d1", "bar")
+	err = dir.Set("labels.d1", "bar")
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("tags.d1"), "bar")
+	xJSONCheck(t, dir.Get("labels.d1"), "bar")
 	// test override
-	err = dir.Set("tags.d1", "foo")
+	err = dir.Set("labels.d1", "foo")
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("tags.d1"), "foo")
-	err = dir.Set("tags.d1", nil)
+	xJSONCheck(t, dir.Get("labels.d1"), "foo")
+	err = dir.Set("labels.d1", nil)
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("tags.d1"), nil)
+	xJSONCheck(t, dir.Get("labels.d1"), nil)
 
-	err = file.Set("tags.f1", "foo")
+	err = file.Set("labels.f1", "foo")
 	xNoErr(t, err)
 	file.Refresh()
-	xJSONCheck(t, file.Get("tags.f1"), "foo")
-	err = file.Set("tags.f1", nil)
+	xJSONCheck(t, file.Get("labels.f1"), "foo")
+	err = file.Set("labels.f1", nil)
 	xNoErr(t, err)
 	file.Refresh()
-	xJSONCheck(t, file.Get("tags.f1"), nil)
+	xJSONCheck(t, file.Get("labels.f1"), nil)
 
-	err = ver.Set("tags.v1", "foo")
+	err = ver.Set("labels.v1", "foo")
 	xNoErr(t, err)
 	ver.Refresh()
-	xJSONCheck(t, ver.Get("tags.v1"), "foo")
-	err = ver.Set("tags.v1", nil)
+	xJSONCheck(t, ver.Get("labels.v1"), "foo")
+	err = ver.Set("labels.v1", nil)
 	xNoErr(t, err)
 	ver.Refresh()
-	xJSONCheck(t, ver.Get("tags.v1"), nil)
+	xJSONCheck(t, ver.Get("labels.v1"), nil)
 
-	dir.Set("tags.dd", "dd.foo")
-	file.Set("tags.ff", "ff.bar")
-	ver.Set("tags.vv", 987.234)
-	ver.Set("tags.vv2", "v11")
-	ver2.Set("tags.2nd", "3rd")
+	dir.Set("labels.dd", "dd.foo")
+	file.Set("labels.ff", "ff.bar")
+	ver.Set("labels.vv", 987.234)
+	ver.Set("labels.vv2", "v11")
+	ver2.Set("labels.2nd", "3rd")
 
 	xCheckGet(t, reg, "?inline", `{
-  "id": "TestSetTags",
+  "id": "TestSetLabels",
   "self": "http://localhost:8080/",
-  "tags": {
+  "labels": {
     "r2": "123.234"
   },
 
@@ -199,7 +199,7 @@ func TestSetTags(t *testing.T) {
     "d1": {
       "id": "d1",
       "self": "http://localhost:8080/dirs/d1",
-      "tags": {
+      "labels": {
         "dd": "dd.foo"
       },
 
@@ -209,7 +209,7 @@ func TestSetTags(t *testing.T) {
           "self": "http://localhost:8080/dirs/d1/files/f1",
           "latestId": "v2",
           "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
-          "tags": {
+          "labels": {
             "2nd": "3rd",
             "ff": "ff.bar"
           },
@@ -218,7 +218,7 @@ func TestSetTags(t *testing.T) {
             "v1": {
               "id": "v1",
               "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
-              "tags": {
+              "labels": {
                 "vv": "987.234",
                 "vv2": "v11"
               }
@@ -227,7 +227,7 @@ func TestSetTags(t *testing.T) {
               "id": "v2",
               "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
               "latest": true,
-              "tags": {
+              "labels": {
                 "2nd": "3rd",
                 "ff": "ff.bar"
               }
@@ -248,9 +248,9 @@ func TestSetTags(t *testing.T) {
 
 	file.SetLatest(ver)
 	xCheckGet(t, reg, "?inline", `{
-  "id": "TestSetTags",
+  "id": "TestSetLabels",
   "self": "http://localhost:8080/",
-  "tags": {
+  "labels": {
     "r2": "123.234"
   },
 
@@ -258,7 +258,7 @@ func TestSetTags(t *testing.T) {
     "d1": {
       "id": "d1",
       "self": "http://localhost:8080/dirs/d1",
-      "tags": {
+      "labels": {
         "dd": "dd.foo"
       },
 
@@ -268,7 +268,7 @@ func TestSetTags(t *testing.T) {
           "self": "http://localhost:8080/dirs/d1/files/f1",
           "latestId": "v1",
           "latestUrl": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
-          "tags": {
+          "labels": {
             "vv": "987.234",
             "vv2": "v11"
           },
@@ -278,7 +278,7 @@ func TestSetTags(t *testing.T) {
               "id": "v1",
               "self": "http://localhost:8080/dirs/d1/files/f1/versions/v1",
               "latest": true,
-              "tags": {
+              "labels": {
                 "vv": "987.234",
                 "vv2": "v11"
               }
@@ -286,7 +286,7 @@ func TestSetTags(t *testing.T) {
             "v2": {
               "id": "v2",
               "self": "http://localhost:8080/dirs/d1/files/f1/versions/v2",
-              "tags": {
+              "labels": {
                 "2nd": "3rd",
                 "ff": "ff.bar"
               }

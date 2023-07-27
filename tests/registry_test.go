@@ -95,7 +95,7 @@ func TestRegistryProps(t *testing.T) {
 	reg.Set("name", "nameIt")
 	reg.Set("description", "a very cool reg")
 	reg.Set("docs", "https://docs.com")
-	reg.Set("tags.stage", "dev")
+	reg.Set("labels.stage", "dev")
 
 	xCheckGet(t, reg, "", `{
   "specVersion": "x.y",
@@ -104,7 +104,7 @@ func TestRegistryProps(t *testing.T) {
   "self": "http://localhost:8080/",
   "description": "a very cool reg",
   "docs": "https://docs.com",
-  "tags": {
+  "labels": {
     "stage": "dev"
   }
 }

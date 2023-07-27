@@ -180,7 +180,7 @@ func RemoveProps(buf []byte) []byte {
 	re := regexp.MustCompile(`\n[^{}]*\n`)
 	buf = re.ReplaceAll(buf, []byte("\n"))
 
-	re = regexp.MustCompile(`\s"tags": {\s*},*`)
+	re = regexp.MustCompile(`\s"labels": {\s*},*`)
 	buf = re.ReplaceAll(buf, []byte(""))
 
 	re = regexp.MustCompile(`\n *\n`)

@@ -183,14 +183,14 @@ func SetProp(entity any, name string, val any) error {
 	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
 	defer log.VPrintf(3, "<Exit SetProp")
 
-	// Only allow "." in the name if it's "tags.xxx"
+	// Only allow "." in the name if it's "labels.xxx"
 	preDot, _, found := strings.Cut(name, ".")
 	if found {
-		if preDot != "tags" {
+		if preDot != "labels" {
 			return fmt.Errorf("Can't use '.' in a property name except for "+
-				"tags: %s", name)
+				"labels: %s", name)
 		}
-	} else if name == "tags" {
+	} else if name == "labels" {
 		return fmt.Errorf("Invalid propery name: %s", name)
 	}
 
@@ -372,7 +372,7 @@ var orderedProps = []struct {
 	}},
 	{"description", "", nil},
 	{"docs", "", nil},
-	{"tags", "", func(e *Entity, info *RequestInfo) any {
+	{"labels", "", func(e *Entity, info *RequestInfo) any {
 		var res map[string]string
 
 		for _, key := range SortedKeys(e.Props) {
@@ -380,13 +380,13 @@ var orderedProps = []struct {
 				break
 			}
 
-			if strings.HasPrefix(key, "tags.") {
+			if strings.HasPrefix(key, "labels.") {
 				val, _ := e.Props[key]
 				if res == nil {
 					res = map[string]string{}
 				}
 				// Convert it to a string per the spec
-				res[key[5:]] = fmt.Sprintf("%v", val)
+				res[key[7:]] = fmt.Sprintf("%v", val)
 			}
 		}
 		return res
@@ -445,8 +445,8 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		if key[0] == '#' {
 			continue
 		}
-		// "tags." is special and we know we did it above
-		if usedProps[key] || strings.HasPrefix(key, "tags.") {
+		// "labels." is special and we know we did it above
+		if usedProps[key] || strings.HasPrefix(key, "labels.") {
 			continue
 		}
 		val, _ := e.Props[key]
