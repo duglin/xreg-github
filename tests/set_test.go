@@ -190,6 +190,7 @@ func TestSetLabels(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetLabels",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "labels": {
     "r2": "123.234"
@@ -249,6 +250,7 @@ func TestSetLabels(t *testing.T) {
 	file.SetLatest(ver)
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetLabels",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "labels": {
     "r2": "123.234"

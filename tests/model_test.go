@@ -14,6 +14,7 @@ func TestNoModel(t *testing.T) {
 	xCheckGet(t, reg, "/model", "{}\n")
 	xCheckGet(t, reg, "?model", `{
   "id": "TestNoModel",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {}
 }
@@ -311,6 +312,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	xCheckGet(t, reg, "?model&inline=dirs/files", `{
   "id": "TestResourceModels",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
     "groups": [
@@ -378,6 +380,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
   "id": "TestResourceModels",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
     "groups": [
@@ -426,6 +429,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
   "id": "TestResourceModels",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
     "schema": "reg-model-schema",
@@ -461,6 +465,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=", `{
   "id": "TestResourceModels",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
     "groups": [
@@ -594,6 +599,7 @@ func TestMultModel2Create(t *testing.T) {
 
 	xCheckGet(t, reg, "?model&inline", `{
   "id": "TestMultModel2Create",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
     "groups": [

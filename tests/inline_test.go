@@ -39,6 +39,7 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?",
 			Exp: `{
   "id": "TestBasicInline",
+  "epoch": 1,
   "self": "http://localhost:8181/",
 
   "dirsCount": 2,
@@ -53,6 +54,7 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?inline",
 			Exp: `{
   "id": "TestBasicInline",
+  "epoch": 1,
   "self": "http://localhost:8181/",
 
   "dirs": {

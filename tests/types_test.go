@@ -113,6 +113,7 @@ func TestBasicTypes(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestBasicTypes",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "regBool1": true,
   "regBool2": false,

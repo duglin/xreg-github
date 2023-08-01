@@ -100,8 +100,8 @@ func (r *Result) PullNextRow() {
 }
 
 func Query(cmd string, args ...interface{}) (*Result, error) {
-	if log.GetVerbose() > 3 {
-		log.VPrintf(4, "Query: %s", SubQuery(cmd, args))
+	if log.GetVerbose() > 2 {
+		log.VPrintf(3, "Query: %s", SubQuery(cmd, args))
 	}
 
 	ps, err := DB.Prepare(cmd)

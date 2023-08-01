@@ -15,6 +15,7 @@ func TestCreateRegistry(t *testing.T) {
 	xCheckGet(t, reg, "/",
 		`{
   "id": "TestCreateRegistry",
+  "epoch": 1,
   "self": "http://localhost:8181/"
 }
 `)
@@ -42,6 +43,7 @@ func TestCreateRegistry(t *testing.T) {
 
 	xCheckGet(t, reg, "", `{
   "id": "TestCreateRegistry",
+  "epoch": 1,
   "self": "http://localhost:8181/"
 }
 `)
@@ -101,6 +103,7 @@ func TestRegistryProps(t *testing.T) {
   "specVersion": "x.y",
   "id": "TestRegistryProps",
   "name": "nameIt",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "a very cool reg",
   "docs": "https://docs.com",

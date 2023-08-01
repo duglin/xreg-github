@@ -112,25 +112,30 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		err = HTTPPut(out, info)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(fmt.Sprintf("HTTP method %q not supported", r.Method)))
-		return
+		info.ErrCode = http.StatusMethodNotAllowed
+		err = fmt.Errorf("HTTP method %q not supported", r.Method)
 	}
 
 	if err != nil {
+		str := ""
 		if info.ErrCode != 0 {
 			w.WriteHeader(info.ErrCode)
+			str = fmt.Sprintf("%d: ", info.ErrCode)
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		w.Write([]byte(err.Error()))
+		str += err.Error()
+		if str[len(str)-1] != '\n' {
+			str += "\n"
+		}
+		w.Write([]byte(str))
 	}
 }
 
 func HTTPGETModel(w io.Writer, info *RequestInfo) error {
 	if len(info.Parts) > 1 {
 		info.ErrCode = http.StatusNotFound
-		return fmt.Errorf("404: Not found\n")
+		return fmt.Errorf("Not found")
 	}
 
 	model := info.Registry.Model
@@ -143,7 +148,7 @@ func HTTPGETModel(w io.Writer, info *RequestInfo) error {
 	buf, err := json.MarshalIndent(httpModel, "", "  ")
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
-		return fmt.Errorf("500: " + err.Error())
+		return err
 	}
 
 	info.OriginalResponse.Header().Add("Content-Type", "application/json")
@@ -176,13 +181,13 @@ FROM FullTree WHERE RegSID=? AND `
 
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
-		return fmt.Errorf("500: " + err.Error())
+		return err
 	}
 
 	entity := readNextEntity(results)
 	if entity == nil {
 		info.ErrCode = http.StatusNotFound
-		return fmt.Errorf("404: Not found\n")
+		return fmt.Errorf("Not found")
 	}
 
 	var version *Entity
@@ -194,7 +199,7 @@ FROM FullTree WHERE RegSID=? AND `
 			v := readNextEntity(results)
 			if v == nil && version == nil {
 				info.ErrCode = http.StatusInternalServerError
-				return fmt.Errorf("500: Can't find version: %s", vID)
+				return fmt.Errorf("Can't find version: %s", vID)
 			}
 			if v == nil {
 				break
@@ -260,11 +265,11 @@ FROM FullTree WHERE RegSID=? AND `
 		resp, err := http.Get(url)
 		if err != nil {
 			info.ErrCode = http.StatusInternalServerError
-			return fmt.Errorf("500: " + err.Error())
+			return err
 		}
 		if resp.StatusCode/100 != 2 {
 			info.ErrCode = resp.StatusCode
-			return fmt.Errorf("%s: Remote error", resp.Status)
+			return fmt.Errorf("Remote error")
 		}
 
 		// Copy all HTTP headers
@@ -276,7 +281,7 @@ FROM FullTree WHERE RegSID=? AND `
 		_, err = io.Copy(w, resp.Body)
 		if err != nil {
 			info.ErrCode = http.StatusInternalServerError
-			return fmt.Errorf("500: " + err.Error())
+			return err
 		}
 		return nil
 	}
@@ -309,7 +314,7 @@ func HTTPGet(w io.Writer, info *RequestInfo) error {
 
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
-		return fmt.Errorf("500: " + err.Error())
+		return err
 	}
 
 	jw := NewJsonWriter(w, info, results)
@@ -319,7 +324,7 @@ func HTTPGet(w io.Writer, info *RequestInfo) error {
 		// Collections will need to print the {}, so don't error for them
 		if jw.Entity == nil {
 			info.ErrCode = http.StatusNotFound
-			return fmt.Errorf("404: Not found\n")
+			return fmt.Errorf("Not found")
 		}
 	}
 
@@ -334,7 +339,6 @@ func HTTPGet(w io.Writer, info *RequestInfo) error {
 		jw.Print("\n")
 	} else {
 		info.ErrCode = http.StatusInternalServerError
-		err = fmt.Errorf("500: " + err.Error())
 	}
 
 	return err
@@ -346,6 +350,21 @@ func HTTPPut(w io.Writer, info *RequestInfo) error {
 	if len(info.Parts) > 0 && info.Parts[0] == "model" {
 		return HTTPPUTModel(w, info)
 	}
+
+	// reg := info.Registry
+
+	props, err := LoadHTTPProps(info)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Props:\n%#v\n", props)
+
+	/*
+		if len(info.Parts) == 0 {
+			return HTTPPutRegistry(w, info)
+		}
+	*/
 
 	return nil
 }
@@ -440,33 +459,190 @@ func ModelToHTTPModel(m *Model) *HTTPModel {
 func HTTPPUTModel(w io.Writer, info *RequestInfo) error {
 	if len(info.Parts) > 1 {
 		info.ErrCode = http.StatusNotFound
-		return fmt.Errorf("404: Not found\n")
+		return fmt.Errorf("Not found")
 	}
 
 	reqBody, err := io.ReadAll(info.OriginalRequest.Body)
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
-		return fmt.Errorf("500: " + err.Error())
+		return err
 	}
 
 	tmpModel := HTTPModel{}
 	err = json.Unmarshal(reqBody, &tmpModel)
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
-		return fmt.Errorf("500: " + err.Error())
+		return err
 	}
 
 	model := tmpModel.ToModel()
 	if err != nil {
 		info.ErrCode = http.StatusInternalServerError
-		return fmt.Errorf("500: " + err.Error())
+		return err
 	}
 
 	err = info.Registry.Model.ApplyNewModel(model)
 	if err != nil {
 		info.ErrCode = http.StatusBadRequest
-		return fmt.Errorf("400: " + err.Error())
+		return err
 	}
 
 	return HTTPGETModel(w, info)
+}
+
+func LoadHTTPProps(info *RequestInfo) (map[string]any, error) {
+	var registry = info.Registry
+	var entity *Entity
+	var group *Group
+	var resource *Resource
+	var version *Version
+	var realID string
+	var banned = []string{}
+	var err error
+
+	if info.What == "Coll" {
+		info.ErrCode = http.StatusBadRequest
+		return nil, fmt.Errorf("Can't update a collection(%s) directly",
+			info.Abstract)
+	}
+
+	if info.What == "Registry" {
+		entity = &registry.Entity
+		entity.Refresh()
+
+		for _, gModel := range registry.Model.Groups {
+			banned = append(banned, gModel.Plural)
+			banned = append(banned, gModel.Singular)
+		}
+	} else {
+		// GROUP
+		group, err = registry.FindGroup(info.GroupType, info.GroupUID)
+		if err == nil && group == nil {
+			group, err = registry.AddGroup(info.GroupType, NewUUID())
+		}
+		if err != nil {
+			info.ErrCode = http.StatusBadRequest
+			return nil, fmt.Errorf("Error processing group: %s", err.Error())
+		}
+		entity = &group.Entity
+
+		for _, rModel := range registry.Model.Groups[info.GroupType].Resources {
+			banned = append(banned, rModel.Plural)
+			banned = append(banned, rModel.Singular)
+		}
+
+		// RESOURCE
+		if info.ResourceUID != "" {
+			resource, err = group.FindResource(info.ResourceType, info.ResourceUID)
+			if err != nil {
+				info.ErrCode = http.StatusBadRequest
+				return nil, fmt.Errorf("Error processing resource: %s", err.Error())
+			}
+			verUID := info.VersionUID
+			if resource != nil {
+				if verUID != "" {
+					version, err = resource.FindVersion(verUID)
+					if err != nil {
+						info.ErrCode = http.StatusBadRequest
+						return nil, fmt.Errorf("Error processing version: %s", err.Error())
+					}
+					if version == nil {
+						version, err = resource.AddVersion(verUID)
+					}
+					if err != nil {
+						info.ErrCode = http.StatusBadRequest
+						return nil, fmt.Errorf("Error processing version: %s", err.Error())
+					}
+					entity = &version.Entity
+					realID = version.UID
+				} else {
+					version, err = resource.GetLatest()
+					if err != nil {
+						info.ErrCode = http.StatusBadRequest
+						return nil, fmt.Errorf("Error processing version: %s", err.Error())
+					}
+				}
+			} else {
+				if verUID == "" {
+					verUID = NewUUID()
+				}
+
+				resource, err = group.AddResource(info.ResourceType, info.ResourceUID, verUID)
+				if err != nil {
+					info.ErrCode = http.StatusBadRequest
+					return nil, fmt.Errorf("Error processing resource: %s", err.Error())
+				}
+				version, err = resource.GetLatest()
+				if err != nil {
+					info.ErrCode = http.StatusBadRequest
+					return nil, fmt.Errorf("Error processing version: %s", err.Error())
+				}
+				if info.VersionUID == "" {
+					entity = &resource.Entity
+					realID = resource.UID
+				} else {
+					entity = &version.Entity
+					realID = version.UID
+				}
+			}
+
+			if err != nil {
+				info.ErrCode = http.StatusBadRequest
+				return nil, fmt.Errorf("Error processing resource: %s", err.Error())
+			}
+			if resource == nil {
+				info.ErrCode = http.StatusNotFound
+				return nil, fmt.Errorf("Not found")
+			}
+			entity = &resource.Entity
+			realID = resource.UID
+
+			if info.VersionUID != "" {
+				version, err = resource.FindVersion(info.VersionUID)
+				if err != nil {
+					info.ErrCode = http.StatusBadRequest
+					return nil, fmt.Errorf("Error processing version: %s", err.Error())
+				}
+				if version == nil {
+					info.ErrCode = http.StatusNotFound
+					return nil, fmt.Errorf("Not found")
+				}
+				entity = &version.Entity
+				realID = version.UID
+
+			}
+		} else {
+			// rUID := NewUUID()
+			// vUID := NewUUID()
+		}
+
+	}
+
+	log.Printf("Entity:\n%s\n", ToJSON(entity))
+
+	body, err := io.ReadAll(info.OriginalRequest.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	props := map[string]any{}
+
+	if err = json.Unmarshal(body, &props); err != nil {
+		return nil, err
+	}
+
+	for k, v := range props {
+		log.Printf("%s => %v", k, v)
+		if k == "id" {
+			if v != realID {
+				return nil,
+					fmt.Errorf("`id` in Body (%s )doesn't match actual ID(%s)",
+						v, realID)
+			}
+			continue
+		}
+		SetProp(entity, k, v)
+	}
+
+	return props, nil
 }

@@ -9,8 +9,10 @@ test: server
 	NO_DELETE_REGISTRY=1 go test -failfast github.com/duglin/xreg-github/tests
 	@echo
 
-server: *.go registry/* Dockerfile
+server: *.go registry/*
 	go build -o $@ .
+
+image: server Dockerfile
 	docker build -f Dockerfile -t duglin/xreg-server .
 
 run: server test
@@ -41,7 +43,7 @@ k3d:
 		do echo -n . ; sleep 1 ; done ; \
 		kubectl apply -f mysql.yaml )
 
-k3dserver: k3d server
+k3dserver: k3d image
 	-kubectl delete -f deploy.yaml 2> /dev/null
 	k3d image import duglin/xreg-server -c xreg
 	kubectl apply -f deploy.yaml

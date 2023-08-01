@@ -54,9 +54,43 @@ func (e *Entity) Get(name string) any {
 	return val
 }
 
+func RawEntityFromPath(regID string, path string) (*Entity, error) {
+	log.VPrintf(3, ">Enter: LoadEntityFromPath(%s)", path)
+	defer log.VPrintf(3, "<Exit: LoadEntityFromPath")
+
+	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1      2     3    4     5         6         7     8      9
+
+	results, err := Query(`
+		SELECT
+            e.RegSID as RegSID,
+            e.Level as Level,
+            e.Plural as Plural,
+            e.eSID as eSID,
+            e.UID as UID,
+            p.PropName as PropName,
+            p.PropValue as PropValue,
+            p.PropType as PropType,
+            e.Path as Path,
+            e.Abstract as Abstract
+        FROM Entities AS e
+        LEFT JOIN Props AS p ON (e.eSID=p.EntitySID)
+        WHERE e.RegSID=? AND e.Path=? ORDER BY Path`, regID, path)
+	defer results.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	entity := readNextEntity(results)
+	return entity, nil
+}
+
 func (e *Entity) Find() (bool, error) {
 	log.VPrintf(3, ">Enter: Find(%s)", e.UID)
-	log.VPrintf(3, "<Exit: Find")
+	defer log.VPrintf(3, "<Exit: Find")
+
+	// TODO NEED REGID
 
 	results, err := Query(`
 		SELECT
@@ -194,13 +228,17 @@ func SetProp(entity any, name string, val any) error {
 		return fmt.Errorf("Invalid propery name: %s", name)
 	}
 
-	eField := reflect.ValueOf(entity).Elem().FieldByName("Entity")
 	e := (*Entity)(nil)
-	if !eField.IsValid() {
-		panic(fmt.Sprintf("Passing a non-entity to SetProp: %#v", entity))
-		// e = entity.(*Entity)
+	if reflect.TypeOf(entity) == reflect.TypeOf((*Entity)(nil)) {
+		e = entity.(*Entity)
 	} else {
-		e = eField.Addr().Interface().(*Entity)
+		eField := reflect.ValueOf(entity).Elem().FieldByName("Entity")
+		if !eField.IsValid() {
+			panic(fmt.Sprintf("Passing a non-entity to SetProp: %#v", entity))
+			// e = entity.(*Entity)
+		} else {
+			e = eField.Addr().Interface().(*Entity)
+		}
 	}
 
 	if e.DbSID == "" {
@@ -341,7 +379,7 @@ func readNextEntity(results *Result) *Entity {
 			}
 			entity.Props[propName] = tmpFloat
 		} else {
-			panic(fmt.Sprintf("bad type: %v", propType))
+			panic(fmt.Sprintf("bad type(%s): %v", propType, propType))
 		}
 	}
 
@@ -357,7 +395,7 @@ var orderedProps = []struct {
 	{"specVersion", "", nil},
 	{"id", "", nil},
 	{"name", "", nil},
-	{"epoch", "23", nil},
+	{"epoch", "", nil},
 	{"self", "", func(e *Entity, info *RequestInfo) any {
 		return info.BaseURL + "/" + e.Path
 	}},

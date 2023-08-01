@@ -74,6 +74,7 @@ func TestHTTPModel(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "id": "TestHTTPModel",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {}
 }

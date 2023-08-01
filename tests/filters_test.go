@@ -36,6 +36,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?",
 			Exp: `{
   "id": "TestBasicFilters",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "labels": {
     "reg1": "1ger"
@@ -168,6 +169,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?filter=labels.reg1=1ger",
 			Exp: `{
   "id": "TestBasicFilters",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "labels": {
     "reg1": "1ger"
@@ -183,6 +185,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?filter=dirs/files/labels.file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "labels": {
     "reg1": "1ger"
@@ -198,6 +201,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?inline&filter=dirs/files/labels.file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "labels": {
     "reg1": "1ger"
@@ -265,6 +269,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?inline&filter=dirs/files/labels.file1",
 			Exp: `{
   "id": "TestBasicFilters",
+  "epoch": 1,
   "self": "http://localhost:8181/",
   "labels": {
     "reg1": "1ger"
