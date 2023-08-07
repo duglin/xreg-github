@@ -3,17 +3,12 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"path"
-	// "runtime"
-	// "reflect"
 	log "github.com/duglin/dlog"
+	"path"
 	"strings"
 )
 
 type JsonWriter struct {
-	writer      io.Writer
 	info        *RequestInfo
 	indent      string
 	collPaths   []string   // [level] URL path to the root of Colls
@@ -23,9 +18,8 @@ type JsonWriter struct {
 	Entity  *Entity // Current row in the DB results
 }
 
-func NewJsonWriter(w io.Writer, info *RequestInfo, results *Result) *JsonWriter {
+func NewJsonWriter(info *RequestInfo, results *Result) *JsonWriter {
 	return &JsonWriter{
-		writer:      w,
 		info:        info,
 		indent:      "",
 		collPaths:   make([]string, 4),
@@ -35,11 +29,11 @@ func NewJsonWriter(w io.Writer, info *RequestInfo, results *Result) *JsonWriter 
 }
 
 func (jw *JsonWriter) Print(str string) {
-	fmt.Fprint(jw.writer, str)
+	fmt.Fprint(jw.info, str)
 }
 
 func (jw *JsonWriter) Printf(format string, args ...any) {
-	fmt.Fprintf(jw.writer, format, args...)
+	fmt.Fprintf(jw.info, format, args...)
 }
 
 func (jw *JsonWriter) OptPrintf(format string, args ...any) {
@@ -74,11 +68,13 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Entity.Plural
 	myURL := fmt.Sprintf("%s/%s", jw.info.BaseURL, path.Dir(jw.Entity.Path))
 
-	saveWriter := jw.writer
+	saveWriter := jw.info.HTTPWriter
 	saveExtra := extra
 
+	// TODO optimize this to avoid the ioutil.Discard and just count the
+	// children from the result set instead
 	if !jw.info.ShouldInline(jw.Entity.Abstract) {
-		jw.writer = ioutil.Discard
+		jw.info.HTTPWriter = DefaultDiscardWriter
 	}
 
 	jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Entity.Plural)
@@ -88,8 +84,8 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 		return "", err
 	}
 
-	if jw.writer == ioutil.Discard {
-		jw.writer = saveWriter
+	if jw.info.HTTPWriter == DefaultDiscardWriter {
+		jw.info.HTTPWriter = saveWriter
 		extra = saveExtra
 	}
 

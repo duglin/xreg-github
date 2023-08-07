@@ -48,8 +48,16 @@ func NotNilInt(val *any) int {
 		return 0
 	}
 
-	b := (*val).(int64)
-	return int(b)
+	var b int
+
+	if reflect.ValueOf(*val).Kind() == reflect.Int64 {
+		tmp, _ := (*val).(int64)
+		b = int(tmp)
+	} else {
+		b, _ = (*val).(int)
+	}
+
+	return b
 }
 
 func NotNilBool(val *any) bool {

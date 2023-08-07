@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -212,20 +213,25 @@ func (e *Entity) sSet(name string, val any) error {
 	// return SetProp(e, name, val)
 }
 
+var RegexpPropName = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$")
+var RegexpLabelName = regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9_.\\-]*$")
+
 // Maybe replace error with a panic?
 func SetProp(entity any, name string, val any) error {
 	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
 	defer log.VPrintf(3, "<Exit SetProp")
 
-	// Only allow "." in the name if it's "labels.xxx"
-	preDot, _, found := strings.Cut(name, ".")
-	if found {
-		if preDot != "labels" {
-			return fmt.Errorf("Can't use '.' in a property name except for "+
-				"labels: %s", name)
+	if name == "labels" {
+		return fmt.Errorf("Invalid property name: labels")
+	}
+
+	if strings.HasPrefix(name, "labels/") {
+		labelName := name[7:]
+		if !RegexpLabelName.MatchString(labelName) {
+			return fmt.Errorf("Invalid label name: %s", labelName)
 		}
-	} else if name == "labels" {
-		return fmt.Errorf("Invalid propery name: %s", name)
+	} else if name[0] != '#' && !RegexpPropName.MatchString(name) {
+		return fmt.Errorf("Invalid property name: %s", name)
 	}
 
 	e := (*Entity)(nil)
@@ -386,31 +392,34 @@ func readNextEntity(results *Result) *Entity {
 	return entity
 }
 
+type SpecProp struct {
+	name    string                          // prop name
+	levels  string                          // only show for these levels
+	mutable bool                            // user editable
+	fn      func(*Entity, *RequestInfo) any // caller will Marshal the 'any'
+}
+
 // This allows for us to choose the order and define custom logic per prop
-var orderedProps = []struct {
-	key    string                          // prop name
-	levels string                          // only show for these levels
-	fn     func(*Entity, *RequestInfo) any // caller will Marshal the 'any'
-}{
-	{"specVersion", "", nil},
-	{"id", "", nil},
-	{"name", "", nil},
-	{"epoch", "", nil},
-	{"self", "", func(e *Entity, info *RequestInfo) any {
+var OrderedSpecProps = []*SpecProp{
+	{"specVersion", "", false, nil},
+	{"id", "", false, nil},
+	{"name", "", true, nil},
+	{"epoch", "", false, nil},
+	{"self", "", false, func(e *Entity, info *RequestInfo) any {
 		return info.BaseURL + "/" + e.Path
 	}},
-	{"latest", "3", nil},
-	{"latestId", "2", nil},
-	{"latestUrl", "2", func(e *Entity, info *RequestInfo) any {
+	{"latest", "3", false, nil},
+	{"latestId", "2", false, nil},
+	{"latestUrl", "2", false, func(e *Entity, info *RequestInfo) any {
 		val := e.Props["latestId"]
 		if IsNil(val) {
 			return nil
 		}
 		return info.BaseURL + "/" + e.Path + "/versions/" + val.(string)
 	}},
-	{"description", "", nil},
-	{"docs", "", nil},
-	{"labels", "", func(e *Entity, info *RequestInfo) any {
+	{"description", "", true, nil},
+	{"documentation", "", true, nil},
+	{"labels", "", true, func(e *Entity, info *RequestInfo) any {
 		var res map[string]string
 
 		for _, key := range SortedKeys(e.Props) {
@@ -418,7 +427,7 @@ var orderedProps = []struct {
 				break
 			}
 
-			if strings.HasPrefix(key, "labels.") {
+			if strings.HasPrefix(key, "labels/") {
 				val, _ := e.Props[key]
 				if res == nil {
 					res = map[string]string{}
@@ -429,11 +438,12 @@ var orderedProps = []struct {
 		}
 		return res
 	}},
-	{"createdBy", "", nil},
-	{"createdOn", "", nil},
-	{"modifiedBy", "", nil},
-	{"modifiedOn", "", nil},
-	{"model", "0", func(e *Entity, info *RequestInfo) any {
+	{"format", "23", true, nil},
+	{"createdBy", "", false, nil},
+	{"createdOn", "", false, nil},
+	{"modifiedBy", "", false, nil},
+	{"modifiedOn", "", false, nil},
+	{"model", "0", false, func(e *Entity, info *RequestInfo) any {
 		if info.ShowModel {
 			model := info.Registry.Model
 			if model == nil {
@@ -446,14 +456,23 @@ var orderedProps = []struct {
 	}},
 }
 
+var SpecProps = map[string]*SpecProp{}
+
+func init() {
+	// Load map via lower-case version of prop name
+	for _, sp := range OrderedSpecProps {
+		SpecProps[strings.ToLower(sp.name)] = sp
+	}
+}
+
 // This is used to serialize Prop regardless of the format.
 func (e *Entity) SerializeProps(info *RequestInfo,
 	fn func(*Entity, *RequestInfo, string, any) error) error {
 
 	usedProps := map[string]bool{}
 
-	for _, prop := range orderedProps {
-		usedProps[prop.key] = true
+	for _, prop := range OrderedSpecProps {
+		usedProps[prop.name] = true
 
 		// Only show props that are for this level
 		ch := rune('0' + byte(e.Level))
@@ -462,16 +481,16 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		}
 
 		// Even if it has a func, if there's a val in Values let it override
-		val, ok := e.Props[prop.key]
+		val, ok := e.Props[prop.name]
 		if !ok && prop.fn != nil {
 			val = prop.fn(e, info)
 		}
 
 		// Only write it if we have a value
 		if !IsNil(val) {
-			err := fn(e, info, prop.key, val)
+			err := fn(e, info, prop.name, val)
 			if err != nil {
-				log.Printf("Error serializing %q(%v): %s", prop.key, val, err)
+				log.Printf("Error serializing %q(%v): %s", prop.name, val, err)
 				return err
 			}
 		}
@@ -483,8 +502,8 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		if key[0] == '#' {
 			continue
 		}
-		// "labels." is special and we know we did it above
-		if usedProps[key] || strings.HasPrefix(key, "labels.") {
+		// "labels/" is special and we know we did it above
+		if usedProps[key] || strings.HasPrefix(key, "labels/") {
 			continue
 		}
 		val, _ := e.Props[key]

@@ -18,8 +18,8 @@ func TestBasicFilters(t *testing.T) {
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
 
-	reg.Set("labels.reg1", "1ger")
-	f.Set("labels.file1", "1elif")
+	reg.Set("labels/reg1", "1ger")
+	f.Set("labels/file1", "1elif")
 
 	// /dirs/d1/f1/v1
 	//            /v2
@@ -82,7 +82,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter root, no match",
 			URL:  "?inline&oneline&filter=id=xxx",
 			// Nothing matched so 404
-			Exp: `404: Not found`,
+			Exp: `Not found`,
 		},
 		{
 			Name: "Get root, filter group coll - match",
@@ -94,7 +94,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get root, filter group coll - no match",
 			URL:  "?inline&oneline&filter=dirs/id=xxx",
 			// Nothing, matched, so 404
-			Exp: `404: Not found`,
+			Exp: `Not found`,
 		},
 		{
 			Name: "Get/filter group coll - match",
@@ -117,7 +117,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter group entity - no match",
 			URL:  "dirs/d1?inline&oneline&filter=id=xxx",
 			// Nothing, matched, so 404
-			Exp: `404: Not found`,
+			Exp: `Not found`,
 		},
 		{
 			Name: "Get group entity, filter resource - match",
@@ -129,7 +129,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get group entity, filter resource - no match",
 			URL:  "dirs/d1?inline&oneline&filter=files/id=xxx",
 			// Nothing, matched, so 404
-			Exp: `404: Not found`,
+			Exp: `Not found`,
 		},
 		{
 			Name: "Get/filter version coll - match",
@@ -154,19 +154,19 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter version - no match",
 			URL:  "dirs/d1/files/f1/versions/v1?inline&oneline&filter=id=xxx&meta",
 			// Nothing, matched, so 404
-			Exp: `404: Not found`,
+			Exp: `Not found`,
 		},
 
 		// Some tag filters
 		{
 			Name: "Get/filter reg.labels - no match",
-			URL:  "?filter=labels.reg1=xxx",
+			URL:  "?filter=labels/reg1=xxx",
 			// Nothing, matched, so 404
-			Exp: "404: Not found\n",
+			Exp: "Not found\n",
 		},
 		{
 			Name: "Get/filter reg.labels - match",
-			URL:  "?filter=labels.reg1=1ger",
+			URL:  "?filter=labels/reg1=1ger",
 			Exp: `{
   "id": "TestBasicFilters",
   "epoch": 1,
@@ -182,7 +182,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter labels",
-			URL:  "?filter=dirs/files/labels.file1=1elif",
+			URL:  "?filter=dirs/files/labels/file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
   "epoch": 1,
@@ -198,7 +198,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter dir file.labels - match",
-			URL:  "?inline&filter=dirs/files/labels.file1=1elif",
+			URL:  "?inline&filter=dirs/files/labels/file1=1elif",
 			Exp: `{
   "id": "TestBasicFilters",
   "epoch": 1,
@@ -251,22 +251,22 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter dir file.labels - no match empty string",
-			URL:  "?inline&filter=dirs/files/labels.file1=",
-			Exp:  "404: Not found\n",
+			URL:  "?inline&filter=dirs/files/labels/file1=",
+			Exp:  "Not found\n",
 		},
 		{
-			Name: "Get/filter dir file.labels.xxx - no match empty string",
-			URL:  "?inline&filter=dirs/files/labels.xxx=",
-			Exp:  "404: Not found\n",
+			Name: "Get/filter dir file.labels/xxx - no match empty string",
+			URL:  "?inline&filter=dirs/files/labels/xxx=",
+			Exp:  "Not found\n",
 		},
 		{
-			Name: "Get/filter dir file.labels.xxx - no match non-empty string",
-			URL:  "?inline&filter=dirs/files/labels.xxx",
-			Exp:  "404: Not found\n",
+			Name: "Get/filter dir file.labels/xxx - no match non-empty string",
+			URL:  "?inline&filter=dirs/files/labels/xxx",
+			Exp:  "Not found\n",
 		},
 		{
 			Name: "Get/filter dir file.labels - match non-empty string",
-			URL:  "?inline&filter=dirs/files/labels.file1",
+			URL:  "?inline&filter=dirs/files/labels/file1",
 			Exp: `{
   "id": "TestBasicFilters",
   "epoch": 1,
@@ -348,8 +348,8 @@ func TestANDORFilters(t *testing.T) {
 	s, _ := sg.AddResource("schemas", "s1", "v1.0")
 	s.AddVersion("v2.0")
 
-	reg.Set("labels.reg1", "1ger")
-	f.Set("labels.file1", "1elif")
+	reg.Set("labels/reg1", "1ger")
+	f.Set("labels/file1", "1elif")
 
 	// /dirs/d1/f1/v1     f1.name=f1
 	//            /v2
@@ -371,7 +371,7 @@ func TestANDORFilters(t *testing.T) {
 		{
 			Name: "AND same obj/level - no match",
 			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/name=f2",
-			Exp:  `404: Not found`,
+			Exp:  `Not found`,
 		},
 		{
 			Name: "OR same obj/level - match",

@@ -47,10 +47,10 @@ func TestCreateGroup(t *testing.T) {
   "filesUrl": "http://localhost:8181/dirs/d1/files"
 }
 `)
-	xCheckGet(t, reg, "/dirs/xxx", "404: Not found\n")
-	xCheckGet(t, reg, "dirs/xxx", "404: Not found\n")
-	xCheckGet(t, reg, "/dirs/xxx/yyy", "Unknown Resource type: \"yyy\"")
-	xCheckGet(t, reg, "dirs/xxx/yyy", "Unknown Resource type: \"yyy\"")
+	xCheckGet(t, reg, "/dirs/xxx", "Not found\n")
+	xCheckGet(t, reg, "dirs/xxx", "Not found\n")
+	xCheckGet(t, reg, "/dirs/xxx/yyy", "Unknown Resource type: \"yyy\"\n")
+	xCheckGet(t, reg, "dirs/xxx/yyy", "Unknown Resource type: \"yyy\"\n")
 
 	g, err := reg.FindGroup("dirs", "d1")
 	xNoErr(t, err)

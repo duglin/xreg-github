@@ -50,10 +50,10 @@ func TestCreateResource(t *testing.T) {
   "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
-	xCheckGet(t, reg, "/dirs/d1/files/xxx", "404: Not found\n")
-	xCheckGet(t, reg, "dirs/d1/files/xxx", "404: Not found\n")
-	xCheckGet(t, reg, "/dirs/d1/files/xxx/yyy", `Expected "versions", got: "yyy"`)
-	xCheckGet(t, reg, "dirs/d1/files/xxx/yyy", `Expected "versions", got: "yyy"`)
+	xCheckGet(t, reg, "/dirs/d1/files/xxx", "Not found\n")
+	xCheckGet(t, reg, "dirs/d1/files/xxx", "Not found\n")
+	xCheckGet(t, reg, "/dirs/d1/files/xxx/yyy", "Expected \"versions\", got: \"yyy\"\n")
+	xCheckGet(t, reg, "dirs/d1/files/xxx/yyy", "Expected \"versions\", got: \"yyy\"\n")
 
 	ft, err = d1.FindResource("files", "f1")
 	xNoErr(t, err)

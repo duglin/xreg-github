@@ -90,12 +90,12 @@ func TestSetDots(t *testing.T) {
 	xCheck(t, err != nil, "labels=xxx should fail")
 
 	// dots are ok as tag names
-	err = dir.Set("labels.xxx.yyy", "xxx")
+	err = dir.Set("labels/xxx.yyy", "xxx")
 	xNoErr(t, err)
-	err = dir.Set("labels.many.dots", "hello")
-	xCheck(t, dir.Get("labels.many.dots") == "hello", "many.dots should work")
+	err = dir.Set("labels/many.dots", "hello")
+	xCheck(t, dir.Get("labels/many.dots") == "hello", "many.dots should work")
 	dir.Refresh()
-	xCheck(t, dir.Get("labels.many.dots") == "hello", "many.dots should work")
+	xCheck(t, dir.Get("labels/many.dots") == "hello", "many.dots should work")
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
   "self": "http://localhost:8181/dirs/d1",
@@ -111,7 +111,10 @@ func TestSetDots(t *testing.T) {
 
 	err = dir.Set("labels", nil)
 	xCheck(t, err != nil, "labels=nil should fail")
-	xCheck(t, err != nil, "labels.xxx.yyy=nil should fail")
+	err = dir.Set("labels/xxx/yyy", nil)
+	xCheck(t, err != nil, "labels/xxx/yyy=nil should fail")
+	err = dir.Set("labels/.abc", nil)
+	xCheck(t, err != nil, "labels/.abc=nil should fail")
 	err = dir.Set("xxx.yyy", "xxx")
 	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
 	err = dir.Set("xxx.yyy", nil)
@@ -137,56 +140,56 @@ func TestSetLabels(t *testing.T) {
 	ver2, _ := file.AddVersion("v2")
 
 	// /dirs/d1/f1/v1
-	err := reg.Set("labels.r2", 123.234) // notice it's not a string
+	err := reg.Set("labels/r2", 123.234) // notice it's not a string
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("labels.r2"), 123.234) // won't see it as a string until json
-	err = reg.Set("labels.r1", "foo")
+	xJSONCheck(t, reg.Get("labels/r2"), 123.234) // won't see it as a string until json
+	err = reg.Set("labels/r1", "foo")
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("labels.r1"), "foo")
-	err = reg.Set("labels.r1", nil)
+	xJSONCheck(t, reg.Get("labels/r1"), "foo")
+	err = reg.Set("labels/r1", nil)
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("labels.r1"), nil)
+	xJSONCheck(t, reg.Get("labels/r1"), nil)
 
-	err = dir.Set("labels.d1", "bar")
+	err = dir.Set("labels/d1", "bar")
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("labels.d1"), "bar")
+	xJSONCheck(t, dir.Get("labels/d1"), "bar")
 	// test override
-	err = dir.Set("labels.d1", "foo")
+	err = dir.Set("labels/d1", "foo")
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("labels.d1"), "foo")
-	err = dir.Set("labels.d1", nil)
+	xJSONCheck(t, dir.Get("labels/d1"), "foo")
+	err = dir.Set("labels/d1", nil)
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("labels.d1"), nil)
+	xJSONCheck(t, dir.Get("labels/d1"), nil)
 
-	err = file.Set("labels.f1", "foo")
+	err = file.Set("labels/f1", "foo")
 	xNoErr(t, err)
 	file.Refresh()
-	xJSONCheck(t, file.Get("labels.f1"), "foo")
-	err = file.Set("labels.f1", nil)
+	xJSONCheck(t, file.Get("labels/f1"), "foo")
+	err = file.Set("labels/f1", nil)
 	xNoErr(t, err)
 	file.Refresh()
-	xJSONCheck(t, file.Get("labels.f1"), nil)
+	xJSONCheck(t, file.Get("labels/f1"), nil)
 
-	err = ver.Set("labels.v1", "foo")
+	err = ver.Set("labels/v1", "foo")
 	xNoErr(t, err)
 	ver.Refresh()
-	xJSONCheck(t, ver.Get("labels.v1"), "foo")
-	err = ver.Set("labels.v1", nil)
+	xJSONCheck(t, ver.Get("labels/v1"), "foo")
+	err = ver.Set("labels/v1", nil)
 	xNoErr(t, err)
 	ver.Refresh()
-	xJSONCheck(t, ver.Get("labels.v1"), nil)
+	xJSONCheck(t, ver.Get("labels/v1"), nil)
 
-	dir.Set("labels.dd", "dd.foo")
-	file.Set("labels.ff", "ff.bar")
-	ver.Set("labels.vv", 987.234)
-	ver.Set("labels.vv2", "v11")
-	ver2.Set("labels.2nd", "3rd")
+	dir.Set("labels/dd", "dd.foo")
+	file.Set("labels/ff", "ff.bar")
+	ver.Set("labels/vv", 987.234)
+	ver.Set("labels/vv2", "v11")
+	ver2.Set("labels/2nd", "3rd")
 
 	xCheckGet(t, reg, "?inline", `{
   "id": "TestSetLabels",

@@ -50,10 +50,10 @@ func TestCreateVersion(t *testing.T) {
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
 }
 `)
-	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/xxx", "404: Not found\n")
-	xCheckGet(t, reg, "dirs/d1/files/f1/versions/xxx", "404: Not found\n")
-	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/xxx/yyy", "404: Not found\n")
-	xCheckGet(t, reg, "dirs/d1/files/f1/versions/xxx/yyy", "404: Not found\n")
+	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/xxx", "Not found\n")
+	xCheckGet(t, reg, "dirs/d1/files/f1/versions/xxx", "Not found\n")
+	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/xxx/yyy", "Not found\n")
+	xCheckGet(t, reg, "dirs/d1/files/f1/versions/xxx/yyy", "Not found\n")
 
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)

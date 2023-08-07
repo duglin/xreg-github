@@ -294,7 +294,18 @@ type RequestInfo struct {
 	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
 	ShowModel        bool
 	ShowMeta         bool
-	ErrCode          int
+
+	StatusCode int
+	SentStatus bool
+	HTTPWriter HTTPWriter `json:"-"`
+}
+
+func (ri *RequestInfo) Write(b []byte) (int, error) {
+	return ri.HTTPWriter.Write(b)
+}
+
+func (ri *RequestInfo) AddHeader(name, value string) {
+	ri.HTTPWriter.AddHeader(name, value)
 }
 
 type FilterExpr struct {
@@ -315,11 +326,12 @@ func (reg *Registry) ParseRequest(w http.ResponseWriter, r *http.Request) (*Requ
 		ShowMeta:         r.URL.Query().Has("meta"),
 	}
 
+	info.HTTPWriter = DefaultHTTPWriter(info)
+
 	defer func() { log.VPrintf(3, "Info:\n%s\n", ToJSON(info)) }()
 
 	err := info.ParseRequestURL()
 	if err != nil {
-		info.ErrCode = http.StatusBadRequest
 		return info, err
 	}
 
@@ -335,7 +347,7 @@ func (reg *Registry) ParseRequest(w http.ResponseWriter, r *http.Request) (*Requ
 						p = info.Abstract + "/" + p
 					}
 					if err := info.AddInline(p); err != nil {
-						info.ErrCode = http.StatusBadRequest
+						info.StatusCode = http.StatusBadRequest
 						return info, err
 					}
 				}
@@ -364,7 +376,7 @@ func (info *RequestInfo) ParseFilters() error {
 
 			/*
 				if info.What != "Coll" && strings.Index(path, "/") < 0 {
-					info.ErrCode = http.StatusBadRequest
+					info.StatusCode = http.StatusBadRequest
 					return fmt.Errorf("A filter with just an attribute name (%s) "+
 						"isn't allowed in this context", path)
 				}
@@ -415,7 +427,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		gModel = info.Registry.Model.Groups[info.Parts[0]]
 	}
 	if gModel == nil && (info.Parts[0] != "model" || len(info.Parts) > 1) {
-		info.ErrCode = 404
+		info.StatusCode = http.StatusNotFound
 		return fmt.Errorf("Unknown Group type: %q", info.Parts[0])
 	}
 	info.GroupType = info.Parts[0]
@@ -439,7 +451,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		rModel = gModel.Resources[info.Parts[2]]
 	}
 	if rModel == nil {
-		info.ErrCode = 404
+		info.StatusCode = http.StatusNotFound
 		return fmt.Errorf("Unknown Resource type: %q", info.Parts[2])
 	}
 	info.ResourceType = info.Parts[2]
@@ -459,7 +471,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	if info.Parts[4] != "versions" {
-		info.ErrCode = 404
+		info.StatusCode = http.StatusNotFound
 		return fmt.Errorf("Expected \"versions\", got: %q", info.Parts[4])
 	}
 	info.Root += "/versions"
@@ -477,8 +489,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
-	info.ErrCode = 404
-	return fmt.Errorf("404: Not found\n")
+	info.StatusCode = http.StatusNotFound
+	return fmt.Errorf("Not found")
 }
 
 func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {

@@ -19,10 +19,10 @@ func TestCreateRegistry(t *testing.T) {
   "self": "http://localhost:8181/"
 }
 `)
-	xCheckGet(t, reg, "/xxx", "Unknown Group type: \"xxx\"")
-	xCheckGet(t, reg, "xxx", "Unknown Group type: \"xxx\"")
-	xCheckGet(t, reg, "/xxx/yyy", "Unknown Group type: \"xxx\"")
-	xCheckGet(t, reg, "xxx/yyy", "Unknown Group type: \"xxx\"")
+	xCheckGet(t, reg, "/xxx", "Unknown Group type: \"xxx\"\n")
+	xCheckGet(t, reg, "xxx", "Unknown Group type: \"xxx\"\n")
+	xCheckGet(t, reg, "/xxx/yyy", "Unknown Group type: \"xxx\"\n")
+	xCheckGet(t, reg, "xxx/yyy", "Unknown Group type: \"xxx\"\n")
 
 	// make sure dups generate an error
 	reg2, err := registry.NewRegistry("TestCreateRegistry")
@@ -96,8 +96,8 @@ func TestRegistryProps(t *testing.T) {
 	reg.Set("specVersion", "x.y")
 	reg.Set("name", "nameIt")
 	reg.Set("description", "a very cool reg")
-	reg.Set("docs", "https://docs.com")
-	reg.Set("labels.stage", "dev")
+	reg.Set("documentation", "https://docs.com")
+	reg.Set("labels/stage", "dev")
 
 	xCheckGet(t, reg, "", `{
   "specVersion": "x.y",
@@ -106,7 +106,7 @@ func TestRegistryProps(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "a very cool reg",
-  "docs": "https://docs.com",
+  "documentation": "https://docs.com",
   "labels": {
     "stage": "dev"
   }
