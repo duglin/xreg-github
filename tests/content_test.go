@@ -121,7 +121,6 @@ type Test struct {
 }
 
 func CompareContentMeta(t *testing.T, test *Test) {
-	t.Logf("\n*** TESTING: URL: %s", test.URL)
 	u := test.URL
 
 	metaResp, err := http.Get("http://localhost:8181/" + u + "?meta")
@@ -144,7 +143,8 @@ func CompareContentMeta(t *testing.T, test *Test) {
 	res, err := client.Get("http://localhost:8181/" + u)
 	xNoErr(t, err)
 	xCheck(t, res.StatusCode == test.Code,
-		fmt.Sprintf("\nTest: %s\nBad http code: %d", u, res.StatusCode))
+		fmt.Sprintf("\nTest: %s\nBad http code: %d should be %d", u,
+			res.StatusCode, test.Code))
 	resBody, err := io.ReadAll(res.Body)
 	xNoErr(t, err)
 

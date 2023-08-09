@@ -426,7 +426,7 @@ WITH RECURSIVE cte(eID,ParentID,Path) AS (
         -- below finds SeachNodes/IDs of interest
         -- Add regID into the search
           SELECT eID,Path FROM FullTree
-          WHERE (PropName='latestId' AND PropValue='v1.0' AND Level=2)
+          WHERE (PropName='latestVersionId' AND PropValue='v1.0' AND Level=2)
         -- end of ID selection
       ) as res ON ( res.eID=e1.eID )
       JOIN Entities AS e2 ON (

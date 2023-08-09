@@ -32,8 +32,8 @@ func (v *Version) Delete() error {
 	defer results.Close()
 
 	if err != nil {
-		return fmt.Errorf("Error finding next latestID for Resource %q: %s",
-			v.Resource.UID, err)
+		return fmt.Errorf("Error finding next latestVersionID for Resource "+
+			"%q: %s", v.Resource.UID, err)
 	}
 
 	row := results.NextRow()

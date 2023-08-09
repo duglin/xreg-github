@@ -18,7 +18,7 @@ func (r *Resource) Get(name string) any {
 		return r.Entity.Get(name[1:])
 	}
 
-	if name == "id" || name == "latestId" || name == "latestUrl" {
+	if name == "id" || name == "latestVersionId" || name == "latestVersionUrl" {
 		return r.Entity.Get(name)
 	}
 
@@ -32,17 +32,17 @@ func (r *Resource) Get(name string) any {
 func (r *Resource) Set(name string, val any) error {
 	log.VPrintf(4, "Set: r(%s).Set(%s,%v)", r.UID, name, val)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
-		if name == ".latestId" {
-			log.Printf("Shouldn't be setting .latestId directly-1")
-			panic("can't set .latestId directly")
+		if name == ".latestVersionId" {
+			log.Printf("Shouldn't be setting .latestVersionId directly-1")
+			panic("can't set .latestVersionId directly")
 		}
 		return SetProp(r, name[1:], val)
 	}
 
-	if name == "id" || name == "latestId" || name == "latestUrl" {
-		if name == "latestId" {
-			log.Printf("Shouldn't be setting .latestId directly-2")
-			panic("can't set .latestId directly")
+	if name == "id" || name == "latestVersionId" || name == "latestVersionUrl" {
+		if name == "latestVersionId" {
+			log.Printf("Shouldn't be setting .latestVersionId directly-2")
+			panic("can't set .latestVersionId directly")
 		}
 		return SetProp(r, name, val)
 	}
@@ -103,7 +103,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 
 // Maybe replace error with a panic?
 func (r *Resource) GetLatest() (*Version, error) {
-	val := r.Get("latestId")
+	val := r.Get("latestVersionId")
 	if val == nil {
 		return nil, nil
 		// panic("No latest is set")
@@ -122,7 +122,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	}
 
 	// TODO: do both of these in one transaction to make it atomic
-	SetProp(r, "latestId", newLatest.UID)
+	SetProp(r, "latestVersionId", newLatest.UID)
 	return newLatest.Set("latest", true)
 }
 
@@ -194,7 +194,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 	err = r.SetLatest(v)
 	if err != nil {
 		// v.Delete()
-		err = fmt.Errorf("Error setting latestId: %s", err)
+		err = fmt.Errorf("Error setting latestVersionId: %s", err)
 		return v, err
 	}
 

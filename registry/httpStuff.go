@@ -273,7 +273,7 @@ FROM FullTree WHERE RegSID=? AND `
 	versionsCount := 0
 	if info.VersionUID == "" {
 		// We're on a Resource, so go find the right Version
-		vID := entity.Get("latestId").(string)
+		vID := entity.Get("latestVersionId").(string)
 		for {
 			v := readNextEntity(results)
 			if v == nil && version == nil {

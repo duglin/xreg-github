@@ -409,9 +409,9 @@ var OrderedSpecProps = []*SpecProp{
 		return info.BaseURL + "/" + e.Path
 	}},
 	{"latest", "3", false, nil},
-	{"latestId", "2", false, nil},
-	{"latestUrl", "2", false, func(e *Entity, info *RequestInfo) any {
-		val := e.Props["latestId"]
+	{"latestVersionId", "2", false, nil},
+	{"latestVersionUrl", "2", false, func(e *Entity, info *RequestInfo) any {
+		val := e.Props["latestVersionId"]
 		if IsNil(val) {
 			return nil
 		}

@@ -215,8 +215,8 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1",
-          "latestId": "v2",
-          "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+          "latestVersionId": "v2",
+          "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
           "labels": {
             "2nd": "3rd",
             "ff": "ff.bar"
@@ -280,8 +280,8 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1",
-          "latestId": "v1",
-          "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+          "latestVersionId": "v1",
+          "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
           "labels": {
             "vv": "987.234",
             "vv2": "v11"

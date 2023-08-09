@@ -223,8 +223,8 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
-          "latestId": "v1.1",
-          "latestUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestVersionId": "v1.1",
+          "latestVersionUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
           "labels": {
             "file1": "1elif"
           },
@@ -296,8 +296,8 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
-          "latestId": "v1.1",
-          "latestUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestVersionId": "v1.1",
+          "latestVersionUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
           "labels": {
             "file1": "1elif"
           },
@@ -431,12 +431,12 @@ func TestANDORFilters(t *testing.T) {
 		},
 		{
 			Name: "dirsOR and schemaGroupsOR - match second",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/versions/id=xxx&filter=schemaGroups/schemas/versions/id=v2.0,schemaGroups/schemas/latestId=v2.0",
+			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/versions/id=xxx&filter=schemaGroups/schemas/versions/id=v2.0,schemaGroups/schemas/latestVersionId=v2.0",
 			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and schemaGroupsOR - both match",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/versions/id=v2&filter=schemaGroups/schemas/versions/id=v2.0,schemaGroups/schemas/latestId=v2.0",
+			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/versions/id=v2&filter=schemaGroups/schemas/versions/id=v2.0,schemaGroups/schemas/latestVersionId=v2.0",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 	}
