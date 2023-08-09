@@ -121,6 +121,7 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 		return nil, err
 	}
 	r.Set(".id", r.UID)
+	r.Set(".#nextVersionID", 1)
 
 	_, err = r.AddVersion(vID)
 	if err != nil {

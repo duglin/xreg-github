@@ -401,7 +401,7 @@ type SpecProp struct {
 
 // This allows for us to choose the order and define custom logic per prop
 var OrderedSpecProps = []*SpecProp{
-	{"specVersion", "", false, nil},
+	{"specVersion", "0", false, nil},
 	{"id", "", false, nil},
 	{"name", "", true, nil},
 	{"epoch", "", false, nil},

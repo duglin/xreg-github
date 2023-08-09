@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"strconv"
 
 	log "github.com/duglin/dlog"
 )
@@ -129,12 +130,38 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: AddVersion%s)", id)
 	defer log.VPrintf(3, "<Exit: AddVersion")
 
-	v, err := r.FindVersion(id)
-	if err != nil {
-		return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)
-	}
-	if v != nil {
-		return nil, fmt.Errorf("Version %q already exists", id)
+	var v *Version
+	var err error
+
+	if id == "" {
+		// No versionID provided so grab the next aailable one
+		tmp := r.Props["#nextVersionID"]
+		nextID := NotNilInt(&tmp)
+		for {
+			id = strconv.Itoa(nextID)
+			log.Printf("Looking for v: %s", id)
+			v, err = r.FindVersion(id)
+			if err != nil {
+				return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)
+			}
+
+			// Increment no matter what since it's "next" not "latest"
+			nextID++
+
+			if v == nil {
+				r.Set(".#nextVersionID", nextID)
+				break
+			}
+		}
+	} else {
+		v, err = r.FindVersion(id)
+
+		if err != nil {
+			return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)
+		}
+		if v != nil {
+			return nil, fmt.Errorf("Version %q already exists", id)
+		}
 	}
 
 	v = &Version{
@@ -162,7 +189,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		return nil, err
 	}
 	v.Set("id", id)
-	// v.Set("epoch", 1)
+	v.Set("epoch", 1)
 
 	err = r.SetLatest(v)
 	if err != nil {

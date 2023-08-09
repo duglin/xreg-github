@@ -35,6 +35,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "No Filter",
 			URL:  "?",
 			Exp: `{
+  "specVersion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -146,6 +147,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "dirs/d1/files/f1/versions/v1?inline&filter=id=v1&meta",
 			Exp: `{
   "id": "v1",
+  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
 }
 `,
@@ -168,6 +170,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter reg.labels - match",
 			URL:  "?filter=labels/reg1=1ger",
 			Exp: `{
+  "specVersion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -184,6 +187,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter labels",
 			URL:  "?filter=dirs/files/labels/file1=1elif",
 			Exp: `{
+  "specVersion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -200,6 +204,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter dir file.labels - match",
 			URL:  "?inline&filter=dirs/files/labels/file1=1elif",
 			Exp: `{
+  "specVersion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -210,11 +215,13 @@ func TestBasicFilters(t *testing.T) {
   "dirs": {
     "d2": {
       "id": "d2",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
 
       "files": {
         "f2": {
           "id": "f2",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
           "latestId": "v1.1",
           "latestUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
@@ -225,10 +232,12 @@ func TestBasicFilters(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
               "latest": true,
               "labels": {
@@ -268,6 +277,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter dir file.labels - match non-empty string",
 			URL:  "?inline&filter=dirs/files/labels/file1",
 			Exp: `{
+  "specVersion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -278,11 +288,13 @@ func TestBasicFilters(t *testing.T) {
   "dirs": {
     "d2": {
       "id": "d2",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
 
       "files": {
         "f2": {
           "id": "f2",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
           "latestId": "v1.1",
           "latestUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
@@ -293,10 +305,12 @@ func TestBasicFilters(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
               "latest": true,
               "labels": {

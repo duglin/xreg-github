@@ -146,7 +146,7 @@ func (dw *DefaultWriter) AddHeader(name, value string) {
 }
 
 func (dw *DefaultWriter) Done() {
-	dw.Info.OriginalResponse.Write(nil)
+	dw.Write(nil)
 }
 
 type BufferedWriter struct {
@@ -327,8 +327,8 @@ FROM FullTree WHERE RegSID=? AND `
 		url = val.(string)
 	}
 	if url != "" {
-		info.OriginalResponse.Header().Add("Location", url)
-		info.OriginalResponse.WriteHeader(http.StatusSeeOther)
+		info.StatusCode = http.StatusSeeOther
+		info.AddHeader("Location", url)
 		/*
 			http.Redirect(info.OriginalResponse, info.OriginalRequest, url,
 				http.StatusSeeOther)
@@ -503,19 +503,37 @@ func HTTPPutPost(info *RequestInfo) error {
 	log.VPrintf(3, "entityData.Props:\n%s", ToJSON(entityData.Props))
 	log.VPrintf(3, "Body: %d bytes / IsContent: %v", len(body), bodyIsContent)
 
-	// All ready to go, let's walk the path
+	// Check for some obvious high-level bad states up-front
+	if len(info.Parts) == 0 && method == "POST" {
+		info.StatusCode = http.StatusMethodNotAllowed
+		return fmt.Errorf("POST not allowed on the root of the registry")
+	}
+
 	if info.What == "Coll" && method == "PUT" {
 		info.StatusCode = http.StatusMethodNotAllowed
 		return fmt.Errorf("PUT not allowed on collections")
 	}
 
+	if len(info.Parts) == 2 && method == "POST" {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("POST not allowed on a group")
+	}
+
+	if len(info.Parts) == 6 && method == "POST" {
+		info.StatusCode = http.StatusMethodNotAllowed
+		return fmt.Errorf("POST not allowed on a version")
+	}
+
+	tmp := entityData.Props["id"]
+	propsID := NotNilString(&tmp)
+
+	// All ready to go, let's walk the path
+
 	// URL: /
 	// ////////////////////////////////////////////////////////////////
-	if len(info.Parts) == 0 && method == "POST" {
-		info.StatusCode = http.StatusMethodNotAllowed
-		return fmt.Errorf("POST not allowed on the root of the registry")
-	}
 	if len(info.Parts) == 0 {
+		// MUST be PUT /
+		entityData.IsNew = isNew
 		entityData.Level = 0
 		err = UserUpdateEntity(&info.Registry.Entity, &entityData)
 
@@ -531,29 +549,30 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	// URL: /GROUPs[/gID]...
 	// ////////////////////////////////////////////////////////////////
-	if len(info.Parts) == 2 && method == "POST" {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("POST not allowed on a group")
-	}
 	group := (*Group)(nil)
 	groupUID := info.GroupUID
-	if len(info.Parts) == 1 { // must be POST /GROUPs
-		tmp := entityData.Props["id"]
-		if groupUID = NotNilString(&tmp); groupUID == "" {
+	if len(info.Parts) == 1 {
+		// must be POST /GROUPs
+		if groupUID = propsID; groupUID == "" {
 			groupUID = NewUUID()
 		}
 	} else {
+		// must be PUT/POST /GROUPs/gID...
 		group, err = info.Registry.FindGroup(info.GroupType, groupUID)
 	}
 	if err == nil && group == nil {
-		group, err = info.Registry.AddGroup(info.GroupType, groupUID)
+		// Group doesn't exist so create it
 		isNew = true
+		group, err = info.Registry.AddGroup(info.GroupType, groupUID)
 	}
+
 	if err == nil && len(info.Parts) < 3 {
 		// Either /GROUPs or /GROUPs/gID
+		entityData.IsNew = isNew
 		entityData.Level = 1
 		err = UserUpdateEntity(&group.Entity, &entityData)
 	}
+
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
@@ -583,37 +602,65 @@ func HTTPPutPost(info *RequestInfo) error {
 	resourceUID := info.ResourceUID
 	versionUID := info.VersionUID
 
-	if len(info.Parts) == 3 { // must be /GROUPs/gID/RESOURCEs
-		tmp := entityData.Props["id"]
-		if resourceUID = NotNilString(&tmp); resourceUID == "" {
+	if len(info.Parts) == 3 {
+		// must be: POST /GROUPs/gID/RESOURCEs
+		if resourceUID = propsID; resourceUID == "" {
 			resourceUID = NewUUID()
 		}
-		versionUID = NewUUID()
-	}
-	if versionUID == "" { // /GROUPs/gID/RESOURCE/rID...
-		tmp := entityData.Props["id"]
-		if versionUID = NotNilString(&tmp); versionUID == "" {
-			versionUID = NewUUID()
-		}
-	}
-
-	resource, err = group.FindResource(info.ResourceType, info.ResourceUID)
-	if err == nil && resource == nil {
-		resource, err = group.AddResource(info.ResourceType, resourceUID,
-			versionUID)
 		isNew = true
+		resource, err = group.AddResource(info.ResourceType, resourceUID,
+			versionUID) // vID should be ""
+		if err == nil {
+			version, err = resource.GetLatest()
+		}
+	} else {
+		// must be PUT/POST /GROUPs/gID/RESOURCEs/rID...
+		resource, err = group.FindResource(info.ResourceType, resourceUID)
+		if err == nil && resource == nil {
+			if versionUID == "" {
+				// No vID in URL, grab from props. If missing, auto-generate
+				versionUID = propsID
+			}
+			isNew = true
+			resource, err = group.AddResource(info.ResourceType, resourceUID,
+				versionUID)
+			if err == nil {
+				version, err = resource.GetLatest()
+			}
+		}
 	}
 
-	if err == nil && version == nil {
-		version, err = resource.FindVersion(versionUID)
-		if err == nil && version == nil {
-			version, err = resource.AddVersion(versionUID)
-			isNew = true
+	if err != nil || resource == nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error processing resource(%s): %s", resourceUID, err)
+	}
+
+	// No version means the resource already existed, find/create version
+	if version == nil {
+		if versionUID != "" {
+			version, err = resource.FindVersion(versionUID)
 		}
+		if err == nil && version == nil {
+			if versionUID == "" {
+				versionUID = propsID
+			}
+			if versionUID == "" {
+				version, err = resource.GetLatest()
+			} else {
+				isNew = true
+				version, err = resource.AddVersion(versionUID)
+			}
+		}
+	}
+
+	if err != nil || version == nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
 	}
 
 	if err == nil {
 		// Update Resource or Version based on the URL of the request
+		entityData.IsNew = isNew
 		if len(info.Parts) < 5 {
 			// Either /GROUPs/gID/RESOURCEs or /GROUPs/gID/RESOURCEs/rID
 			entityData.Level = 2
@@ -662,6 +709,7 @@ type EntityData struct {
 	Content    []byte
 	UpdateCase bool
 	Patch      bool
+	IsNew      bool
 }
 
 // check for props to be removed - old props
@@ -772,7 +820,10 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		}
 	}
 
-	epoch++
+	// Only update the epoch if the entity isn't new
+	if !ed.IsNew {
+		epoch++
+	}
 
 	return SetProp(entity, "epoch", epoch)
 }
@@ -896,161 +947,4 @@ func HTTPPUTModel(info *RequestInfo) error {
 	}
 
 	return HTTPGETModel(info)
-}
-
-func LoadHTTPProps(info *RequestInfo) (map[string]any, error) {
-	var registry = info.Registry
-	var entity *Entity
-	var group *Group
-	var resource *Resource
-	var version *Version
-	var realID string
-	var banned = []string{}
-	var err error
-
-	if info.What == "Coll" {
-		info.StatusCode = http.StatusBadRequest
-		return nil, fmt.Errorf("Can't update a collection(%s) directly",
-			info.Abstract)
-	}
-
-	if info.What == "Registry" {
-		entity = &registry.Entity
-		entity.Refresh()
-
-		for _, gModel := range registry.Model.Groups {
-			banned = append(banned, gModel.Plural)
-			banned = append(banned, gModel.Singular)
-		}
-	} else {
-		// GROUP
-		group, err = registry.FindGroup(info.GroupType, info.GroupUID)
-		if err == nil && group == nil {
-			group, err = registry.AddGroup(info.GroupType, NewUUID())
-		}
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return nil, fmt.Errorf("Error processing group: %s", err.Error())
-		}
-		entity = &group.Entity
-
-		for _, rModel := range registry.Model.Groups[info.GroupType].Resources {
-			banned = append(banned, rModel.Plural)
-			banned = append(banned, rModel.Singular)
-		}
-
-		// RESOURCE
-		if info.ResourceUID != "" {
-			resource, err = group.FindResource(info.ResourceType, info.ResourceUID)
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return nil, fmt.Errorf("Error processing resource: %s", err.Error())
-			}
-			verUID := info.VersionUID
-			if resource != nil {
-				if verUID != "" {
-					version, err = resource.FindVersion(verUID)
-					if err != nil {
-						info.StatusCode = http.StatusBadRequest
-						return nil, fmt.Errorf("Error processing version: %s", err.Error())
-					}
-					if version == nil {
-						version, err = resource.AddVersion(verUID)
-					}
-					if err != nil {
-						info.StatusCode = http.StatusBadRequest
-						return nil, fmt.Errorf("Error processing version: %s", err.Error())
-					}
-					entity = &version.Entity
-					realID = version.UID
-				} else {
-					version, err = resource.GetLatest()
-					if err != nil {
-						info.StatusCode = http.StatusBadRequest
-						return nil, fmt.Errorf("Error processing version: %s", err.Error())
-					}
-				}
-			} else {
-				if verUID == "" {
-					verUID = NewUUID()
-				}
-
-				resource, err = group.AddResource(info.ResourceType, info.ResourceUID, verUID)
-				if err != nil {
-					info.StatusCode = http.StatusBadRequest
-					return nil, fmt.Errorf("Error processing resource: %s", err.Error())
-				}
-				version, err = resource.GetLatest()
-				if err != nil {
-					info.StatusCode = http.StatusBadRequest
-					return nil, fmt.Errorf("Error processing version: %s", err.Error())
-				}
-				if info.VersionUID == "" {
-					entity = &resource.Entity
-					realID = resource.UID
-				} else {
-					entity = &version.Entity
-					realID = version.UID
-				}
-			}
-
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return nil, fmt.Errorf("Error processing resource: %s", err.Error())
-			}
-			if resource == nil {
-				info.StatusCode = http.StatusNotFound
-				return nil, fmt.Errorf("Not found")
-			}
-			entity = &resource.Entity
-			realID = resource.UID
-
-			if info.VersionUID != "" {
-				version, err = resource.FindVersion(info.VersionUID)
-				if err != nil {
-					info.StatusCode = http.StatusBadRequest
-					return nil, fmt.Errorf("Error processing version: %s", err.Error())
-				}
-				if version == nil {
-					info.StatusCode = http.StatusNotFound
-					return nil, fmt.Errorf("Not found")
-				}
-				entity = &version.Entity
-				realID = version.UID
-
-			}
-		} else {
-			// rUID := NewUUID()
-			// vUID := NewUUID()
-		}
-
-	}
-
-	log.Printf("Entity:\n%s\n", ToJSON(entity))
-
-	body, err := io.ReadAll(info.OriginalRequest.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	props := map[string]any{}
-
-	if err = json.Unmarshal(body, &props); err != nil {
-		return nil, err
-	}
-
-	for k, v := range props {
-		log.Printf("%s => %v", k, v)
-		if k == "id" {
-			if v != realID {
-				return nil,
-					fmt.Errorf("`id` in Body (%s )doesn't match actual ID(%s)",
-						v, realID)
-			}
-			continue
-		}
-		SetProp(entity, k, v)
-	}
-
-	return props, nil
 }

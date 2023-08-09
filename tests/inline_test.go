@@ -38,6 +38,7 @@ func TestBasicInline(t *testing.T) {
 			Name: "No Inline",
 			URL:  "?",
 			Exp: `{
+  "specVersion": "0.5",
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -53,6 +54,7 @@ func TestBasicInline(t *testing.T) {
 			Name: "Inline - No Filter - full",
 			URL:  "?inline",
 			Exp: `{
+  "specVersion": "0.5",
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -60,11 +62,13 @@ func TestBasicInline(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1",
 
       "files": {
         "f1": {
           "id": "f1",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1",
           "latestId": "v2",
           "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
@@ -72,10 +76,12 @@ func TestBasicInline(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
             },
             "v2": {
               "id": "v2",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
               "latest": true
             }
@@ -89,11 +95,13 @@ func TestBasicInline(t *testing.T) {
     },
     "d2": {
       "id": "d2",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
 
       "files": {
         "f2": {
           "id": "f2",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
           "latestId": "v1.1",
           "latestUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
@@ -101,10 +109,12 @@ func TestBasicInline(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
               "latest": true
             }
@@ -122,11 +132,13 @@ func TestBasicInline(t *testing.T) {
   "dirs2": {
     "d2": {
       "id": "d2",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs2/d2",
 
       "files": {
         "f2": {
           "id": "f2",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs2/d2/files/f2",
           "latestId": "v1",
           "latestUrl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
@@ -134,6 +146,7 @@ func TestBasicInline(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
               "latest": true
             }

@@ -67,7 +67,6 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "APIs-guru Registry")
 		reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory")
-		reg.Set("specVersion", "0.5")
 		reg.Set("docs", "https://github.com/duglin/xreg-github")
 		err = reg.Refresh()
 		ErrFatalf(err, "Error refeshing registry: %s", err)
@@ -193,7 +192,6 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Test Registry")
 		reg.Set("description", "A test reg")
-		reg.Set("specVersion", "0.5")
 		reg.Set("docs", "https://github.com/duglin/xreg-github")
 
 		reg.Set("labels/stage", "prod")
@@ -221,7 +219,6 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Test Registry")
 		reg.Set("description", "A test reg")
-		reg.Set("specVersion", "0.5")
 		reg.Set("docs", "https://github.com/duglin/xreg-github")
 	}
 

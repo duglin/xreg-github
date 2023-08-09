@@ -14,6 +14,7 @@ func TestCreateRegistry(t *testing.T) {
 	// Check basic GET first
 	xCheckGet(t, reg, "/",
 		`{
+  "specVersion": "0.5",
   "id": "TestCreateRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/"
@@ -42,6 +43,7 @@ func TestCreateRegistry(t *testing.T) {
 	xCheck(t, reg3 != reg, "reg3 should be different from reg")
 
 	xCheckGet(t, reg, "", `{
+  "specVersion": "0.5",
   "id": "TestCreateRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/"

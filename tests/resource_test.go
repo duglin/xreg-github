@@ -42,6 +42,7 @@ func TestCreateResource(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1/files/f1?meta",
 		`{
   "id": "f1",
+  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1",
   "latestId": "v2",
   "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",

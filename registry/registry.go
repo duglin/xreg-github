@@ -13,6 +13,7 @@ type Registry struct {
 	Model *Model
 }
 
+var SpecVersion = "0.5"
 var Registries = map[string]*Registry{} // User UID->Reg
 
 func NewRegistry(id string) (*Registry, error) {
@@ -62,6 +63,7 @@ func NewRegistry(id string) (*Registry, error) {
 		return nil, err
 	}
 
+	reg.Set("specVersion", SpecVersion)
 	reg.Set("id", reg.UID)
 	reg.Set("epoch", 1)
 	Registries[id] = reg
@@ -230,6 +232,7 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 		return nil, err
 	}
 	g.Set("id", g.UID)
+	g.Set("epoch", 1)
 
 	log.VPrintf(3, "Created new one - DbSID: %s", g.DbSID)
 	return g, nil

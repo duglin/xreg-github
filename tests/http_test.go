@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -19,6 +20,7 @@ type HTTPTest struct {
 
 	Code       int
 	ResHeaders []string // name:value
+	Masks      []string
 	ResBody    string
 }
 
@@ -53,8 +55,59 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 	}
 
 	resBody, _ := io.ReadAll(res.Body)
+	testBody := test.ResBody
+
+	fmt.Printf("Res before:\n%s\n\n", string(resBody))
+	for _, mask := range test.Masks {
+		var re *regexp.Regexp
+		search, replace, found := strings.Cut(mask, "|")
+		if !found {
+			// Must be just a property name
+			search = fmt.Sprintf(`("%s": ")(.*)(")`, search)
+			replace = `${1}xxx${3}`
+		}
+
+		if re = savedREs[search]; re == nil {
+			re = regexp.MustCompile(search)
+			savedREs[search] = re
+		}
+
+		resBody = re.ReplaceAll(resBody, []byte(replace))
+		testBody = re.ReplaceAllString(testBody, replace)
+
+		fmt.Printf("Res:\n%s\n\n", string(resBody))
+	}
+
 	xCheckEqual(t, "Test: "+test.Name+"\nBody:\n",
-		string(resBody), test.ResBody)
+		string(resBody), testBody)
+}
+
+var savedREs = map[string]*regexp.Regexp{}
+
+func TestHTTPhtml(t *testing.T) {
+	reg := NewRegistry("TestHTTPhtml")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	// Check as part of Reg request
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "?html",
+		URL:        "?html",
+		Method:     "GET",
+		ReqHeaders: []string{},
+		ReqBody:    "",
+
+		Code:       200,
+		ResHeaders: []string{"Content-Type:text/html"},
+		ResBody: `<pre>
+{
+  "specVersion": "0.5",
+  "id": "TestHTTPhtml",
+  "epoch": 1,
+  "self": "<a href="http://localhost:8181/?html">http://localhost:8181/?html</a>"
+}
+`,
+	})
 }
 
 func TestHTTPModel(t *testing.T) {
@@ -73,6 +126,7 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
+  "specVersion": "0.5",
   "id": "TestHTTPModel",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -170,4 +224,96 @@ func TestHTTPModel(t *testing.T) {
 }
 `,
 	})
+}
+
+func TestHTTPRegistry(t *testing.T) {
+	reg := NewRegistry("TestHTTPRegistry")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST reg",
+		URL:        "/",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    "",
+		Code:       405,
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
+		ResBody:    "POST not allowed on the root of the registry\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - empty",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    "",
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "specVersion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 2,
+  "self": "http://localhost:8181/"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - empty json",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    "{}",
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "specVersion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 3,
+  "self": "http://localhost:8181/"
+}
+`,
+	})
+}
+
+func TestHTTPGroups(t *testing.T) {
+	reg := NewRegistry("TestHTTPGroups")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
+	gm.AddResourceModel("files", "file", 0, true, true)
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT groups",
+		URL:        "/dirs",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    "",
+		Code:       405,
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
+		ResBody:    "PUT not allowed on collections\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "Create group - empty",
+		URL:        "/dirs",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    "",
+		Code:       201,
+		ResHeaders: []string{"Content-Type:application/json"},
+		Masks:      []string{"id", "dirs/[a-zA-Z0-9]*|dirs/xxx"},
+		ResBody: `{
+  "id": "xxx",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/xxx",
+
+  "filesCount": 0,
+  "filesUrl": "http://localhost:8181/dirs/xxx/files"
+}
+`,
+	})
+
 }

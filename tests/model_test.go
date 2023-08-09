@@ -13,6 +13,7 @@ func TestNoModel(t *testing.T) {
 
 	xCheckGet(t, reg, "/model", "{}\n")
 	xCheckGet(t, reg, "?model", `{
+  "specVersion": "0.5",
   "id": "TestNoModel",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -311,6 +312,7 @@ func TestResourceModelCreate(t *testing.T) {
 	g.AddResource("files", "f1", "v1")
 
 	xCheckGet(t, reg, "?model&inline=dirs/files", `{
+  "specVersion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -336,11 +338,13 @@ func TestResourceModelCreate(t *testing.T) {
   "dirs": {
     "dir1": {
       "id": "dir1",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/dir1",
 
       "files": {
         "f1": {
           "id": "f1",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs/dir1/files/f1",
           "latestId": "v1",
           "latestUrl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
@@ -379,6 +383,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
+  "specVersion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -404,6 +409,7 @@ func TestResourceModelCreate(t *testing.T) {
   "dirs": {
     "dir1": {
       "id": "dir1",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/dir1",
 
       "files2Count": 0,
@@ -428,6 +434,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
+  "specVersion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -445,6 +452,7 @@ func TestResourceModelCreate(t *testing.T) {
   "dirs": {
     "dir1": {
       "id": "dir1",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/dir1"
     }
   },
@@ -464,6 +472,7 @@ func TestResourceModelCreate(t *testing.T) {
 	}
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=", `{
+  "specVersion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -598,6 +607,7 @@ func TestMultModel2Create(t *testing.T) {
 	// /dirs2/f2/f2/v1
 
 	xCheckGet(t, reg, "?model&inline", `{
+  "specVersion": "0.5",
   "id": "TestMultModel2Create",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -635,11 +645,13 @@ func TestMultModel2Create(t *testing.T) {
   "dirs1": {
     "d1": {
       "id": "d1",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs1/d1",
 
       "files": {
         "f1": {
           "id": "f1",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs1/d1/files/f1",
           "latestId": "v2",
           "latestUrl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
@@ -647,10 +659,12 @@ func TestMultModel2Create(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1"
             },
             "v2": {
               "id": "v2",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
               "latest": true
             }
@@ -664,11 +678,13 @@ func TestMultModel2Create(t *testing.T) {
     },
     "d2": {
       "id": "d2",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs1/d2",
 
       "files": {
         "f2": {
           "id": "f2",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs1/d2/files/f2",
           "latestId": "v1.1",
           "latestUrl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
@@ -676,10 +692,12 @@ func TestMultModel2Create(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1"
             },
             "v1.1": {
               "id": "v1.1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
               "latest": true
             }
@@ -697,11 +715,13 @@ func TestMultModel2Create(t *testing.T) {
   "dirs2": {
     "d2": {
       "id": "d2",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs2/d2",
 
       "files": {
         "f2": {
           "id": "f2",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs2/d2/files/f2",
           "latestId": "v1",
           "latestUrl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
@@ -709,6 +729,7 @@ func TestMultModel2Create(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
               "latest": true
             }

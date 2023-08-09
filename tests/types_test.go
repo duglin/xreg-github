@@ -112,6 +112,7 @@ func TestBasicTypes(t *testing.T) {
 	}
 
 	xCheckGet(t, reg, "?inline", `{
+  "specVersion": "0.5",
   "id": "TestBasicTypes",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -130,6 +131,7 @@ func TestBasicTypes(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
+      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1",
       "dirBool1": true,
       "dirBool2": false,
@@ -146,6 +148,7 @@ func TestBasicTypes(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
+          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1",
           "latestId": "v1",
           "latestUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
@@ -175,6 +178,7 @@ func TestBasicTypes(t *testing.T) {
           "versions": {
             "v1": {
               "id": "v1",
+              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
               "latest": true,
               "verBool1": true,
