@@ -98,6 +98,7 @@ func TestResourceContents(t *testing.T) {
 		URL:  "dirs/d1/files/f1",
 		Body: "",
 		Headers: []string{
+			"xRegistry-fileUrl: http://example.com",
 			"Location: http://example.com",
 		},
 	})
@@ -107,6 +108,7 @@ func TestResourceContents(t *testing.T) {
 		URL:  "dirs/d1/files/f1/versions/v4",
 		Body: "",
 		Headers: []string{
+			"xRegistry-fileUrl: http://example.com",
 			"Location: http://example.com",
 		},
 	})
@@ -134,6 +136,9 @@ func CompareContentMeta(t *testing.T, test *Test) {
 	// t.Logf("MetaBody: %s", string(metaBody))
 	err = json.Unmarshal(metaBody, &metaProps)
 	xNoErr(t, err)
+	if err != nil {
+		t.Logf("JSON: %s", string(metaBody))
+	}
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

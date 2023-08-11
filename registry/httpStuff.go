@@ -2,6 +2,7 @@ package registry
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -105,6 +106,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		if info.StatusCode == 0 {
+			// Only default to BadRequest is not set by someone else
+			info.StatusCode = http.StatusBadRequest
+		}
 		info.Write([]byte(err.Error() + "\n"))
 	}
 
@@ -142,7 +147,7 @@ func (dw *DefaultWriter) Write(b []byte) (int, error) {
 }
 
 func (dw *DefaultWriter) AddHeader(name, value string) {
-	dw.Info.OriginalResponse.Header().Add(name, value)
+	dw.Info.OriginalResponse.Header()[name] = []string{value}
 }
 
 func (dw *DefaultWriter) Done() {
@@ -236,6 +241,8 @@ func HTTPGETModel(info *RequestInfo) error {
 }
 
 func HTTPGETContent(info *RequestInfo) error {
+	log.VPrintf(3, ">Enter: HTTPGetContent")
+	defer log.VPrintf(3, "<Exit: HTTPGetContent")
 	query := `
 SELECT
   RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
@@ -298,15 +305,15 @@ FROM FullTree WHERE RegSID=? AND `
 	headerIt := func(e *Entity, info *RequestInfo, key string, val any) error {
 		str := ""
 		if key == "labels" {
-			header := info.OriginalResponse.Header()
 			for name, value := range val.(map[string]string) {
-				header["xRegistry-labels-"+name] = []string{value}
+				info.AddHeader("xRegistry-labels-"+name, value)
 			}
 			return nil
 		}
+
 		str = fmt.Sprintf("%v", val)
 
-		info.OriginalResponse.Header()["xRegistry-"+key] = []string{str}
+		info.AddHeader("xRegistry-"+key, str)
 		return nil
 	}
 
@@ -316,18 +323,27 @@ FROM FullTree WHERE RegSID=? AND `
 	}
 
 	if info.VersionUID == "" {
-		info.OriginalResponse.Header()["xRegistry-versionsCount"] =
-			[]string{fmt.Sprintf("%d", versionsCount)}
-		info.OriginalResponse.Header()["xRegistry-versionsUrl"] =
-			[]string{info.BaseURL + "/" + entity.Path + "/versions"}
+		info.AddHeader("xRegistry-versionsCount",
+			fmt.Sprintf("%d", versionsCount))
+		info.AddHeader("xRegistry-versionsUrl",
+			info.BaseURL+"/"+entity.Path+"/versions")
+
+		info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
 	}
 
 	url := ""
 	if val := entity.Get("#resourceURL"); val != nil {
+		gModel := info.Registry.Model.Groups[info.GroupType]
+		rModel := gModel.Resources[info.ResourceType]
+		singular := rModel.Singular
+
 		url = val.(string)
-	}
-	if url != "" {
-		info.StatusCode = http.StatusSeeOther
+		info.AddHeader("xRegistry-"+singular+"Url", url)
+
+		if info.StatusCode == 0 {
+			// If we set it during a PUT/POST, don't override the 201
+			info.StatusCode = http.StatusSeeOther
+		}
 		info.AddHeader("Location", url)
 		/*
 			http.Redirect(info.OriginalResponse, info.OriginalRequest, url,
@@ -339,6 +355,8 @@ FROM FullTree WHERE RegSID=? AND `
 	if val := entity.Get("#resourceProxyURL"); val != nil {
 		url = val.(string)
 	}
+
+	log.VPrintf(3, "#resourceProxyURL: %s", url)
 	if url != "" {
 		// Just act as a proxy and copy the remote resource as our response
 		resp, err := http.Get(url)
@@ -353,7 +371,7 @@ FROM FullTree WHERE RegSID=? AND `
 
 		// Copy all HTTP headers
 		for header, value := range resp.Header {
-			info.OriginalResponse.Header()[header] = value
+			info.AddHeader(header, strings.Join(value, ","))
 		}
 
 		// Now copy the body
@@ -368,7 +386,11 @@ FROM FullTree WHERE RegSID=? AND `
 	buf := version.Get("#resource")
 	if buf == nil {
 		// No data so just return
-		// info.OriginalResponse.WriteHeader(200) // http.StatusNoContent)
+		/*
+			if info.StatusCode == 0 {
+				info.StatusCode = http.StatusNoContent
+			}
+		*/
 		return nil
 	}
 	info.Write(buf.([]byte))
@@ -377,6 +399,9 @@ FROM FullTree WHERE RegSID=? AND `
 }
 
 func HTTPGet(info *RequestInfo) error {
+	log.VPrintf(3, ">Enter: HTTPGet(%s)", info.What)
+	defer log.VPrintf(3, "<Exit: HTTPGet(%s)", info.What)
+
 	info.Root = strings.Trim(info.Root, "/")
 
 	if len(info.Parts) > 0 && info.Parts[0] == "model" {
@@ -425,7 +450,6 @@ func HTTPGet(info *RequestInfo) error {
 
 func HTTPPutPost(info *RequestInfo) error {
 	isNew := false
-	bodyIsContent := false
 	method := strings.ToUpper(info.OriginalRequest.Method)
 	entityData := EntityData{
 		Props: map[string]any{},
@@ -444,14 +468,28 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error reading body: %s", err)
 	}
+	if len(body) == 0 {
+		body = nil
+	}
+
+	var groupModel *GroupModel
+	var resourceModel *ResourceModel
+
+	if info.GroupType != "" {
+		groupModel = info.Registry.Model.Groups[info.GroupType]
+
+		if info.ResourceType != "" {
+			resourceModel = groupModel.Resources[info.ResourceType]
+		}
+	}
 
 	// Load the xReg properties - either from headers or body
 
 	// We have /GROUPs/gID/RESOURCEs but not ?meta so grab headers
 	if len(info.Parts) >= 3 && !info.ShowMeta {
-		bodyIsContent = true
-		entityData.Content = body
 		entityData.Patch = true
+		entityData.Props["#resource"] = body
+
 		for key, value := range info.OriginalRequest.Header {
 			lowerKey := strings.ToLower(key)
 			if !strings.HasPrefix(lowerKey, "xregistry-") {
@@ -463,17 +501,52 @@ func HTTPPutPost(info *RequestInfo) error {
 				continue
 			}
 
-			if !strings.HasPrefix(lowerKey, "labels-") {
-				entityData.Props[key] = value[0] // only grab first one
-			} else {
-				entityData.Props["labels/"+key[7:]] = value[0]
+			lowerSingular := strings.ToLower(resourceModel.Singular)
+			if lowerKey == lowerSingular {
+				return fmt.Errorf("'xRegistry-%s' isn't allowed as an HTTP "+
+					"header", resourceModel.Singular)
 			}
+			if lowerKey == lowerSingular+"base64" {
+				return fmt.Errorf("'xRegistry-%qBase64' isn't allowed as an "+
+					" HTTP header", resourceModel.Singular)
+			}
+
+			// If it's a specProp then set Key to it's real case
+			specProp, isSpec := SpecProps[lowerKey]
+			if isSpec {
+				key = specProp.name
+			}
+
+			val := any(value[0])
+			if val == "null" {
+				val = nil
+			}
+
+			if !strings.HasPrefix(lowerKey, "labels-") {
+				// Not a label
+				if lowerKey == lowerSingular+"url" {
+					// is #resourceURL
+					if len(body) != 0 {
+						return fmt.Errorf("'xRegistry-%sUrl' isn't allowed "+
+							"if there's a body", resourceModel.Singular)
+					}
+
+					entityData.Props["#resource"] = nil
+					key = "#resourceURL"
+				}
+			} else {
+				key = "labels/" + key[7:]
+			}
+
+			entityData.Props[key] = val
 		}
 	} else {
 		// Assume body is xReg metadata so parse it into entityData.Props
 		if strings.TrimSpace(string(body)) == "" {
 			body = []byte("{}") // Be forgiving
 		}
+
+		err = json.Unmarshal(body, &entityData.RawProps)
 		err = json.Unmarshal(body, &entityData.Props)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
@@ -481,27 +554,84 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 		entityData.UpdateCase = true
 
-		// Fix labels
+		// Fix labels and check for RESOURCE properties
 		for k, v := range entityData.Props {
-			if strings.ToLower(k) == "labels" && k != "labels" {
+			lowerK := strings.ToLower(k)
+			if lowerK == "labels" && k != "labels" {
 				return fmt.Errorf("Property name %q is invalid, one in "+
 					"a different case already exists", k)
 			}
+
+			// If we're on a resource or version, check for its content
+			if resourceModel != nil {
+				singular := resourceModel.Singular
+
+				if k == singular {
+					delete(entityData.Props, k)
+					delete(entityData.RawProps, k)
+
+					entityData.Props["#resourceURL"] = nil
+					entityData.Props["#resource"] = entityData.RawProps[k]
+				}
+
+				if k == singular+"Base64" {
+					if body != nil {
+						return fmt.Errorf("Only one of '%s', '%sUrl' and "+
+							" '%sBase64' can be present at a time",
+							singular, singular, singular)
+					}
+					data := entityData.RawProps[k]
+					content, err := base64.StdEncoding.DecodeString(string(data))
+					if err != nil {
+						return fmt.Errorf("Error decoding base64 data(%s): "+
+							"%s", k, err)
+					}
+
+					delete(entityData.Props, k)
+					delete(entityData.RawProps, k)
+
+					entityData.Props["#resource"] = content
+					entityData.Props["#resourceURL"] = nil
+				}
+
+				if k == resourceModel.Singular+"Url" {
+					if body != nil {
+						return fmt.Errorf("'%sUrl' and an HTTP body can not "+
+							"both be present", resourceModel.Singular)
+					}
+
+					delete(entityData.Props, k)
+					delete(entityData.RawProps, k)
+
+					entityData.Props["#resourceURL"] = v
+					entityData.Props["#resource"] = nil
+				}
+			}
+
 			if k != "labels" {
 				continue
 			}
 
-			labelMap, ok := v.(map[string]string)
+			labelMap, ok := v.(map[string]any)
 			if !ok {
 				return fmt.Errorf("Property 'labels' must be a "+
-					" map(string,string), not %T", v)
+					"map(string,any), not %T", v)
 			}
-			entityData.Props["label"] = labelMap
+
+			for k, v := range labelMap {
+				if v == nil {
+					continue
+				}
+				// Be nice and convert any non-string into a string
+				entityData.Props["labels/"+k] = fmt.Sprintf("%v", v)
+			}
+
+			delete(entityData.Props, "labels")
 		}
 	}
 
 	log.VPrintf(3, "entityData.Props:\n%s", ToJSON(entityData.Props))
-	log.VPrintf(3, "Body: %d bytes / IsContent: %v", len(body), bodyIsContent)
+	log.VPrintf(3, "Body: %d bytes", len(body))
 
 	// Check for some obvious high-level bad states up-front
 	if len(info.Parts) == 0 && method == "POST" {
@@ -570,11 +700,13 @@ func HTTPPutPost(info *RequestInfo) error {
 		// Either /GROUPs or /GROUPs/gID
 		entityData.IsNew = isNew
 		entityData.Level = 1
+		entityData.Plural = groupModel.Plural
+		entityData.Singular = groupModel.Singular
 		err = UserUpdateEntity(&group.Entity, &entityData)
 	}
 
 	if err != nil {
-		info.StatusCode = http.StatusInternalServerError
+		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
 	}
 
@@ -615,12 +747,29 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 	} else {
 		// must be PUT/POST /GROUPs/gID/RESOURCEs/rID...
+
+		// Check metadata ID == ID in URL, only if doing a resource+PUT.
+		// Check here because later on we'll replace id with the version's
+		// ID and won't be able to check it in updateentity
+		if len(info.Parts) == 4 && method == "PUT" &&
+			propsID != "" && propsID != resourceUID {
+
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf("Metadata id(%s) doesn't match ID in "+
+				"URL(%s)", propsID, resourceUID)
+		}
+
 		resource, err = group.FindResource(info.ResourceType, resourceUID)
+
 		if err == nil && resource == nil {
-			if versionUID == "" {
+			if versionUID == "" &&
+				((len(info.Parts) == 4 && method == "POST") ||
+					(len(info.Parts) == 5)) {
+
 				// No vID in URL, grab from props. If missing, auto-generate
 				versionUID = propsID
 			}
+
 			isNew = true
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID)
@@ -658,20 +807,25 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
 	}
 
-	if err == nil {
-		// Update Resource or Version based on the URL of the request
-		entityData.IsNew = isNew
+	// Update Resource or Version based on the URL of the request
+	entityData.IsNew = isNew
+	entityData.Plural = resourceModel.Plural
+	entityData.Singular = resourceModel.Singular
+
+	if len(info.Parts) < 5 {
+		entityData.Props["id"] = version.UID
+	}
+	/*
 		if len(info.Parts) < 5 {
 			// Either /GROUPs/gID/RESOURCEs or /GROUPs/gID/RESOURCEs/rID
 			entityData.Level = 2
 			err = UserUpdateEntity(&resource.Entity, &entityData)
 		} else {
-			// Either ..RESOURCEs/rID/versions or ..RESOURCEs/rID/versions/vID
-			entityData.Level = 3
-			err = UserUpdateEntity(&version.Entity, &entityData)
-		}
-
-	}
+	*/
+	// Either ..RESOURCEs/rID/versions or ..RESOURCEs/rID/versions/vID
+	entityData.Level = 3
+	err = UserUpdateEntity(&version.Entity, &entityData)
+	// }
 
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
@@ -686,13 +840,13 @@ func HTTPPutPost(info *RequestInfo) error {
 	info.GroupUID = groupUID
 	info.ResourceUID = resourceUID
 
-	// location := info.BaseURL + "/" + resourcePath
-	location := resource.Path
+	location := info.BaseURL + "/" + resource.Path
+	// location := resource.Path
 	if originalLen > 4 {
 		info.Parts = append(info.Parts, "versions", versionUID)
 		info.VersionUID = versionUID
-		// location += "/version" + info.VersionUID
-		location = version.Path
+		location += "/version" + info.VersionUID
+		// location = version.Path
 	}
 
 	if isNew { // 201, else let it default to 200
@@ -705,8 +859,10 @@ func HTTPPutPost(info *RequestInfo) error {
 
 type EntityData struct {
 	Level      int
+	Plural     string
+	Singular   string
 	Props      map[string]any
-	Content    []byte
+	RawProps   map[string]json.RawMessage
 	UpdateCase bool
 	Patch      bool
 	IsNew      bool
@@ -716,6 +872,9 @@ type EntityData struct {
 // check for casing against list of existing props
 func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 	var err error
+	hadLabel := false
+
+	log.VPrintf(3, "Updating:\n%s\n", ToJSON(ed))
 
 	tmp := entity.Props["epoch"]
 	epoch := NotNilInt(&tmp)
@@ -723,7 +882,14 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		epoch = 0
 	}
 
-	if incomingEpoch, ok := ed.Props["epoch"]; ok {
+	if tmp := ed.Props["id"]; tmp != nil {
+		if tmp != entity.Get("id") {
+			return fmt.Errorf("Metadata id(%s) doesn't match ID in "+
+				"URL(%s)", tmp, entity.Get("id"))
+		}
+	}
+
+	if incomingEpoch, ok := ed.Props["epoch"]; ok && !ed.IsNew {
 		kind := reflect.ValueOf(incomingEpoch).Kind()
 		incoming := 0
 		if kind == reflect.String {
@@ -747,6 +913,8 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		}
 	}
 
+	oldLabels := map[string]bool{}
+
 	// Find all mutable spec-defined props or extensions
 	// and save them in a map (key=lower-name) for easy reference
 	// and these are the ones we'll want to delete when done
@@ -758,6 +926,11 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		// Only save it if it's an extension or if the spec prop is mutable
 		if !isSpec || specProp.mutable == true {
 			tmpLowerEntityProps[lowerK] = k
+		}
+
+		// Save existing label keys too
+		if strings.HasPrefix(k, "labels/") {
+			oldLabels[k] = true
 		}
 	}
 
@@ -781,9 +954,9 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 			// OK, let it thru so we can set it
 		} else {
-			// It's a user-defined property name - aka an extension
+			// It's a user-defined property name - aka an extension(or label)
 
-			// See if it exsits in the existing entity's Props
+			// See if it exists in the existing entity's Props
 			if caseProp, ok := tmpLowerEntityProps[lowerK]; ok {
 				// Found one!
 
@@ -800,19 +973,32 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 			} else {
 				// Not an existing prop so just let it thru so we can set it
 			}
+
+			if strings.HasPrefix(lowerK, "labels/") {
+				hadLabel = true
+				delete(oldLabels, k)
+			}
 		}
 
-		log.VPrintf(1, "Setting %q->%q", k, v)
 		err := SetProp(entity, k, v)
 		if err != nil {
 			return err
 		}
 	}
 
+	if hadLabel {
+		for k, _ := range oldLabels {
+			log.Printf("Deleting old label: %s", k)
+			err := SetProp(entity, k, nil)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	// Delete any remaining properties from the Entity, if not patching
 	if !ed.Patch {
 		for _, v := range tmpLowerEntityProps {
-			log.VPrintf(1, "Deleting %q", v)
 			err := SetProp(entity, v, nil)
 			if err != nil {
 				return err

@@ -166,6 +166,19 @@ func (jw *JsonWriter) WriteEntity() error {
 		panic(err)
 	}
 
+	// Add resource content released properties
+	if myLevel >= 2 {
+		if val := jw.Entity.Get("#resourceURL"); val != nil {
+			gModel := jw.info.Registry.Model.Groups[jw.info.GroupType]
+			rModel := gModel.Resources[jw.info.ResourceType]
+			singular := rModel.Singular
+
+			url := val.(string)
+			jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular+"Url", url)
+			extra = ","
+		}
+	}
+
 	// Now show all of the nested collections
 	if extra != "" {
 		extra += "\n" // just because it looks nicer with a blank line

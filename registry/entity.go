@@ -198,10 +198,10 @@ func (e *Entity) sSet(name string, val any) error {
 		} else {
 			panic(fmt.Sprintf("Bad property kind: %s", k.String()))
 		}
-		err = Do(`
-			REPLACE INTO Props( 
+		err = DoOneTwo(`
+            REPLACE INTO Props(
 				RegistrySID, EntitySID, PropName, PropValue, PropType)
-			VALUES( ?,?,?,?,? )`,
+            VALUES( ?,?,?,?,? )`,
 			e.RegistrySID, e.DbSID, name, val, propType)
 	}
 
@@ -254,17 +254,22 @@ func SetProp(entity any, name string, val any) error {
 		log.Fatalf("RegistrySID should not be empty")
 	}
 
+	var err error
+
 	// #resource is special and is saved in it's own table
 	if name == "#resource" {
-		// The actual contents
-		err := DoOne(`
-            INSERT INTO ResourceContents(VersionSID, Content)
-            VALUES(?,?)`, e.DbSID, val)
+		if IsNil(val) {
+			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
+		} else {
+			// The actual contents
+			err = DoOneTwo(`
+                REPLACE INTO ResourceContents(VersionSID, Content)
+            	VALUES(?,?)`, e.DbSID, val)
+		}
 		return err
 	}
 
-	var err error
-	if val == nil {
+	if IsNil(val) {
 		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
 			e.DbSID, name)
 	} else {
@@ -287,10 +292,10 @@ func SetProp(entity any, name string, val any) error {
 		} else {
 			panic(fmt.Sprintf("Bad property kind: %s", k.String()))
 		}
-		err = Do(`
-			REPLACE INTO Props( 
-				RegistrySID, EntitySID, PropName, PropValue, PropType)
-			VALUES( ?,?,?,?,? )`,
+		err = DoOneTwo(`
+            REPLACE INTO Props(
+              RegistrySID, EntitySID, PropName, PropValue, PropType)
+            VALUES( ?,?,?,?,? )`,
 			e.RegistrySID, e.DbSID, name, dbVal, propType)
 	}
 

@@ -136,41 +136,57 @@ func Query(cmd string, args ...interface{}) (*Result, error) {
 	return result, nil
 }
 
-func Do(cmd string, args ...interface{}) error {
-	log.VPrintf(4, "Do: %q arg: %v", cmd, args)
+func DoCount(cmd string, args ...interface{}) (int, error) {
+	log.VPrintf(4, "DoCount: %q arg: %v", cmd, args)
 	ps, err := DB.Prepare(cmd)
 	if err != nil {
-		return err
-	}
-	_, err = ps.Exec(args...)
-
-	if err != nil {
-		query := SubQuery(cmd, args)
-		log.Printf("Do:Error DB(%s)->%s\n", query, err)
-	}
-	return err
-}
-
-func DoOne(cmd string, args ...interface{}) error {
-	ps, err := DB.Prepare(cmd)
-	if err != nil {
-		return err
+		return 0, err
 	}
 	result, err := ps.Exec(args...)
 
 	if err != nil {
 		query := SubQuery(cmd, args)
-		log.Printf("DoOne:Error DB(%s)->%s\n", query, err)
+		log.Printf("DoCount:Error DB(%s)->%s\n", query, err)
+		return 0, err
+	}
+
+	count, _ := result.RowsAffected()
+	return int(count), err
+}
+
+func Do(cmd string, args ...interface{}) error {
+	_, err := DoCount(cmd, args...)
+	return err
+}
+
+func DoOne(cmd string, args ...interface{}) error {
+	count, err := DoCount(cmd, args...)
+	if err != nil {
 		return err
 	}
 
-	if count, _ := result.RowsAffected(); count != 1 {
+	if count != 1 {
 		query := SubQuery(cmd, args)
 		log.Printf("DoOne:Error DB(%s) didn't change exactly 1 row(%d)",
 			query, count)
 	}
 
-	return err
+	return nil
+}
+
+func DoOneTwo(cmd string, args ...interface{}) error {
+	count, err := DoCount(cmd, args...)
+	if err != nil {
+		return err
+	}
+
+	if count != 1 && count != 2 {
+		query := SubQuery(cmd, args)
+		log.Printf("DoOne:Error DB(%s) didn't change exactly 1/2 rows(%d)",
+			query, count)
+	}
+
+	return nil
 }
 
 func DBExists(name string) bool {

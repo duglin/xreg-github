@@ -43,7 +43,7 @@ func (m *Model) SetSchema(schema string) error {
 		val = &schema
 	}
 
-	err := Do(`
+	err := DoOne(`
         INSERT INTO Models(RegistrySID, "Schema")
 		VALUES(?,?) ON DUPLICATE KEY UPDATE "Schema"=?`,
 		m.Registry.DbSID, val, val)
@@ -267,7 +267,7 @@ func (gm *GroupModel) Delete() error {
 func (gm *GroupModel) Save() error {
 	// Just updates this GroupModel, not any Resources
 	// DO NOT use this to insert a new one
-	err := Do(`
+	err := DoOne(`
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, SchemaURL)
@@ -310,7 +310,7 @@ func (gm *GroupModel) AddResourceModel(plural string, singular string, versions 
 
 	mSID := NewUUID()
 
-	err := Do(`
+	err := DoOne(`
 		INSERT INTO ModelEntities(
 			SID, RegistrySID, ParentSID, Plural, Singular, SchemaURL, Versions,
 			VersionId, Latest)
@@ -356,7 +356,7 @@ func (rm *ResourceModel) Delete() error {
 func (rm *ResourceModel) Save() error {
 	// Just updates this GroupModel, not any Resources
 	// DO NOT use this to insert a new one
-	err := Do(`
+	err := DoOne(`
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, SchemaURL, Versions,

@@ -139,7 +139,6 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		nextID := NotNilInt(&tmp)
 		for {
 			id = strconv.Itoa(nextID)
-			log.Printf("Looking for v: %s", id)
 			v, err = r.FindVersion(id)
 			if err != nil {
 				return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)

@@ -20,6 +20,18 @@ func NewUUID() string {
 	return uuid.NewString()[:8]
 }
 
+func init() {
+	if !IsNil(nil) {
+		panic("help me1")
+	}
+	if !IsNil(any(nil)) {
+		panic("help me2")
+	}
+	if !IsNil((*any)(nil)) {
+		panic("help me3")
+	}
+}
+
 func IsNil(a any) bool {
 	val := reflect.ValueOf(a)
 	if !val.IsValid() {
@@ -37,6 +49,10 @@ func IsNil(a any) bool {
 func NotNilString(val *any) string {
 	if val == nil || *val == nil {
 		return ""
+	}
+
+	if reflect.ValueOf(*val).Kind() == reflect.String {
+		return (*val).(string)
 	}
 
 	b := (*val).([]byte)
