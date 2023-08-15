@@ -136,8 +136,8 @@ func Query(cmd string, args ...interface{}) (*Result, error) {
 	return result, nil
 }
 
-func DoCount(cmd string, args ...interface{}) (int, error) {
-	log.VPrintf(4, "DoCount: %q arg: %v", cmd, args)
+func doCount(cmd string, args ...interface{}) (int, error) {
+	log.VPrintf(4, "doCount: %q arg: %v", cmd, args)
 	ps, err := DB.Prepare(cmd)
 	if err != nil {
 		return 0, err
@@ -146,7 +146,7 @@ func DoCount(cmd string, args ...interface{}) (int, error) {
 
 	if err != nil {
 		query := SubQuery(cmd, args)
-		log.Printf("DoCount:Error DB(%s)->%s\n", query, err)
+		log.Printf("doCount:Error DB(%s)->%s\n", query, err)
 		return 0, err
 	}
 
@@ -155,12 +155,12 @@ func DoCount(cmd string, args ...interface{}) (int, error) {
 }
 
 func Do(cmd string, args ...interface{}) error {
-	_, err := DoCount(cmd, args...)
+	_, err := doCount(cmd, args...)
 	return err
 }
 
 func DoOne(cmd string, args ...interface{}) error {
-	count, err := DoCount(cmd, args...)
+	count, err := doCount(cmd, args...)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func DoOne(cmd string, args ...interface{}) error {
 }
 
 func DoOneTwo(cmd string, args ...interface{}) error {
-	count, err := DoCount(cmd, args...)
+	count, err := doCount(cmd, args...)
 	if err != nil {
 		return err
 	}
@@ -184,6 +184,36 @@ func DoOneTwo(cmd string, args ...interface{}) error {
 		query := SubQuery(cmd, args)
 		log.Printf("DoOne:Error DB(%s) didn't change exactly 1/2 rows(%d)",
 			query, count)
+	}
+
+	return nil
+}
+
+func DoZeroTwo(cmd string, args ...interface{}) error {
+	count, err := doCount(cmd, args...)
+	if err != nil {
+		return err
+	}
+
+	if count != 0 && count != 2 {
+		query := SubQuery(cmd, args)
+		log.Printf("DoOne:Error DB(%s) didn't change exactly 1/2 rows(%d)",
+			query, count)
+	}
+
+	return nil
+}
+
+func DoCount(num int, cmd string, args ...interface{}) error {
+	count, err := doCount(cmd, args...)
+	if err != nil {
+		return err
+	}
+
+	if count != num {
+		query := SubQuery(cmd, args)
+		log.Printf("DoOne:Error DB(%s) didn't change exactly %d rows(%d)",
+			query, num, count)
 	}
 
 	return nil

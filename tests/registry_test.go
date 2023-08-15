@@ -51,7 +51,7 @@ func TestCreateRegistry(t *testing.T) {
 `)
 }
 
-func TestDeleteRefistry(t *testing.T) {
+func TestDeleteRegistry(t *testing.T) {
 	reg, err := registry.NewRegistry("TestDeleteRegistry")
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg shouldn't be nil")
@@ -65,13 +65,12 @@ func TestDeleteRefistry(t *testing.T) {
 }
 
 func TestRefreshRegistry(t *testing.T) {
-	reg, err := registry.NewRegistry("TestRefreshRegistry")
+	reg := NewRegistry("TestRefreshRegistry")
 	defer PassDeleteReg(t, reg)
-	xNoErr(t, err)
 
 	reg.Props["xxx"] = "yyy"
 
-	err = reg.Refresh()
+	err := reg.Refresh()
 	xNoErr(t, err)
 
 	xCheck(t, reg.Props["xxx"] == nil, "xxx should not be there")
@@ -83,7 +82,7 @@ func TestFindRegistry(t *testing.T) {
 		"Shouldn't have found TestFindRegistry")
 
 	reg, err = registry.NewRegistry("TestFindRegistry")
-	defer PassDeleteReg(t, reg)
+	defer reg.Delete() // PassDeleteReg(t, reg)
 	xNoErr(t, err)
 
 	reg2, err := registry.FindRegistry(reg.UID)

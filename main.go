@@ -15,14 +15,12 @@ func init() {
 }
 
 var Port = 8080
-var Reg = (*registry.Registry)(nil)
 var DBName = "registry"
 var Verbose = 2
 
 func main() {
 	var err error
 
-	newDB := false
 	doDelete := flag.Bool("delete", false, "Delete DB an exit")
 	doRecreate := flag.Bool("recreate", false, "Recreate DB, then run")
 	flag.IntVar(&Verbose, "v", 2, "Verbose level")
@@ -42,24 +40,22 @@ func main() {
 
 	if !registry.DBExists(DBName) {
 		registry.CreateDB(DBName)
-		newDB = true
 	}
 
 	registry.OpenDB(DBName)
-
-	if newDB {
-		Reg = LoadDirsSample(Reg)
-		// Reg = LoadEndpointsSample(Reg)
-		Reg = LoadAPIGuru(Reg, "APIs-guru", "openapi-directory")
-	}
-
-	Reg, err = registry.FindRegistry("SampleRegistry")
+	reg, err := registry.FindRegistry("SampleRegistry")
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	if Reg == nil {
+	if reg == nil {
+		reg = LoadDirsSample(reg)
+		_ = LoadEndpointsSample(nil)
+		reg = LoadAPIGuru(reg, "APIs-guru", "openapi-directory")
+	}
+
+	if reg == nil {
 		fmt.Fprintf(os.Stderr, "No registry loaded\n")
 		os.Exit(1)
 	}
@@ -71,5 +67,6 @@ func main() {
 		}
 	}
 
-	registry.NewServer(Reg, Port).Serve()
+	registry.DefaultReg = reg
+	registry.NewServer(Port).Serve()
 }

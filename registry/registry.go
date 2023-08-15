@@ -71,6 +71,22 @@ func NewRegistry(id string) (*Registry, error) {
 	return reg, nil
 }
 
+func GetRegistryNames() []string {
+	results, err := Query(` SELECT UID FROM Registries`)
+	defer results.Close()
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	res := []string{}
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
+		res = append(res, NotNilString(row[0]))
+	}
+
+	return res
+}
+
 func (reg *Registry) Set(name string, val any) error {
 	return SetProp(reg, name, val)
 }
@@ -317,13 +333,13 @@ type FilterExpr struct {
 	HasEqual bool
 }
 
-func (reg *Registry) ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) {
+func ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) {
 	path := strings.Trim(r.URL.Path, " /")
 	info := &RequestInfo{
 		OriginalPath:     path,
 		OriginalRequest:  r,
 		OriginalResponse: w,
-		Registry:         reg,
+		Registry:         DefaultReg,
 		BaseURL:          "http://" + r.Host,
 		ShowModel:        r.URL.Query().Has("model"),
 		ShowMeta:         r.URL.Query().Has("meta"),
@@ -414,8 +430,27 @@ func (info *RequestInfo) ParseFilters() error {
 func (info *RequestInfo) ParseRequestURL() error {
 	path := strings.Trim(info.OriginalPath, " /")
 	info.Parts = strings.Split(path, "/")
-
 	if len(info.Parts) == 1 && info.Parts[0] == "" {
+		info.Parts = []string{}
+	}
+
+	if len(info.Parts) > 0 && strings.HasPrefix(info.Parts[0], "reg-") {
+		info.BaseURL += "/" + info.Parts[0]
+		name := info.Parts[0][4:]
+		info.Parts = info.Parts[1:] // shift
+
+		reg, err := FindRegistry(name)
+		if reg == nil {
+			extra := ""
+			if err != nil {
+				extra = err.Error()
+			}
+			return fmt.Errorf("Can't find registry %q%s", name, extra)
+		}
+		info.Registry = reg
+	}
+
+	if len(info.Parts) == 0 {
 		info.Parts = nil
 		info.What = "Registry"
 		return nil

@@ -185,6 +185,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	var err error
+	log.VPrintf(1, "Loading registry '%s'", "SampleRegistry")
 	if reg == nil {
 		reg, err = registry.NewRegistry("SampleRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
@@ -212,8 +213,14 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	var err error
+	log.VPrintf(1, "Loading registry '%s'", "EndpointsRegistry")
 	if reg == nil {
-		reg, err = registry.NewRegistry("SampleRegistry")
+		reg, _ = registry.FindRegistry("EndpointsRegistry")
+		if reg != nil {
+			return reg
+		}
+
+		reg, err = registry.NewRegistry("EndpointsRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 
 		reg.Set("#baseURL", "http://soaphub.org:8585/")

@@ -18,13 +18,19 @@ import (
 
 func TestMain(m *testing.M) {
 	// call flag.Parse() here if TestMain uses flags
-	registry.DeleteDB("testreg")
-	registry.CreateDB("testreg")
-	registry.OpenDB("testreg")
+	// registry.DeleteDB("testreg")
+	// registry.CreateDB("testreg")
+	// registry.OpenDB("testreg")
+
+	DBName := "registry"
+	if !registry.DBExists(DBName) {
+		registry.CreateDB(DBName)
+	}
+	registry.OpenDB(DBName)
 
 	// Start HTTP server
 
-	server := registry.NewServer(nil, 8181).Start()
+	server := registry.NewServer(8181).Start()
 
 	// Run the tests
 	rc := m.Run()
@@ -33,19 +39,25 @@ func TestMain(m *testing.M) {
 	server.Close()
 
 	if rc == 0 {
-		registry.DeleteDB("testreg")
+		// registry.DeleteDB("testreg")
 	}
 	os.Exit(rc)
 }
 
 func NewRegistry(name string) *registry.Registry {
 	var err error
-	registry.Reg, err = registry.NewRegistry(name)
+
+	reg, _ := registry.FindRegistry(name)
+	if reg != nil {
+		reg.Delete()
+	}
+
+	registry.DefaultReg, err = registry.NewRegistry(name)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating registry %q: %s", name, err)
 		os.Exit(1)
 	}
-	return registry.Reg
+	return registry.DefaultReg
 }
 
 func PassDeleteReg(t *testing.T, reg *registry.Registry) {
@@ -55,7 +67,7 @@ func PassDeleteReg(t *testing.T, reg *registry.Registry) {
 			// one registry in the DB at a time
 			reg.Delete()
 		}
-		registry.Reg = nil
+		registry.DefaultReg = nil
 	}
 }
 

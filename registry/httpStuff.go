@@ -19,10 +19,9 @@ type Server struct {
 	HTTPServer *http.Server
 }
 
-var Reg *Registry
+var DefaultReg *Registry
 
-func NewServer(reg *Registry, port int) *Server {
-	Reg = reg
+func NewServer(port int) *Server {
 	server := &Server{
 		Port: port,
 		HTTPServer: &http.Server{
@@ -59,7 +58,7 @@ func (s *Server) Serve() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if Reg == nil {
+	if DefaultReg == nil {
 		panic("No registry specified")
 	}
 
@@ -71,9 +70,101 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer log.SetVerbose(saveVerbose)
 	}
 
-	log.VPrintf(2, "%s %s", r.Method, r.URL.Path)
+	log.VPrintf(2, "%s %s", r.Method, r.URL)
 
-	info, err := Reg.ParseRequest(w, r)
+	if r.URL.Query().Has("reg") {
+		list := ""
+		list += fmt.Sprintf("<li onclick=choose('/')>Default</li>\n")
+		for _, name := range GetRegistryNames() {
+			list += fmt.Sprintf("<li onclick=choose('/reg-%s')>%s</li>\n",
+				name, name)
+		}
+
+		w.Header().Add("Content-Type", "text/html")
+		w.Write([]byte(`<html>
+<style>
+  form {
+    display: inline ;
+  }
+  body {
+    display: flex ;
+    flex-direction: row ;
+    flex-wrap: nowrap ;
+    justify-content: flex-start ;
+    align-item: stretch ;
+    height: 100% ;
+    margin: 0 ;
+  }
+  #left {
+    padding: 8 20 8 8 ;
+    background-color: lightsteelblue;
+    white-space: nowrap ;
+  }
+  #right {
+    display: flex ;
+    flex-direction: column ;
+    flex-wrap: nowrap ;
+    justify-content: flex-start ;
+    width: 100% ;
+
+  }
+  #url {
+    background-color: lightgray;
+    border: 0px ;
+    display: flex ;
+    flex-direction: row ;
+    align-items: center ;
+    padding: 5px ;
+    margin: 0px ;
+  }
+  #myURL {
+    width: 50em ;
+  }
+  button {
+    margin-left: 5px ;
+  }
+  #output {
+    background-color: ghostwhite;
+    border: 0px ;
+    flex: 1 ;
+  }
+  li {
+    white-space: nowrap ;
+    cursor: pointer ;
+  }
+</style>
+<script>
+  function choose(e) {
+    var val = "http://ubuntu:8080" + e ;
+    document.getElementById('myURL').value = val ;
+    go(val);
+  }
+
+  function go() {
+    var val1 = document.getElementById('myURL').value ;
+    val1 += (val1.includes("?") ? "&":"?") + "html"
+
+    document.getElementById('output').src = val1 ;
+  }
+</script>
+<div id=left>
+<b>Choose a registry:</b>
+<br><br>
+` + list + `
+</div>
+<div id=right>
+    <form id=url target=iframe onsubmit="go();return false;">
+      <div style="margin:0 5 0 10">URL:</div>
+      <input id=myURL type=text>
+      <button type=submit> Go! </button>
+    </form>
+  <iframe id=output name='iframe'></iframe>
+</div>
+`))
+		return
+	}
+
+	info, err := ParseRequest(w, r)
 	if err != nil {
 		w.WriteHeader(info.StatusCode)
 		w.Write([]byte(fmt.Sprintf("%s\n", err.Error())))
@@ -988,7 +1079,6 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 	if hadLabel {
 		for k, _ := range oldLabels {
-			log.Printf("Deleting old label: %s", k)
 			err := SetProp(entity, k, nil)
 			if err != nil {
 				return err
