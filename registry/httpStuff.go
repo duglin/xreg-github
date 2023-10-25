@@ -91,7 +91,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     flex-direction: row ;
     flex-wrap: nowrap ;
     justify-content: flex-start ;
-    align-item: stretch ;
     height: 100% ;
     margin: 0 ;
   }
@@ -118,7 +117,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     margin: 0px ;
   }
   #myURL {
-    width: 50em ;
+    width: 40em ;
   }
   button {
     margin-left: 5px ;
@@ -127,6 +126,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     background-color: ghostwhite;
     border: 0px ;
     flex: 1 ;
+  }
+  #myOutput {
+    background-color: ghostwhite;
+    border: 0px ;
+	padding: 5px ;
+    flex: 1 ;
+	overflow: auto ;
+  }
+  pre {
+    margin: 0px ;
   }
   li {
     white-space: nowrap ;
@@ -142,9 +151,28 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
   function go() {
     var val1 = document.getElementById('myURL').value ;
-    val1 += (val1.includes("?") ? "&":"?") + "html"
+    // val1 += (val1.includes("?") ? "&":"?") + "html"
 
-    document.getElementById('output').src = val1 ;
+    // document.getElementById('output').src = val1 ;
+	getPage(val1)
+  }
+
+  function go1(url) {
+    document.getElementById('myURL').value = url ;
+	go(url)
+  }
+
+  function getPage(url) {
+    var req = new XMLHttpRequest();
+    req.open("GET", url, false);
+    req.send(null);
+    var text = req.responseText ;
+    text = "<pre>" + text + "</pre>" ;
+
+	// text.replace('"(https?://ubuntu[^"\n]*?)"','"<a href=\'$1\'>$1</a>"');
+	const regex = new RegExp('"(https?://ubuntu[^"\n]*)"',"g");
+	text = text.replaceAll(regex,'"<a onclick=\'go1("$1");return false;\' href=\'$1\'>$1</a>"');
+    document.getElementById('myOutput').innerHTML = text ;
   }
 </script>
 <div id=left>
@@ -158,7 +186,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
       <input id=myURL type=text>
       <button type=submit> Go! </button>
     </form>
-  <iframe id=output name='iframe'></iframe>
+  <!-- <iframe id=output name='iframe'></iframe> -->
+  <div id=myOutput>
+  </div>
 </div>
 `))
 		return
@@ -285,12 +315,14 @@ func (bw *BufferedWriter) Done() {
 	bw.Info.OriginalResponse.WriteHeader(code)
 
 	buf := bw.Buffer.Bytes()
-	if req.URL.Query().Has("noprops") {
-		buf = RemoveProps(buf)
-	}
-	if req.URL.Query().Has("oneline") {
-		buf = OneLine(buf)
-	}
+	/*
+		if req.URL.Query().Has("noprops") {
+			buf = RemoveProps(buf)
+		}
+		if req.URL.Query().Has("oneline") {
+			buf = OneLine(buf)
+		}
+	*/
 	if req.URL.Query().Has("html") {
 		bw.Info.OriginalResponse.Write([]byte("<pre>\n"))
 		buf = HTMLify(req, buf)
