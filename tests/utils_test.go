@@ -18,15 +18,15 @@ import (
 
 func TestMain(m *testing.M) {
 	// call flag.Parse() here if TestMain uses flags
-	// registry.DeleteDB("testreg")
-	// registry.CreateDB("testreg")
-	// registry.OpenDB("testreg")
+	registry.DeleteDB("testreg")
+	registry.CreateDB("testreg")
+	registry.OpenDB("testreg")
 
-	DBName := "registry"
-	if !registry.DBExists(DBName) {
-		registry.CreateDB(DBName)
-	}
-	registry.OpenDB(DBName)
+	// DBName := "registry"
+	// if !registry.DBExists(DBName) {
+	// registry.CreateDB(DBName)
+	// }
+	// registry.OpenDB(DBName)
 
 	// Start HTTP server
 

@@ -454,7 +454,7 @@ var OrderedSpecProps = []*SpecProp{
 			if model == nil {
 				model = &Model{}
 			}
-			httpModel := ModelToHTTPModel(model)
+			httpModel := model // ModelToHTTPModel(model)
 			return httpModel
 		}
 		return nil

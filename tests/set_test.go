@@ -8,8 +8,8 @@ func TestSetResource(t *testing.T) {
 	reg := NewRegistry("TestSetResource")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	gm.AddResourceModel("files", "file", 0, true, true)
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
@@ -45,8 +45,8 @@ func TestSetVersion(t *testing.T) {
 	reg := NewRegistry("TestSetVersion")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	gm.AddResourceModel("files", "file", 0, true, true)
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
@@ -81,8 +81,8 @@ func TestSetDots(t *testing.T) {
 	reg := NewRegistry("TestSetDots")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	gm.AddResourceModel("files", "file", 0, true, true)
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	// check some dots in the prop names - and some labels stuff too
 	dir, _ := reg.AddGroup("dirs", "d1")
@@ -132,8 +132,8 @@ func TestSetLabels(t *testing.T) {
 	reg := NewRegistry("TestSetLabels")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	gm.AddResourceModel("files", "file", 0, true, true)
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")

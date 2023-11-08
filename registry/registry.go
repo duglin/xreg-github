@@ -57,8 +57,8 @@ func NewRegistry(id string) (*Registry, error) {
 	}
 
 	err = DoOne(`
-		INSERT INTO Models(RegistrySID, "Schema")
-		VALUES(?,NULL)`, dbSID)
+		INSERT INTO Models(RegistrySID)
+		VALUES(?)`, dbSID)
 	if err != nil {
 		return nil, err
 	}

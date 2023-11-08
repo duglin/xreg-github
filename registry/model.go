@@ -1,19 +1,49 @@
 package registry
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	log "github.com/duglin/dlog"
 )
 
+const VERSIONS = 1
+const VERSIONID = true
+const LATEST = true
+const HASDOCUMENT = true
+
+type Model struct {
+	Registry   *Registry              `json:"-"`
+	Schemas    []string               `json:"schemas,omitempty"`
+	Attributes map[string]*Attribute  `json:"attributes,omitempty"` // attrName
+	Groups     map[string]*GroupModel `json:"groups,omitempty"`     // Plural
+}
+
+type Attribute struct {
+	Name        string                `json:"name,omitempty"`
+	Type        string                `json:"type,omitempty"`
+	Description string                `json:"description,omitempty"`
+	Enum        []string              `json:"enum,omitempty"`
+	Strict      bool                  `json:"strict,omitempty"`
+	Required    bool                  `json:"required,omitempty"`
+	Attributes  map[string]*Attribute `json:"attributes,omitempty"`
+	KeyType     string                `json:"keyType,omitempty"`
+	ItemType    string                `json:"itemType,omitempty"`
+	IfValue     map[string]*IfValue   `json:"ifValue,omitempty"` // Value
+}
+
+type IfValue struct {
+	SiblingAttributes map[string]*Attribute `json:"siblingAttributes,omitempty"`
+}
+
 type GroupModel struct {
 	SID      string    `json:"-"`
 	Registry *Registry `json:"-"`
 
-	Plural   string `json:"plural"`
-	Singular string `json:"singular"`
-	Schema   string `json:"schema,omitempty"`
+	Plural     string                `json:"plural"`
+	Singular   string                `json:"singular"`
+	Attributes map[string]*Attribute `json:"attributes,omitempty"`
 
 	Resources map[string]*ResourceModel `json:"resources,omitempty"` // Plural
 }
@@ -22,40 +52,83 @@ type ResourceModel struct {
 	SID        string      `json:"-"`
 	GroupModel *GroupModel `json:"-"`
 
-	Plural    string `json:"plural"`
-	Singular  string `json:"singular"`
-	Versions  int    `json:"versions"`
-	VersionId bool   `json:"versionId"`
-	Latest    bool   `json:"latest"`
+	Plural      string                `json:"plural"`
+	Singular    string                `json:"singular"`
+	Versions    int                   `json:"versions"`
+	VersionId   bool                  `json:"versionId"`
+	Latest      bool                  `json:"latest"`
+	HasDocument bool                  `json:"hasDocument"`
+	Attributes  map[string]*Attribute `json:"attributes,omitempty"`
 }
 
-type Model struct {
-	Registry *Registry              `json:"-"`
-	Schema   string                 `json:"schema,omitempty"`
-	Groups   map[string]*GroupModel `json:"groups,omitempty"` // Plural
+func (r *ResourceModel) UnmarshalJSON(data []byte) error {
+	// Set the default values
+	r.Versions = VERSIONS
+	r.VersionId = VERSIONID
+	r.Latest = LATEST
+	r.HasDocument = HASDOCUMENT
+
+	type tmpResourceModel ResourceModel
+	return json.Unmarshal(data, (*tmpResourceModel)(r))
 }
 
-func (m *Model) SetSchema(schema string) error {
-	var val any
-
-	// "" -> nil
-	if schema != "" {
-		val = &schema
-	}
-
-	err := DoCount(2, `
-        INSERT INTO Models(RegistrySID, "Schema")
-		VALUES(?,?) ON DUPLICATE KEY UPDATE "Schema"=?`,
-		m.Registry.DbSID, val, val)
+func (m *Model) AddSchema(schema string) error {
+	err := Do(`INSERT INTO "Schemas" (RegistrySID, "Schema") VALUES(?,?)`,
+		m.Registry.DbSID, schema)
 	if err != nil {
-		log.Printf("Error updating modelSchema(%s): %s", m.Registry.DbSID, err)
+		err = fmt.Errorf("Error inserting schema(%s): %s", schema, err)
+		log.Print(err)
+		return err
 	}
 
-	m.Schema = schema
-	return err
+	for _, s := range m.Schemas {
+		if s == schema {
+			// already there
+			return nil
+		}
+	}
+
+	m.Schemas = append(m.Schemas, schema)
+	return nil
 }
 
-func (m *Model) AddGroupModel(plural string, singular string, schema string) (*GroupModel, error) {
+func (m *Model) DelSchema(schema string) error {
+	err := Do(`DELETE FROM "Schemas" WHERE RegistrySID=? AND "Schema"=?`,
+		m.Registry.DbSID, schema)
+	if err != nil {
+		err = fmt.Errorf("Error deleting schema(%s): %s", schema, err)
+		log.Print(err)
+		return err
+	}
+
+	for i, s := range m.Schemas {
+		if s == schema {
+			m.Schemas = append(m.Schemas[:i], m.Schemas[i+1:]...)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *Model) SetSchemas(schemas []string) error {
+	err := Do(`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
+	if err != nil {
+		err = fmt.Errorf("Error deleting schemas: %s", err)
+		log.Print(err)
+		return err
+	}
+	m.Schemas = nil
+
+	for _, s := range schemas {
+		err = m.AddSchema(s)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, error) {
 	if plural == "" {
 		return nil, fmt.Errorf("Can't add a GroupModel with an empty plural name")
 	}
@@ -77,9 +150,9 @@ func (m *Model) AddGroupModel(plural string, singular string, schema string) (*G
 	mSID := NewUUID()
 	err := DoOne(`
         INSERT INTO ModelEntities(
-            SID, RegistrySID, ParentSID, Plural, Singular, SchemaURL, Versions)
-        VALUES(?,?,?,?,?,?,?) `,
-		mSID, m.Registry.DbSID, nil, plural, singular, schema, 0)
+            SID, RegistrySID, ParentSID, Plural, Singular, Versions)
+        VALUES(?,?,?,?,?,?) `,
+		mSID, m.Registry.DbSID, nil, plural, singular, 0)
 	if err != nil {
 		log.Printf("Error inserting groupModel(%s): %s", plural, err)
 		return nil, err
@@ -89,7 +162,6 @@ func (m *Model) AddGroupModel(plural string, singular string, schema string) (*G
 		Registry: m.Registry,
 		Singular: singular,
 		Plural:   plural,
-		Schema:   schema,
 
 		Resources: map[string]*ResourceModel{},
 	}
@@ -107,26 +179,27 @@ func LoadModel(reg *Registry) *Model {
 		Groups:   map[string]*GroupModel{},
 	}
 
-	results, err := Query(`SELECT "Schema" FROM Models WHERE RegistrySID=?`,
-		reg.DbSID)
+	// Load Schemas
+	results, err := Query(`
+        SELECT RegistrySID, "Schema" FROM "Schemas"
+        WHERE RegistrySID=?
+        ORDER BY "Schema" ASC`, reg.DbSID)
+	defer results.Close()
 
 	if err != nil {
-		log.Printf("Error loading model(%s): %s", reg.UID, err)
+		log.Printf("Error loading schemas(%s): %s", reg.UID, err)
 		return nil
 	}
 
-	row := results.NextRow()
-	if row == nil {
-		log.Printf("Error loading model(%s): results are empty", reg.UID)
-		return nil
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
+		model.Schemas = append(model.Schemas, NotNilString(row[1]))
 	}
-	model.Schema = NotNilString(row[0])
-	results.Close()
 
+	// Load Groups & Resources
 	results, err = Query(`
         SELECT
-            SID, RegistrySID, ParentSID, Plural, Singular, SchemaURL, Versions,
-            VersionId, Latest
+            SID, RegistrySID, ParentSID, Plural, Singular, Versions,
+            VersionId, Latest, HasDocument
         FROM ModelEntities
         WHERE RegistrySID=?
         ORDER BY ParentSID ASC`, reg.DbSID)
@@ -144,7 +217,6 @@ func LoadModel(reg *Registry) *Model {
 				Registry: reg,
 				Plural:   NotNilString(row[3]), // Plural
 				Singular: NotNilString(row[4]), // Singular
-				Schema:   NotNilString(row[5]), // SchemaURL
 
 				Resources: map[string]*ResourceModel{},
 			}
@@ -157,13 +229,14 @@ func LoadModel(reg *Registry) *Model {
 
 			if g != nil { // should always be true, but...
 				r := &ResourceModel{
-					SID:        NotNilString(row[0]),
-					GroupModel: g,
-					Plural:     NotNilString(row[3]),
-					Singular:   NotNilString(row[4]),
-					Versions:   NotNilInt(row[6]),
-					VersionId:  NotNilBool(row[7]),
-					Latest:     NotNilBool(row[8]),
+					SID:         NotNilString(row[0]),
+					GroupModel:  g,
+					Plural:      NotNilString(row[3]),
+					Singular:    NotNilString(row[4]),
+					Versions:    NotNilIntDef(row[5], VERSIONS),
+					VersionId:   NotNilBoolDef(row[6], VERSIONID),
+					Latest:      NotNilBoolDef(row[7], LATEST),
+					HasDocument: NotNilBoolDef(row[8], HASDOCUMENT),
 				}
 
 				g.Resources[r.Plural] = r
@@ -185,8 +258,15 @@ func (m *Model) FindGroupModel(gTypePlural string) *GroupModel {
 }
 
 func (m *Model) ApplyNewModel(newM *Model) error {
-	if newM.Schema != m.Schema {
-		m.SetSchema(newM.Schema)
+	// Delete old Schemas, then add new ones
+	err := Do(`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
+	if err != nil {
+		return err
+	}
+	for _, schema := range newM.Schemas {
+		if err = m.AddSchema(schema); err != nil {
+			return err
+		}
 	}
 
 	// Find all old groups that need to be deleted
@@ -207,20 +287,17 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 	}
 
 	// Apply new stuff
-	var err error
 	newM.Registry = m.Registry
 	for _, newGM := range newM.Groups {
 		newGM.Registry = m.Registry
 		oldGM := m.Groups[newGM.Plural]
 		if oldGM == nil {
-			oldGM, err = m.AddGroupModel(newGM.Plural, newGM.Singular,
-				newGM.Schema)
+			oldGM, err = m.AddGroupModel(newGM.Plural, newGM.Singular)
 			if err != nil {
 				return err
 			}
 		} else {
 			oldGM.Singular = newGM.Singular
-			oldGM.Schema = newGM.Schema
 			if err = oldGM.Save(); err != nil {
 				return err
 			}
@@ -231,12 +308,13 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 			if oldRM == nil {
 				oldRM, err = oldGM.AddResourceModel(newRM.Plural,
 					newRM.Singular, newRM.Versions, newRM.VersionId,
-					newRM.Latest)
+					newRM.Latest, newRM.HasDocument)
 			} else {
 				oldRM.Singular = newRM.Singular
 				oldRM.Versions = newRM.Versions
 				oldRM.VersionId = newRM.VersionId
 				oldRM.Latest = newRM.Latest
+				oldRM.HasDocument = newRM.HasDocument
 				if err = oldRM.Save(); err != nil {
 					return err
 				}
@@ -270,22 +348,21 @@ func (gm *GroupModel) Save() error {
 	err := DoZeroTwo(`
         INSERT INTO ModelEntities(
             SID, RegistrySID,
-			ParentSID, Plural, Singular, SchemaURL)
-        VALUES(?,?,?,?,?,?)
+			ParentSID, Plural, Singular)
+        VALUES(?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
-		    ParentSID=?,Plural=?,Singular=?,SchemaURL=?
+		    ParentSID=?,Plural=?,Singular=?
 		`,
 		gm.SID, gm.Registry.DbSID,
-		nil, gm.Plural, gm.Singular, gm.Schema,
-
-		nil, gm.Plural, gm.Singular, gm.Schema)
+		nil, gm.Plural, gm.Singular,
+		nil, gm.Plural, gm.Singular)
 	if err != nil {
 		log.Printf("Error updating groupModel(%s): %s", gm.Plural, err)
 	}
 	return err
 }
 
-func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool) (*ResourceModel, error) {
+func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool, hasDocument bool) (*ResourceModel, error) {
 	if plural == "" {
 		return nil, fmt.Errorf("Can't add a group with an empty plural name")
 	}
@@ -312,23 +389,24 @@ func (gm *GroupModel) AddResourceModel(plural string, singular string, versions 
 
 	err := DoOne(`
 		INSERT INTO ModelEntities(
-			SID, RegistrySID, ParentSID, Plural, Singular, SchemaURL, Versions,
-			VersionId, Latest)
-		VALUES(?,?,?,?,?,?,?,?,?) `,
-		mSID, gm.Registry.DbSID, gm.SID, plural, singular, nil, versions,
-		verId, latest)
+			SID, RegistrySID, ParentSID, Plural, Singular, Versions,
+			VersionId, Latest, HasDocument)
+		VALUES(?,?,?,?,?,?,?,?,?)`,
+		mSID, gm.Registry.DbSID, gm.SID, plural, singular, versions,
+		verId, latest, hasDocument)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", plural, err)
 		return nil, err
 	}
 	r := &ResourceModel{
-		SID:        mSID,
-		GroupModel: gm,
-		Singular:   singular,
-		Plural:     plural,
-		Versions:   versions,
-		VersionId:  verId,
-		Latest:     latest,
+		SID:         mSID,
+		GroupModel:  gm,
+		Singular:    singular,
+		Plural:      plural,
+		Versions:    versions,
+		VersionId:   verId,
+		Latest:      latest,
+		HasDocument: hasDocument,
 	}
 
 	gm.Resources[plural] = r
@@ -359,18 +437,18 @@ func (rm *ResourceModel) Save() error {
 	err := DoZeroTwo(`
         INSERT INTO ModelEntities(
             SID, RegistrySID,
-			ParentSID, Plural, Singular, SchemaURL, Versions,
-			VersionId, Latest)
+			ParentSID, Plural, Singular, Versions,
+			VersionId, Latest, HasDocument)
         VALUES(?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
-            ParentSID=?, Plural=?, Singular=?, SchemaURL=?,
-            Versions=?, VersionId=?, Latest=?`,
+            ParentSID=?, Plural=?, Singular=?,
+            Versions=?, VersionId=?, Latest=?, HasDocument=?`,
 		rm.SID, rm.GroupModel.Registry.DbSID,
-		rm.GroupModel.SID, rm.Plural, rm.Singular, nil, rm.Versions,
-		rm.VersionId, rm.Latest,
+		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.Versions,
+		rm.VersionId, rm.Latest, rm.HasDocument,
 
-		rm.GroupModel.SID, rm.Plural, rm.Singular, nil, rm.Versions,
-		rm.VersionId, rm.Latest)
+		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.Versions,
+		rm.VersionId, rm.Latest, rm.HasDocument)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
 		return err

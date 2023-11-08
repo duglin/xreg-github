@@ -9,8 +9,8 @@ func TestCreateVersion(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	gm.AddResourceModel("files", "file", 0, true, true)
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
 	d1, _ := reg.AddGroup("dirs", "d1")
 
 	f1, err := d1.AddResource("files", "f1", "v1")

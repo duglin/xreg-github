@@ -75,11 +75,11 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		// TODO Support "model" being part of the Registry struct above
 	}
 
-	g, _ := reg.Model.AddGroupModel("apiProviders", "apiProvider", "")
-	_, err = g.AddResourceModel("apis", "api", 2, true, true)
+	g, _ := reg.Model.AddGroupModel("apiProviders", "apiProvider")
+	_, err = g.AddResourceModel("apis", "api", 2, true, true, true)
 
-	g, _ = reg.Model.AddGroupModel("schemaGroups", "schemaGroup", "")
-	_, err = g.AddResourceModel("schemas", "schema", 1, true, true)
+	g, _ = reg.Model.AddGroupModel("schemaGroups", "schemaGroup")
+	_, err = g.AddResourceModel("schemas", "schema", 1, true, true, true)
 
 	m := reg.LoadModel()
 	log.VPrintf(3, "Model: %#v\n", m)
@@ -198,8 +198,8 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("labels/stage", "prod")
 	}
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	_, err = gm.AddResourceModel("files", "file", 2, true, true)
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	_, err = gm.AddResourceModel("files", "file", 2, true, true, true)
 
 	g, _ := reg.AddGroup("dirs", "dir1")
 	g.Set("labels/private", "true")
@@ -229,8 +229,8 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("docs", "https://github.com/duglin/xreg-github")
 	}
 
-	gm, _ := reg.Model.AddGroupModel("endpoints", "endpoint", "")
-	_, err = gm.AddResourceModel("definitions", "definition", 2, true, true)
+	gm, _ := reg.Model.AddGroupModel("endpoints", "endpoint")
+	_, err = gm.AddResourceModel("definitions", "definition", 2, true, true, true)
 
 	g, _ := reg.AddGroup("endpoints", "e1")
 	g.Set("name", "end1")

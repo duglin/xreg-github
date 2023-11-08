@@ -196,14 +196,63 @@ func TestHTTPModel(t *testing.T) {
 		URL:        "/model",
 		Method:     "PUT",
 		ReqHeaders: []string{},
+		ReqBody:    `{"schemas":["schema1"]}`,
+
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "schemas": [
+    "schema1"
+  ]
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "Create model - defaults",
+		URL:        "/model",
+		Method:     "PUT",
+		ReqHeaders: []string{},
 		ReqBody: `{
-  "schema": "model.schema"
+  "schemas": [
+    "schema1"
+  ],
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file"
+        }
+      }
+    }
+  }
 }`,
 
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "schema": "model.schema"
+  "schemas": [
+    "schema1"
+  ],
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "versions": 1,
+          "versionId": true,
+          "latest": true,
+          "hasDocument": true
+        }
+      }
+    }
+  }
 }
 `,
 	})
@@ -214,41 +263,49 @@ func TestHTTPModel(t *testing.T) {
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
-  "groups": [
-    {
+  "schemas": [
+    "schema1"
+  ],
+  "groups": {
+    "dirs": {
       "plural": "dirs",
       "singular": "dir",
-      "resources": [
-        {
+      "resources": {
+        "files": {
           "plural": "files",
           "singular": "file",
           "versions": 1,
           "versionId": true,
-          "latest": true
+          "latest": true,
+          "hasDocument": false
         }
-      ]
+      }
     }
-  ]
+  }
 }`,
 
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "groups": [
-    {
+  "schemas": [
+    "schema1"
+  ],
+  "groups": {
+    "dirs": {
       "plural": "dirs",
       "singular": "dir",
-      "resources": [
-        {
+      "resources": {
+        "files": {
           "plural": "files",
           "singular": "file",
           "versions": 1,
           "versionId": true,
-          "latest": true
+          "latest": true,
+          "hasDocument": false
         }
-      ]
+      }
     }
-  ]
+  }
 }
 `,
 	})
@@ -310,8 +367,8 @@ func TestHTTPGroups(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	gm.AddResourceModel("files", "file", 0, true, true)
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	xCheckHTTP(t, &HTTPTest{
 		Name:       "PUT groups - fail",
@@ -520,8 +577,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir", "")
-	gm.AddResourceModel("files", "file", 0, true, true)
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
 	reg.AddGroup("dirs", "dir1")
 
 	xCheckHTTP(t, &HTTPTest{

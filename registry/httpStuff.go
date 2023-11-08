@@ -349,9 +349,7 @@ func HTTPGETModel(info *RequestInfo) error {
 		model = &Model{}
 	}
 
-	httpModel := ModelToHTTPModel(model)
-
-	buf, err := json.MarshalIndent(httpModel, "", "  ")
+	buf, err := json.MarshalIndent(model, "", "  ")
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return err
@@ -1136,93 +1134,6 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 	return SetProp(entity, "epoch", epoch)
 }
 
-type HTTPResourceModel struct {
-	Plural    string `json:"plural,omitempty"`
-	Singular  string `json:"singular,omitempty"`
-	Versions  int    `json:"versions"`
-	VersionId bool   `json:"versionId"`
-	Latest    bool   `json:"latest"`
-}
-
-type HTTPGroupModel struct {
-	Plural   string `json:"plural,omitempty"`
-	Singular string `json:"singular,omitempty"`
-	Schema   string `json:"schema,omitempty"`
-
-	Resources []HTTPResourceModel `json:"resources,omitempty"`
-}
-
-type HTTPModel struct {
-	Schema string           `json:"schema,omitempty"`
-	Groups []HTTPGroupModel `json:"groups,omitempty"`
-}
-
-func (httpModel *HTTPModel) ToModel() *Model {
-	model := &Model{
-		Schema: httpModel.Schema,
-	}
-
-	for _, g := range httpModel.Groups {
-		if model.Groups == nil {
-			model.Groups = map[string]*GroupModel{}
-		}
-		newG := &GroupModel{
-			Plural:   g.Plural,
-			Singular: g.Singular,
-			Schema:   g.Schema,
-		}
-		model.Groups[newG.Plural] = newG
-
-		for _, r := range g.Resources {
-			if newG.Resources == nil {
-				newG.Resources = map[string]*ResourceModel{}
-			}
-			newR := &ResourceModel{
-				Plural:    r.Plural,
-				Singular:  r.Singular,
-				Versions:  r.Versions,
-				VersionId: r.VersionId,
-				Latest:    r.Latest,
-			}
-			newG.Resources[newR.Plural] = newR
-		}
-	}
-
-	return model
-}
-
-func ModelToHTTPModel(m *Model) *HTTPModel {
-	httpModel := &HTTPModel{
-		Schema: m.Schema,
-	}
-
-	// To ensure consistent - especially when diffing the output
-	for _, groupKey := range SortedKeys(m.Groups) {
-		group := m.Groups[groupKey]
-		newG := HTTPGroupModel{
-			Plural:   group.Plural,
-			Singular: group.Singular,
-			Schema:   group.Schema,
-		}
-
-		for _, resKey := range SortedKeys(group.Resources) {
-			resource := group.Resources[resKey]
-			newR := HTTPResourceModel{
-				Plural:    resource.Plural,
-				Singular:  resource.Singular,
-				Versions:  resource.Versions,
-				VersionId: resource.VersionId,
-				Latest:    resource.Latest,
-			}
-			newG.Resources = append(newG.Resources, newR)
-		}
-
-		httpModel.Groups = append(httpModel.Groups, newG)
-	}
-
-	return httpModel
-}
-
 func HTTPPUTModel(info *RequestInfo) error {
 	if len(info.Parts) > 1 {
 		info.StatusCode = http.StatusNotFound
@@ -1235,20 +1146,19 @@ func HTTPPUTModel(info *RequestInfo) error {
 		return err
 	}
 
-	tmpModel := HTTPModel{}
-	err = json.Unmarshal(reqBody, &tmpModel)
+	model := Model{}
+	err = json.Unmarshal(reqBody, &model)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return err
 	}
 
-	model := tmpModel.ToModel()
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return err
 	}
 
-	err = info.Registry.Model.ApplyNewModel(model)
+	err = info.Registry.Model.ApplyNewModel(&model)
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return err

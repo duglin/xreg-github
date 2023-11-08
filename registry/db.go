@@ -142,8 +142,8 @@ func doCount(cmd string, args ...interface{}) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	result, err := ps.Exec(args...)
 
+	result, err := ps.Exec(args...)
 	if err != nil {
 		query := SubQuery(cmd, args)
 		log.Printf("doCount:Error DB(%s)->%s\n", query, err)

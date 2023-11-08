@@ -37,14 +37,13 @@ CREATE TABLE Registries (
 CREATE TRIGGER RegistryTrigger BEFORE DELETE ON Registries
 FOR EACH ROW
 BEGIN
-    DELETE FROM Props WHERE EntitySID=OLD.SID @
+    DELETE FROM Props    WHERE EntitySID=OLD.SID @
     DELETE FROM "Groups" WHERE RegistrySID=OLD.SID @
-    DELETE FROM Models WHERE RegistrySID=OLD.SID @
+    DELETE FROM Models   WHERE RegistrySID=OLD.SID @
 END ;
 
 CREATE TABLE Models (
-    RegistrySID VARCHAR(64),
-    "Schema"    VARCHAR(255),
+    RegistrySID VARCHAR(64) NOT NULL,
 
     PRIMARY KEY (RegistrySID)
 );
@@ -53,19 +52,30 @@ CREATE TRIGGER ModelsTrigger BEFORE DELETE ON Models
 FOR EACH ROW
 BEGIN
     DELETE FROM ModelEntities WHERE RegistrySID=OLD.RegistrySID @
+    DELETE FROM "Schemas"     WHERE RegistrySID=OLD.RegistrySID @
 END ;
 
-CREATE TABLE ModelEntities (        # Group or Resource (no parent->Group)
+CREATE TABLE "Schemas" (
+    RegistrySID  VARCHAR(64) NOT NULL,
+    "Schema"     VARCHAR(255) NOT NULL,
+
+    PRIMARY KEY(RegistrySID, "Schema"),
+    INDEX (RegistrySID)
+);
+
+CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     SID         VARCHAR(64),        # my System ID
     RegistrySID VARCHAR(64),
     ParentSID   VARCHAR(64),        # ID of parent ModelEntity
 
-    Plural      VARCHAR(64),
     Singular    VARCHAR(64),
-    SchemaURL   VARCHAR(255),       # For Groups
+    Plural      VARCHAR(64),
+
     Versions    INT NOT NULL,       # For Resources
     VersionId   BOOL NOT NULL,      # For Resources
     Latest      BOOL NOT NULL,      # For Resources
+    HasDocument BOOL NOT NULL,      # For Resources
+    Attributes  JSON,               # Until we use the Attributes table
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),
@@ -75,8 +85,61 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent->Group)
 CREATE TRIGGER ModelTrigger BEFORE DELETE ON ModelEntities
 FOR EACH ROW
 BEGIN
-    DELETE FROM "Groups" WHERE ModelSID=OLD.SID @
-    DELETE FROM Resources WHERE ModelSID=OLD.SID @
+    DELETE FROM "Groups"        WHERE ModelSID=OLD.SID @
+    DELETE FROM Resources       WHERE ModelSID=OLD.SID @
+    DELETE FROM ModelAttributes WHERE ParentSID=OLD.SID @
+END ;
+
+# Not used yet
+CREATE TABLE ModelAttributes (
+    SID           VARCHAR(64) NOT NULL,   # my System ID
+    RegistrySID   VARCHAR(64) NOT NULL,
+    ParentSID     VARCHAR(64),            # NULL=Root. Model or IfValue SID
+    Name          VARCHAR(64) NOT NULL,
+    Type          VARCHAR(64) NOT NULL,
+    Description   VARCHAR(255),
+    Strict        BOOL NOT NULL,
+    Required      BOOL NOT NULL,
+    ItemType      VARCHAR(64),
+
+    PRIMARY KEY(RegistrySID, ParentSID, SID),
+    UNIQUE INDEX (SID),
+    CONSTRAINT UC_Name UNIQUE (RegistrySID, ParentSID, Name)
+);
+
+CREATE TRIGGER ModelAttributeTrigger BEFORE DELETE ON ModelAttributes
+FOR EACH ROW
+BEGIN
+    DELETE FROM ModelEnums    WHERE AttributeSID=OLD.SID @
+    DELETE FROM ModelIfValues WHERE AttributeSID=OLD.SID @
+END ;
+
+CREATE TABLE ModelEnums (
+    RegistrySID   VARCHAR(64) NOT NULL,
+    AttributeSID  VARCHAR(64) NOT NULL,
+    Value         VARCHAR(255) NOT NULL,
+
+    PRIMARY KEY(RegistrySID, AttributeSID),
+    INDEX (AttributeSID),
+    CONSTRAINT UC_Value UNIQUE (RegistrySID, AttributeSID, Value)
+);
+
+CREATE TABLE ModelIfValues (
+    SID           VARCHAR(64) NOT NULL,
+    RegistrySID   VARCHAR(64) NOT NULL,
+    AttributeSID  VARCHAR(64) NOT NULL,
+    Value         VARCHAR(255) NOT NULL,
+
+    PRIMARY KEY(RegistrySID, AttributeSID),
+    UNIQUE INDEX (SID),
+    INDEX (AttributeSID),
+    CONSTRAINT UC_Value UNIQUE (RegistrySID, AttributeSID, Value)
+);
+
+CREATE TRIGGER ModelIfValuesTrigger BEFORE DELETE ON ModelIfValues
+FOR EACH ROW
+BEGIN
+    DELETE FROM ModelAttributes    WHERE ParentSID=OLD.SID @
 END ;
 
 

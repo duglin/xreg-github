@@ -20,6 +20,12 @@ func NewUUID() string {
 	return uuid.NewString()[:8]
 }
 
+func Must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func init() {
 	if !IsNil(nil) {
 		panic("help me1")
@@ -59,9 +65,9 @@ func NotNilString(val *any) string {
 	return string(b)
 }
 
-func NotNilInt(val *any) int {
+func NotNilIntDef(val *any, def int) int {
 	if val == nil || *val == nil {
-		return 0
+		return def
 	}
 
 	var b int
@@ -76,12 +82,26 @@ func NotNilInt(val *any) int {
 	return b
 }
 
-func NotNilBool(val *any) bool {
+func NotNilInt(val *any) int {
+	return NotNilIntDef(val, 0)
+}
+
+func PtrIntDef(val *any, def int) *int {
+	result := NotNilIntDef(val, def)
+	return &result
+}
+
+func NotNilBoolDef(val *any, def bool) bool {
 	if val == nil || *val == nil {
-		return false
+		return def
 	}
 
 	return ((*val).(int64)) == 1
+}
+
+func PtrBoolDef(val *any, def bool) *bool {
+	result := NotNilBoolDef(val, def)
+	return &result
 }
 
 func JSONEscape(obj interface{}) string {
