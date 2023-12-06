@@ -7,15 +7,16 @@ const LATEST = true
 const HASDOCUMENT = true
 
 // Attribute types
+const ANY = "any"
 const ARRAY = "array"
 const BOOLEAN = "boolean"
 const DECIMAL = "decimal"
-const INT = "integer"
+const INTEGER = "integer"
 const MAP = "map"
 const OBJECT = "object"
 const STRING = "string"
 const TIME = "time"
-const UINT = "uinteger"
+const UINTEGER = "uinteger"
 const URI = "uri"
 const URI_REFERENCE = "urireference"
 const URI_TEMPLATE = "uritemplate"

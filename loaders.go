@@ -77,7 +77,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 	g, _ := reg.Model.AddGroupModel("apiProviders", "apiProvider")
 	_, err = g.AddResourceModel("apis", "api", 2, true, true, true)
-	g.AddAttr("xxx", registry.INT)
+	g.AddAttr("xxx", registry.INTEGER)
 	g.AddAttr("yyy", registry.STRING)
 	g.AddAttr("zzz", registry.STRING)
 
@@ -203,7 +203,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		reg.Model.AddAttribute(&registry.Attribute{Name: "bool1",
 			Type: registry.BOOLEAN})
 		reg.Model.AddAttribute(&registry.Attribute{Name: "int1",
-			Type: registry.INT})
+			Type: registry.INTEGER})
 		reg.Model.AddAttribute(&registry.Attribute{Name: "dec1",
 			Type: registry.DECIMAL})
 		reg.Model.AddAttribute(&registry.Attribute{Name: "str1",

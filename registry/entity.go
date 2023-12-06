@@ -49,17 +49,37 @@ var _ EType = EURIReference("")
 var _ EType = EURITemplate("")
 var _ EType = EURL("")
 
+func GoToOurType(val any) string {
+	switch reflect.ValueOf(val).Kind() {
+	case reflect.Bool:
+		return BOOLEAN
+	case reflect.Int:
+		return INTEGER
+	case reflect.Interface:
+		return ANY
+	case reflect.Float64:
+		return DECIMAL
+	case reflect.String:
+		return STRING
+	case reflect.Uint64:
+		return UINTEGER
+	}
+	panic(fmt.Sprintf("Bad Kind: %v", reflect.ValueOf(val).Kind()))
+}
+
 func ToGoType(s string) reflect.Type {
 	switch s {
+	case ANY:
+		return reflect.TypeOf(any(true))
 	case BOOLEAN:
 		return reflect.TypeOf(true)
 	case DECIMAL:
 		return reflect.TypeOf(float64(1.1))
-	case INT:
+	case INTEGER:
 		return reflect.TypeOf(int(1))
-	case TIME, URI, URI_REFERENCE, URI_TEMPLATE, URL:
+	case STRING, TIME, URI, URI_REFERENCE, URI_TEMPLATE, URL:
 		return reflect.TypeOf("")
-	case UINT:
+	case UINTEGER:
 		return reflect.TypeOf(uint(0))
 	}
 	panic("ToGoType - not supported: " + s)
@@ -92,7 +112,7 @@ func StringToEDecimal(s string) EDecimal {
 type EInt int
 
 func (ei EInt) String() string { return fmt.Sprintf("%v", int(ei)) }
-func (ei EInt) Type() string   { return INT }
+func (ei EInt) Type() string   { return INTEGER }
 func StringToEInt(s string) EInt {
 	ei, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
@@ -128,7 +148,7 @@ func StringToETime(s string) ETime { return ETime(s) }
 type EUInt uint
 
 func (eui EUInt) String() string { return fmt.Sprintf("%v", uint(eui)) }
-func (ei EUInt) Type() string    { return UINT }
+func (ei EUInt) Type() string    { return UINTEGER }
 func StringToEUInt(s string) EUInt {
 	eui, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
@@ -305,28 +325,28 @@ func (e *Entity) Refresh() error {
 		case ARRAY:
 			Panicf("Not supported: %s", propType)
 		case BOOLEAN:
-			e.Props[name] = (val == "true")
+			e.Props[name] = (val == "1")
 		case DECIMAL:
 			tmpFloat, err := strconv.ParseFloat(val, 64)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing float: %s", val))
 			}
 			e.Props[name] = tmpFloat
-		case INT:
+		case INTEGER:
 			tmpInt, err := strconv.Atoi(val)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing int: %s", val))
 			}
 			e.Props[name] = tmpInt
 		case MAP:
-			Panicf("Not supported: %s", propType)
+			// Panicf("Not supported: %s", propType)
 		case OBJECT:
 			Panicf("Not supported: %s", propType)
 		case STRING:
 			e.Props[name] = val
 		case TIME:
 			e.Props[name] = val
-		case UINT:
+		case UINTEGER:
 			tmpInt, err := strconv.Atoi(val)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing int: %s", val))
@@ -414,7 +434,7 @@ func SetPropPP(entity any, pp *PropPath, val any) error {
 		// log.Printf("Error on getAttr(%s): %s", pp.UI(), err)
 		return err
 	}
-	if attrType == "" && name[0] != '#' {
+	if attrType == "" {
 		return fmt.Errorf("Can't find attribute %q", pp.UI())
 	}
 
@@ -436,33 +456,21 @@ func SetPropPP(entity any, pp *PropPath, val any) error {
 		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
 			e.DbSID, name)
 	} else {
-		dbVal := val
-		propType := ""
-		k := reflect.ValueOf(val).Type().Kind()
-		if k == reflect.Bool {
-			propType = BOOLEAN
-			if val.(bool) {
-				dbVal = "true"
-			} else {
-				dbVal = "false"
-			}
-		} else if k == reflect.String {
-			propType = STRING
-		} else if k == reflect.Int {
-			propType = INT
-		} else if k == reflect.Float64 {
-			propType = DECIMAL
-		} else {
-			panic(fmt.Sprintf("Bad property kind: %s", k.String()))
+		if attrType != ANY && GoToOurType(val) != attrType {
+			return fmt.Errorf("Expecting %q type for %q, got %q instead",
+				attrType, name, GoToOurType(val))
 		}
-		if attrType != "" {
-			propType = attrType
+
+		propType := attrType
+		if attrType == ANY {
+			propType = GoToOurType(val)
 		}
+
 		err = DoOneTwo(`
             REPLACE INTO Props(
               RegistrySID, EntitySID, PropName, PropValue, PropType)
             VALUES( ?,?,?,?,? )`,
-			e.RegistrySID, e.DbSID, name, dbVal, propType)
+			e.RegistrySID, e.DbSID, name, val, propType)
 	}
 
 	if err != nil {
@@ -533,8 +541,8 @@ func readNextEntity(results *Result) *Entity {
 		if propType == STRING {
 			entity.Props[propName] = propVal
 		} else if propType == BOOLEAN {
-			entity.Props[propName] = (propVal == "true")
-		} else if propType == INT {
+			entity.Props[propName] = propVal == "1"
+		} else if propType == INTEGER {
 			tmpInt, err := strconv.Atoi(propVal)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing int: %s", propVal))
@@ -580,9 +588,9 @@ var OrderedSpecProps = []*SpecProp{
 		Type:     STRING,
 		Required: true,
 	}},
-	{"epoch", INT, "", false, nil, &Attribute{
+	{"epoch", INTEGER, "", false, nil, &Attribute{
 		Name:     "epoch",
-		Type:     INT,
+		Type:     INTEGER,
 		Required: true,
 	}},
 	{"self", STRING, "", false, func(e *Entity, info *RequestInfo) any {

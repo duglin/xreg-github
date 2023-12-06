@@ -17,16 +17,19 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttr("regDec2", registry.DECIMAL)
 	reg.Model.AddAttr("regDec3", registry.DECIMAL)
 	reg.Model.AddAttr("regDec4", registry.DECIMAL)
-	reg.Model.AddAttr("regInt1", registry.INT)
-	reg.Model.AddAttr("regInt2", registry.INT)
-	reg.Model.AddAttr("regInt3", registry.INT)
+	reg.Model.AddAttr("regInt1", registry.INTEGER)
+	reg.Model.AddAttr("regInt2", registry.INTEGER)
+	reg.Model.AddAttr("regInt3", registry.INTEGER)
 	reg.Model.AddAttr("regString1", registry.STRING)
 	reg.Model.AddAttr("regString2", registry.STRING)
+	reg.Model.AddAttr("regAnyInt", registry.ANY)
+	reg.Model.AddAttr("regAnyStr", registry.ANY)
+	reg.Model.AddAttr("regAnyObj", registry.ANY)
 	reg.Model.AddAttribute(&registry.Attribute{
 		Name:     "regMapInt",
 		Type:     registry.MAP,
 		KeyType:  registry.STRING,
-		ItemType: registry.INT,
+		ItemType: registry.INTEGER,
 	})
 	reg.Model.AddAttribute(&registry.Attribute{
 		Name:     "regMapString",
@@ -44,7 +47,7 @@ func TestBasicTypes(t *testing.T) {
 			},
 			"objInt": &registry.Attribute{
 				Name: "objInt",
-				Type: registry.INT,
+				Type: registry.INTEGER,
 			},
 			"objStr": &registry.Attribute{
 				Name: "objStr",
@@ -63,9 +66,9 @@ func TestBasicTypes(t *testing.T) {
 	gm.AddAttr("dirDec2", registry.DECIMAL)
 	gm.AddAttr("dirDec3", registry.DECIMAL)
 	gm.AddAttr("dirDec4", registry.DECIMAL)
-	gm.AddAttr("dirInt1", registry.INT)
-	gm.AddAttr("dirInt2", registry.INT)
-	gm.AddAttr("dirInt3", registry.INT)
+	gm.AddAttr("dirInt1", registry.INTEGER)
+	gm.AddAttr("dirInt2", registry.INTEGER)
+	gm.AddAttr("dirInt3", registry.INTEGER)
 	gm.AddAttr("dirString1", registry.STRING)
 	gm.AddAttr("dirString2", registry.STRING)
 
@@ -76,9 +79,9 @@ func TestBasicTypes(t *testing.T) {
 	rm.AddAttr("fileDec2", registry.DECIMAL)
 	rm.AddAttr("fileDec3", registry.DECIMAL)
 	rm.AddAttr("fileDec4", registry.DECIMAL)
-	rm.AddAttr("fileInt1", registry.INT)
-	rm.AddAttr("fileInt2", registry.INT)
-	rm.AddAttr("fileInt3", registry.INT)
+	rm.AddAttr("fileInt1", registry.INTEGER)
+	rm.AddAttr("fileInt2", registry.INTEGER)
+	rm.AddAttr("fileInt3", registry.INTEGER)
 	rm.AddAttr("fileString1", registry.STRING)
 	rm.AddAttr("fileString2", registry.STRING)
 
@@ -91,6 +94,7 @@ func TestBasicTypes(t *testing.T) {
 	type Prop struct {
 		Name  string
 		Value any
+		Fails bool
 	}
 
 	type Test struct {
@@ -100,63 +104,77 @@ func TestBasicTypes(t *testing.T) {
 
 	tests := []Test{
 		Test{reg, []Prop{
-			{"regString1", "str1"},
-			{"regString2", ""},
-			{"regInt1", 123},
-			{"regInt2", -123},
-			{"regInt3", 0},
-			{"regBool1", true},
-			{"regBool2", false},
-			{"regDec1", 123.5},
-			{"regDec2", -123.5},
-			{"regDec3", 124.0},
-			{"regDec4", 0.0},
-			{"regMapInt.k1", 123},
-			{"regMapInt.k2", 234},
-			{"regMapString.k1", "v1"},
-			{"regMapString.k2", "v2"},
-			{"regObj.objBool", true},
-			{"regObj.objInt", 345},
-			{"regObj.objStr", "in1"},
+			{"regString1", "str1", false},
+			{"regString2", "", false},
+			{"regInt1", 123, false},
+			{"regInt2", -123, false},
+			{"regInt3", 0, false},
+			{"regBool1", true, false},
+			{"regBool2", false, false},
+			{"regDec1", 123.5, false},
+			{"regDec2", -123.5, false},
+			{"regDec3", 124.0, false},
+			{"regDec4", 0.0, false},
+			{"regMapInt.k1", 123, false},
+			{"regMapInt.k2", 234, false},
+			{"regMapString.k1", "v1", false},
+			{"regMapString.k2", "v2", false},
+			{"regObj.objBool", true, false},
+			{"regObj.objInt", 345, false},
+			{"regObj.objStr", "in1", false},
+			{"regAnyInt", "AnyInt", false},
+			{"regAnyStr", 234.345, false},
+			{"regAnyObj.int", 345, false},
+			{"regAnyObj.str", "substr", false},
+			{"regAnyObj2.str", "substr", true}, // unknown attr
+			{"unknown_str", "error", true},     // unknown attr
+			{"unknown_int", 123, true},         // unknown attr
+			{"regString1", 123, true},          // bad type
+			{"regInt1", "123", true},           // bad type
+			{"regBool1", "123", true},          // bad type
+			{"regDec1", "123", true},           // bad type
+			{"regMapInt", "123", true},         // bad type
+			{"regMapInt.k1", "123", true},      // bad type
+			{"regMapString.k1", 123, true},     // bad type
 		}},
 		Test{dir, []Prop{
-			{"dirString1", "str2"},
-			{"dirString2", ""},
-			{"dirInt1", 234},
-			{"dirInt2", -234},
-			{"dirInt3", 0},
-			{"dirBool1", true},
-			{"dirBool2", false},
-			{"dirDec1", 234.5},
-			{"dirDec2", -234.5},
-			{"dirDec3", 235.0},
-			{"dirDec4", 0.0},
+			{"dirString1", "str2", false},
+			{"dirString2", "", false},
+			{"dirInt1", 234, false},
+			{"dirInt2", -234, false},
+			{"dirInt3", 0, false},
+			{"dirBool1", true, false},
+			{"dirBool2", false, false},
+			{"dirDec1", 234.5, false},
+			{"dirDec2", -234.5, false},
+			{"dirDec3", 235.0, false},
+			{"dirDec4", 0.0, false},
 		}},
 		Test{file, []Prop{
-			{"fileString1", "str3"},
-			{"fileString2", ""},
-			{"fileInt1", 345},
-			{"fileInt2", -345},
-			{"fileInt3", 0},
-			{"fileBool1", true},
-			{"fileBool2", false},
-			{"fileDec1", 345.5},
-			{"fileDec2", -345.5},
-			{"fileDec3", 346.0},
-			{"fileDec4", 0.0},
+			{"fileString1", "str3", false},
+			{"fileString2", "", false},
+			{"fileInt1", 345, false},
+			{"fileInt2", -345, false},
+			{"fileInt3", 0, false},
+			{"fileBool1", true, false},
+			{"fileBool2", false, false},
+			{"fileDec1", 345.5, false},
+			{"fileDec2", -345.5, false},
+			{"fileDec3", 346.0, false},
+			{"fileDec4", 0.0, false},
 		}},
 		Test{ver, []Prop{
-			{"fileString1", "str4"},
-			{"fileString2", ""},
-			{"fileInt1", 456},
-			{"fileInt2", -456},
-			{"fileInt3", 0},
-			{"fileBool1", true},
-			{"fileBool2", false},
-			{"fileDec1", 456.5},
-			{"fileDec2", -456.5},
-			{"fileDec3", 457.0},
-			{"fileDec4", 0.0},
+			{"fileString1", "str4", false},
+			{"fileString2", "", false},
+			{"fileInt1", 456, false},
+			{"fileInt2", -456, false},
+			{"fileInt3", 0, false},
+			{"fileBool1", true, false},
+			{"fileBool2", false, false},
+			{"fileDec1", 456.5, false},
+			{"fileDec2", -456.5, false},
+			{"fileDec3", 457.0, false},
+			{"fileDec4", 0.0, false},
 		}},
 	}
 
@@ -171,17 +189,26 @@ func TestBasicTypes(t *testing.T) {
 
 		for _, prop := range test.Props {
 			// Note that for Resources this will set them on the latest Version
-			setter.Set(prop.Name, prop.Value)
+			err := setter.Set(prop.Name, prop.Value)
+			if err != nil && !prop.Fails {
+				t.Errorf("Error calling set (%q=%v): %s", prop.Name,
+					prop.Value, err)
+				return // stop fast
+			}
 		}
 
 		entity.Props = map[string]any{} // force delete everything
 		entity.Refresh()                // and then re-get props from DB
 
 		for _, prop := range test.Props {
+			if prop.Fails {
+				continue
+			}
 			got := setter.Get(prop.Name) // test.Entity.Get(prop.Name)
 			if got != prop.Value {
 				t.Errorf("%T) %s: got %v(%T), expected %v(%T)\n",
 					test.Entity, prop.Name, got, got, prop.Value, prop.Value)
+				return // stop fast
 			}
 		}
 	}
@@ -191,6 +218,12 @@ func TestBasicTypes(t *testing.T) {
   "id": "TestBasicTypes",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "regAnyInt": "AnyInt",
+  "regAnyObj": {
+    "int": 345,
+    "str": "substr"
+  },
+  "regAnyStr": 234.345,
   "regBool1": true,
   "regBool2": false,
   "regDec1": 123.5,

@@ -664,9 +664,10 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 }
 
 func IsScalar(daType string) bool {
-	return daType == BOOLEAN || daType == DECIMAL || daType == INT ||
-		daType == STRING || daType == TIME || daType == UINT || daType == URI ||
-		daType == URI_REFERENCE || daType == URI_TEMPLATE || daType == URL
+	return daType == BOOLEAN || daType == DECIMAL || daType == INTEGER ||
+		daType == STRING || daType == TIME || daType == UINTEGER ||
+		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
+		daType == URL
 }
 
 func (a *Attribute) IsScalar() bool {
@@ -688,6 +689,10 @@ func (a *Attribute) AddAttribute(attr *Attribute) *Attribute {
 func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error) {
 	if pp.Len() == 0 {
 		panic("PropPath can't be empty for GetAttributeType")
+	}
+
+	if pp.Top()[0] == '#' {
+		return ANY, nil
 	}
 
 	attrs := GetAttributes(rSID, abstractEntity)
@@ -712,6 +717,10 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 				panic(fmt.Sprintf("Trying to traverse into a scalar %q: %s",
 					attr.Name, top))
 			}
+			return attr.Type, nil
+		}
+
+		if attr.Type == ANY {
 			return attr.Type, nil
 		}
 

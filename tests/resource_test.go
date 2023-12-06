@@ -87,7 +87,7 @@ func TestResourceSet(t *testing.T) {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
 	rm.AddAttr("ext1", registry.STRING)
-	rm.AddAttr("ext2", registry.INT)
+	rm.AddAttr("ext2", registry.INTEGER)
 
 	d1, _ := reg.AddGroup("dirs", "d1")
 	f1, _ := d1.AddResource("files", "f1", "v1")

@@ -181,8 +181,8 @@ func SetField(res any, name string, value *string, propType string) {
 	if propType == STRING {
 		val = *value
 	} else if propType == BOOLEAN {
-		val = (*value == "true")
-	} else if propType == INT {
+		val = (*value == "1")
+	} else if propType == INTEGER {
 		val, err = strconv.Atoi(*value)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing int: %s", val))

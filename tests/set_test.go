@@ -157,9 +157,10 @@ func TestSetLabels(t *testing.T) {
 
 	// /dirs/d1/f1/v1
 	labels := NewPP().P("labels")
-	err := reg.Set(labels.P("r2").UI(), 123.234) // notice it's not a string
+	err := reg.Set(labels.P("r2").UI(), "123.234") // OLD: notice it's not a string
 	xNoErr(t, err)
 	reg.Refresh()
+	// But it's a string here because labels is a map[string]string
 	xJSONCheck(t, reg.Get(labels.P("r2").UI()), "123.234")
 	err = reg.Set("labels.r1", "foo")
 	xNoErr(t, err)
@@ -204,11 +205,11 @@ func TestSetLabels(t *testing.T) {
 
 	dir.Set(labels.P("dd").UI(), "dd.foo")
 	file.Set(labels.P("ff").UI(), "ff.bar")
-	ver.Set(labels.P("vv").UI(), 987.234)
+	// ver.Set(labels.P("vv").UI(), 987.234)
 	ver.Set(labels.P("vv2").UI(), "v11")
 	ver2.Set(labels.P("2nd").UI(), "3rd")
-	ver2.Set(labels.P("bool1").UI(), true)
-	ver2.Set(labels.P("bool2").UI(), false)
+	// ver2.Set(labels.P("bool1").UI(), true)
+	// ver2.Set(labels.P("bool2").UI(), false)
 
 	xCheckGet(t, reg, "?inline", `{
   "specVersion": "0.5",
@@ -237,8 +238,6 @@ func TestSetLabels(t *testing.T) {
           "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
           "labels": {
             "2nd": "3rd",
-            "bool1": "true",
-            "bool2": "false",
             "ff": "ff.bar"
           },
 
@@ -248,7 +247,6 @@ func TestSetLabels(t *testing.T) {
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
               "labels": {
-                "vv": "987.234",
                 "vv2": "v11"
               }
             },
@@ -259,8 +257,6 @@ func TestSetLabels(t *testing.T) {
               "latest": true,
               "labels": {
                 "2nd": "3rd",
-                "bool1": "true",
-                "bool2": "false",
                 "ff": "ff.bar"
               }
             }
@@ -305,7 +301,6 @@ func TestSetLabels(t *testing.T) {
           "latestVersionId": "v1",
           "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
           "labels": {
-            "vv": "987.234",
             "vv2": "v11"
           },
 
@@ -316,7 +311,6 @@ func TestSetLabels(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
               "latest": true,
               "labels": {
-                "vv": "987.234",
                 "vv2": "v11"
               }
             },
@@ -326,8 +320,6 @@ func TestSetLabels(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
               "labels": {
                 "2nd": "3rd",
-                "bool1": "true",
-                "bool2": "false",
                 "ff": "ff.bar"
               }
             }
