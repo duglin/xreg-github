@@ -18,8 +18,8 @@ func TestBasicFilters(t *testing.T) {
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
 
-	reg.Set("labels/reg1", "1ger")
-	f.Set("labels/file1", "1elif")
+	reg.Set("labels.reg1", "1ger")
+	f.Set("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1
 	//            /v2
@@ -55,22 +55,22 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "2 leaves match",
-			URL:  "?inline&oneline&filter=dirs/files/versions/id=v1",
+			URL:  "?inline&oneline&filter=dirs.files.versions.id=v1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}}`,
 		},
 		{
 			Name: "Just one leaf - v2",
-			URL:  "?inline&oneline&filter=dirs/files/versions/id=v2",
+			URL:  "?inline&oneline&filter=dirs.files.versions.id=v2",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}}}`,
 		},
 		{
 			Name: "filter at file level",
-			URL:  "?inline&oneline&filter=dirs/files/id=f2",
+			URL:  "?inline&oneline&filter=dirs.files.id=f2",
 			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "get groups, filter at resource level",
-			URL:  "dirs?inline&oneline&filter=files/id=f2",
+			URL:  "dirs?inline&oneline&filter=files.id=f2",
 			Exp:  `{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}`,
 		},
 		{ // Test some filtering at the root of the GET
@@ -87,13 +87,13 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get root, filter group coll - match",
-			URL:  "?inline&oneline&filter=dirs/id=d1",
+			URL:  "?inline&oneline&filter=dirs.id=d1",
 			// Just root + dirs/d1
 			Exp: `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}}}`,
 		},
 		{
 			Name: "Get root, filter group coll - no match",
-			URL:  "?inline&oneline&filter=dirs/id=xxx",
+			URL:  "?inline&oneline&filter=dirs.id=xxx",
 			// Nothing, matched, so 404
 			Exp: `Not found`,
 		},
@@ -122,13 +122,13 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get group entity, filter resource - match",
-			URL:  "dirs/d1?inline&oneline&filter=files/id=f1",
+			URL:  "dirs/d1?inline&oneline&filter=files.id=f1",
 			// entire d1
 			Exp: `{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}`,
 		},
 		{
 			Name: "Get group entity, filter resource - no match",
-			URL:  "dirs/d1?inline&oneline&filter=files/id=xxx",
+			URL:  "dirs/d1?inline&oneline&filter=files.id=xxx",
 			// Nothing, matched, so 404
 			Exp: `Not found`,
 		},
@@ -162,13 +162,13 @@ func TestBasicFilters(t *testing.T) {
 		// Some tag filters
 		{
 			Name: "Get/filter reg.labels - no match",
-			URL:  "?filter=labels/reg1=xxx",
+			URL:  "?filter=labels.reg1=xxx",
 			// Nothing, matched, so 404
 			Exp: "Not found\n",
 		},
 		{
 			Name: "Get/filter reg.labels - match",
-			URL:  "?filter=labels/reg1=1ger",
+			URL:  "?filter=labels.reg1=1ger",
 			Exp: `{
   "specVersion": "0.5",
   "id": "TestBasicFilters",
@@ -185,7 +185,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter labels",
-			URL:  "?filter=dirs/files/labels/file1=1elif",
+			URL:  "?filter=dirs.files.labels.file1=1elif",
 			Exp: `{
   "specVersion": "0.5",
   "id": "TestBasicFilters",
@@ -202,7 +202,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter dir file.labels - match",
-			URL:  "?inline&filter=dirs/files/labels/file1=1elif",
+			URL:  "?inline&filter=dirs.files.labels.file1=1elif",
 			Exp: `{
   "specVersion": "0.5",
   "id": "TestBasicFilters",
@@ -260,22 +260,22 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter dir file.labels - no match empty string",
-			URL:  "?inline&filter=dirs/files/labels/file1=",
+			URL:  "?inline&filter=dirs.files.labels.file1=",
 			Exp:  "Not found\n",
 		},
 		{
-			Name: "Get/filter dir file.labels/xxx - no match empty string",
-			URL:  "?inline&filter=dirs/files/labels/xxx=",
+			Name: "Get/filter dir file.labels.xxx - no match empty string",
+			URL:  "?inline&filter=dirs.files.labels.xxx=",
 			Exp:  "Not found\n",
 		},
 		{
-			Name: "Get/filter dir file.labels/xxx - no match non-empty string",
-			URL:  "?inline&filter=dirs/files/labels/xxx",
+			Name: "Get/filter dir file.labels.xxx - no match non-empty string",
+			URL:  "?inline&filter=dirs.files.labels.xxx",
 			Exp:  "Not found\n",
 		},
 		{
 			Name: "Get/filter dir file.labels - match non-empty string",
-			URL:  "?inline&filter=dirs/files/labels/file1",
+			URL:  "?inline&filter=dirs.files.labels.file1",
 			Exp: `{
   "specVersion": "0.5",
   "id": "TestBasicFilters",
@@ -362,8 +362,8 @@ func TestANDORFilters(t *testing.T) {
 	s, _ := sg.AddResource("schemas", "s1", "v1.0")
 	s.AddVersion("v2.0")
 
-	reg.Set("labels/reg1", "1ger")
-	f.Set("labels/file1", "1elif")
+	reg.Set("labels.reg1", "1ger")
+	f.Set("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1     f1.name=f1
 	//            /v2
@@ -379,64 +379,64 @@ func TestANDORFilters(t *testing.T) {
 	}{
 		{
 			Name: "AND same obj/level - match",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/name=f1",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.name=f1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
 		},
 		{
 			Name: "AND same obj/level - no match",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/name=f2",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.name=f2",
 			Exp:  `Not found`,
 		},
 		{
 			Name: "OR same obj/level - match",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1&filter=dirs/files/name=f1",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1&filter=dirs.files.name=f1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
 		},
 		{
 			Name: "multi result 2 levels down - match",
-			URL:  "?oneline&inline&filter=dirs/files/versions/id=v1",
+			URL:  "?oneline&inline&filter=dirs.files.versions.id=v1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"schemaGroups":{}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - match",
-			URL:  "dirs?oneline&inline&filter=files/versions/id=v1",
+			URL:  "dirs?oneline&inline&filter=files.versions.id=v1",
 			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - no match",
-			URL:  "dirs?oneline&inline&filter=files/versions/id=xxx",
+			URL:  "dirs?oneline&inline&filter=files.versions.id=xxx",
 			Exp:  `{}`,
 		},
 
 		// Span group types
 		{
 			Name: "dirs and schemaGroups - match both",
-			URL:  "?oneline&inline&filter=dirs/id=d1&filter=schemaGroups/id=sg1",
+			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemaGroups.id=sg1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirs and schemaGroups - match first",
-			URL:  "?oneline&inline&filter=dirs/id=d1&filter=schemaGroups/id=xxx",
+			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemaGroups.id=xxx",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
 		},
 		{
 			Name: "dirs and schemaGroups - match second",
-			URL:  "?oneline&inline&filter=dirs/id=xxx&filter=schemaGroups/id=sg1",
+			URL:  "?oneline&inline&filter=dirs.id=xxx&filter=schemaGroups.id=sg1",
 			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and schemaGroupsOR - match first",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/versions/id=v2&filter=schemaGroups/schemas/versions/id=v1.0,schemaGroups/schemas/versions/id=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v1.0,schemaGroups.schemas.versions.id=v2.0",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{}}`,
 		},
 		{
 			Name: "dirsOR and schemaGroupsOR - match second",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/versions/id=xxx&filter=schemaGroups/schemas/versions/id=v2.0,schemaGroups/schemas/latestVersionId=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestVersionId=v2.0",
 			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and schemaGroupsOR - both match",
-			URL:  "?oneline&inline&filter=dirs/files/id=f1,dirs/files/versions/id=v2&filter=schemaGroups/schemas/versions/id=v2.0,schemaGroups/schemas/latestVersionId=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestVersionId=v2.0",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 	}

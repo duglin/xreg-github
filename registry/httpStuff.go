@@ -392,6 +392,7 @@ FROM FullTree WHERE RegSID=? AND `
 	}
 
 	entity := readNextEntity(results)
+	log.VPrintf(3, "Entity: %#v", entity)
 	if entity == nil {
 		info.StatusCode = http.StatusNotFound
 		return fmt.Errorf("Not found")
@@ -401,7 +402,7 @@ FROM FullTree WHERE RegSID=? AND `
 	versionsCount := 0
 	if info.VersionUID == "" {
 		// We're on a Resource, so go find the right Version
-		vID := entity.Get("latestVersionId").(string)
+		vID := entity.GetPropFromUI("latestVersionId").(string)
 		for {
 			v := readNextEntity(results)
 			if v == nil && version == nil {
@@ -420,7 +421,6 @@ FROM FullTree WHERE RegSID=? AND `
 		version = entity
 	}
 
-	log.VPrintf(3, "Entity: %#v", entity)
 	log.VPrintf(3, "Version: %#v", version)
 
 	headerIt := func(e *Entity, info *RequestInfo, key string, val any) error {
@@ -453,7 +453,7 @@ FROM FullTree WHERE RegSID=? AND `
 	}
 
 	url := ""
-	if val := entity.Get("#resourceURL"); val != nil {
+	if val := entity.GetPropFromUI("#resourceURL"); val != nil {
 		gModel := info.Registry.Model.Groups[info.GroupType]
 		rModel := gModel.Resources[info.ResourceType]
 		singular := rModel.Singular
@@ -473,7 +473,7 @@ FROM FullTree WHERE RegSID=? AND `
 		return nil
 	}
 
-	if val := entity.Get("#resourceProxyURL"); val != nil {
+	if val := entity.GetPropFromUI("#resourceProxyURL"); val != nil {
 		url = val.(string)
 	}
 
@@ -504,7 +504,7 @@ FROM FullTree WHERE RegSID=? AND `
 		return nil
 	}
 
-	buf := version.Get("#resource")
+	buf := version.GetPropFromUI("#resource")
 	if buf == nil {
 		// No data so just return
 		/*
@@ -652,11 +652,13 @@ func HTTPPutPost(info *RequestInfo) error {
 							"if there's a body", resourceModel.Singular)
 					}
 
-					entityData.Props["#resource"] = nil
+					entityData.Props["#resourceURL"] = nil
 					key = "#resourceURL"
 				}
 			} else {
-				key = "labels/" + key[7:]
+				// key = "labels." + key[7:]
+				pp := NewPPP("labels").P(key[7:])
+				key = pp.UI()
 			}
 
 			entityData.Props[key] = val
@@ -744,7 +746,9 @@ func HTTPPutPost(info *RequestInfo) error {
 					continue
 				}
 				// Be nice and convert any non-string into a string
-				entityData.Props["labels/"+k] = fmt.Sprintf("%v", v)
+				// entityData.Props["labels.['"+k+"']"] = fmt.Sprintf("%v", v)
+				k = NewPPP("labels").P(k).UI()
+				entityData.Props[k] = fmt.Sprintf("%v", v)
 			}
 
 			delete(entityData.Props, "labels")
@@ -786,6 +790,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		// MUST be PUT /
 		entityData.IsNew = isNew
 		entityData.Level = 0
+		entityData.Attributes = info.Registry.Model.Attributes
 		err = UserUpdateEntity(&info.Registry.Entity, &entityData)
 
 		if err != nil {
@@ -823,6 +828,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		entityData.Level = 1
 		entityData.Plural = groupModel.Plural
 		entityData.Singular = groupModel.Singular
+		entityData.Attributes = groupModel.Attributes
 		err = UserUpdateEntity(&group.Entity, &entityData)
 	}
 
@@ -932,6 +938,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	entityData.IsNew = isNew
 	entityData.Plural = resourceModel.Plural
 	entityData.Singular = resourceModel.Singular
+	entityData.Attributes = resourceModel.Attributes
 
 	if len(info.Parts) < 5 {
 		entityData.Props["id"] = version.UID
@@ -979,11 +986,15 @@ func HTTPPutPost(info *RequestInfo) error {
 }
 
 type EntityData struct {
+	// Info from entity
 	Level      int
 	Plural     string
 	Singular   string
-	Props      map[string]any
-	RawProps   map[string]json.RawMessage
+	Attributes map[string]*Attribute
+
+	// Incoming data
+	Props      map[string]any             // key=incoming JSON key
+	RawProps   map[string]json.RawMessage // key=incoming JSON key
 	UpdateCase bool
 	Patch      bool
 	IsNew      bool
@@ -997,16 +1008,16 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 	log.VPrintf(3, "Updating:\n%s\n", ToJSON(ed))
 
-	tmp := entity.Props["epoch"]
+	tmp := entity.GetPropFromUI("epoch")
 	epoch := NotNilInt(&tmp)
-	if epoch <= 0 {
+	if epoch < 0 {
 		epoch = 0
 	}
 
 	if tmp := ed.Props["id"]; tmp != nil {
-		if tmp != entity.Get("id") {
+		if tmp != entity.GetPropFromUI("id") {
 			return fmt.Errorf("Metadata id(%s) doesn't match ID in "+
-				"URL(%s)", tmp, entity.Get("id"))
+				"URL(%s)", tmp, entity.GetPropFromUI("id"))
 		}
 	}
 
@@ -1036,27 +1047,38 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 	oldLabels := map[string]bool{}
 
-	// Find all mutable spec-defined props or extensions
+	// Find all existing mutable spec-defined props or extensions
 	// and save them in a map (key=lower-name) for easy reference
-	// and these are the ones we'll want to delete when done
-	tmpLowerEntityProps := map[string]string{} // key == lower name
+	// and these are the ones we'll want to delete when done.
+	// Key is lower-name in UI form
+	// Val is cased-name in DB form
+	toDeleteEntityProps := map[string]string{} // key == lower name, val=Name
 	for k, _ := range entity.Props {
 		lowerK := strings.ToLower(k)
-		specProp, isSpec := SpecProps[lowerK]
+		pp, _ := PropPathFromDB(k)
+		top := pp.Top()
+		lowerTop := strings.ToLower(top)
+
+		specProp, isSpec := SpecProps[lowerTop]
 
 		// Only save it if it's an extension or if the spec prop is mutable
 		if !isSpec || specProp.mutable == true {
-			tmpLowerEntityProps[lowerK] = k
+			toDeleteEntityProps[lowerK] = k
 		}
 
 		// Save existing label keys too
-		if strings.HasPrefix(k, "labels/") {
+		// if strings.HasPrefix(k, "labels"+string(DB_IN)) {
+		if top == "labels" {
 			oldLabels[k] = true
 		}
 	}
 
 	for k, v := range ed.Props {
 		lowerK := strings.ToLower(k)
+		pp, err := PropPathFromUI(k)
+		PanicIf(err != nil, "%s", err)
+		// lowerKUI := strings.ToLower(pp.UI())
+		lowerKDB := strings.ToLower(pp.DB())
 
 		specProp := SpecProps[lowerK]
 		if specProp != nil {
@@ -1071,37 +1093,40 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 			}
 
 			// Remove from delete list
-			delete(tmpLowerEntityProps, lowerK)
+			delete(toDeleteEntityProps, lowerKDB)
 
 			// OK, let it thru so we can set it
 		} else {
 			// It's a user-defined property name - aka an extension(or label)
 
 			// See if it exists in the existing entity's Props
-			if caseProp, ok := tmpLowerEntityProps[lowerK]; ok {
+			if caseProp, ok := toDeleteEntityProps[lowerKDB]; ok {
 				// Found one!
 
 				// Case doesn't match and we're not supposed to update it
 				// so just use the existing case instead
 				if caseProp != k && !ed.UpdateCase {
-					k = caseProp
+					// k = caseProp
+					// Convert to the UI version since 'k' is UI not DB view
+					pp, _ := PropPathFromDB(caseProp)
+					k = pp.UI()
 				}
 
 				// Remove from delete list
-				delete(tmpLowerEntityProps, lowerK)
+				delete(toDeleteEntityProps, lowerKDB)
 
 				// OK, let it thru so we can set it
 			} else {
 				// Not an existing prop so just let it thru so we can set it
 			}
 
-			if strings.HasPrefix(lowerK, "labels/") {
+			if pp.Top() == "labels" { // if strings.HasPrefix(lowerK, "labels"+string(DB_IN))
 				hadLabel = true
 				delete(oldLabels, k)
 			}
 		}
 
-		err := SetProp(entity, k, v)
+		err = SetPropFromUI(entity, k, v)
 		if err != nil {
 			return err
 		}
@@ -1109,7 +1134,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 	if hadLabel {
 		for k, _ := range oldLabels {
-			err := SetProp(entity, k, nil)
+			err := SetPropFromDB(entity, k, nil)
 			if err != nil {
 				return err
 			}
@@ -1118,8 +1143,8 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 	// Delete any remaining properties from the Entity, if not patching
 	if !ed.Patch {
-		for _, v := range tmpLowerEntityProps {
-			err := SetProp(entity, v, nil)
+		for _, v := range toDeleteEntityProps {
+			err := SetPropFromDB(entity, v, nil)
 			if err != nil {
 				return err
 			}
@@ -1131,7 +1156,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		epoch++
 	}
 
-	return SetProp(entity, "epoch", epoch)
+	return SetPropFromUI(entity, "epoch", epoch)
 }
 
 func HTTPPUTModel(info *RequestInfo) error {

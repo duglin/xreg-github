@@ -9,8 +9,10 @@ import (
 	gourl "net/url"
 	"os"
 	"path"
+	"reflect"
 	"regexp"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/duglin/xreg-github/registry"
@@ -90,11 +92,16 @@ func Caller() string {
 func xCheck(t *testing.T, b bool, errStr string) bool {
 	if !b {
 		t.Errorf("%s: %s", Caller(), errStr)
+		ShowStack()
+		t.FailNow()
 	}
 	return b
 }
 
 func ToJSON(obj interface{}) string {
+	if obj != nil && reflect.TypeOf(obj).String() == "*errors.errorString" {
+		obj = obj.(error).Error()
+	}
 	buf, err := json.MarshalIndent(obj, "", "  ")
 	if err != nil {
 		return fmt.Sprintf("Error Marshaling: %s", err)
@@ -212,4 +219,19 @@ func HTMLify(r *http.Request, buf []byte) []byte {
 func NotNilString(val any) string {
 	b := (val).([]byte)
 	return string(b)
+}
+
+func NewPP() *registry.PropPath {
+	return registry.NewPP()
+}
+
+func ShowStack() {
+	fmt.Printf("-----\n")
+	for i := 1; i < 20; i++ {
+		pc, file, line, _ := runtime.Caller(i)
+		fmt.Printf("Caller: %s:%d\n", path.Base(runtime.FuncForPC(pc).Name()), line)
+		if strings.Contains(file, "main") || strings.Contains(file, "testing") {
+			break
+		}
+	}
 }

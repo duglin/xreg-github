@@ -11,8 +11,12 @@ type Group struct {
 	Registry *Registry
 }
 
+func (g *Group) Get(name string) any {
+	return g.Entity.GetPropFromUI(name)
+}
+
 func (g *Group) Set(name string, val any) error {
-	return SetProp(g, name, val)
+	return SetPropFromUI(g, name, val)
 }
 
 func (g *Group) FindResource(rType string, id string) (*Resource, error) {
@@ -24,7 +28,7 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
                 FROM Resources as r
                 LEFT JOIN Props AS p ON (p.EntitySID=r.SID)
                 WHERE r.GroupSID=? AND r.UID=?
-                AND r.Abstract = CONCAT(?,'/',?)`,
+                AND r.Abstract = CONCAT(?,'`+string(DB_IN)+`',?)`,
 		g.DbSID, id, g.Plural, rType)
 	defer results.Close()
 
@@ -45,7 +49,7 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 
 					Level:    2,
 					Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
-					Abstract: g.Plural + "/" + rType,
+					Abstract: g.Plural + string(DB_IN) + rType,
 				},
 				Group: g,
 			}
@@ -94,7 +98,7 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 
 			Level:    2,
 			Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
-			Abstract: g.Plural + "/" + rType,
+			Abstract: g.Plural + string(DB_IN) + rType,
 		},
 		Group: g,
 	}
@@ -111,7 +115,7 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
             AND Plural=?)
             AND Plural=?`,
 		r.DbSID, r.UID, g.DbSID,
-		g.Plural+"/"+g.UID+"/"+rType+"/"+r.UID, g.Plural+"/"+rType,
+		g.Plural+"/"+g.UID+"/"+rType+"/"+r.UID, g.Plural+string(DB_IN)+rType,
 		g.RegistrySID,
 		g.RegistrySID, g.Plural,
 		rType)

@@ -120,7 +120,8 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 			break
 		}
 
-		jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Entity.Props["id"])
+		jw.Printf("%s\n%s%q: ", extra, jw.indent,
+			jw.Entity.Props[NewPPP("id").DB()])
 		if err := jw.WriteEntity(); err != nil {
 			return count, err
 		}
@@ -168,7 +169,7 @@ func (jw *JsonWriter) WriteEntity() error {
 
 	// Add resource content released properties
 	if myLevel >= 2 {
-		if val := jw.Entity.Get("#resourceURL"); val != nil {
+		if val := jw.Entity.GetPropFromUI("#resourceURL"); val != nil {
 			gModel := jw.info.Registry.Model.Groups[jw.info.GroupType]
 			rModel := gModel.Resources[jw.info.ResourceType]
 			singular := rModel.Singular
@@ -211,7 +212,7 @@ func (jw *JsonWriter) LoadCollections(level int) {
 			names = SortedKeys(jw.info.Registry.Model.Groups)
 		}
 	} else if level == 1 {
-		gName, _ := strings.CutSuffix(jw.Entity.Abstract, "/")
+		gName, _ := strings.CutSuffix(jw.Entity.Abstract, IN_STR)
 		names = SortedKeys(jw.info.Registry.Model.Groups[gName].Resources)
 	} else if level == 2 {
 		names = []string{"versions"}
@@ -275,13 +276,13 @@ func Path2Abstract(path string) string {
 	for i, part := range parts {
 		if i%2 == 0 {
 			if res != "" {
-				res += "/"
+				res += IN_STR
 			}
 			res += part
 		}
 	}
 	if addSlash {
-		res += "/"
+		res += IN_STR
 	}
 	return res
 }

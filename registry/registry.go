@@ -14,7 +14,8 @@ type Registry struct {
 }
 
 var SpecVersion = "0.5"
-var Registries = map[string]*Registry{} // User UID->Reg
+var Registries = map[string]*Registry{}      // User UID->Reg
+var RegistriesBySID = map[string]*Registry{} // SID->Reg
 
 func NewRegistry(id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: NewRegistry %q", id)
@@ -67,6 +68,7 @@ func NewRegistry(id string) (*Registry, error) {
 	reg.Set("id", reg.UID)
 	reg.Set("epoch", 1)
 	Registries[id] = reg
+	RegistriesBySID[reg.DbSID] = reg
 
 	return reg, nil
 }
@@ -87,20 +89,57 @@ func GetRegistryNames() []string {
 	return res
 }
 
+func (reg *Registry) Get(name string) any {
+	return reg.Entity.GetPropFromUI(name)
+}
+
 func (reg *Registry) Set(name string, val any) error {
-	return SetProp(reg, name, val)
+	return SetPropFromUI(reg, name, val)
 }
 
 func (reg *Registry) Delete() error {
 	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.UID)
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
 
-	return DoOne(`DELETE FROM Registries WHERE SID=?`, reg.DbSID)
+	err := DoOne(`DELETE FROM Registries WHERE SID=?`, reg.DbSID)
+	if err == nil {
+		delete(Registries, reg.UID)
+		delete(RegistriesBySID, reg.DbSID)
+	}
+	return err
+}
+
+func FindRegistryBySID(sid string) (*Registry, error) {
+	log.VPrintf(3, ">Enter: FindRegistrySID(%s)", sid)
+	defer log.VPrintf(3, "<Exit: FindRegistrySID")
+
+	if reg, ok := RegistriesBySID[sid]; ok {
+		return reg, nil
+	}
+
+	results, err := Query(`SELECT UID FROM Registries WHERE SID=?`, sid)
+	defer results.Close()
+
+	if err != nil {
+		return nil, fmt.Errorf("Error finding Registry %q: %s", sid, err)
+	}
+
+	row := results.NextRow()
+	if row == nil {
+		return nil, fmt.Errorf("Error finding Registry %q: no match", sid)
+	}
+
+	uid := NotNilString(row[0])
+	return FindRegistry(uid)
 }
 
 func FindRegistry(id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistry(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindRegistry")
+
+	if reg, ok := Registries[id]; ok {
+		return reg, nil
+	}
 
 	results, err := Query(`
 		SELECT r.SID, p.PropName, p.PropValue, p.PropType
@@ -140,6 +179,9 @@ func FindRegistry(id string) (*Registry, error) {
 	if reg == nil {
 		log.VPrintf(3, "None found")
 	} else {
+		Registries[reg.UID] = reg
+		RegistriesBySID[reg.DbSID] = reg
+
 		reg.LoadModel()
 	}
 
@@ -256,24 +298,32 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 
 func (info *RequestInfo) AddInline(path string) error {
 	// use "*" to inline all
-	path = strings.Trim(path, "/.") // To be nice
+	// path = strings.TrimLeft(path, "/.") // To be nice
+
+	pp, err := PropPathFromUI(path)
+	if err != nil {
+		return err
+	}
 
 	for _, group := range info.Registry.Model.Groups {
-		if path == group.Plural {
+		if pp.Equals(NewPPP(group.Plural)) {
 			info.Inlines = append(info.Inlines, path)
 			return nil
 		}
 		for _, res := range group.Resources {
-			if path == group.Plural+"/"+res.Plural ||
-				path == group.Plural+"/"+res.Plural+"/"+res.Singular ||
-				path == group.Plural+"/"+res.Plural+"/versions" ||
-				path == group.Plural+"/"+res.Plural+"/versions."+res.Singular {
+			if pp.Equals(NewPPP(group.Plural).P(res.Plural)) ||
+				pp.Equals(NewPPP(group.Plural).P(res.Plural).P(res.Singular)) ||
+				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("versions")) ||
+				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("versions").P(res.Singular)) {
 
-				info.Inlines = append(info.Inlines, path)
+				info.Inlines = append(info.Inlines, pp.DB())
 				return nil
 			}
 		}
 	}
+
+	// Convert back to UI version for the error message
+	path = pp.UI()
 
 	// Remove Abstract value just to print a nicer error message
 	if info.Abstract != "" && strings.HasPrefix(path, info.Abstract) {
@@ -284,10 +334,11 @@ func (info *RequestInfo) AddInline(path string) error {
 }
 
 func (info *RequestInfo) ShouldInline(entityPath string) bool {
-	// entityPath = strings.Replace(entityPath, "/", ".", -1)
+	ePP, _ := PropPathFromDB(entityPath) // entity-PP
 	for _, path := range info.Inlines {
-		log.VPrintf(4, "Inline check: %q in %q ?", entityPath, path)
-		if path == "*" || entityPath == path || strings.HasPrefix(path, entityPath) {
+		iPP, _ := PropPathFromDB(path) // Inline-PP
+		if iPP.Top() == "*" || ePP.Equals(iPP) || iPP.HasPrefix(ePP) {
+			log.VPrintf(4, "Inline match: %q in %q", entityPath, path)
 			return true
 		}
 	}
@@ -308,8 +359,8 @@ type RequestInfo struct {
 	ResourceType     string
 	ResourceUID      string
 	VersionUID       string
-	What             string // Registry, Coll, Entity
-	Inlines          []string
+	What             string          // Registry, Coll, Entity
+	Inlines          []string        // TODO store a PropPaths instead
 	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
 	ShowModel        bool
 	ShowMeta         bool
@@ -328,7 +379,7 @@ func (ri *RequestInfo) AddHeader(name, value string) {
 }
 
 type FilterExpr struct {
-	Path     string // endpoints.id
+	Path     string // endpoints.id  TODO store a PropPath?
 	Value    string // myEndpoint
 	HasEqual bool
 }
@@ -355,21 +406,36 @@ func ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) 
 	}
 
 	if r.URL.Query().Has("inline") {
+		stopInline := false
 		for _, value := range r.URL.Query()["inline"] {
 			for _, p := range strings.Split(value, ",") {
 				if p == "" || p == "*" {
 					info.Inlines = []string{"*"}
+					stopInline = true
+					break
 				} else {
 					// if we're not at the root then we need to twiddle
 					// the inline path to add the HTTP Path as a prefix
 					if info.Abstract != "" {
-						p = info.Abstract + "/" + p
+						// want: p = info.Abstract + "." + p  in UI format
+						absPP, err := PropPathFromPath(info.Abstract)
+						if err != nil {
+							return info, err
+						}
+						pPP, err := PropPathFromUI(p)
+						if err != nil {
+							return info, err
+						}
+						p = absPP.Append(pPP).UI()
 					}
 					if err := info.AddInline(p); err != nil {
 						info.StatusCode = http.StatusBadRequest
 						return info, err
 					}
 				}
+			}
+			if stopInline {
+				break
 			}
 		}
 	}
@@ -392,6 +458,11 @@ func (info *RequestInfo) ParseFilters() error {
 				continue
 			}
 			path, value, found := strings.Cut(expr, "=")
+			pp, err := PropPathFromUI(path)
+			if err != nil {
+				return err
+			}
+			path = pp.DB()
 
 			/*
 				if info.What != "Coll" && strings.Index(path, "/") < 0 {
@@ -402,9 +473,12 @@ func (info *RequestInfo) ParseFilters() error {
 			*/
 
 			if info.Abstract != "" {
-				// path = strings.Replace(info.Abstract, "/", ".", -1) + "." + path
-				path = info.Abstract + "/" + path
+				// Want: path = abs + "," + path in DB format
+				absPP, _ := PropPathFromPath(info.Abstract)
+				absPP = absPP.Append(pp)
+				path = absPP.DB()
 			}
+
 			filter := &FilterExpr{
 				Path:     path,
 				Value:    value,
@@ -614,7 +688,7 @@ eSID IN ( -- eSID from query
           SELECT eSID,Path FROM FullTree
           WHERE
             RegSID=? AND
-            (BINARY CONCAT(IF(Abstract<>'',CONCAT(Abstract,'/'),''),PropName)=? AND
+            (BINARY CONCAT(IF(Abstract<>'',CONCAT(Abstract,'` + string(DB_IN) + `'),''),PropName)=? AND
                ` + check + `)`
 			} // end of AndFilter
 			query += `

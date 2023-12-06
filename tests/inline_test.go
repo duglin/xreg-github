@@ -170,8 +170,13 @@ func TestBasicInline(t *testing.T) {
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}},"dirs2":{"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}}`,
 		},
 		{
-			Name: "Inline * - No Filter",
+			Name: "Inline * - * Filter",
 			URL:  "?inline=*&oneline",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}},"dirs2":{"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}}`,
+		},
+		{
+			Name: "Inline * - * Filter - not first",
+			URL:  "?inline=dirs2,*&oneline",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}},"dirs2":{"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}}`,
 		},
 		{
@@ -201,12 +206,12 @@ func TestBasicInline(t *testing.T) {
 		},
 		{
 			Name: "inline two levels",
-			URL:  "?inline=dirs/files&oneline",
+			URL:  "?inline=dirs.files&oneline",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{}}},"d2":{"files":{"f2":{}}}}}`,
 		},
 		{
 			Name: "inline three levels",
-			URL:  "?inline=dirs/files/versions&oneline",
+			URL:  "?inline=dirs.files.versions&oneline",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
@@ -221,13 +226,13 @@ func TestBasicInline(t *testing.T) {
 		},
 		{
 			Name: "get one level, inline two levels",
-			URL:  "dirs?inline=files/versions&oneline",
+			URL:  "dirs?inline=files.versions&oneline",
 			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}`,
 		},
 		{
 			Name: "get one level, inline three levels",
-			URL:  "dirs?inline=files/versions.xxx&oneline",
-			Exp:  `Invalid 'inline' value: "files/versions.xxx"`,
+			URL:  "dirs?inline=files.versions.xxx&oneline",
+			Exp:  `Invalid 'inline' value: "files.versions.xxx"`,
 		},
 		{
 			Name: "get one level, inline one level",
@@ -236,7 +241,7 @@ func TestBasicInline(t *testing.T) {
 		},
 		{
 			Name: "get one level, inline two levels",
-			URL:  "dirs/d1?inline=files/versions&oneline",
+			URL:  "dirs/d1?inline=files.versions&oneline",
 			Exp:  `{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}`,
 		},
 		{
@@ -252,17 +257,17 @@ func TestBasicInline(t *testing.T) {
 		},
 		{
 			Name: "inline 2 top, 1 and 2 levels",
-			URL:  "?inline=dirs,dirs2/files&oneline",
+			URL:  "?inline=dirs,dirs2.files&oneline",
 			Exp:  `{"dirs":{"d1":{},"d2":{}},"dirs2":{"d2":{"files":{"f2":{}}}}}`,
 		},
 		{
 			Name: "inline 2 top, 1 and 2 levels - one err",
-			URL:  "?inline=dirs,dirs2/files/xxx&oneline",
-			Exp:  `Invalid 'inline' value: "dirs2/files/xxx"`,
+			URL:  "?inline=dirs,dirs2.files.xxx&oneline",
+			Exp:  `Invalid 'inline' value: "dirs2.files.xxx"`,
 		},
 		{
 			Name: "get one level, inline 2, 1 and 2 levels same top",
-			URL:  "dirs?inline=files,files/versions&oneline",
+			URL:  "dirs?inline=files,files.versions&oneline",
 			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}`,
 		},
 
@@ -280,6 +285,8 @@ func TestBasicInline(t *testing.T) {
 
 	for _, test := range tests {
 		t.Logf("Testing: %s", test.Name)
-		xCheckGet(t, reg, test.URL, test.Exp)
+		if !xCheckGet(t, reg, test.URL, test.Exp) {
+			break
+		}
 	}
 }

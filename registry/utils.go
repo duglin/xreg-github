@@ -26,6 +26,15 @@ func Must(err error) {
 	}
 }
 
+func PanicIf(b bool, msg string, args ...any) {
+	if b {
+		Panicf(msg, args...)
+	}
+}
+func Panicf(msg string, args ...any) {
+	panic(fmt.Sprintf(msg, args...))
+}
+
 func init() {
 	if !IsNil(nil) {
 		panic("help me1")
@@ -169,16 +178,16 @@ func SetField(res any, name string, value *string, propType string) {
 		return
 	}
 
-	if propType == "s" {
+	if propType == STRING {
 		val = *value
-	} else if propType == "b" {
+	} else if propType == BOOLEAN {
 		val = (*value == "true")
-	} else if propType == "i" {
+	} else if propType == INT {
 		val, err = strconv.Atoi(*value)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing int: %s", val))
 		}
-	} else if propType == "f" {
+	} else if propType == DECIMAL {
 		val, err = strconv.ParseFloat(*value, 64)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing float: %s", val))

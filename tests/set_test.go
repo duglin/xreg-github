@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -17,27 +18,28 @@ func TestSetResource(t *testing.T) {
 	// /dirs/d1/f1/v1
 
 	// Make sure setting it on the version is seen by res.Latest and res
-	file.Set("name", "myName")
+	namePP := NewPP().P("name").UI()
+	file.Set(namePP, "myName")
 	ver, _ := file.FindVersion("v1")
-	val := ver.Get("name")
+	val := ver.Get(namePP)
 	if val != "myName" {
 		t.Errorf("ver.Name is %q, should be 'myName'", val)
 	}
 
-	name := file.Get("name").(string)
+	name := file.Get(namePP).(string)
 	xCheckEqual(t, "", name, "myName")
 
 	// Verify that nil and "" are treated differently
-	ver.Set("name", nil)
+	ver.Set(namePP, nil)
 	ver2, _ := file.FindVersion(ver.UID)
 	xJSONCheck(t, ver2, ver)
-	val = ver.Get("name")
+	val = ver.Get(namePP)
 	xCheck(t, val == nil, "Setting to nil should return nil")
 
-	ver.Set("name", "")
+	ver.Set(namePP, "")
 	ver2, _ = file.FindVersion(ver.UID)
 	xJSONCheck(t, ver2, ver)
-	val = ver.Get("name")
+	val = ver.Get(namePP)
 	xCheck(t, val == "", "Setting to '' should return ''")
 }
 
@@ -55,23 +57,24 @@ func TestSetVersion(t *testing.T) {
 	// /dirs/d1/f1/v1
 
 	// Make sure setting it on the version is seen by res.Latest and res
-	ver.Set("name", "myName")
+	namePP := NewPP().P("name").UI()
+	ver.Set(namePP, "myName")
 	file, _ = dir.FindResource("files", "f1")
 	l, err := file.GetLatest()
 	xNoErr(t, err)
 	xCheck(t, l != nil, "latest is nil")
-	val := l.Get("name")
+	val := l.Get(namePP)
 	if val != "myName" {
 		t.Errorf("resource.latest.Name is %q, should be 'myName'", val)
 	}
-	val = file.Get("name")
+	val = file.Get(namePP)
 	if val != "myName" {
 		t.Errorf("resource.Name is %q, should be 'myName'", val)
 	}
 
 	// Make sure we can also still see it from the version itself
 	ver, _ = file.FindVersion("v1")
-	val = ver.Get("name")
+	val = ver.Get(namePP)
 	if val != "myName" {
 		t.Errorf("version.Name is %q, should be 'myName'", val)
 	}
@@ -86,23 +89,28 @@ func TestSetDots(t *testing.T) {
 
 	// check some dots in the prop names - and some labels stuff too
 	dir, _ := reg.AddGroup("dirs", "d1")
-	err := dir.Set("labels", "xxx")
+	labels := NewPP().P("labels")
+
+	err := dir.Set(labels.UI(), "xxx")
 	xCheck(t, err != nil, "labels=xxx should fail")
 
+	// Nesting under labels should fail
+	err = dir.Set(labels.P("xxx").P("yyy").UI(), "xy")
+	xJSONCheck(t, err, "Traversing into a map/scalar \"labels\": xxx.yyy")
+
 	// dots are ok as tag names
-	err = dir.Set("labels/xxx.yyy", "xxx")
+	err = dir.Set(labels.P("abc.def").UI(), "ABC")
 	xNoErr(t, err)
-	err = dir.Set("labels/many.dots", "hello")
-	xCheck(t, dir.Get("labels/many.dots") == "hello", "many.dots should work")
+	xJSONCheck(t, dir.Get(labels.P("abc.def").UI()), "ABC")
+
 	dir.Refresh()
-	xCheck(t, dir.Get("labels/many.dots") == "hello", "many.dots should work")
+
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
   "labels": {
-    "many.dots": "hello",
-    "xxx.yyy": "xxx"
+    "abc.def": "ABC"
   },
 
   "filesCount": 0,
@@ -111,21 +119,28 @@ func TestSetDots(t *testing.T) {
 `)
 
 	err = dir.Set("labels", nil)
-	xCheck(t, err != nil, "labels=nil should fail")
-	err = dir.Set("labels/xxx/yyy", nil)
-	xCheck(t, err != nil, "labels/xxx/yyy=nil should fail")
-	err = dir.Set("labels/.abc", nil)
-	xCheck(t, err != nil, "labels/.abc=nil should fail")
-	err = dir.Set("xxx.yyy", "xxx")
-	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
-	err = dir.Set("xxx.yyy", nil)
-	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	xCheck(t, err.Error() == "Invalid property name: labels",
+		fmt.Sprintf("labels=nil should fail: %s", err))
+
+	err = dir.Set(NewPP().P("labels").P("xxx/yyy").UI(), nil)
+	xCheck(t, err.Error() == `Unexpected / in "labels.xxx/yyy" at pos 11`,
+		fmt.Sprintf("labels.xxx/yyy=nil should fail: %s", err))
+
+	err = dir.Set(NewPP().P("labels").P("").P("abc").UI(), nil)
+	xJSONCheck(t, err, `Unexpected . in "labels..abc" at pos 8`)
+
+	err = dir.Set(NewPP().P("labels").P("xxx.yyy").UI(), "xxx")
+	xJSONCheck(t, err, nil)
+
+	err = dir.Set(NewPP().P("xxx.yyy").UI(), nil)
+	xJSONCheck(t, err, `Can't find attribute "xxx.yyy"`)
+	xCheck(t, err != nil, "xxx.yyy=nil should fail")
 	err = dir.Set("xxx.", "xxx")
-	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	xCheck(t, err != nil, "xxx.=xxx should fail")
 	err = dir.Set(".xxx", "xxx")
-	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	xCheck(t, err != nil, ".xxx=xxx should fail")
 	err = dir.Set(".xxx.", "xxx")
-	xCheck(t, err != nil, "xxx.yyy=xxx should fail")
+	xCheck(t, err != nil, ".xxx.=xxx should fail")
 }
 
 func TestSetLabels(t *testing.T) {
@@ -141,56 +156,59 @@ func TestSetLabels(t *testing.T) {
 	ver2, _ := file.AddVersion("v2")
 
 	// /dirs/d1/f1/v1
-	err := reg.Set("labels/r2", 123.234) // notice it's not a string
+	labels := NewPP().P("labels")
+	err := reg.Set(labels.P("r2").UI(), 123.234) // notice it's not a string
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("labels/r2"), 123.234) // won't see it as a string until json
-	err = reg.Set("labels/r1", "foo")
+	xJSONCheck(t, reg.Get(labels.P("r2").UI()), "123.234")
+	err = reg.Set("labels.r1", "foo")
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("labels/r1"), "foo")
-	err = reg.Set("labels/r1", nil)
+	xJSONCheck(t, reg.Get(labels.P("r1").UI()), "foo")
+	err = reg.Set(labels.P("r1").UI(), nil)
 	xNoErr(t, err)
 	reg.Refresh()
-	xJSONCheck(t, reg.Get("labels/r1"), nil)
+	xJSONCheck(t, reg.Get(labels.P("r1").UI()), nil)
 
-	err = dir.Set("labels/d1", "bar")
+	err = dir.Set(labels.P("d1").UI(), "bar")
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("labels/d1"), "bar")
+	xJSONCheck(t, dir.Get(labels.P("d1").UI()), "bar")
 	// test override
-	err = dir.Set("labels/d1", "foo")
+	err = dir.Set(labels.P("d1").UI(), "foo")
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("labels/d1"), "foo")
-	err = dir.Set("labels/d1", nil)
+	xJSONCheck(t, dir.Get(labels.P("d1").UI()), "foo")
+	err = dir.Set(labels.P("d1").UI(), nil)
 	xNoErr(t, err)
 	dir.Refresh()
-	xJSONCheck(t, dir.Get("labels/d1"), nil)
+	xJSONCheck(t, dir.Get(labels.P("d1").UI()), nil)
 
-	err = file.Set("labels/f1", "foo")
+	err = file.Set(labels.P("f1").UI(), "foo")
 	xNoErr(t, err)
 	file.Refresh()
-	xJSONCheck(t, file.Get("labels/f1"), "foo")
-	err = file.Set("labels/f1", nil)
+	xJSONCheck(t, file.Get(labels.P("f1").UI()), "foo")
+	err = file.Set(labels.P("f1").UI(), nil)
 	xNoErr(t, err)
 	file.Refresh()
-	xJSONCheck(t, file.Get("labels/f1"), nil)
+	xJSONCheck(t, file.Get(labels.P("f1").UI()), nil)
 
-	err = ver.Set("labels/v1", "foo")
+	err = ver.Set(labels.P("v1").UI(), "foo")
 	xNoErr(t, err)
 	ver.Refresh()
-	xJSONCheck(t, ver.Get("labels/v1"), "foo")
-	err = ver.Set("labels/v1", nil)
+	xJSONCheck(t, ver.Get(labels.P("v1").UI()), "foo")
+	err = ver.Set(labels.P("v1").UI(), nil)
 	xNoErr(t, err)
 	ver.Refresh()
-	xJSONCheck(t, ver.Get("labels/v1"), nil)
+	xJSONCheck(t, ver.Get(labels.P("v1").UI()), nil)
 
-	dir.Set("labels/dd", "dd.foo")
-	file.Set("labels/ff", "ff.bar")
-	ver.Set("labels/vv", 987.234)
-	ver.Set("labels/vv2", "v11")
-	ver2.Set("labels/2nd", "3rd")
+	dir.Set(labels.P("dd").UI(), "dd.foo")
+	file.Set(labels.P("ff").UI(), "ff.bar")
+	ver.Set(labels.P("vv").UI(), 987.234)
+	ver.Set(labels.P("vv2").UI(), "v11")
+	ver2.Set(labels.P("2nd").UI(), "3rd")
+	ver2.Set(labels.P("bool1").UI(), true)
+	ver2.Set(labels.P("bool2").UI(), false)
 
 	xCheckGet(t, reg, "?inline", `{
   "specVersion": "0.5",
@@ -219,6 +237,8 @@ func TestSetLabels(t *testing.T) {
           "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
           "labels": {
             "2nd": "3rd",
+            "bool1": "true",
+            "bool2": "false",
             "ff": "ff.bar"
           },
 
@@ -239,6 +259,8 @@ func TestSetLabels(t *testing.T) {
               "latest": true,
               "labels": {
                 "2nd": "3rd",
+                "bool1": "true",
+                "bool2": "false",
                 "ff": "ff.bar"
               }
             }
@@ -304,6 +326,8 @@ func TestSetLabels(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
               "labels": {
                 "2nd": "3rd",
+                "bool1": "true",
+                "bool2": "false",
                 "ff": "ff.bar"
               }
             }

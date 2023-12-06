@@ -15,18 +15,18 @@ type Resource struct {
 func (r *Resource) Get(name string) any {
 	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
-		return r.Entity.Get(name[1:])
+		return r.Entity.GetPropFromUI(name[1:])
 	}
 
 	if name == "id" || name == "latestVersionId" || name == "latestVersionUrl" {
-		return r.Entity.Get(name)
+		return r.Entity.GetPropFromUI(name)
 	}
 
 	v, err := r.GetLatest()
 	if err != nil {
 		panic(err)
 	}
-	return v.Entity.Get(name)
+	return v.Entity.GetPropFromUI(name)
 }
 
 func (r *Resource) Set(name string, val any) error {
@@ -36,7 +36,7 @@ func (r *Resource) Set(name string, val any) error {
 			log.Printf("Shouldn't be setting .latestVersionId directly-1")
 			panic("can't set .latestVersionId directly")
 		}
-		return SetProp(r, name[1:], val)
+		return SetPropFromUI(r, name[1:], val)
 	}
 
 	if name == "id" || name == "latestVersionId" || name == "latestVersionUrl" {
@@ -44,7 +44,7 @@ func (r *Resource) Set(name string, val any) error {
 			log.Printf("Shouldn't be setting .latestVersionId directly-2")
 			panic("can't set .latestVersionId directly")
 		}
-		return SetProp(r, name, val)
+		return SetPropFromUI(r, name, val)
 	}
 
 	v, err := r.GetLatest()
@@ -80,7 +80,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 
 					Level:    3,
 					Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
-					Abstract: r.Group.Plural + "/" + r.Plural + "/versions",
+					Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
 				},
 				Resource: r,
 			}
@@ -103,7 +103,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 
 // Maybe replace error with a panic?
 func (r *Resource) GetLatest() (*Version, error) {
-	val := r.Get("latestVersionId")
+	val := r.GetPropFromUI("latestVersionId")
 	if val == nil {
 		return nil, nil
 		// panic("No latest is set")
@@ -122,7 +122,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	}
 
 	// TODO: do both of these in one transaction to make it atomic
-	SetProp(r, "latestVersionId", newLatest.UID)
+	SetPropFromUI(r, "latestVersionId", newLatest.UID)
 	return newLatest.Set("latest", true)
 }
 
@@ -135,7 +135,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 
 	if id == "" {
 		// No versionID provided so grab the next aailable one
-		tmp := r.Props["#nextVersionID"]
+		tmp := r.Props[NewPPP("#nextVersionID").DB()]
 		nextID := NotNilInt(&tmp)
 		for {
 			id = strconv.Itoa(nextID)
@@ -171,7 +171,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 
 			Level:    3,
 			Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
-			Abstract: r.Group.Plural + "/" + r.Plural + "/versions",
+			Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
 		},
 		Resource: r,
 	}
@@ -181,7 +181,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
         VALUES(?,?,?,?,?)`,
 		v.DbSID, id, r.DbSID,
 		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+v.UID,
-		r.Group.Plural+"/"+r.Plural+"/versions")
+		r.Group.Plural+string(DB_IN)+r.Plural+string(DB_IN)+"versions")
 	if err != nil {
 		err = fmt.Errorf("Error adding Version: %s", err)
 		log.Print(err)

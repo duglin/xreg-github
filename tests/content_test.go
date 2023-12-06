@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 func TestResourceContents(t *testing.T) {
@@ -15,17 +17,27 @@ func TestResourceContents(t *testing.T) {
 	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
-	gm.AddResourceModel("files", "file", 0, true, true, true)
+	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
+	rm.AddAttr("str1", registry.STRING)
+	rm.AddAttr("str2", registry.STRING)
+	rm.AddAttr("int1", registry.INT)
+	rm.AddAttr("int2", registry.INT)
+	rm.AddAttr("int3", registry.INT)
+	rm.AddAttr("bool1", registry.BOOLEAN)
+	rm.AddAttr("bool2", registry.BOOLEAN)
+	rm.AddAttr("dec1", registry.DECIMAL)
+	rm.AddAttr("dec2", registry.DECIMAL)
+	rm.AddAttr("dec3", registry.DECIMAL)
 
 	d1, _ := reg.AddGroup("dirs", "d1")
 	f1, _ := d1.AddResource("files", "f1", "v1")
 
 	f1.Set("name", "file1")
-	f1.Set("labels/str1", "foo")
-	f1.Set("labels/str2", "")
-	f1.Set("labels/int", 6)
-	f1.Set("labels/bool", true)
-	f1.Set("labels/float", 123.456)
+	f1.Set("labels.str1", "foo")
+	f1.Set("labels.str2", "")
+	f1.Set("labels.int", 6)
+	f1.Set("labels.bool", true)
+	f1.Set("labels.decimal", 123.456)
 	f1.Set("str1", "foo")
 	f1.Set("str2", "")
 	f1.Set("int1", 6)
@@ -33,9 +45,9 @@ func TestResourceContents(t *testing.T) {
 	f1.Set("int3", 0)
 	f1.Set("bool1", true)
 	f1.Set("bool2", false)
-	f1.Set("float1", 123.456)
-	f1.Set("float2", -456.876)
-	f1.Set("float3", 0.0)
+	f1.Set("dec1", 123.456)
+	f1.Set("dec2", -456.876)
+	f1.Set("dec3", 0.0)
 
 	f1.Set("#resource", "Hello there")
 
@@ -133,7 +145,6 @@ func CompareContentMeta(t *testing.T, test *Test) {
 	metaBody, err := io.ReadAll(metaResp.Body)
 	xNoErr(t, err)
 	metaProps := map[string]any{}
-	// t.Logf("MetaBody: %s", string(metaBody))
 	err = json.Unmarshal(metaBody, &metaProps)
 	xNoErr(t, err)
 	if err != nil {
@@ -236,6 +247,6 @@ func CompareContentMeta(t *testing.T, test *Test) {
 		if propName == "labels" {
 			continue
 		}
-		t.Errorf("Extra prop %q in ?meata, not in header: %s", propName, u)
+		t.Errorf("Extra prop %q in ?meta, not in header: %s", propName, u)
 	}
 }

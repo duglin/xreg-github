@@ -67,7 +67,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "APIs-guru Registry")
 		reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory")
-		reg.Set("docs", "https://github.com/duglin/xreg-github")
+		reg.Set("documentation", "https://github.com/duglin/xreg-github")
 		err = reg.Refresh()
 		ErrFatalf(err, "Error refeshing registry: %s", err)
 		// log.VPrintf(3, "New registry:\n%#v", reg)
@@ -77,6 +77,9 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 	g, _ := reg.Model.AddGroupModel("apiProviders", "apiProvider")
 	_, err = g.AddResourceModel("apis", "api", 2, true, true, true)
+	g.AddAttr("xxx", registry.INT)
+	g.AddAttr("yyy", registry.STRING)
+	g.AddAttr("zzz", registry.STRING)
 
 	g, _ = reg.Model.AddGroupModel("schemaGroups", "schemaGroup")
 	_, err = g.AddResourceModel("schemas", "schema", 1, true, true, true)
@@ -123,13 +126,13 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 		group.Set("name", group.UID)
 		group.Set("modifiedBy", "me")
-		group.Set("modifiedAt", "noon")
+		group.Set("modifiedOn", "noon")
 		group.Set("epoch", 5)
 		group.Set("xxx", 5)
 		group.Set("yyy", "6")
 		group.Set("zzz", "6")
 
-		group.Set("modifiedAt", nil) // delete prop
+		group.Set("modifiedOn", nil) // delete prop
 		group.Set("zzz", nil)        // delete prop
 
 		// group2 := reg.FindGroup("apiProviders", parts[0])
@@ -193,20 +196,38 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Test Registry")
 		reg.Set("description", "A test reg")
-		reg.Set("docs", "https://github.com/duglin/xreg-github")
+		reg.Set("documentation", "https://github.com/duglin/xreg-github")
 
-		reg.Set("labels/stage", "prod")
+		reg.Set("labels.stage", "prod")
+
+		reg.Model.AddAttribute(&registry.Attribute{Name: "bool1",
+			Type: registry.BOOLEAN})
+		reg.Model.AddAttribute(&registry.Attribute{Name: "int1",
+			Type: registry.INT})
+		reg.Model.AddAttribute(&registry.Attribute{Name: "dec1",
+			Type: registry.DECIMAL})
+		reg.Model.AddAttribute(&registry.Attribute{Name: "str1",
+			Type: registry.STRING})
+		reg.Model.AddAttribute(&registry.Attribute{Name: "map1",
+			Type:    registry.MAP,
+			KeyType: registry.STRING, ItemType: registry.STRING})
+
+		reg.Set("bool1", true)
+		reg.Set("int1", 1)
+		reg.Set("dec1", 1.1)
+		reg.Set("str1", "hi")
+		reg.Set("map1.k1", "v1")
 	}
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	_, err = gm.AddResourceModel("files", "file", 2, true, true, true)
 
 	g, _ := reg.AddGroup("dirs", "dir1")
-	g.Set("labels/private", "true")
+	g.Set("labels.private", "true")
 	r, _ := g.AddResource("files", "f1", "v1")
 	r.AddVersion("v2")
-	r.Set("labels/stage", "dev")
-	r.Set("labels/none", "")
+	r.Set("labels.stage", "dev")
+	r.Set("labels.none", "")
 
 	return reg
 }
@@ -226,18 +247,20 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Test Registry")
 		reg.Set("description", "A test reg")
-		reg.Set("docs", "https://github.com/duglin/xreg-github")
+		reg.Set("documentation", "https://github.com/duglin/xreg-github")
 	}
 
 	gm, _ := reg.Model.AddGroupModel("endpoints", "endpoint")
+	gm.AddAttribute(&registry.Attribute{Name: "ext", Type: "string"})
+
 	_, err = gm.AddResourceModel("definitions", "definition", 2, true, true, true)
 
 	g, _ := reg.AddGroup("endpoints", "e1")
 	g.Set("name", "end1")
 	g.Set("epoch", 1)
 	g.Set("ext", "ext1")
-	g.Set("labels/stage", "dev")
-	g.Set("labels/stale", "true")
+	g.Set("labels.stage", "dev")
+	g.Set("labels.stale", "true")
 
 	r, _ := g.AddResource("definitions", "created", "v1")
 	v, _ := r.FindVersion("v1")

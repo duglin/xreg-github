@@ -1,12 +1,14 @@
 all: run
 
+TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
+
 test: server
 	@go clean -testcache
-	go test -failfast github.com/duglin/xreg-github/tests
+	go test -failfast $(TESTDIRS)
 	@echo
 	@echo "# Run the tests again w/o deleting the Registry after each one"
 	@go clean -testcache
-	NO_DELETE_REGISTRY=1 go test -failfast github.com/duglin/xreg-github/tests
+	NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
 	@echo
 
 server: *.go registry/*

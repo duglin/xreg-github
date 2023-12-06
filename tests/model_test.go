@@ -326,7 +326,7 @@ func TestResourceModelCreate(t *testing.T) {
 	g, _ := reg.AddGroup("dirs", "dir1")
 	g.AddResource("files", "f1", "v1")
 
-	xCheckGet(t, reg, "?model&inline=dirs/files", `{
+	xCheckGet(t, reg, "?model&inline=dirs.files", `{
   "specVersion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,

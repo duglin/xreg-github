@@ -174,6 +174,21 @@ func DoOne(cmd string, args ...interface{}) error {
 	return nil
 }
 
+func DoZeroOne(cmd string, args ...interface{}) error {
+	count, err := doCount(cmd, args...)
+	if err != nil {
+		return err
+	}
+
+	if count != 0 && count != 1 {
+		query := SubQuery(cmd, args)
+		log.Printf("DoOne:Error DB(%s) didn't change exactly 0/1 rows(%d)",
+			query, count)
+	}
+
+	return nil
+}
+
 func DoOneTwo(cmd string, args ...interface{}) error {
 	count, err := doCount(cmd, args...)
 	if err != nil {
@@ -221,6 +236,7 @@ func DoCount(num int, cmd string, args ...interface{}) error {
 
 func DBExists(name string) bool {
 	log.VPrintf(3, ">Enter: DBExists %q", name)
+	defer log.VPrintf(3, "<Exit: DBExists")
 	db, err := sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/")
 	if err != nil {
 		panic(err)

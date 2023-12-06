@@ -11,8 +11,12 @@ type Version struct {
 	Resource *Resource
 }
 
+func (v *Version) Get(name string) any {
+	return v.Entity.GetPropFromUI(name)
+}
+
 func (v *Version) Set(name string, val any) error {
-	return SetProp(v, name, val)
+	return SetPropFromUI(v, name, val)
 }
 
 func (v *Version) Delete() error {

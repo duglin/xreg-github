@@ -11,12 +11,17 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type EType interface {
+	String() string
+	Type() string
+}
+
 type Entity struct {
 	RegistrySID string
 	DbSID       string // Entity's SID
 	Plural      string
-	UID         string // Entity's UID
-	Props       map[string]any
+	UID         string  // Entity's UID
+	Props       EObject // map[string]EType // any
 
 	// These were added just for convinience and so we can use the same
 	// struct for traversing the SQL results
@@ -25,8 +30,153 @@ type Entity struct {
 	Abstract string
 }
 
-func (e *Entity) Get(name string) any {
-	if name == "#resource" {
+type EntitySetter interface {
+	Get(name string) any
+	Set(name string, val any) error
+}
+
+var _ EType = EArray(nil)
+var _ EType = EBoolean(true)
+var _ EType = EDecimal(1.0)
+var _ EType = EInt(1)
+var _ EType = EMap(nil)
+var _ EType = EObject(nil)
+var _ EType = EString("hi")
+var _ EType = ETime("")
+var _ EType = EUInt(0)
+var _ EType = EURI("")
+var _ EType = EURIReference("")
+var _ EType = EURITemplate("")
+var _ EType = EURL("")
+
+func ToGoType(s string) reflect.Type {
+	switch s {
+	case BOOLEAN:
+		return reflect.TypeOf(true)
+	case DECIMAL:
+		return reflect.TypeOf(float64(1.1))
+	case INT:
+		return reflect.TypeOf(int(1))
+	case TIME, URI, URI_REFERENCE, URI_TEMPLATE, URL:
+		return reflect.TypeOf("")
+	case UINT:
+		return reflect.TypeOf(uint(0))
+	}
+	panic("ToGoType - not supported: " + s)
+}
+
+type EArray []any
+
+func (ea EArray) String() string     { return "ARRAY" }
+func (ea EArray) Type() string       { return ARRAY }
+func StringToEArray(s string) EArray { return EArray{} }
+
+type EBoolean bool
+
+func (eb EBoolean) String() string       { return fmt.Sprintf("%v", bool(eb)) }
+func (eb EBoolean) Type() string         { return BOOLEAN }
+func StringToEBoolean(s string) EBoolean { return s == "true" }
+
+type EDecimal float64
+
+func (ed EDecimal) String() string { return fmt.Sprintf("%v", float64(ed)) }
+func (ed EDecimal) Type() string   { return DECIMAL }
+func StringToEDecimal(s string) EDecimal {
+	ed, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Bad format for decimal %q: %s", s, err))
+	}
+	return EDecimal(ed)
+}
+
+type EInt int
+
+func (ei EInt) String() string { return fmt.Sprintf("%v", int(ei)) }
+func (ei EInt) Type() string   { return INT }
+func StringToEInt(s string) EInt {
+	ei, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Bad format for int %q: %s", s, err))
+	}
+	return EInt(ei)
+}
+
+type EMap map[any]any
+
+func (ei EMap) String() string   { return "MAP" }
+func (ei EMap) Type() string     { return MAP }
+func StringToEMap(s string) EMap { return EMap{} }
+
+type EObject map[string]any
+
+func (ei EObject) String() string      { return "OBJECT" }
+func (ei EObject) Type() string        { return OBJECT }
+func StringToEObject(s string) EObject { return EObject{} }
+
+type EString string
+
+func (es EString) String() string      { return string(es) }
+func (ei EString) Type() string        { return STRING }
+func StringToEString(s string) EString { return EString(s) }
+
+type ETime string
+
+func (et ETime) String() string    { return string(et) }
+func (ei ETime) Type() string      { return TIME }
+func StringToETime(s string) ETime { return ETime(s) }
+
+type EUInt uint
+
+func (eui EUInt) String() string { return fmt.Sprintf("%v", uint(eui)) }
+func (ei EUInt) Type() string    { return UINT }
+func StringToEUInt(s string) EUInt {
+	eui, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Bad format for int %q: %s", s, err))
+	}
+	return EUInt(eui)
+}
+
+type EURI string
+
+func (eu EURI) String() string   { return string(eu) }
+func (ei EURI) Type() string     { return URI }
+func StringToEURI(s string) EURI { return EURI(s) }
+
+type EURIReference string
+
+func (eur EURIReference) String() string           { return string(eur) }
+func (ei EURIReference) Type() string              { return URI_REFERENCE }
+func StringToEURIReference(s string) EURIReference { return EURIReference(s) }
+
+type EURITemplate string
+
+func (eut EURITemplate) String() string          { return string(eut) }
+func (ei EURITemplate) Type() string             { return URI_TEMPLATE }
+func StringToEURITemplate(s string) EURITemplate { return EURITemplate(s) }
+
+type EURL string
+
+func (eu EURL) String() string   { return string(eu) }
+func (ei EURL) Type() string     { return URL }
+func StringToEURL(s string) EURL { return EURL(s) }
+
+func (e *Entity) GetPropFromUI(name string) any {
+	pp, err := PropPathFromUI(name)
+	PanicIf(err != nil, fmt.Sprintf("%s", err))
+	return e.GetPropPP(pp)
+}
+
+func (e *Entity) GetPropFromDB(name string) any {
+	pp, err := PropPathFromDB(name)
+	PanicIf(err != nil, fmt.Sprintf("%s", err))
+	return e.GetPropPP(pp)
+}
+
+func (e *Entity) GetPropPP(pp *PropPath) any {
+	name := pp.DB()
+	if pp.Len() == 1 && pp.Top() == "#resource" {
+		// if name == "#resource" {
 		results, err := Query(`
             SELECT Content
             FROM ResourceContents
@@ -55,9 +205,14 @@ func (e *Entity) Get(name string) any {
 	return val
 }
 
+func (e *Entity) Set(name string, val any) error {
+	fmt.Printf("E: %#v\n", e)
+	panic("NO!")
+}
+
 func RawEntityFromPath(regID string, path string) (*Entity, error) {
-	log.VPrintf(3, ">Enter: LoadEntityFromPath(%s)", path)
-	defer log.VPrintf(3, "<Exit: LoadEntityFromPath")
+	log.VPrintf(3, ">Enter: RawEntityFromPath(%s)", path)
+	defer log.VPrintf(3, "<Exit: RawEntityFromPath")
 
 	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
 	//   0     1      2     3    4     5         6         7     8      9
@@ -146,92 +301,91 @@ func (e *Entity) Refresh() error {
 		val := NotNilString(row[1])
 		propType := NotNilString(row[2])
 
-		if propType == "s" {
-			e.Props[name] = val
-		} else if propType == "b" {
+		switch propType {
+		case ARRAY:
+			Panicf("Not supported: %s", propType)
+		case BOOLEAN:
 			e.Props[name] = (val == "true")
-		} else if propType == "i" {
-			tmpInt, err := strconv.Atoi(val)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing int: %s", val))
-			}
-			e.Props[name] = tmpInt
-		} else if propType == "f" {
+		case DECIMAL:
 			tmpFloat, err := strconv.ParseFloat(val, 64)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing float: %s", val))
 			}
 			e.Props[name] = tmpFloat
-		} else {
-			panic(fmt.Sprintf("bad type: %v", propType))
+		case INT:
+			tmpInt, err := strconv.Atoi(val)
+			if err != nil {
+				panic(fmt.Sprintf("error parsing int: %s", val))
+			}
+			e.Props[name] = tmpInt
+		case MAP:
+			Panicf("Not supported: %s", propType)
+		case OBJECT:
+			Panicf("Not supported: %s", propType)
+		case STRING:
+			e.Props[name] = val
+		case TIME:
+			e.Props[name] = val
+		case UINT:
+			tmpInt, err := strconv.Atoi(val)
+			if err != nil {
+				panic(fmt.Sprintf("error parsing int: %s", val))
+			}
+			e.Props[name] = tmpInt
+		case URI:
+			e.Props[name] = val
+		case URI_REFERENCE:
+			e.Props[name] = val
+		case URI_TEMPLATE:
+			e.Props[name] = val
+		case URL:
+			e.Props[name] = val
+		default:
+			panic(fmt.Sprintf("Unknown type: %s", propType))
 		}
 	}
 	return nil
 }
 
-func (e *Entity) sSet(name string, val any) error {
-	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
-	defer log.VPrintf(3, "<Exit SetProp")
-
-	if e.DbSID == "" {
-		log.Fatalf("DbSID should not be empty")
-	}
-	if e.RegistrySID == "" {
-		log.Fatalf("RegistrySID should not be empty")
-	}
-
-	var err error
-	if val == nil {
-		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
-			e.DbSID, name)
-	} else {
-		propType := ""
-		k := reflect.ValueOf(val).Type().Kind()
-		if k == reflect.Bool {
-			propType = "b" // boolean
-		} else if k == reflect.String {
-			propType = "s" // string
-		} else if k == reflect.Int {
-			propType = "i" // int
-		} else if k == reflect.Float64 {
-			propType = "f" // float
-		} else {
-			panic(fmt.Sprintf("Bad property kind: %s", k.String()))
-		}
-		err = DoOneTwo(`
-            REPLACE INTO Props(
-				RegistrySID, EntitySID, PropName, PropValue, PropType)
-            VALUES( ?,?,?,?,? )`,
-			e.RegistrySID, e.DbSID, name, val, propType)
-	}
-
-	if err != nil {
-		log.Printf("Error updating prop(%s/%v): %s", name, val, err)
-		return fmt.Errorf("Error updating prop(%s/%v): %s", name, val, err)
-	}
-	return nil
-	// return SetProp(e, name, val)
-}
-
-var RegexpPropName = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*$")
-var RegexpLabelName = regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9_.\\-]*$")
+var RegexpPropName = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_./]*$")
+var RegexpMapKey = regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9_.\\-]*$")
 
 // Maybe replace error with a panic?
-func SetProp(entity any, name string, val any) error {
-	log.VPrintf(3, ">Enter: SetProp(%s=%v)", name, val)
-	defer log.VPrintf(3, "<Exit SetProp")
-
-	if name == "labels" {
-		return fmt.Errorf("Invalid property name: labels")
+func SetPropFromDB(entity any, name string, val any) error {
+	pp, err := PropPathFromDB(name)
+	if err != nil {
+		return err
 	}
+	return SetPropPP(entity, pp, val)
+}
 
-	if strings.HasPrefix(name, "labels/") {
-		labelName := name[7:]
-		if !RegexpLabelName.MatchString(labelName) {
-			return fmt.Errorf("Invalid label name: %s", labelName)
+func SetPropFromUI(entity any, name string, val any) error {
+	pp, err := PropPathFromUI(name)
+	if err != nil {
+		return err
+	}
+	return SetPropPP(entity, pp, val)
+}
+
+func SetPropPP(entity any, pp *PropPath, val any) error {
+	name := pp.DB()
+	log.VPrintf(3, ">Enter: SetPropPP(%s=%v)", pp, val)
+	defer log.VPrintf(3, "<Exit SetPropPP")
+
+	if pp.Top() == "labels" {
+		if pp.Len() == 1 {
+			return fmt.Errorf("Invalid property name: %s", pp.Top())
 		}
-	} else if name[0] != '#' && !RegexpPropName.MatchString(name) {
-		return fmt.Errorf("Invalid property name: %s", name)
+		mapName := pp.Top()
+		key := pp.Next().Top()
+		if len(key) == 0 {
+			return fmt.Errorf("Map %q key is empty", mapName)
+		}
+		if !RegexpMapKey.MatchString(key) {
+			return fmt.Errorf("Invalid label key: %s", key)
+		}
+	} else if pp.Top()[0] != '#' && !RegexpPropName.MatchString(pp.Top()) {
+		return fmt.Errorf("Invalid property name: %s", pp.Top())
 	}
 
 	e := (*Entity)(nil)
@@ -254,10 +408,19 @@ func SetProp(entity any, name string, val any) error {
 		log.Fatalf("RegistrySID should not be empty")
 	}
 
-	var err error
+	// Check to see if attribute is defined in the model
+	attrType, err := GetAttributeType(e.RegistrySID, e.Abstract, pp)
+	if err != nil {
+		// log.Printf("Error on getAttr(%s): %s", pp.UI(), err)
+		return err
+	}
+	if attrType == "" && name[0] != '#' {
+		return fmt.Errorf("Can't find attribute %q", pp.UI())
+	}
 
 	// #resource is special and is saved in it's own table
-	if name == "#resource" {
+	if pp.Len() == 1 && pp.Top() == "#resource" {
+		// if name == "#resource" {
 		if IsNil(val) {
 			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
 		} else {
@@ -277,20 +440,23 @@ func SetProp(entity any, name string, val any) error {
 		propType := ""
 		k := reflect.ValueOf(val).Type().Kind()
 		if k == reflect.Bool {
-			propType = "b" // boolean
+			propType = BOOLEAN
 			if val.(bool) {
 				dbVal = "true"
 			} else {
 				dbVal = "false"
 			}
 		} else if k == reflect.String {
-			propType = "s" // string
+			propType = STRING
 		} else if k == reflect.Int {
-			propType = "i" // int
+			propType = INT
 		} else if k == reflect.Float64 {
-			propType = "f" // float
+			propType = DECIMAL
 		} else {
 			panic(fmt.Sprintf("Bad property kind: %s", k.String()))
+		}
+		if attrType != "" {
+			propType = attrType
 		}
 		err = DoOneTwo(`
             REPLACE INTO Props(
@@ -300,37 +466,28 @@ func SetProp(entity any, name string, val any) error {
 	}
 
 	if err != nil {
-		log.Printf("Error updating prop(%s/%v): %s", name, val, err)
-		return fmt.Errorf("Error updating prop(%s/%v): %s", name, val, err)
+		log.Printf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
+		return fmt.Errorf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
 	}
 
-	// Technically this is old, we should just assume everything is in Props
-	field := reflect.ValueOf(entity).Elem().FieldByName(name)
+	field := reflect.ValueOf(e).Elem().FieldByName("Props")
 	if !field.IsValid() {
-		field := reflect.ValueOf(e).Elem().FieldByName("Props")
-		if !field.IsValid() {
-			log.VPrintf(2, "Can't Set unknown field(%s/%s)", e.DbSID, name)
-		} else {
-			if val == nil {
-				if field.IsNil() {
-					return nil
-				}
-				field.SetMapIndex(reflect.ValueOf(name), reflect.Value{})
-			} else {
-				if field.IsNil() {
-					field.Set(reflect.ValueOf(map[string]any{}))
-				}
-				//tmp := fmt.Sprint(val)
-				//field.SetMapIndex(reflect.ValueOf(name), reflect.ValueOf(tmp))
-				field.SetMapIndex(reflect.ValueOf(name), reflect.ValueOf(val))
-			}
+		panic(fmt.Sprintf("Can't find Props(%s)", e.DbSID))
+	}
+
+	if val == nil {
+		if field.IsNil() {
+			return nil // already gone
 		}
+		// Delete map key
+		field.SetMapIndex(reflect.ValueOf(name), reflect.Value{})
 	} else {
-		if val == nil {
-			field.SetZero()
-		} else {
-			field.Set(reflect.ValueOf(val))
+		if field.IsNil() {
+			// Props is nil so create an empty map
+			field.Set(reflect.ValueOf(map[string]any{}))
 		}
+		// Add key/value to the Props map
+		field.SetMapIndex(reflect.ValueOf(name), reflect.ValueOf(val))
 	}
 
 	return nil
@@ -353,7 +510,7 @@ func readNextEntity(results *Result) *Entity {
 				DbSID:       NotNilString(row[3]),
 				Plural:      plural,
 				UID:         uid,
-				Props:       map[string]any{},
+				Props:       EObject{}, // map[string]any{},
 
 				Level:    level,
 				Path:     NotNilString(row[8]),
@@ -373,17 +530,17 @@ func readNextEntity(results *Result) *Entity {
 		propVal := NotNilString(row[6])
 		propType := NotNilString(row[7])
 
-		if propType == "s" {
+		if propType == STRING {
 			entity.Props[propName] = propVal
-		} else if propType == "b" {
+		} else if propType == BOOLEAN {
 			entity.Props[propName] = (propVal == "true")
-		} else if propType == "i" {
+		} else if propType == INT {
 			tmpInt, err := strconv.Atoi(propVal)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing int: %s", propVal))
 			}
 			entity.Props[propName] = tmpInt
-		} else if propType == "f" {
+		} else if propType == DECIMAL {
 			tmpFloat, err := strconv.ParseFloat(propVal, 64)
 			if err != nil {
 				panic(fmt.Sprintf("error parsing float: %s", propVal))
@@ -398,57 +555,118 @@ func readNextEntity(results *Result) *Entity {
 }
 
 type SpecProp struct {
-	name    string                          // prop name
-	levels  string                          // only show for these levels
-	mutable bool                            // user editable
-	fn      func(*Entity, *RequestInfo) any // caller will Marshal the 'any'
+	name           string // prop name
+	daType         string
+	levels         string                          // only show for these levels
+	mutable        bool                            // user editable
+	fn             func(*Entity, *RequestInfo) any // caller will Marshal the 'any'
+	modelAttribute *Attribute
 }
 
 // This allows for us to choose the order and define custom logic per prop
 var OrderedSpecProps = []*SpecProp{
-	{"specVersion", "0", false, nil},
-	{"id", "", false, nil},
-	{"name", "", true, nil},
-	{"epoch", "", false, nil},
-	{"self", "", false, func(e *Entity, info *RequestInfo) any {
-		return info.BaseURL + "/" + e.Path
+	{"specVersion", STRING, "0", false, nil, &Attribute{
+		Name:     "specVersion",
+		Type:     STRING,
+		Required: true,
 	}},
-	{"latest", "3", false, nil},
-	{"latestVersionId", "2", false, nil},
-	{"latestVersionUrl", "2", false, func(e *Entity, info *RequestInfo) any {
-		val := e.Props["latestVersionId"]
+	{"id", STRING, "", false, nil, &Attribute{
+		Name:     "id",
+		Type:     STRING,
+		Required: true,
+	}},
+	{"name", STRING, "", true, nil, &Attribute{
+		Name:     "name",
+		Type:     STRING,
+		Required: true,
+	}},
+	{"epoch", INT, "", false, nil, &Attribute{
+		Name:     "epoch",
+		Type:     INT,
+		Required: true,
+	}},
+	{"self", STRING, "", false, func(e *Entity, info *RequestInfo) any {
+		return info.BaseURL + "/" + e.Path
+	}, &Attribute{
+		Name:     "self",
+		Type:     STRING,
+		Required: true,
+	}},
+	{"latest", BOOLEAN, "3", false, nil, &Attribute{
+		Name:     "latest",
+		Type:     BOOLEAN,
+		Required: true,
+	}},
+	{"latestVersionId", STRING, "2", false, nil, &Attribute{
+		Name:     "latestVersionId",
+		Type:     STRING,
+		Required: true,
+	}},
+	{"latestVersionUrl", URL, "2", false, func(e *Entity, info *RequestInfo) any {
+		val := e.Props[NewPPP("latestVersionId").DB()]
 		if IsNil(val) {
 			return nil
 		}
 		return info.BaseURL + "/" + e.Path + "/versions/" + val.(string)
+	}, &Attribute{
+		Name:     "latestVersionUrl",
+		Type:     URL,
+		Required: true,
 	}},
-	{"description", "", true, nil},
-	{"documentation", "", true, nil},
-	{"labels", "", true, func(e *Entity, info *RequestInfo) any {
+	{"description", STRING, "", true, nil, &Attribute{
+		Name: "description",
+		Type: STRING,
+	}},
+	{"documentation", STRING, "", true, nil, &Attribute{
+		Name: "description",
+		Type: STRING,
+	}},
+	{"labels", MAP, "", true, func(e *Entity, info *RequestInfo) any {
 		var res map[string]string
 
 		for _, key := range SortedKeys(e.Props) {
-			if key[0] > 't' {
+			if key[0] > 't' { // Why t and not l ? can't remember. typo?
 				break
 			}
 
-			if strings.HasPrefix(key, "labels/") {
+			pp, _ := PropPathFromDB(key)
+			if pp.Len() == 2 && pp.Top() == "labels" {
 				val, _ := e.Props[key]
 				if res == nil {
 					res = map[string]string{}
 				}
 				// Convert it to a string per the spec
-				res[key[7:]] = fmt.Sprintf("%v", val)
+				res[pp.Next().Top()] = fmt.Sprintf("%v", val)
 			}
 		}
 		return res
+	}, &Attribute{
+		Name:     "labels",
+		Type:     MAP,
+		KeyType:  STRING,
+		ItemType: STRING,
 	}},
-	{"format", "23", true, nil},
-	{"createdBy", "", false, nil},
-	{"createdOn", "", false, nil},
-	{"modifiedBy", "", false, nil},
-	{"modifiedOn", "", false, nil},
-	{"model", "0", false, func(e *Entity, info *RequestInfo) any {
+	{"format", STRING, "23", true, nil, &Attribute{
+		Name: "format",
+		Type: STRING,
+	}},
+	{"createdBy", STRING, "", false, nil, &Attribute{
+		Name: "createdBy",
+		Type: STRING,
+	}},
+	{"createdOn", TIME, "", false, nil, &Attribute{
+		Name: "createdOn",
+		Type: TIME,
+	}},
+	{"modifiedBy", STRING, "", false, nil, &Attribute{
+		Name: "modifiedBy",
+		Type: STRING,
+	}},
+	{"modifiedOn", TIME, "", false, nil, &Attribute{
+		Name: "modifiedOn",
+		Type: TIME,
+	}},
+	{"model", OBJECT, "0", false, func(e *Entity, info *RequestInfo) any {
 		if info.ShowModel {
 			model := info.Registry.Model
 			if model == nil {
@@ -458,7 +676,7 @@ var OrderedSpecProps = []*SpecProp{
 			return httpModel
 		}
 		return nil
-	}},
+	}, nil},
 }
 
 var SpecProps = map[string]*SpecProp{}
@@ -474,10 +692,43 @@ func init() {
 func (e *Entity) SerializeProps(info *RequestInfo,
 	fn func(*Entity, *RequestInfo, string, any) error) error {
 
+	daObj := e.Materialize(info)
+
+	// fmt.Printf("----\n")
+	// Do spec defined props first, in order
+	for _, prop := range OrderedSpecProps {
+		// fmt.Printf("Trying to serialize: %s\n", prop.name)
+		if val, ok := daObj[prop.name]; ok {
+			// fmt.Printf("  found it\n")
+			if err := fn(e, info, prop.name, val); err != nil {
+				log.Printf("Error serializing %q(%v): %s", prop.name, val, err)
+				return err
+			}
+			delete(daObj, prop.name)
+		}
+	}
+
+	// Now do all other props (extensions) alphabetically
+	for _, key := range SortedKeys(daObj) {
+		val, _ := daObj[key]
+
+		if err := fn(e, info, key, val); err != nil {
+			log.Printf("Error serializing %q(%v): %s", key, val, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *Entity) Materialize(info *RequestInfo) map[string]any {
+	result := map[string]any{}
 	usedProps := map[string]bool{}
 
 	for _, prop := range OrderedSpecProps {
-		usedProps[prop.name] = true
+		pp := NewPPP(prop.name)
+		propName := pp.DB()
+		usedProps[propName] = true
 
 		// Only show props that are for this level
 		ch := rune('0' + byte(e.Level))
@@ -486,38 +737,111 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		}
 
 		// Even if it has a func, if there's a val in Values let it override
-		val, ok := e.Props[prop.name]
+		val, ok := e.Props[propName]
 		if !ok && prop.fn != nil {
 			val = prop.fn(e, info)
 		}
 
 		// Only write it if we have a value
 		if !IsNil(val) {
-			err := fn(e, info, prop.name, val)
-			if err != nil {
-				log.Printf("Error serializing %q(%v): %s", prop.name, val, err)
-				return err
+			// result[pp.UI()] = val
+			result[pp.Top()] = val
+		}
+	}
+
+	for key, val := range e.Props {
+		pp, _ := PropPathFromDB(key)
+		if pp.Top()[0] == '#' { // Internal use only, skip
+			continue
+		}
+
+		// skip processed ones, "labels" is special & we know we did it above
+		if usedProps[key] || pp.Top() == "labels" {
+			continue
+		}
+		/*
+			k, _, _ := strings.Cut(key, ".")
+			if usedProps[k] {
+				continue
 			}
+			usedProps[k] = true
+		*/
+
+		processProp(result, key, val)
+		// result[k] = MaterializeProperty(k)
+	}
+
+	return result
+}
+
+/*
+func (e *Entity) MaterializeProperty(name string) (any, error) {
+	keys := map[string]bool{}
+
+	for key, _ := range e.Props {
+		if !strings.HasPrefix(key, name+string(DB_IN)) && key != name {
+			continue
 		}
 	}
 
-	// Now write the remaining properties (sorted)
-	for _, key := range SortedKeys(e.Props) {
-		// Keys that start with '#' are for internal use only
-		if key[0] == '#' {
-			continue
-		}
-		// "labels/" is special and we know we did it above
-		if usedProps[key] || strings.HasPrefix(key, "labels/") {
-			continue
-		}
-		val, _ := e.Props[key]
-		err := fn(e, info, key, val)
-		if err != nil {
-			log.Printf("Error serializing %q(%v): %s", key, val, err)
-			return err
-		}
+	pp, err := PropPathFromDB(name)
+}
+*/
+
+func processProp(daMap map[string]any, key string, val any) {
+	pp, err := PropPathFromDB(key)
+	PanicIf(err != nil, fmt.Sprint(err))
+
+	name := pp.Top()
+	index := pp.IsIndexed()
+
+	if index < 0 { // Not indexed
+		daMap[name] = processPropValue(daMap[name], pp.Next(), val)
+		return
 	}
 
-	return nil
+	currentVal := daMap[name]
+	if currentVal == nil {
+		currentVal = []any{}
+	}
+
+	daArray := currentVal.([]any)
+	if diff := (1 + index - len(daArray)); diff > 0 { // Resize if needed
+		daArray = append(daArray, make([]any, diff)...)
+	}
+	pp = pp.Next().Next() // Skip current and index
+	daArray[index] = processPropValue(daArray[index], pp, val)
+	daMap[name] = currentVal
+}
+
+func processPropValue(currentVal any, pp *PropPath, val any) any {
+	if pp.Len() == 0 {
+		return val
+	}
+
+	name := pp.Top()
+	index := pp.IsIndexed()
+
+	if index >= 0 {
+		var daArray []any
+		if currentVal == nil {
+			daArray = make([]any, index+1)
+		} else {
+			daArray = currentVal.([]any)
+		}
+		pp = pp.Next().Next()
+		daArray[index] = processPropValue(daArray[index], pp, val)
+		return daArray
+	}
+
+	// Is scalar
+	var daMap map[string]any
+	if currentVal == nil {
+		daMap = map[string]any{}
+	} else {
+		daMap = currentVal.(map[string]any)
+	}
+	pp = pp.Next()
+	daMap[name] = processPropValue(daMap[name], pp, val)
+	return daMap
 }

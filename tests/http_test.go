@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 type HTTPTest struct {
@@ -82,7 +84,7 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 		if testHeaders[k] == true {
 			continue
 		}
-		t.Errorf("Extra header(%s)", k)
+		t.Errorf("%s: Extra header(%s)\nWant: %v", test.Name, k, res.Header)
 	}
 
 	resBody, _ := io.ReadAll(res.Body)
@@ -368,6 +370,7 @@ func TestHTTPGroups(t *testing.T) {
 	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddAttr("format", registry.STRING)
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	xCheckHTTP(t, &HTTPTest{

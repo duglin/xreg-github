@@ -2,6 +2,8 @@ package tests
 
 import (
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 func TestCreateResource(t *testing.T) {
@@ -83,7 +85,10 @@ func TestResourceSet(t *testing.T) {
 	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
-	gm.AddResourceModel("files", "file", 0, true, true, true)
+	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
+	rm.AddAttr("ext1", registry.STRING)
+	rm.AddAttr("ext2", registry.INT)
+
 	d1, _ := reg.AddGroup("dirs", "d1")
 	f1, _ := d1.AddResource("files", "f1", "v1")
 

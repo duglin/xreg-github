@@ -29,6 +29,7 @@ SET GLOBAL sql_mode = 'ANSI_QUOTES' ;
 CREATE TABLE Registries (
     SID     VARCHAR(255) NOT NULL,  # System ID
     UID     VARCHAR(255) NOT NULL,  # User defined
+    Attributes  JSON,               # Until we use the Attributes table
 
     PRIMARY KEY (SID),
     UNIQUE INDEX (UID)
@@ -70,12 +71,12 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
 
     Singular    VARCHAR(64),
     Plural      VARCHAR(64),
+    Attributes  JSON,               # Until we use the Attributes table
 
     Versions    INT NOT NULL,       # For Resources
     VersionId   BOOL NOT NULL,      # For Resources
     Latest      BOOL NOT NULL,      # For Resources
     HasDocument BOOL NOT NULL,      # For Resources
-    Attributes  JSON,               # Until we use the Attributes table
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),
@@ -211,7 +212,7 @@ CREATE TABLE Props (
     EntitySID   VARCHAR(64) NOT NULL,       # Reg,Group,Res,Ver System ID
     PropName    VARCHAR(64) NOT NULL,
     PropValue   VARCHAR(255),
-    PropType    CHAR(1) NOT NULL,           # i(nt), f(loat), b(ool), s(tring)
+    PropType    CHAR(64) NOT NULL,          # string, boolean, int, ...
 
     PRIMARY KEY (EntitySID, PropName),
     INDEX (EntitySID)
@@ -235,8 +236,11 @@ FROM Props AS p
 JOIN Versions AS v ON (p.EntitySID=v.SID)
 JOIN Resources AS r ON (r.SID=v.ResourceSID)
 JOIN Props AS p1 ON (p1.EntitySID=r.SID)
-WHERE p1.PropName='latestVersionId' AND v.UID=p1.PropValue AND
-      p.PropName<>'id';     # Don't overwrite 'id'
+WHERE p1.PropName='latestVersionId,' AND v.UID=p1.PropValue AND
+      p.PropName<>'id,';     # Don't overwrite 'id'
+# NOTE!!! is DB_IN changes then the above 2 lines MUST change
+# TODO move the creation of this into the code then we can dynamically
+# use DB_IN instead of hard-coding the "," in here
 
 CREATE VIEW AllProps AS
 SELECT * FROM Props

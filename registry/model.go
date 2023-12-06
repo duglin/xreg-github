@@ -8,11 +8,6 @@ import (
 	log "github.com/duglin/dlog"
 )
 
-const VERSIONS = 1
-const VERSIONID = true
-const LATEST = true
-const HASDOCUMENT = true
-
 type Model struct {
 	Registry   *Registry              `json:"-"`
 	Schemas    []string               `json:"schemas,omitempty"`
@@ -110,6 +105,22 @@ func (m *Model) DelSchema(schema string) error {
 	return nil
 }
 
+func (m *Model) Save() error {
+	buf, _ := json.Marshal(m.Attributes)
+	attrs := string(buf)
+
+	err := DoZeroOne(`UPDATE Registries SET Attributes=? WHERE SID=?`,
+		attrs, m.Registry.DbSID)
+	if err != nil {
+		log.Printf("Error updating model: %s", err)
+	}
+
+	for _, gm := range m.Groups {
+		gm.Save()
+	}
+	return err
+}
+
 func (m *Model) SetSchemas(schemas []string) error {
 	err := Do(`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
 	if err != nil {
@@ -126,6 +137,44 @@ func (m *Model) SetSchemas(schemas []string) error {
 		}
 	}
 	return nil
+}
+
+func (m *Model) AddAttr(name, daType string) *Attribute {
+	return m.AddAttribute(&Attribute{
+		Name: name,
+		Type: daType,
+	})
+}
+
+func (m *Model) AddAttrMap(name string, itemType string) *Attribute {
+	return m.AddAttribute(&Attribute{
+		Name:     name,
+		Type:     MAP,
+		ItemType: itemType,
+	})
+}
+
+func (m *Model) AddAttribute(attr *Attribute) *Attribute {
+	if attr == nil {
+		return nil
+	}
+
+	if m.Attributes == nil {
+		m.Attributes = map[string]*Attribute{}
+	}
+
+	m.Attributes[attr.Name] = attr
+	m.Save()
+	return attr
+}
+
+func (m *Model) DelAttribute(name string) {
+	if m.Attributes == nil {
+		return
+	}
+
+	delete(m.Attributes, name)
+	m.Save()
 }
 
 func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, error) {
@@ -179,8 +228,27 @@ func LoadModel(reg *Registry) *Model {
 		Groups:   map[string]*GroupModel{},
 	}
 
+	// Load Registry Attributes
+	results, err := Query(`SELECT Attributes FROM Registries WHERE SID=?`,
+		reg.DbSID)
+	defer results.Close()
+	if err != nil {
+		log.Printf("Error loading registries(%s): %s", reg.UID, err)
+		return nil
+	}
+	row := results.NextRow()
+	if row == nil {
+		log.Printf("Can't find registry: %s", reg.UID)
+		return nil
+	}
+
+	if row[0] != nil {
+		json.Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
+
+	}
+
 	// Load Schemas
-	results, err := Query(`
+	results, err = Query(`
         SELECT RegistrySID, "Schema" FROM "Schemas"
         WHERE RegistrySID=?
         ORDER BY "Schema" ASC`, reg.DbSID)
@@ -198,8 +266,8 @@ func LoadModel(reg *Registry) *Model {
 	// Load Groups & Resources
 	results, err = Query(`
         SELECT
-            SID, RegistrySID, ParentSID, Plural, Singular, Versions,
-            VersionId, Latest, HasDocument
+            SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
+			Versions, VersionId, Latest, HasDocument
         FROM ModelEntities
         WHERE RegistrySID=?
         ORDER BY ParentSID ASC`, reg.DbSID)
@@ -211,12 +279,18 @@ func LoadModel(reg *Registry) *Model {
 	}
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
+		attrs := (map[string]*Attribute)(nil)
+		if row[5] != nil {
+			json.Unmarshal([]byte(NotNilString(row[5])), &attrs)
+		}
+
 		if *row[2] == nil { // ParentSID nil -> new Group
 			g := &GroupModel{ // Plural
-				SID:      NotNilString(row[0]), // SID
-				Registry: reg,
-				Plural:   NotNilString(row[3]), // Plural
-				Singular: NotNilString(row[4]), // Singular
+				SID:        NotNilString(row[0]), // SID
+				Registry:   reg,
+				Plural:     NotNilString(row[3]), // Plural
+				Singular:   NotNilString(row[4]), // Singular
+				Attributes: attrs,
 
 				Resources: map[string]*ResourceModel{},
 			}
@@ -233,10 +307,11 @@ func LoadModel(reg *Registry) *Model {
 					GroupModel:  g,
 					Plural:      NotNilString(row[3]),
 					Singular:    NotNilString(row[4]),
-					Versions:    NotNilIntDef(row[5], VERSIONS),
-					VersionId:   NotNilBoolDef(row[6], VERSIONID),
-					Latest:      NotNilBoolDef(row[7], LATEST),
-					HasDocument: NotNilBoolDef(row[8], HASDOCUMENT),
+					Attributes:  attrs,
+					Versions:    NotNilIntDef(row[6], VERSIONS),
+					VersionId:   NotNilBoolDef(row[7], VERSIONID),
+					Latest:      NotNilBoolDef(row[8], LATEST),
+					HasDocument: NotNilBoolDef(row[9], HASDOCUMENT),
 				}
 
 				g.Resources[r.Plural] = r
@@ -345,21 +420,68 @@ func (gm *GroupModel) Delete() error {
 func (gm *GroupModel) Save() error {
 	// Just updates this GroupModel, not any Resources
 	// DO NOT use this to insert a new one
+
+	buf, _ := json.Marshal(gm.Attributes)
+	attrs := string(buf)
+
 	err := DoZeroTwo(`
         INSERT INTO ModelEntities(
             SID, RegistrySID,
-			ParentSID, Plural, Singular)
-        VALUES(?,?,?,?,?)
+			ParentSID, Plural, Singular, Attributes)
+        VALUES(?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
-		    ParentSID=?,Plural=?,Singular=?
+		    ParentSID=?,Plural=?,Singular=?,Attributes=?
 		`,
 		gm.SID, gm.Registry.DbSID,
-		nil, gm.Plural, gm.Singular,
-		nil, gm.Plural, gm.Singular)
+		nil, gm.Plural, gm.Singular, attrs,
+		nil, gm.Plural, gm.Singular, attrs)
 	if err != nil {
 		log.Printf("Error updating groupModel(%s): %s", gm.Plural, err)
 	}
+
+	for _, rm := range gm.Resources {
+		rm.Save()
+	}
+
 	return err
+}
+
+func (gm *GroupModel) AddAttr(name, daType string) *Attribute {
+	return gm.AddAttribute(&Attribute{
+		Name: name,
+		Type: daType,
+	})
+}
+
+func (gm *GroupModel) AddAttrMap(name string, itemType string) *Attribute {
+	return gm.AddAttribute(&Attribute{
+		Name:     name,
+		Type:     MAP,
+		ItemType: itemType,
+	})
+}
+
+func (gm *GroupModel) AddAttribute(attr *Attribute) *Attribute {
+	if attr == nil {
+		return nil
+	}
+
+	if gm.Attributes == nil {
+		gm.Attributes = map[string]*Attribute{}
+	}
+
+	gm.Attributes[attr.Name] = attr
+	gm.Save()
+	return attr
+}
+
+func (gm *GroupModel) DelAttribute(name string) {
+	if gm.Attributes == nil {
+		return
+	}
+
+	delete(gm.Attributes, name)
+	gm.Save()
 }
 
 func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool, hasDocument bool) (*ResourceModel, error) {
@@ -454,4 +576,241 @@ func (rm *ResourceModel) Save() error {
 		return err
 	}
 	return err
+}
+
+func (rm *ResourceModel) AddAttr(name, daType string) *Attribute {
+	return rm.AddAttribute(&Attribute{
+		Name: name,
+		Type: daType,
+	})
+}
+
+func (rm *ResourceModel) AddAttrMap(name string, itemType string) *Attribute {
+	return rm.AddAttribute(&Attribute{
+		Name:     name,
+		Type:     MAP,
+		ItemType: itemType,
+	})
+}
+
+func (rm *ResourceModel) AddAttribute(attr *Attribute) *Attribute {
+	if attr == nil {
+		return nil
+	}
+
+	if rm.Attributes == nil {
+		rm.Attributes = map[string]*Attribute{}
+	}
+
+	rm.Attributes[attr.Name] = attr
+	rm.Save()
+	return attr
+}
+
+func (rm *ResourceModel) DelAttribute(name string) {
+	if rm.Attributes == nil {
+		return
+	}
+
+	delete(rm.Attributes, name)
+	rm.Save()
+}
+
+func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
+	reg, err := FindRegistryBySID(rSID)
+	if reg == nil {
+		log.Fatalf("Can't find registry(%s): %s", rSID, err)
+	}
+
+	var attrs map[string]*Attribute
+	level := '0'
+
+	paths := strings.Split(abstractEntity, string(DB_IN))
+	if len(paths) == 0 || paths[0] == "" {
+		attrs = reg.Model.Attributes
+	} else {
+		level = rune('0' + len(paths))
+		gm := reg.Model.Groups[paths[0]]
+		if gm == nil {
+			panic(fmt.Sprintf("Can't find Group %q", paths[0]))
+		}
+
+		if len(paths) == 1 {
+			attrs = gm.Attributes
+		} else {
+			rm := gm.Resources[paths[1]]
+			if rm == nil {
+				panic(fmt.Sprintf("Can't find Resource %q", paths[1]))
+			}
+			attrs = rm.Attributes
+		}
+	}
+
+	// Now copy and add the xReg defined attributes
+	res := map[string]*Attribute{}
+	for key, value := range attrs {
+		res[key] = value
+	}
+
+	for _, specProp := range OrderedSpecProps {
+		if specProp.levels == "" || strings.ContainsRune(specProp.levels, level) {
+			if specProp.modelAttribute != nil {
+				res[specProp.name] = specProp.modelAttribute
+			}
+		}
+	}
+
+	return res
+}
+
+func IsScalar(daType string) bool {
+	return daType == BOOLEAN || daType == DECIMAL || daType == INT ||
+		daType == STRING || daType == TIME || daType == UINT || daType == URI ||
+		daType == URI_REFERENCE || daType == URI_TEMPLATE || daType == URL
+}
+
+func (a *Attribute) IsScalar() bool {
+	return IsScalar(a.Type)
+}
+
+func (a *Attribute) AddAttr(name, daType string) *Attribute {
+	return a.AddAttribute(&Attribute{
+		Name: name,
+		Type: daType,
+	})
+}
+
+func (a *Attribute) AddAttribute(attr *Attribute) *Attribute {
+	a.Attributes[attr.Name] = attr
+	return attr
+}
+
+func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error) {
+	if pp.Len() == 0 {
+		panic("PropPath can't be empty for GetAttributeType")
+	}
+
+	attrs := GetAttributes(rSID, abstractEntity)
+	if attrs == nil {
+		panic("Attributes can't be nil for: %s" + abstractEntity)
+	}
+
+	for {
+		// We're on an object
+		if pp.Len() == 0 {
+			return OBJECT, nil
+		}
+		top := pp.Top()
+		attr := attrs[top]
+		if attr == nil {
+			return "", nil
+		}
+
+		// Just a scalar, return it
+		if attr.IsScalar() {
+			if pp.Len() != 1 {
+				panic(fmt.Sprintf("Trying to traverse into a scalar %q: %s",
+					attr.Name, top))
+			}
+			return attr.Type, nil
+		}
+
+		// Is non-scalar (obj, map, array)
+		if attr.Type == OBJECT {
+			attrs = attr.Attributes
+			pp = pp.Next()
+			continue
+		}
+
+		if attr.Type == ARRAY {
+		}
+
+		if attr.Type == MAP {
+			pp = pp.Next() // Next is the key, if present
+			if pp.Len() == 0 {
+				return MAP, nil // No key so just return the map itself
+			}
+			if IsScalar(attr.ItemType) {
+				if pp.Len() != 1 {
+					return "", fmt.Errorf("Traversing into a map/scalar "+
+						"%q: %s", attr.Name, pp.UI())
+				}
+				return attr.ItemType, nil
+			}
+			// Skip key
+			pp = pp.Next()
+			if attr.ItemType == OBJECT {
+				attrs = attr.Attributes
+				continue
+			}
+
+		}
+
+		panic(fmt.Sprintf("Can't deal with type: %s", attr.Type))
+	}
+}
+
+func unused__GetAttributeValue(rsid, abstractEntity, name string) any {
+	if name == "" {
+		panic("Name can't be empty for GetAttributeValue")
+	}
+
+	attrs := GetAttributes(rsid, abstractEntity)
+	if attrs == nil {
+		panic("Attributes can't be nil for: %s" + abstractEntity)
+	}
+
+	parts := strings.Split(name, string(DB_IN))
+	for {
+		// We're on an object
+		if len(parts) == 0 || parts[0] == "" {
+			return nil
+		}
+		attr := attrs[parts[0]]
+		if attr == nil {
+			return ""
+		}
+
+		// Just a scalar, return it
+		if attr.IsScalar() {
+			if len(parts) != 1 {
+				panic(fmt.Sprintf("Trying to traverse into a scalar %q: %s",
+					attr.Name, name))
+			}
+			return attr.Type
+		}
+
+		// Is non-scalar (obj, map, array)
+		if attr.Type == OBJECT {
+			attrs = attr.Attributes
+			parts = parts[1:]
+			continue
+		}
+
+		if attr.Type == ARRAY {
+		}
+
+		if attr.Type == MAP {
+			parts = parts[1:] // Now parts[0] == key, if present
+			if len(parts) == 0 {
+				return MAP // No key so just return the map itself
+			}
+			if IsScalar(attr.ItemType) {
+				if len(parts) != 1 {
+					panic(fmt.Sprintf("Traversing into a map/scalar "+
+						"%q: %s", attr.Name, name))
+				}
+				return attr.ItemType
+			}
+			// Skip key
+			parts = parts[1:]
+			if attr.ItemType == OBJECT {
+				attrs = attr.Attributes
+				continue
+			}
+
+		}
+
+		panic(fmt.Sprintf("Can't deal with type: %s", attr.Type))
+	}
 }
