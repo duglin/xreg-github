@@ -36,7 +36,7 @@ func (r *Resource) Set(name string, val any) error {
 			log.Printf("Shouldn't be setting .latestVersionId directly-1")
 			panic("can't set .latestVersionId directly")
 		}
-		return SetPropFromUI(r, name[1:], val)
+		return r.Entity.SetFromUI(name[1:], val)
 	}
 
 	if name == "id" || name == "latestVersionId" || name == "latestVersionUrl" {
@@ -44,7 +44,7 @@ func (r *Resource) Set(name string, val any) error {
 			log.Printf("Shouldn't be setting .latestVersionId directly-2")
 			panic("can't set .latestVersionId directly")
 		}
-		return SetPropFromUI(r, name, val)
+		return r.Entity.SetFromUI(name, val)
 	}
 
 	v, err := r.GetLatest()
@@ -90,7 +90,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 			name := NotNilString(row[1])
 			val := NotNilString(row[2])
 			propType := NotNilString(row[3])
-			SetField(v, name, &val, propType)
+			v.Entity.SetPropFromString(name, &val, propType)
 		}
 	}
 
@@ -122,7 +122,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	}
 
 	// TODO: do both of these in one transaction to make it atomic
-	SetPropFromUI(r, "latestVersionId", newLatest.UID)
+	r.Entity.SetFromUI("latestVersionId", newLatest.UID)
 	return newLatest.Set("latest", true)
 }
 

@@ -94,7 +94,7 @@ func (reg *Registry) Get(name string) any {
 }
 
 func (reg *Registry) Set(name string, val any) error {
-	return SetPropFromUI(reg, name, val)
+	return reg.Entity.SetFromUI(name, val)
 }
 
 func (reg *Registry) Delete() error {
@@ -172,7 +172,7 @@ func FindRegistry(id string) (*Registry, error) {
 			name := NotNilString(row[1])
 			val := NotNilString(row[2])
 			propType := NotNilString(row[3])
-			SetField(reg, name, &val, propType)
+			reg.Entity.SetPropFromString(name, &val, propType)
 		}
 	}
 
@@ -231,7 +231,7 @@ func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
 			name := NotNilString(row[1])
 			val := NotNilString(row[2])
 			propType := NotNilString(row[3])
-			SetField(g, name, &val, propType)
+			g.SetPropFromString(name, &val, propType)
 		}
 	}
 

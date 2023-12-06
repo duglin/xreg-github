@@ -1126,7 +1126,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 			}
 		}
 
-		err = SetPropFromUI(entity, k, v)
+		err = entity.SetFromUI(k, v)
 		if err != nil {
 			return err
 		}
@@ -1134,7 +1134,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 	if hadLabel {
 		for k, _ := range oldLabels {
-			err := SetPropFromDB(entity, k, nil)
+			err := entity.SetFromDB(k, nil)
 			if err != nil {
 				return err
 			}
@@ -1144,7 +1144,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 	// Delete any remaining properties from the Entity, if not patching
 	if !ed.Patch {
 		for _, v := range toDeleteEntityProps {
-			err := SetPropFromDB(entity, v, nil)
+			err := entity.SetFromDB(v, nil)
 			if err != nil {
 				return err
 			}
@@ -1156,7 +1156,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		epoch++
 	}
 
-	return SetPropFromUI(entity, "epoch", epoch)
+	return entity.SetFromUI("epoch", epoch)
 }
 
 func HTTPPUTModel(info *RequestInfo) error {

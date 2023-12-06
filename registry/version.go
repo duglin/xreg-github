@@ -16,7 +16,7 @@ func (v *Version) Get(name string) any {
 }
 
 func (v *Version) Set(name string, val any) error {
-	return SetPropFromUI(v, name, val)
+	return v.Entity.SetFromUI(name, val)
 }
 
 func (v *Version) Delete() error {

@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
-	"strconv"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -150,53 +149,6 @@ func SortedKeys(m interface{}) []string {
 	}
 	sort.Strings(keys)
 	return keys
-}
-
-func SetField(res any, name string, value *string, propType string) {
-	log.VPrintf(3, ">Enter: SetField(%T, %s=%s(%s))",
-		res, name, *value, propType)
-	defer log.VPrintf(3, "<Exit: SetField")
-
-	var val any
-	var err error
-
-	field := reflect.ValueOf(res).Elem().FieldByName("Props")
-	if !field.IsValid() {
-		panic(fmt.Sprintf("Can't find Props: %#v", res))
-	}
-	if field.IsNil() {
-		// Since we're deleting the key anyway we can just return
-		if value == nil {
-			return
-		}
-		field.Set(reflect.ValueOf(map[string]any{}))
-	}
-
-	if value == nil {
-		// delete any existing key from map
-		field.SetMapIndex(reflect.ValueOf(name), reflect.Value{})
-		return
-	}
-
-	if propType == STRING {
-		val = *value
-	} else if propType == BOOLEAN {
-		val = (*value == "1")
-	} else if propType == INTEGER {
-		val, err = strconv.Atoi(*value)
-		if err != nil {
-			panic(fmt.Sprintf("error parsing int: %s", val))
-		}
-	} else if propType == DECIMAL {
-		val, err = strconv.ParseFloat(*value, 64)
-		if err != nil {
-			panic(fmt.Sprintf("error parsing float: %s", val))
-		}
-	} else {
-		panic(fmt.Sprintf("bad type: %v", propType))
-	}
-
-	field.SetMapIndex(reflect.ValueOf(name), reflect.ValueOf(val))
 }
 
 type JSONData struct {

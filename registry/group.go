@@ -16,7 +16,7 @@ func (g *Group) Get(name string) any {
 }
 
 func (g *Group) Set(name string, val any) error {
-	return SetPropFromUI(g, name, val)
+	return g.Entity.SetFromUI(name, val)
 }
 
 func (g *Group) FindResource(rType string, id string) (*Resource, error) {
@@ -59,7 +59,7 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 			name := NotNilString(row[1])
 			val := NotNilString(row[2])
 			propType := NotNilString(row[3])
-			SetField(r, name, &val, propType)
+			r.Entity.SetPropFromString(name, &val, propType)
 		}
 	}
 

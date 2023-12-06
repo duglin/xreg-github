@@ -11,17 +11,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type EType interface {
-	String() string
-	Type() string
-}
-
 type Entity struct {
 	RegistrySID string
 	DbSID       string // Entity's SID
 	Plural      string
-	UID         string  // Entity's UID
-	Props       EObject // map[string]EType // any
+	UID         string // Entity's UID
+	Props       map[string]any
 
 	// These were added just for convinience and so we can use the same
 	// struct for traversing the SQL results
@@ -34,20 +29,6 @@ type EntitySetter interface {
 	Get(name string) any
 	Set(name string, val any) error
 }
-
-var _ EType = EArray(nil)
-var _ EType = EBoolean(true)
-var _ EType = EDecimal(1.0)
-var _ EType = EInt(1)
-var _ EType = EMap(nil)
-var _ EType = EObject(nil)
-var _ EType = EString("hi")
-var _ EType = ETime("")
-var _ EType = EUInt(0)
-var _ EType = EURI("")
-var _ EType = EURIReference("")
-var _ EType = EURITemplate("")
-var _ EType = EURL("")
 
 func GoToOurType(val any) string {
 	switch reflect.ValueOf(val).Kind() {
@@ -84,102 +65,6 @@ func ToGoType(s string) reflect.Type {
 	}
 	panic("ToGoType - not supported: " + s)
 }
-
-type EArray []any
-
-func (ea EArray) String() string     { return "ARRAY" }
-func (ea EArray) Type() string       { return ARRAY }
-func StringToEArray(s string) EArray { return EArray{} }
-
-type EBoolean bool
-
-func (eb EBoolean) String() string       { return fmt.Sprintf("%v", bool(eb)) }
-func (eb EBoolean) Type() string         { return BOOLEAN }
-func StringToEBoolean(s string) EBoolean { return s == "true" }
-
-type EDecimal float64
-
-func (ed EDecimal) String() string { return fmt.Sprintf("%v", float64(ed)) }
-func (ed EDecimal) Type() string   { return DECIMAL }
-func StringToEDecimal(s string) EDecimal {
-	ed, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		panic(fmt.Sprintf("Bad format for decimal %q: %s", s, err))
-	}
-	return EDecimal(ed)
-}
-
-type EInt int
-
-func (ei EInt) String() string { return fmt.Sprintf("%v", int(ei)) }
-func (ei EInt) Type() string   { return INTEGER }
-func StringToEInt(s string) EInt {
-	ei, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		panic(fmt.Sprintf("Bad format for int %q: %s", s, err))
-	}
-	return EInt(ei)
-}
-
-type EMap map[any]any
-
-func (ei EMap) String() string   { return "MAP" }
-func (ei EMap) Type() string     { return MAP }
-func StringToEMap(s string) EMap { return EMap{} }
-
-type EObject map[string]any
-
-func (ei EObject) String() string      { return "OBJECT" }
-func (ei EObject) Type() string        { return OBJECT }
-func StringToEObject(s string) EObject { return EObject{} }
-
-type EString string
-
-func (es EString) String() string      { return string(es) }
-func (ei EString) Type() string        { return STRING }
-func StringToEString(s string) EString { return EString(s) }
-
-type ETime string
-
-func (et ETime) String() string    { return string(et) }
-func (ei ETime) Type() string      { return TIME }
-func StringToETime(s string) ETime { return ETime(s) }
-
-type EUInt uint
-
-func (eui EUInt) String() string { return fmt.Sprintf("%v", uint(eui)) }
-func (ei EUInt) Type() string    { return UINTEGER }
-func StringToEUInt(s string) EUInt {
-	eui, err := strconv.ParseUint(s, 10, 64)
-	if err != nil {
-		panic(fmt.Sprintf("Bad format for int %q: %s", s, err))
-	}
-	return EUInt(eui)
-}
-
-type EURI string
-
-func (eu EURI) String() string   { return string(eu) }
-func (ei EURI) Type() string     { return URI }
-func StringToEURI(s string) EURI { return EURI(s) }
-
-type EURIReference string
-
-func (eur EURIReference) String() string           { return string(eur) }
-func (ei EURIReference) Type() string              { return URI_REFERENCE }
-func StringToEURIReference(s string) EURIReference { return EURIReference(s) }
-
-type EURITemplate string
-
-func (eut EURITemplate) String() string          { return string(eut) }
-func (ei EURITemplate) Type() string             { return URI_TEMPLATE }
-func StringToEURITemplate(s string) EURITemplate { return EURITemplate(s) }
-
-type EURL string
-
-func (eu EURL) String() string   { return string(eu) }
-func (ei EURL) Type() string     { return URL }
-func StringToEURL(s string) EURL { return EURL(s) }
 
 func (e *Entity) GetPropFromUI(name string) any {
 	pp, err := PropPathFromUI(name)
@@ -314,6 +199,7 @@ func (e *Entity) Refresh() error {
 		return fmt.Errorf("Error refreshing props(%s): %s", e.DbSID, err)
 	}
 
+	// Erase all old props first
 	e.Props = map[string]any{}
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
@@ -321,48 +207,7 @@ func (e *Entity) Refresh() error {
 		val := NotNilString(row[1])
 		propType := NotNilString(row[2])
 
-		switch propType {
-		case ARRAY:
-			Panicf("Not supported: %s", propType)
-		case BOOLEAN:
-			e.Props[name] = (val == "1")
-		case DECIMAL:
-			tmpFloat, err := strconv.ParseFloat(val, 64)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing float: %s", val))
-			}
-			e.Props[name] = tmpFloat
-		case INTEGER:
-			tmpInt, err := strconv.Atoi(val)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing int: %s", val))
-			}
-			e.Props[name] = tmpInt
-		case MAP:
-			// Panicf("Not supported: %s", propType)
-		case OBJECT:
-			Panicf("Not supported: %s", propType)
-		case STRING:
-			e.Props[name] = val
-		case TIME:
-			e.Props[name] = val
-		case UINTEGER:
-			tmpInt, err := strconv.Atoi(val)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing int: %s", val))
-			}
-			e.Props[name] = tmpInt
-		case URI:
-			e.Props[name] = val
-		case URI_REFERENCE:
-			e.Props[name] = val
-		case URI_TEMPLATE:
-			e.Props[name] = val
-		case URL:
-			e.Props[name] = val
-		default:
-			panic(fmt.Sprintf("Unknown type: %s", propType))
-		}
+		e.SetPropFromString(name, &val, propType)
 	}
 	return nil
 }
@@ -371,26 +216,26 @@ var RegexpPropName = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_./]*$")
 var RegexpMapKey = regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9_.\\-]*$")
 
 // Maybe replace error with a panic?
-func SetPropFromDB(entity any, name string, val any) error {
+func (e *Entity) SetFromDB(name string, val any) error {
 	pp, err := PropPathFromDB(name)
 	if err != nil {
 		return err
 	}
-	return SetPropPP(entity, pp, val)
+	return e.SetPP(pp, val)
 }
 
-func SetPropFromUI(entity any, name string, val any) error {
+func (e *Entity) SetFromUI(name string, val any) error {
 	pp, err := PropPathFromUI(name)
 	if err != nil {
 		return err
 	}
-	return SetPropPP(entity, pp, val)
+	return e.SetPP(pp, val)
 }
 
-func SetPropPP(entity any, pp *PropPath, val any) error {
+func (e *Entity) SetPP(pp *PropPath, val any) error {
 	name := pp.DB()
-	log.VPrintf(3, ">Enter: SetPropPP(%s=%v)", pp, val)
-	defer log.VPrintf(3, "<Exit SetPropPP")
+	log.VPrintf(3, ">Enter: SetPP(%s=%v)", pp, val)
+	defer log.VPrintf(3, "<Exit SetPP")
 
 	if pp.Top() == "labels" {
 		if pp.Len() == 1 {
@@ -408,19 +253,6 @@ func SetPropPP(entity any, pp *PropPath, val any) error {
 		return fmt.Errorf("Invalid property name: %s", pp.Top())
 	}
 
-	e := (*Entity)(nil)
-	if reflect.TypeOf(entity) == reflect.TypeOf((*Entity)(nil)) {
-		e = entity.(*Entity)
-	} else {
-		eField := reflect.ValueOf(entity).Elem().FieldByName("Entity")
-		if !eField.IsValid() {
-			panic(fmt.Sprintf("Passing a non-entity to SetProp: %#v", entity))
-			// e = entity.(*Entity)
-		} else {
-			e = eField.Addr().Interface().(*Entity)
-		}
-	}
-
 	if e.DbSID == "" {
 		log.Fatalf("DbSID should not be empty")
 	}
@@ -428,7 +260,7 @@ func SetPropPP(entity any, pp *PropPath, val any) error {
 		log.Fatalf("RegistrySID should not be empty")
 	}
 
-	// Check to see if attribute is defined in the model
+	// Make sure the attribute is defined in the model
 	attrType, err := GetAttributeType(e.RegistrySID, e.Abstract, pp)
 	if err != nil {
 		// log.Printf("Error on getAttr(%s): %s", pp.UI(), err)
@@ -440,7 +272,6 @@ func SetPropPP(entity any, pp *PropPath, val any) error {
 
 	// #resource is special and is saved in it's own table
 	if pp.Len() == 1 && pp.Top() == "#resource" {
-		// if name == "#resource" {
 		if IsNil(val) {
 			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
 		} else {
@@ -484,21 +315,45 @@ func SetPropPP(entity any, pp *PropPath, val any) error {
 	}
 
 	if val == nil {
-		if field.IsNil() {
-			return nil // already gone
-		}
-		// Delete map key
-		field.SetMapIndex(reflect.ValueOf(name), reflect.Value{})
+		delete(e.Props, name)
 	} else {
-		if field.IsNil() {
-			// Props is nil so create an empty map
-			field.Set(reflect.ValueOf(map[string]any{}))
+		if e.Props == nil {
+			e.Props = map[string]any{}
 		}
-		// Add key/value to the Props map
-		field.SetMapIndex(reflect.ValueOf(name), reflect.ValueOf(val))
+		e.Props[name] = val
 	}
 
 	return nil
+}
+
+func (e *Entity) SetPropFromString(name string, val *string, propType string) {
+	if val == nil {
+		delete(e.Props, name)
+	}
+	if e.Props == nil {
+		e.Props = map[string]any{}
+	}
+
+	if propType == STRING || propType == URI || propType == URI_REFERENCE ||
+		propType == URI_TEMPLATE || propType == URL {
+		e.Props[name] = *val
+	} else if propType == BOOLEAN {
+		e.Props[name] = (*val == "1")
+	} else if propType == INTEGER || propType == UINTEGER {
+		tmpInt, err := strconv.Atoi(*val)
+		if err != nil {
+			panic(fmt.Sprintf("error parsing int: %s", *val))
+		}
+		e.Props[name] = tmpInt
+	} else if propType == DECIMAL {
+		tmpFloat, err := strconv.ParseFloat(*val, 64)
+		if err != nil {
+			panic(fmt.Sprintf("error parsing float: %s", *val))
+		}
+		e.Props[name] = tmpFloat
+	} else {
+		panic(fmt.Sprintf("bad type(%s): %v", propType, name))
+	}
 }
 
 func readNextEntity(results *Result) *Entity {
@@ -518,7 +373,7 @@ func readNextEntity(results *Result) *Entity {
 				DbSID:       NotNilString(row[3]),
 				Plural:      plural,
 				UID:         uid,
-				Props:       EObject{}, // map[string]any{},
+				Props:       map[string]any{},
 
 				Level:    level,
 				Path:     NotNilString(row[8]),
@@ -538,25 +393,7 @@ func readNextEntity(results *Result) *Entity {
 		propVal := NotNilString(row[6])
 		propType := NotNilString(row[7])
 
-		if propType == STRING {
-			entity.Props[propName] = propVal
-		} else if propType == BOOLEAN {
-			entity.Props[propName] = propVal == "1"
-		} else if propType == INTEGER {
-			tmpInt, err := strconv.Atoi(propVal)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing int: %s", propVal))
-			}
-			entity.Props[propName] = tmpInt
-		} else if propType == DECIMAL {
-			tmpFloat, err := strconv.ParseFloat(propVal, 64)
-			if err != nil {
-				panic(fmt.Sprintf("error parsing float: %s", propVal))
-			}
-			entity.Props[propName] = tmpFloat
-		} else {
-			panic(fmt.Sprintf("bad type(%s): %v", propType, propType))
-		}
+		entity.SetPropFromString(propName, &propVal, propType)
 	}
 
 	return entity
