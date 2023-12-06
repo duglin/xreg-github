@@ -22,6 +22,10 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttr("regInt3", registry.INTEGER)
 	reg.Model.AddAttr("regString1", registry.STRING)
 	reg.Model.AddAttr("regString2", registry.STRING)
+	reg.Model.AddAttr("regUint1", registry.UINTEGER)
+	reg.Model.AddAttr("regUint2", registry.UINTEGER)
+	reg.Model.AddAttr("regTime1", registry.TIME)
+
 	reg.Model.AddAttr("regAnyInt", registry.ANY)
 	reg.Model.AddAttr("regAnyStr", registry.ANY)
 	reg.Model.AddAttr("regAnyObj", registry.ANY)
@@ -48,6 +52,16 @@ func TestBasicTypes(t *testing.T) {
 			"objInt": &registry.Attribute{
 				Name: "objInt",
 				Type: registry.INTEGER,
+			},
+			"objObj": &registry.Attribute{
+				Name: "objObj",
+				Type: registry.OBJECT,
+				Attributes: map[string]*registry.Attribute{
+					"ooint": &registry.Attribute{
+						Name: "ooint",
+						Type: registry.INTEGER,
+					},
+				},
 			},
 			"objStr": &registry.Attribute{
 				Name: "objStr",
@@ -94,7 +108,7 @@ func TestBasicTypes(t *testing.T) {
 	type Prop struct {
 		Name  string
 		Value any
-		Fails bool
+		Pass  bool
 	}
 
 	type Test struct {
@@ -104,77 +118,88 @@ func TestBasicTypes(t *testing.T) {
 
 	tests := []Test{
 		Test{reg, []Prop{
-			{"regString1", "str1", false},
-			{"regString2", "", false},
-			{"regInt1", 123, false},
-			{"regInt2", -123, false},
-			{"regInt3", 0, false},
-			{"regBool1", true, false},
-			{"regBool2", false, false},
-			{"regDec1", 123.5, false},
-			{"regDec2", -123.5, false},
-			{"regDec3", 124.0, false},
-			{"regDec4", 0.0, false},
-			{"regMapInt.k1", 123, false},
-			{"regMapInt.k2", 234, false},
-			{"regMapString.k1", "v1", false},
-			{"regMapString.k2", "v2", false},
-			{"regObj.objBool", true, false},
-			{"regObj.objInt", 345, false},
-			{"regObj.objStr", "in1", false},
-			{"regAnyInt", "AnyInt", false},
-			{"regAnyStr", 234.345, false},
-			{"regAnyObj.int", 345, false},
-			{"regAnyObj.str", "substr", false},
-			{"regAnyObj2.str", "substr", true}, // unknown attr
-			{"unknown_str", "error", true},     // unknown attr
-			{"unknown_int", 123, true},         // unknown attr
-			{"regString1", 123, true},          // bad type
-			{"regInt1", "123", true},           // bad type
-			{"regBool1", "123", true},          // bad type
-			{"regDec1", "123", true},           // bad type
-			{"regMapInt", "123", true},         // bad type
-			{"regMapInt.k1", "123", true},      // bad type
-			{"regMapString.k1", 123, true},     // bad type
+			{"regString1", "str1", true},
+			{"regString2", "", true},
+			{"regInt1", 123, true},
+			{"regInt2", -123, true},
+			{"regInt3", 0, true},
+			{"regBool1", true, true},
+			{"regBool2", false, true},
+			{"regDec1", 123.5, true},
+			{"regDec2", -123.5, true},
+			{"regDec3", 124.0, true},
+			{"regDec4", 0.0, true},
+			{"regMapInt.k1", 123, true},
+			{"regMapInt.k2", 234, true},
+			{"regMapString.k1", "v1", true},
+			{"regMapString.k2", "v2", true},
+			{"regUint1", 0, true},
+			{"regUint2", 333, true},
+			{"regTime1", "2006-01-02T15:04:05Z", true},
+
+			{"regObj.objBool", true, true},
+			{"regObj.objInt", 345, true},
+			{"regObj.objObj.ooint", 999, true},
+			{"regObj.objStr", "in1", true},
+			{"regAnyInt", "AnyInt", true},
+			{"regAnyStr", 234.345, true},
+			{"regAnyObj.int", 345, true},
+			{"regAnyObj.str", "substr", true},
+
+			{"regAnyObj.nestobj.int", 123, true},
+
+			{"regAnyObj2.str", "substr", false}, // unknown attr
+			{"unknown_str", "error", false},     // unknown attr
+			{"unknown_int", 123, false},         // unknown attr
+			{"regString1", 123, false},          // bad type
+			{"regInt1", "123", false},           // bad type
+			{"regBool1", "123", false},          // bad type
+			{"regDec1", "123", false},           // bad type
+			{"regMapInt", "123", false},         // bad type
+			{"regMapInt.k1", "123", false},      // bad type
+			{"regMapString.k1", 123, false},     // bad type
+			{"epoch", -123, false},              // bad uint
+			{"regUint1", -1, false},             // bad uint
+			{"regTime", "not a time", false},    // bad date format
 		}},
 		Test{dir, []Prop{
-			{"dirString1", "str2", false},
-			{"dirString2", "", false},
-			{"dirInt1", 234, false},
-			{"dirInt2", -234, false},
-			{"dirInt3", 0, false},
-			{"dirBool1", true, false},
-			{"dirBool2", false, false},
-			{"dirDec1", 234.5, false},
-			{"dirDec2", -234.5, false},
-			{"dirDec3", 235.0, false},
-			{"dirDec4", 0.0, false},
+			{"dirString1", "str2", true},
+			{"dirString2", "", true},
+			{"dirInt1", 234, true},
+			{"dirInt2", -234, true},
+			{"dirInt3", 0, true},
+			{"dirBool1", true, true},
+			{"dirBool2", false, true},
+			{"dirDec1", 234.5, true},
+			{"dirDec2", -234.5, true},
+			{"dirDec3", 235.0, true},
+			{"dirDec4", 0.0, true},
 		}},
 		Test{file, []Prop{
-			{"fileString1", "str3", false},
-			{"fileString2", "", false},
-			{"fileInt1", 345, false},
-			{"fileInt2", -345, false},
-			{"fileInt3", 0, false},
-			{"fileBool1", true, false},
-			{"fileBool2", false, false},
-			{"fileDec1", 345.5, false},
-			{"fileDec2", -345.5, false},
-			{"fileDec3", 346.0, false},
-			{"fileDec4", 0.0, false},
+			{"fileString1", "str3", true},
+			{"fileString2", "", true},
+			{"fileInt1", 345, true},
+			{"fileInt2", -345, true},
+			{"fileInt3", 0, true},
+			{"fileBool1", true, true},
+			{"fileBool2", false, true},
+			{"fileDec1", 345.5, true},
+			{"fileDec2", -345.5, true},
+			{"fileDec3", 346.0, true},
+			{"fileDec4", 0.0, true},
 		}},
 		Test{ver, []Prop{
-			{"fileString1", "str4", false},
-			{"fileString2", "", false},
-			{"fileInt1", 456, false},
-			{"fileInt2", -456, false},
-			{"fileInt3", 0, false},
-			{"fileBool1", true, false},
-			{"fileBool2", false, false},
-			{"fileDec1", 456.5, false},
-			{"fileDec2", -456.5, false},
-			{"fileDec3", 457.0, false},
-			{"fileDec4", 0.0, false},
+			{"fileString1", "str4", true},
+			{"fileString2", "", true},
+			{"fileInt1", 456, true},
+			{"fileInt2", -456, true},
+			{"fileInt3", 0, true},
+			{"fileBool1", true, true},
+			{"fileBool2", false, true},
+			{"fileDec1", 456.5, true},
+			{"fileDec2", -456.5, true},
+			{"fileDec3", 457.0, true},
+			{"fileDec4", 0.0, true},
 		}},
 	}
 
@@ -190,9 +215,14 @@ func TestBasicTypes(t *testing.T) {
 		for _, prop := range test.Props {
 			// Note that for Resources this will set them on the latest Version
 			err := setter.Set(prop.Name, prop.Value)
-			if err != nil && !prop.Fails {
+			if err != nil && prop.Pass {
 				t.Errorf("Error calling set (%q=%v): %s", prop.Name,
 					prop.Value, err)
+				return // stop fast
+			}
+			if err == nil && !prop.Pass {
+				t.Errorf("Setting (%q=%v) was supposed to fail", prop.Name,
+					prop.Value)
 				return // stop fast
 			}
 		}
@@ -201,7 +231,7 @@ func TestBasicTypes(t *testing.T) {
 		entity.Refresh()                // and then re-get props from DB
 
 		for _, prop := range test.Props {
-			if prop.Fails {
+			if !prop.Pass {
 				continue
 			}
 			got := setter.Get(prop.Name) // test.Entity.Get(prop.Name)
@@ -221,6 +251,9 @@ func TestBasicTypes(t *testing.T) {
   "regAnyInt": "AnyInt",
   "regAnyObj": {
     "int": 345,
+    "nestobj": {
+      "int": 123
+    },
     "str": "substr"
   },
   "regAnyStr": 234.345,
@@ -244,10 +277,16 @@ func TestBasicTypes(t *testing.T) {
   "regObj": {
     "objBool": true,
     "objInt": 345,
+    "objObj": {
+      "ooint": 999
+    },
     "objStr": "in1"
   },
   "regString1": "str1",
   "regString2": "",
+  "regTime1": "2006-01-02T15:04:05Z",
+  "regUint1": 0,
+  "regUint2": 333,
 
   "dirs": {
     "d1": {

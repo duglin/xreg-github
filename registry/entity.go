@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/duglin/dlog"
 	_ "github.com/go-sql-driver/mysql"
@@ -270,6 +271,12 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 		return fmt.Errorf("Can't find attribute %q", pp.UI())
 	}
 
+	if !IsNil(val) {
+		if err = ValidatePropValue(val, attrType); err != nil {
+			return err
+		}
+	}
+
 	// #resource is special and is saved in it's own table
 	if pp.Len() == 1 && pp.Top() == "#resource" {
 		if IsNil(val) {
@@ -287,11 +294,6 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
 			e.DbSID, name)
 	} else {
-		if attrType != ANY && GoToOurType(val) != attrType {
-			return fmt.Errorf("Expecting %q type for %q, got %q instead",
-				attrType, name, GoToOurType(val))
-		}
-
 		propType := attrType
 		if attrType == ANY {
 			propType = GoToOurType(val)
@@ -307,11 +309,6 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	if err != nil {
 		log.Printf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
 		return fmt.Errorf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
-	}
-
-	field := reflect.ValueOf(e).Elem().FieldByName("Props")
-	if !field.IsValid() {
-		panic(fmt.Sprintf("Can't find Props(%s)", e.DbSID))
 	}
 
 	if val == nil {
@@ -335,7 +332,7 @@ func (e *Entity) SetPropFromString(name string, val *string, propType string) {
 	}
 
 	if propType == STRING || propType == URI || propType == URI_REFERENCE ||
-		propType == URI_TEMPLATE || propType == URL {
+		propType == URI_TEMPLATE || propType == URL || propType == TIME {
 		e.Props[name] = *val
 	} else if propType == BOOLEAN {
 		e.Props[name] = (*val == "1")
@@ -354,6 +351,51 @@ func (e *Entity) SetPropFromString(name string, val *string, propType string) {
 	} else {
 		panic(fmt.Sprintf("bad type(%s): %v", propType, name))
 	}
+}
+
+func ValidatePropValue(val any, attrType string) error {
+	vKind := reflect.ValueOf(val).Kind()
+
+	switch attrType {
+	case ANY:
+		return nil
+	case BOOLEAN:
+		if vKind != reflect.Bool {
+			return fmt.Errorf(`"%v" should be a boolean`, val)
+		}
+	case DECIMAL:
+		if vKind != reflect.Int && vKind != reflect.Float64 {
+			return fmt.Errorf(`"%v" should be a decimal`, val)
+		}
+	case INTEGER:
+		if vKind != reflect.Int {
+			return fmt.Errorf(`"%v" should be an integer`, val)
+		}
+	case UINTEGER:
+		if vKind != reflect.Int {
+			return fmt.Errorf(`"%v" should be an integer`, val)
+		}
+		i := val.(int)
+		if i < 0 {
+			return fmt.Errorf(`"%v" should be an uinteger`, val)
+		}
+	case STRING, URI, URI_REFERENCE, URI_TEMPLATE, URL: // cheat
+		if vKind != reflect.String {
+			return fmt.Errorf(`"%v" should be a string`, val)
+		}
+	case TIME:
+		if vKind != reflect.String {
+			return fmt.Errorf(`"%v" should be a timestamp`, val)
+		}
+		str := val.(string)
+		_, err := time.Parse(time.RFC3339, str)
+		if err != nil {
+			return fmt.Errorf("Malformed timestamp %q: %s", str, err)
+		}
+	default:
+		return fmt.Errorf("Unsupported type: %s", attrType)
+	}
+	return nil
 }
 
 func readNextEntity(results *Result) *Entity {
@@ -425,9 +467,9 @@ var OrderedSpecProps = []*SpecProp{
 		Type:     STRING,
 		Required: true,
 	}},
-	{"epoch", INTEGER, "", false, nil, &Attribute{
+	{"epoch", UINTEGER, "", false, nil, &Attribute{
 		Name:     "epoch",
-		Type:     INTEGER,
+		Type:     UINTEGER,
 		Required: true,
 	}},
 	{"self", STRING, "", false, func(e *Entity, info *RequestInfo) any {
