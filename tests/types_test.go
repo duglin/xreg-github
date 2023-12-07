@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -26,19 +27,34 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttr("regUint2", registry.UINTEGER)
 	reg.Model.AddAttr("regTime1", registry.TIME)
 
+	reg.Model.AddAttr("regAnyArrayInt", registry.ANY)
+	reg.Model.AddAttr("regAnyArrayObj", registry.ANY)
 	reg.Model.AddAttr("regAnyInt", registry.ANY)
 	reg.Model.AddAttr("regAnyStr", registry.ANY)
 	reg.Model.AddAttr("regAnyObj", registry.ANY)
+
+	reg.Model.AddAttribute(&registry.Attribute{
+		Name:     "regArrayInt",
+		Type:     registry.ARRAY,
+		ItemType: registry.INTEGER,
+	})
+
+	/* DUG TODO finish this
+	reg.Model.AddAttribute(&registry.Attribute{
+		Name:     "regArrayArrayInt",
+		Type:     registry.ARRAY,
+		ItemType: registry.Array,
+	})
+	*/
+
 	reg.Model.AddAttribute(&registry.Attribute{
 		Name:     "regMapInt",
 		Type:     registry.MAP,
-		KeyType:  registry.STRING,
 		ItemType: registry.INTEGER,
 	})
 	reg.Model.AddAttribute(&registry.Attribute{
 		Name:     "regMapString",
 		Type:     registry.MAP,
-		KeyType:  registry.STRING,
 		ItemType: registry.STRING,
 	})
 	reg.Model.AddAttribute(&registry.Attribute{
@@ -118,49 +134,57 @@ func TestBasicTypes(t *testing.T) {
 
 	tests := []Test{
 		Test{reg, []Prop{
-			{"regString1", "str1", true},
-			{"regString2", "", true},
-			{"regInt1", 123, true},
-			{"regInt2", -123, true},
-			{"regInt3", 0, true},
+			{"regArrayInt[0]", 1, true},
+			{"regArrayInt[2]", 3, true},
+			{"regArrayInt[1]", 2, true},
 			{"regBool1", true, true},
 			{"regBool2", false, true},
 			{"regDec1", 123.5, true},
 			{"regDec2", -123.5, true},
 			{"regDec3", 124.0, true},
 			{"regDec4", 0.0, true},
+			{"regInt1", 123, true},
+			{"regInt2", -123, true},
+			{"regInt3", 0, true},
 			{"regMapInt.k1", 123, true},
 			{"regMapInt.k2", 234, true},
 			{"regMapString.k1", "v1", true},
 			{"regMapString.k2", "v2", true},
+			{"regString1", "str1", true},
+			{"regString2", "", true},
+			{"regTime1", "2006-01-02T15:04:05Z", true},
 			{"regUint1", 0, true},
 			{"regUint2", 333, true},
-			{"regTime1", "2006-01-02T15:04:05Z", true},
 
+			{"regAnyArrayInt[2]", 5, true},
+			{"regAnyArrayObj[2].int1", 55, true},
+			{"regAnyArrayObj[2].myobj.int2", 555, true},
+			{"regAnyArrayObj[0]", -5, true},
+			{"regAnyInt", 123, true},
+			{"regAnyObj.int", 345, true},
+			{"regAnyObj.str", "substr", true},
+			{"regAnyStr", "mystr", true},
 			{"regObj.objBool", true, true},
 			{"regObj.objInt", 345, true},
 			{"regObj.objObj.ooint", 999, true},
 			{"regObj.objStr", "in1", true},
-			{"regAnyInt", "AnyInt", true},
-			{"regAnyStr", 234.345, true},
-			{"regAnyObj.int", 345, true},
-			{"regAnyObj.str", "substr", true},
 
 			{"regAnyObj.nestobj.int", 123, true},
 
+			{"epoch", -123, false},              // bad uint
 			{"regAnyObj2.str", "substr", false}, // unknown attr
-			{"unknown_str", "error", false},     // unknown attr
-			{"unknown_int", 123, false},         // unknown attr
-			{"regString1", 123, false},          // bad type
-			{"regInt1", "123", false},           // bad type
+			{"regArrayInt[2]", "abc", false},    // bad type
 			{"regBool1", "123", false},          // bad type
 			{"regDec1", "123", false},           // bad type
+			{"regInt1", "123", false},           // bad type
 			{"regMapInt", "123", false},         // bad type
 			{"regMapInt.k1", "123", false},      // bad type
 			{"regMapString.k1", 123, false},     // bad type
-			{"epoch", -123, false},              // bad uint
-			{"regUint1", -1, false},             // bad uint
+			{"regString1", 123, false},          // bad type
 			{"regTime", "not a time", false},    // bad date format
+			{"regUint1", -1, false},             // bad uint
+			{"unknown_int", 123, false},         // unknown attr
+			{"unknown_str", "error", false},     // unknown attr
 		}},
 		Test{dir, []Prop{
 			{"dirString1", "str2", true},
@@ -248,7 +272,22 @@ func TestBasicTypes(t *testing.T) {
   "id": "TestBasicTypes",
   "epoch": 1,
   "self": "http://localhost:8181/",
-  "regAnyInt": "AnyInt",
+  "regAnyArrayInt": [
+    null,
+    null,
+    5
+  ],
+  "regAnyArrayObj": [
+    -5,
+    null,
+    {
+      "int1": 55,
+      "myobj": {
+        "int2": 555
+      }
+    }
+  ],
+  "regAnyInt": 123,
   "regAnyObj": {
     "int": 345,
     "nestobj": {
@@ -256,7 +295,12 @@ func TestBasicTypes(t *testing.T) {
     },
     "str": "substr"
   },
-  "regAnyStr": 234.345,
+  "regAnyStr": "mystr",
+  "regArrayInt": [
+    1,
+    2,
+    3
+  ],
   "regBool1": true,
   "regBool2": false,
   "regDec1": 123.5,
@@ -355,4 +399,95 @@ func TestBasicTypes(t *testing.T) {
   "dirsUrl": "http://localhost:8181/dirs"
 }
 `)
+}
+
+func TestWildcardBoolTypes(t *testing.T) {
+	reg := NewRegistry("TestWildcardBoolTypes")
+	defer PassDeleteReg(t, reg)
+
+	reg.Model.AddAttr("*", registry.BOOLEAN)
+	reg.Model.Save()
+
+	err := reg.Set("bogus", "foo")
+	xCheck(t, err.Error() == `"foo" should be a boolean`,
+		fmt.Sprintf("bogus=foo: %s", err))
+
+	err = reg.Set("ext1", true)
+	xCheck(t, err == nil, fmt.Sprintf("set ext1: %s", err))
+	reg.Refresh()
+	val := reg.Get("ext1")
+	xCheck(t, val == true, fmt.Sprintf("get ext1: %v", val))
+
+	err = reg.Set("ext1", false)
+	xCheck(t, err == nil, fmt.Sprintf("set ext1-2: %s", err))
+	reg.Refresh()
+	xCheck(t, reg.Get("ext1") == false, fmt.Sprintf("get ext1-2: %v", val))
+}
+
+func TestWildcardAnyTypes(t *testing.T) {
+	reg := NewRegistry("TestWildcardAnyTypes")
+	defer PassDeleteReg(t, reg)
+
+	reg.Model.AddAttr("*", registry.ANY)
+	reg.Model.Save()
+
+	// Make sure we can set the same attr to two different types
+	err := reg.Set("ext1", 5.5)
+	xCheck(t, err == nil, fmt.Sprintf("set ext1: %s", err))
+	reg.Refresh()
+	val := reg.Get("ext1")
+	xCheck(t, val == 5.5, fmt.Sprintf("get ext1: %v", val))
+
+	err = reg.Set("ext1", "foo")
+	xCheck(t, err == nil, fmt.Sprintf("set ext2: %s", err))
+	reg.Refresh()
+	val = reg.Get("ext1")
+	xCheck(t, val == "foo", fmt.Sprintf("get ext2: %v", val))
+
+	// Make sure we add one of a different type
+	err = reg.Set("ext2", true)
+	xCheck(t, err == nil, fmt.Sprintf("set ext3 %s", err))
+	reg.Refresh()
+	val = reg.Get("ext2")
+	xCheck(t, val == true, fmt.Sprintf("get ext3: %v", val))
+}
+
+func TestWildcard2LayersTypes(t *testing.T) {
+	reg := NewRegistry("TestWildcardAnyTypes")
+	defer PassDeleteReg(t, reg)
+
+	reg.Model.AddAttribute(&registry.Attribute{
+		Name: "obj",
+		Type: registry.OBJECT,
+		Attributes: map[string]*registry.Attribute{
+			"map": {
+				Name:     "map",
+				Type:     registry.MAP,
+				ItemType: registry.INTEGER,
+			},
+			"*": {
+				Name: "*",
+				Type: registry.ANY,
+			},
+		},
+	})
+	reg.Model.Save()
+
+	err := reg.Set("obj.map.k1", 5)
+	xCheck(t, err == nil, fmt.Sprintf("set foo.k1: %s", err))
+	reg.Refresh()
+	val := reg.Get("obj.map.k1")
+	xCheck(t, val == 5, fmt.Sprintf("get foo.k1: %v", val))
+
+	err = reg.Set("obj.map.foo.k1.k2", 5)
+	xCheck(t, err.Error() == `Traversing into scalar "foo": obj.map.foo.k1.k2`,
+		fmt.Sprintf("set obj.map.foo.k1.k2: %s", err))
+
+	err = reg.Set("obj.myany.foo.k1.k2", 5)
+	reg.Refresh()
+	val = reg.Get("obj.myany.foo.k1.k2")
+	xCheck(t, val == 5, fmt.Sprintf("set obj.myany.foo.k1.k2: %v", val))
+	val = reg.Get("obj.myany.bogus.k1.k2")
+	xCheck(t, val == nil, fmt.Sprintf("set obj.myany.bogus.k1.k2: %v", val))
+
 }

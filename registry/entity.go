@@ -530,7 +530,6 @@ var OrderedSpecProps = []*SpecProp{
 	}, &Attribute{
 		Name:     "labels",
 		Type:     MAP,
-		KeyType:  STRING,
 		ItemType: STRING,
 	}},
 	{"format", STRING, "23", true, nil, &Attribute{
@@ -689,7 +688,7 @@ func processProp(daMap map[string]any, key string, val any) {
 
 	currentVal := daMap[name]
 	if currentVal == nil {
-		currentVal = []any{}
+		currentVal = make([]any, index+1)
 	}
 
 	daArray := currentVal.([]any)
@@ -698,7 +697,7 @@ func processProp(daMap map[string]any, key string, val any) {
 	}
 	pp = pp.Next().Next() // Skip current and index
 	daArray[index] = processPropValue(daArray[index], pp, val)
-	daMap[name] = currentVal
+	daMap[name] = daArray
 }
 
 func processPropValue(currentVal any, pp *PropPath, val any) any {
@@ -715,6 +714,9 @@ func processPropValue(currentVal any, pp *PropPath, val any) any {
 			daArray = make([]any, index+1)
 		} else {
 			daArray = currentVal.([]any)
+			if diff := (1 + index - len(daArray)); diff > 0 { // Resize ?
+				daArray = append(daArray, make([]any, diff)...)
+			}
 		}
 		pp = pp.Next().Next()
 		daArray[index] = processPropValue(daArray[index], pp, val)

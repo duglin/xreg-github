@@ -96,7 +96,7 @@ func TestSetDots(t *testing.T) {
 
 	// Nesting under labels should fail
 	err = dir.Set(labels.P("xxx").P("yyy").UI(), "xy")
-	xJSONCheck(t, err, "Traversing into a map/scalar \"labels\": xxx.yyy")
+	xJSONCheck(t, err, "Traversing into scalar \"xxx\": labels.xxx.yyy")
 
 	// dots are ok as tag names
 	err = dir.Set(labels.P("abc.def").UI(), "ABC")

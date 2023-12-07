@@ -209,8 +209,8 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		reg.Model.AddAttribute(&registry.Attribute{Name: "str1",
 			Type: registry.STRING})
 		reg.Model.AddAttribute(&registry.Attribute{Name: "map1",
-			Type:    registry.MAP,
-			KeyType: registry.STRING, ItemType: registry.STRING})
+			Type:     registry.MAP,
+			ItemType: registry.STRING})
 
 		reg.Set("bool1", true)
 		reg.Set("int1", 1)

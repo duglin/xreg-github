@@ -23,7 +23,6 @@ type Attribute struct {
 	Strict      bool                  `json:"strict,omitempty"`
 	Required    bool                  `json:"required,omitempty"`
 	Attributes  map[string]*Attribute `json:"attributes,omitempty"`
-	KeyType     string                `json:"keyType,omitempty"`
 	ItemType    string                `json:"itemType,omitempty"`
 	IfValue     map[string]*IfValue   `json:"ifValue,omitempty"` // Value
 }
@@ -695,6 +694,8 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		return ANY, nil
 	}
 
+	savePP := pp.Clone()
+
 	attrs := GetAttributes(rSID, abstractEntity)
 	if attrs == nil {
 		panic("Attributes can't be nil for: %s" + abstractEntity)
@@ -708,13 +709,16 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		top := pp.Top()
 		attr := attrs[top]
 		if attr == nil {
-			return "", nil
+			attr = attrs["*"]
+			if attr == nil {
+				return "", nil
+			}
 		}
 
 		// Just a scalar, return it
 		if attr.IsScalar() {
 			if pp.Len() != 1 {
-				panic(fmt.Sprintf("Trying to traverse into a scalar %q: %s",
+				panic(fmt.Sprintf("Trying to traverse into scalar %q: %s",
 					attr.Name, top))
 			}
 			return attr.Type, nil
@@ -732,17 +736,20 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		}
 
 		if attr.Type == ARRAY {
-		}
-
-		if attr.Type == MAP {
-			pp = pp.Next() // Next is the key, if present
+			saveTop := pp.Top()
+			pp = pp.Next() // Next is the index of the array
 			if pp.Len() == 0 {
-				return MAP, nil // No key so just return the map itself
+				return ARRAY, nil // No index so just return the array itself
+			}
+			if pp.Parts[0].Index < 0 {
+				return "", fmt.Errorf("Array index for %q isn't an integer: %v",
+					saveTop, pp.Top())
 			}
 			if IsScalar(attr.ItemType) {
 				if pp.Len() != 1 {
-					return "", fmt.Errorf("Traversing into a map/scalar "+
-						"%q: %s", attr.Name, pp.UI())
+					return "", fmt.Errorf("Traversing into scalar "+
+						"\"%s[%d]\": %s", saveTop, pp.Parts[0].Index,
+						savePP.UI())
 				}
 				return attr.ItemType, nil
 			}
@@ -752,7 +759,26 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 				attrs = attr.Attributes
 				continue
 			}
+		}
 
+		if attr.Type == MAP {
+			pp = pp.Next() // Next is the key, if present
+			if pp.Len() == 0 {
+				return MAP, nil // No key so just return the map itself
+			}
+			if IsScalar(attr.ItemType) {
+				if pp.Len() != 1 {
+					return "", fmt.Errorf("Traversing into scalar "+
+						"%q: %s", pp.Top(), savePP.UI())
+				}
+				return attr.ItemType, nil
+			}
+			// Skip key
+			pp = pp.Next()
+			if attr.ItemType == OBJECT {
+				attrs = attr.Attributes
+				continue
+			}
 		}
 
 		panic(fmt.Sprintf("Can't deal with type: %s", attr.Type))
@@ -783,7 +809,7 @@ func unused__GetAttributeValue(rsid, abstractEntity, name string) any {
 		// Just a scalar, return it
 		if attr.IsScalar() {
 			if len(parts) != 1 {
-				panic(fmt.Sprintf("Trying to traverse into a scalar %q: %s",
+				panic(fmt.Sprintf("Trying to traverse into scalar %q: %s",
 					attr.Name, name))
 			}
 			return attr.Type
@@ -806,8 +832,8 @@ func unused__GetAttributeValue(rsid, abstractEntity, name string) any {
 			}
 			if IsScalar(attr.ItemType) {
 				if len(parts) != 1 {
-					panic(fmt.Sprintf("Traversing into a map/scalar "+
-						"%q: %s", attr.Name, name))
+					panic(fmt.Sprintf("Traversing into scalar "+
+						"%q: %s", parts[0], name))
 				}
 				return attr.ItemType
 			}

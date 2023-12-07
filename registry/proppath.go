@@ -294,6 +294,12 @@ func (pp *PropPath) Prop(prop string) *PropPath {
 	return newPP
 }
 
+func (pp *PropPath) Clone() *PropPath {
+	newPP := NewPP()
+	newPP.Parts = pp.Parts[:]
+	return newPP
+}
+
 func (pp *PropPath) Append(addPP *PropPath) *PropPath {
 	newPP := NewPP()
 	newPP.Parts = append(pp.Parts[:], addPP.Parts[:]...)
