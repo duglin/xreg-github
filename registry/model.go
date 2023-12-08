@@ -16,15 +16,21 @@ type Model struct {
 }
 
 type Attribute struct {
-	Name        string                `json:"name,omitempty"`
-	Type        string                `json:"type,omitempty"`
-	Description string                `json:"description,omitempty"`
-	Enum        []string              `json:"enum,omitempty"`
-	Strict      bool                  `json:"strict,omitempty"`
-	Required    bool                  `json:"required,omitempty"`
-	Attributes  map[string]*Attribute `json:"attributes,omitempty"`
-	ItemType    string                `json:"itemType,omitempty"`
-	IfValue     map[string]*IfValue   `json:"ifValue,omitempty"` // Value
+	Name        string   `json:"name,omitempty"`
+	Type        string   `json:"type,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Enum        []string `json:"enum,omitempty"`
+	Strict      bool     `json:"strict,omitempty"`
+	Required    bool     `json:"required,omitempty"`
+
+	Item    *Item               `json:"item,omitempty"`
+	IfValue map[string]*IfValue `json:"ifValue,omitempty"` // Value
+}
+
+type Item struct {
+	Attributes map[string]*Attribute `json:"attributes,omitempty"` //attrName
+	Type       string                `json:"type,omitempty"`
+	Item       *Item                 `json:"item,omitempty"`
 }
 
 type IfValue struct {
@@ -147,9 +153,11 @@ func (m *Model) AddAttr(name, daType string) *Attribute {
 
 func (m *Model) AddAttrMap(name string, itemType string) *Attribute {
 	return m.AddAttribute(&Attribute{
-		Name:     name,
-		Type:     MAP,
-		ItemType: itemType,
+		Name: name,
+		Type: MAP,
+		Item: &Item{
+			Type: itemType,
+		},
 	})
 }
 
@@ -454,9 +462,11 @@ func (gm *GroupModel) AddAttr(name, daType string) *Attribute {
 
 func (gm *GroupModel) AddAttrMap(name string, itemType string) *Attribute {
 	return gm.AddAttribute(&Attribute{
-		Name:     name,
-		Type:     MAP,
-		ItemType: itemType,
+		Name: name,
+		Type: MAP,
+		Item: &Item{
+			Type: itemType,
+		},
 	})
 }
 
@@ -586,9 +596,11 @@ func (rm *ResourceModel) AddAttr(name, daType string) *Attribute {
 
 func (rm *ResourceModel) AddAttrMap(name string, itemType string) *Attribute {
 	return rm.AddAttribute(&Attribute{
-		Name:     name,
-		Type:     MAP,
-		ItemType: itemType,
+		Name: name,
+		Type: MAP,
+		Item: &Item{
+			Type: itemType,
+		},
 	})
 }
 
@@ -681,7 +693,7 @@ func (a *Attribute) AddAttr(name, daType string) *Attribute {
 }
 
 func (a *Attribute) AddAttribute(attr *Attribute) *Attribute {
-	a.Attributes[attr.Name] = attr
+	a.Item.Attributes[attr.Name] = attr
 	return attr
 }
 
@@ -708,6 +720,7 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		}
 		top := pp.Top()
 		attr := attrs[top]
+
 		if attr == nil {
 			attr = attrs["*"]
 			if attr == nil {
@@ -729,36 +742,47 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		}
 
 		// Is non-scalar (obj, map, array)
-		if attr.Type == OBJECT {
-			attrs = attr.Attributes
+		if attr.Type == OBJECT || attr.Type == "" {
+			attrs = attr.Item.Attributes
+			attr = nil // let loop grab next one
 			pp = pp.Next()
 			continue
 		}
 
 		if attr.Type == ARRAY {
 			saveTop := pp.Top()
-			pp = pp.Next() // Next is the index of the array
-			if pp.Len() == 0 {
-				return ARRAY, nil // No index so just return the array itself
+			for {
+				pp = pp.Next() // Next is the index of the array
+				if pp.Len() == 0 {
+					return ARRAY, nil // No index so just return the array itself
+				}
+				if pp.Parts[0].Index < 0 {
+					return "", fmt.Errorf("Array index for %q isn't an integer: %v",
+						saveTop, pp.Top())
+				}
+				if attr.Item.Type != ARRAY {
+					break
+				}
+				attr = &Attribute{
+					Type: attr.Item.Type,
+					Item: attr.Item.Item,
+				}
 			}
-			if pp.Parts[0].Index < 0 {
-				return "", fmt.Errorf("Array index for %q isn't an integer: %v",
-					saveTop, pp.Top())
-			}
-			if IsScalar(attr.ItemType) {
+
+			if IsScalar(attr.Item.Type) {
 				if pp.Len() != 1 {
 					return "", fmt.Errorf("Traversing into scalar "+
 						"\"%s[%d]\": %s", saveTop, pp.Parts[0].Index,
 						savePP.UI())
 				}
-				return attr.ItemType, nil
+				return attr.Item.Type, nil
 			}
 			// Skip key
 			pp = pp.Next()
-			if attr.ItemType == OBJECT {
-				attrs = attr.Attributes
-				continue
+			if attr.Item.Type == OBJECT || attr.Type == "" {
+				attrs = attr.Item.Attributes
 			}
+			continue
 		}
 
 		if attr.Type == MAP {
@@ -766,22 +790,23 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 			if pp.Len() == 0 {
 				return MAP, nil // No key so just return the map itself
 			}
-			if IsScalar(attr.ItemType) {
+			if IsScalar(attr.Item.Type) {
 				if pp.Len() != 1 {
 					return "", fmt.Errorf("Traversing into scalar "+
 						"%q: %s", pp.Top(), savePP.UI())
 				}
-				return attr.ItemType, nil
+				return attr.Item.Type, nil
 			}
 			// Skip key
 			pp = pp.Next()
-			if attr.ItemType == OBJECT {
-				attrs = attr.Attributes
-				continue
+			if attr.Item.Type == OBJECT || attr.Item.Type == "" {
+				attrs = attr.Item.Attributes
 			}
+			attr = nil // let loop grab the next one
+			continue
 		}
 
-		panic(fmt.Sprintf("Can't deal with type: %s", attr.Type))
+		panic(fmt.Sprintf("Can't deal with type: %s\npp:%v", attr.Type, savePP.UI()))
 	}
 }
 
@@ -816,8 +841,8 @@ func unused__GetAttributeValue(rsid, abstractEntity, name string) any {
 		}
 
 		// Is non-scalar (obj, map, array)
-		if attr.Type == OBJECT {
-			attrs = attr.Attributes
+		if attr.Type == OBJECT || attr.Type == "" {
+			attrs = attr.Item.Attributes
 			parts = parts[1:]
 			continue
 		}
@@ -830,17 +855,17 @@ func unused__GetAttributeValue(rsid, abstractEntity, name string) any {
 			if len(parts) == 0 {
 				return MAP // No key so just return the map itself
 			}
-			if IsScalar(attr.ItemType) {
+			if IsScalar(attr.Item.Type) {
 				if len(parts) != 1 {
 					panic(fmt.Sprintf("Traversing into scalar "+
 						"%q: %s", parts[0], name))
 				}
-				return attr.ItemType
+				return attr.Item.Type
 			}
 			// Skip key
 			parts = parts[1:]
-			if attr.ItemType == OBJECT {
-				attrs = attr.Attributes
+			if attr.Item.Type == OBJECT || attr.Item.Type == "" {
+				attrs = attr.Item.Attributes
 				continue
 			}
 

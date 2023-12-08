@@ -34,54 +34,61 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttr("regAnyObj", registry.ANY)
 
 	reg.Model.AddAttribute(&registry.Attribute{
-		Name:     "regArrayInt",
-		Type:     registry.ARRAY,
-		ItemType: registry.INTEGER,
+		Name: "regArrayArrayInt",
+		Type: registry.ARRAY,
+		Item: &registry.Item{
+			Type: registry.ARRAY,
+			Item: &registry.Item{
+				Type: registry.INTEGER,
+			},
+		},
 	})
 
-	/* DUG TODO finish this
 	reg.Model.AddAttribute(&registry.Attribute{
-		Name:     "regArrayArrayInt",
-		Type:     registry.ARRAY,
-		ItemType: registry.Array,
+		Name: "regArrayInt",
+		Type: registry.ARRAY,
+		Item: &registry.Item{Type: registry.INTEGER},
 	})
-	*/
 
 	reg.Model.AddAttribute(&registry.Attribute{
-		Name:     "regMapInt",
-		Type:     registry.MAP,
-		ItemType: registry.INTEGER,
+		Name: "regMapInt",
+		Type: registry.MAP,
+		Item: &registry.Item{Type: registry.INTEGER},
 	})
 	reg.Model.AddAttribute(&registry.Attribute{
-		Name:     "regMapString",
-		Type:     registry.MAP,
-		ItemType: registry.STRING,
+		Name: "regMapString",
+		Type: registry.MAP,
+		Item: &registry.Item{Type: registry.STRING},
 	})
 	reg.Model.AddAttribute(&registry.Attribute{
 		Name: "regObj",
 		Type: registry.OBJECT,
-		Attributes: map[string]*registry.Attribute{
-			"objBool": &registry.Attribute{
-				Name: "objBool",
-				Type: registry.BOOLEAN,
-			},
-			"objInt": &registry.Attribute{
-				Name: "objInt",
-				Type: registry.INTEGER,
-			},
-			"objObj": &registry.Attribute{
-				Name: "objObj",
-				Type: registry.OBJECT,
-				Attributes: map[string]*registry.Attribute{
-					"ooint": &registry.Attribute{
-						Name: "ooint",
-						Type: registry.INTEGER,
+		Item: &registry.Item{
+			Attributes: map[string]*registry.Attribute{
+				"objBool": &registry.Attribute{
+					Name: "objBool",
+					Type: registry.BOOLEAN,
+				},
+				"objInt": &registry.Attribute{
+					Name: "objInt",
+					Type: registry.INTEGER,
+				},
+				"objObj": &registry.Attribute{
+					Name: "objObj",
+					Type: registry.OBJECT,
+					Item: &registry.Item{
+						Attributes: map[string]*registry.Attribute{
+							"ooint": &registry.Attribute{
+								Name: "ooint",
+								Type: registry.INTEGER,
+							},
+						},
 					},
 				},
-			},
-			"objStr": &registry.Attribute{
-				Name: "objStr",
-				Type: registry.STRING,
+				"objStr": &registry.Attribute{
+					Name: "objStr",
+					Type: registry.STRING,
+				},
 			},
 		},
 	})
@@ -134,6 +141,7 @@ func TestBasicTypes(t *testing.T) {
 
 	tests := []Test{
 		Test{reg, []Prop{
+			{"regArrayArrayInt[1][1]", 66, true},
 			{"regArrayInt[0]", 1, true},
 			{"regArrayInt[2]", 3, true},
 			{"regArrayInt[1]", 2, true},
@@ -171,20 +179,21 @@ func TestBasicTypes(t *testing.T) {
 
 			{"regAnyObj.nestobj.int", 123, true},
 
-			{"epoch", -123, false},              // bad uint
-			{"regAnyObj2.str", "substr", false}, // unknown attr
-			{"regArrayInt[2]", "abc", false},    // bad type
-			{"regBool1", "123", false},          // bad type
-			{"regDec1", "123", false},           // bad type
-			{"regInt1", "123", false},           // bad type
-			{"regMapInt", "123", false},         // bad type
-			{"regMapInt.k1", "123", false},      // bad type
-			{"regMapString.k1", 123, false},     // bad type
-			{"regString1", 123, false},          // bad type
-			{"regTime", "not a time", false},    // bad date format
-			{"regUint1", -1, false},             // bad uint
-			{"unknown_int", 123, false},         // unknown attr
-			{"unknown_str", "error", false},     // unknown attr
+			{"epoch", -123, false},                   // bad uint
+			{"regAnyObj2.str", "substr", false},      // unknown attr
+			{"regArrayArrayInt[0][0]", "abc", false}, // bad type
+			{"regArrayInt[2]", "abc", false},         // bad type
+			{"regBool1", "123", false},               // bad type
+			{"regDec1", "123", false},                // bad type
+			{"regInt1", "123", false},                // bad type
+			{"regMapInt", "123", false},              // bad type
+			{"regMapInt.k1", "123", false},           // bad type
+			{"regMapString.k1", 123, false},          // bad type
+			{"regString1", 123, false},               // bad type
+			{"regTime", "not a time", false},         // bad date format
+			{"regUint1", -1, false},                  // bad uint
+			{"unknown_int", 123, false},              // unknown attr
+			{"unknown_str", "error", false},          // unknown attr
 		}},
 		Test{dir, []Prop{
 			{"dirString1", "str2", true},
@@ -296,6 +305,13 @@ func TestBasicTypes(t *testing.T) {
     "str": "substr"
   },
   "regAnyStr": "mystr",
+  "regArrayArrayInt": [
+    null,
+    [
+      null,
+      66
+    ]
+  ],
   "regArrayInt": [
     1,
     2,
@@ -459,15 +475,17 @@ func TestWildcard2LayersTypes(t *testing.T) {
 	reg.Model.AddAttribute(&registry.Attribute{
 		Name: "obj",
 		Type: registry.OBJECT,
-		Attributes: map[string]*registry.Attribute{
-			"map": {
-				Name:     "map",
-				Type:     registry.MAP,
-				ItemType: registry.INTEGER,
-			},
-			"*": {
-				Name: "*",
-				Type: registry.ANY,
+		Item: &registry.Item{
+			Attributes: map[string]*registry.Attribute{
+				"map": {
+					Name: "map",
+					Type: registry.MAP,
+					Item: &registry.Item{Type: registry.INTEGER},
+				},
+				"*": {
+					Name: "*",
+					Type: registry.ANY,
+				},
 			},
 		},
 	})

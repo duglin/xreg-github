@@ -70,6 +70,9 @@ func PropPathFromPath(str string) (*PropPath, error) {
 }
 
 func (pp *PropPath) Path() string {
+	if pp == nil {
+		return ""
+	}
 	res := strings.Builder{}
 	for _, part := range pp.Parts {
 		if res.Len() > 0 {
@@ -81,6 +84,9 @@ func (pp *PropPath) Path() string {
 }
 
 func (pp *PropPath) DB() string {
+	if pp == nil {
+		return ""
+	}
 	res := strings.Builder{}
 	for _, part := range pp.Parts {
 		if res.Len() != 0 {
@@ -249,6 +255,9 @@ func PropPathFromUI(str string) (*PropPath, error) {
 }
 
 func (pp *PropPath) UI() string {
+	if pp == nil {
+		return ""
+	}
 	res := strings.Builder{}
 	for _, part := range pp.Parts {
 		if part.Index >= 0 {

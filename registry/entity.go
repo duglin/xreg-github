@@ -528,9 +528,11 @@ var OrderedSpecProps = []*SpecProp{
 		}
 		return res
 	}, &Attribute{
-		Name:     "labels",
-		Type:     MAP,
-		ItemType: STRING,
+		Name: "labels",
+		Type: MAP,
+		Item: &Item{
+			Type: STRING,
+		},
 	}},
 	{"format", STRING, "23", true, nil, &Attribute{
 		Name: "format",
@@ -636,28 +638,72 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 	}
 
 	for key, val := range e.Props {
-		pp, _ := PropPathFromDB(key)
-		if pp.Top()[0] == '#' { // Internal use only, skip
+		if key[0] == '#' || usedProps[key] { // Skip internal and "done" ones
 			continue
 		}
 
-		// skip processed ones, "labels" is special & we know we did it above
-		if usedProps[key] || pp.Top() == "labels" {
+		pp, err := PropPathFromDB(key)
+		PanicIf(err != nil, "Error DBparsing %q: %s", key, err)
+
+		propName := pp.Top()
+
+		// "labels" is special & we know we did it above
+		if propName == "labels" {
 			continue
 		}
-		/*
-			k, _, _ := strings.Cut(key, ".")
-			if usedProps[k] {
-				continue
-			}
-			usedProps[k] = true
-		*/
+		// usedProps[k] = true
 
-		processProp(result, key, val)
-		// result[k] = MaterializeProperty(k)
+		current := result[propName] // needed for non-scalars
+		result[propName], err = MaterializeProp(current, pp.Next(), val)
+		PanicIf(err != nil, "MaterializeProp: %s", err)
 	}
 
 	return result
+}
+
+func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
+	// current is existing value, used for adding to maps/arrays
+	if pp == nil {
+		return val, nil
+	}
+
+	var ok bool
+	var err error
+
+	part := pp.Parts[0]
+	if index := part.Index; index >= 0 {
+		// Is an array
+		// TODO look for cases where Kind(val) == array too - maybe?
+		var daArray []any
+
+		if current != nil {
+			daArray, ok = current.([]any)
+			if !ok {
+				return nil, fmt.Errorf("Current isn't an array: %T", current)
+			}
+		}
+
+		// Resize if needed
+		if diff := (1 + index - len(daArray)); diff > 0 {
+			daArray = append(daArray, make([]any, diff)...)
+		}
+
+		daArray[index], err = MaterializeProp(daArray[index], pp.Next(), val)
+		return daArray, err
+	}
+
+	// Is a map/object
+	// TODO look for cases where Kind(val) == obj/map too - maybe?
+	daMap := map[string]any{}
+
+	if current != nil {
+		daMap, ok = current.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("Current isn't a map: %T", current)
+		}
+	}
+	daMap[pp.Top()], err = MaterializeProp(daMap[pp.Top()], pp.Next(), val)
+	return daMap, err
 }
 
 /*
@@ -673,64 +719,3 @@ func (e *Entity) MaterializeProperty(name string) (any, error) {
 	pp, err := PropPathFromDB(name)
 }
 */
-
-func processProp(daMap map[string]any, key string, val any) {
-	pp, err := PropPathFromDB(key)
-	PanicIf(err != nil, fmt.Sprint(err))
-
-	name := pp.Top()
-	index := pp.IsIndexed()
-
-	if index < 0 { // Not indexed
-		daMap[name] = processPropValue(daMap[name], pp.Next(), val)
-		return
-	}
-
-	currentVal := daMap[name]
-	if currentVal == nil {
-		currentVal = make([]any, index+1)
-	}
-
-	daArray := currentVal.([]any)
-	if diff := (1 + index - len(daArray)); diff > 0 { // Resize if needed
-		daArray = append(daArray, make([]any, diff)...)
-	}
-	pp = pp.Next().Next() // Skip current and index
-	daArray[index] = processPropValue(daArray[index], pp, val)
-	daMap[name] = daArray
-}
-
-func processPropValue(currentVal any, pp *PropPath, val any) any {
-	if pp.Len() == 0 {
-		return val
-	}
-
-	name := pp.Top()
-	index := pp.IsIndexed()
-
-	if index >= 0 {
-		var daArray []any
-		if currentVal == nil {
-			daArray = make([]any, index+1)
-		} else {
-			daArray = currentVal.([]any)
-			if diff := (1 + index - len(daArray)); diff > 0 { // Resize ?
-				daArray = append(daArray, make([]any, diff)...)
-			}
-		}
-		pp = pp.Next().Next()
-		daArray[index] = processPropValue(daArray[index], pp, val)
-		return daArray
-	}
-
-	// Is scalar
-	var daMap map[string]any
-	if currentVal == nil {
-		daMap = map[string]any{}
-	} else {
-		daMap = currentVal.(map[string]any)
-	}
-	pp = pp.Next()
-	daMap[name] = processPropValue(daMap[name], pp, val)
-	return daMap
-}
