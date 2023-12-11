@@ -44,8 +44,8 @@ func TestCreateGroup(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
 
-  "filesCount": 1,
-  "filesUrl": "http://localhost:8181/dirs/d1/files"
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
 }
 `)
 	xCheckGet(t, reg, "/dirs/xxx", "Not found\n")

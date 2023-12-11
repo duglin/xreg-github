@@ -13,7 +13,7 @@ func TestNoModel(t *testing.T) {
 
 	xCheckGet(t, reg, "/model", "{}\n")
 	xCheckGet(t, reg, "?model", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestNoModel",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -166,9 +166,9 @@ func TestResourceModelCreate(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 5,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     },
@@ -180,9 +180,9 @@ func TestResourceModelCreate(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 0,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     }
@@ -201,9 +201,9 @@ func TestResourceModelCreate(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 5,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     },
@@ -226,9 +226,9 @@ func TestResourceModelCreate(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 5,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     },
@@ -251,9 +251,9 @@ func TestResourceModelCreate(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 5,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     }
@@ -272,9 +272,9 @@ func TestResourceModelCreate(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 5,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     }
@@ -294,7 +294,7 @@ func TestResourceModelCreate(t *testing.T) {
 						Versions:  6,
 						VersionId: false,
 						Latest:    false,
-						// Note that hasDocument is missing -> false per golang
+						// Note that hasdocument is missing -> false per golang
 					},
 				},
 			},
@@ -312,9 +312,9 @@ func TestResourceModelCreate(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 6,
-          "versionId": false,
+          "versionid": false,
           "latest": false,
-          "hasDocument": false
+          "hasdocument": false
         }
       }
     }
@@ -327,7 +327,7 @@ func TestResourceModelCreate(t *testing.T) {
 	g.AddResource("files", "f1", "v1")
 
 	xCheckGet(t, reg, "?model&inline=dirs.files", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -341,9 +341,9 @@ func TestResourceModelCreate(t *testing.T) {
             "plural": "files",
             "singular": "file",
             "versions": 6,
-            "versionId": false,
+            "versionid": false,
             "latest": false,
-            "hasDocument": false
+            "hasdocument": false
           }
         }
       }
@@ -361,19 +361,19 @@ func TestResourceModelCreate(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/dir1/files/f1",
-          "latestVersionId": "v1",
-          "latestVersionUrl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+          "latestversionid": "v1",
+          "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
 
-          "versionsCount": 1,
-          "versionsUrl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs/dir1/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/dir1/files"
     }
   },
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `)
 
@@ -397,7 +397,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -411,9 +411,9 @@ func TestResourceModelCreate(t *testing.T) {
             "plural": "files2",
             "singular": "file",
             "versions": 6,
-            "versionId": false,
+            "versionid": false,
             "latest": false,
-            "hasDocument": false
+            "hasdocument": false
           }
         }
       }
@@ -426,12 +426,12 @@ func TestResourceModelCreate(t *testing.T) {
       "epoch": 1,
       "self": "http://localhost:8181/dirs/dir1",
 
-      "files2Count": 0,
-      "files2Url": "http://localhost:8181/dirs/dir1/files2"
+      "files2count": 0,
+      "files2url": "http://localhost:8181/dirs/dir1/files2"
     }
   },
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `)
 
@@ -446,7 +446,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -466,8 +466,8 @@ func TestResourceModelCreate(t *testing.T) {
       "self": "http://localhost:8181/dirs/dir1"
     }
   },
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `)
 
@@ -481,7 +481,7 @@ func TestResourceModelCreate(t *testing.T) {
 	}
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -495,8 +495,8 @@ func TestResourceModelCreate(t *testing.T) {
   },
 
   "dirs2": {},
-  "dirs2Count": 0,
-  "dirs2Url": "http://localhost:8181/dirs2"
+  "dirs2count": 0,
+  "dirs2url": "http://localhost:8181/dirs2"
 }
 `)
 }
@@ -534,17 +534,17 @@ func TestMultModelCreate(t *testing.T) {
           "plural": "rms1",
           "singular": "rm1",
           "versions": 0,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         },
         "rms2": {
           "plural": "rms2",
           "singular": "rm2",
           "versions": 1,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     },
@@ -556,17 +556,17 @@ func TestMultModelCreate(t *testing.T) {
           "plural": "rms1",
           "singular": "rm1",
           "versions": 2,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         },
         "rms2": {
           "plural": "rms2",
           "singular": "rm2",
           "versions": 3,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     }
@@ -617,7 +617,7 @@ func TestMultModel2Create(t *testing.T) {
 	// /dirs2/f2/f2/v1
 
 	xCheckGet(t, reg, "?model&inline", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestMultModel2Create",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -631,9 +631,9 @@ func TestMultModel2Create(t *testing.T) {
             "plural": "files",
             "singular": "file",
             "versions": 2,
-            "versionId": true,
+            "versionid": true,
             "latest": false,
-            "hasDocument": true
+            "hasdocument": true
           }
         }
       },
@@ -645,9 +645,9 @@ func TestMultModel2Create(t *testing.T) {
             "plural": "files",
             "singular": "file",
             "versions": 0,
-            "versionId": false,
+            "versionid": false,
             "latest": true,
-            "hasDocument": true
+            "hasdocument": true
           }
         }
       }
@@ -665,8 +665,8 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs1/d1/files/f1",
-          "latestVersionId": "v2",
-          "latestVersionUrl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
+          "latestversionid": "v2",
+          "latestversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
 
           "versions": {
             "v1": {
@@ -681,12 +681,12 @@ func TestMultModel2Create(t *testing.T) {
               "latest": true
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs1/d1/files/f1/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs1/d1/files/f1/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs1/d1/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs1/d1/files"
     },
     "d2": {
       "id": "d2",
@@ -698,8 +698,8 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs1/d2/files/f2",
-          "latestVersionId": "v1.1",
-          "latestVersionUrl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
+          "latestversionid": "v1.1",
+          "latestversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
 
           "versions": {
             "v1": {
@@ -714,16 +714,16 @@ func TestMultModel2Create(t *testing.T) {
               "latest": true
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs1/d2/files/f2/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs1/d2/files/f2/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs1/d2/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs1/d2/files"
     }
   },
-  "dirs1Count": 2,
-  "dirs1Url": "http://localhost:8181/dirs1",
+  "dirs1count": 2,
+  "dirs1url": "http://localhost:8181/dirs1",
   "dirs2": {
     "d2": {
       "id": "d2",
@@ -735,8 +735,8 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs2/d2/files/f2",
-          "latestVersionId": "v1",
-          "latestVersionUrl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
+          "latestversionid": "v1",
+          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
 
           "versions": {
             "v1": {
@@ -746,16 +746,16 @@ func TestMultModel2Create(t *testing.T) {
               "latest": true
             }
           },
-          "versionsCount": 1,
-          "versionsUrl": "http://localhost:8181/dirs2/d2/files/f2/versions"
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs2/d2/files/f2/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs2/d2/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs2/d2/files"
     }
   },
-  "dirs2Count": 1,
-  "dirs2Url": "http://localhost:8181/dirs2"
+  "dirs2count": 1,
+  "dirs2url": "http://localhost:8181/dirs2"
 }
 `)
 

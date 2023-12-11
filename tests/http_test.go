@@ -131,7 +131,7 @@ func TestHTTPhtml(t *testing.T) {
 		ResHeaders: []string{"Content-Type:text/html"},
 		ResBody: `<pre>
 {
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestHTTPhtml",
   "epoch": 1,
   "self": "<a href="http://localhost:8181/?html">http://localhost:8181/?html</a>"
@@ -156,7 +156,7 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestHTTPModel",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -248,9 +248,9 @@ func TestHTTPModel(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 1,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": true
+          "hasdocument": true
         }
       }
     }
@@ -277,9 +277,9 @@ func TestHTTPModel(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 1,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": false
+          "hasdocument": false
         }
       }
     }
@@ -301,9 +301,9 @@ func TestHTTPModel(t *testing.T) {
           "plural": "files",
           "singular": "file",
           "versions": 1,
-          "versionId": true,
+          "versionid": true,
           "latest": true,
-          "hasDocument": false
+          "hasdocument": false
         }
       }
     }
@@ -338,7 +338,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestHTTPRegistry",
   "epoch": 2,
   "self": "http://localhost:8181/"
@@ -355,7 +355,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestHTTPRegistry",
   "epoch": 3,
   "self": "http://localhost:8181/"
@@ -398,8 +398,8 @@ func TestHTTPGroups(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/dirs/xxx",
 
-  "filesCount": 0,
-  "filesUrl": "http://localhost:8181/dirs/xxx/files"
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/xxx/files"
 }
 `,
 	})
@@ -418,8 +418,8 @@ func TestHTTPGroups(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/dirs/xxx",
 
-  "filesCount": 0,
-  "filesUrl": "http://localhost:8181/dirs/xxx/files"
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/xxx/files"
 }
 `,
 	})
@@ -460,8 +460,8 @@ func TestHTTPGroups(t *testing.T) {
     "label4": ""
   },
 
-  "filesCount": 0,
-  "filesUrl": "http://localhost:8181/dirs/dir1/files"
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
 }
 `,
 	})
@@ -495,8 +495,8 @@ func TestHTTPGroups(t *testing.T) {
     "label.new": "new"
   },
 
-  "filesCount": 0,
-  "filesUrl": "http://localhost:8181/dirs/dir1/files"
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
 }
 `,
 	})
@@ -546,8 +546,8 @@ func TestHTTPGroups(t *testing.T) {
   "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1",
 
-  "filesCount": 0,
-  "filesUrl": "http://localhost:8181/dirs/dir1/files"
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
 }
 `,
 	})

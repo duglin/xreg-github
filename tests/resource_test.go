@@ -46,11 +46,11 @@ func TestCreateResource(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1",
-  "latestVersionId": "v2",
-  "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "latestversionid": "v2",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
 
-  "versionsCount": 2,
-  "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 	xCheckGet(t, reg, "/dirs/d1/files/xxx", "Not found\n")

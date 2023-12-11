@@ -14,7 +14,7 @@ func TestCreateRegistry(t *testing.T) {
 	// Check basic GET first
 	xCheckGet(t, reg, "/",
 		`{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestCreateRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/"
@@ -43,7 +43,7 @@ func TestCreateRegistry(t *testing.T) {
 	xCheck(t, reg3 != reg, "reg3 should be different from reg")
 
 	xCheckGet(t, reg, "", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestCreateRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/"
@@ -94,14 +94,14 @@ func TestRegistryProps(t *testing.T) {
 	reg := NewRegistry("TestRegistryProps")
 	defer PassDeleteReg(t, reg)
 
-	reg.Set("specVersion", "x.y")
+	reg.Set("specversion", "x.y")
 	reg.Set("name", "nameIt")
 	reg.Set("description", "a very cool reg")
 	reg.Set("documentation", "https://docs.com")
 	reg.Set("labels.stage", "dev")
 
 	xCheckGet(t, reg, "", `{
-  "specVersion": "x.y",
+  "specversion": "x.y",
   "id": "TestRegistryProps",
   "name": "nameIt",
   "epoch": 1,

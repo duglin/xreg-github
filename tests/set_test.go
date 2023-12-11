@@ -113,8 +113,8 @@ func TestSetDots(t *testing.T) {
     "abc.def": "ABC"
   },
 
-  "filesCount": 0,
-  "filesUrl": "http://localhost:8181/dirs/d1/files"
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
 }
 `)
 
@@ -212,7 +212,7 @@ func TestSetLabels(t *testing.T) {
 	// ver2.Set(labels.P("bool2").UI(), false)
 
 	xCheckGet(t, reg, "?inline", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestSetLabels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -234,8 +234,8 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1",
-          "latestVersionId": "v2",
-          "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+          "latestversionid": "v2",
+          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
           "labels": {
             "2nd": "3rd",
             "ff": "ff.bar"
@@ -261,22 +261,22 @@ func TestSetLabels(t *testing.T) {
               }
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs/d1/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
     }
   },
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `)
 
 	file.SetLatest(ver)
 	xCheckGet(t, reg, "?inline", `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestSetLabels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -298,8 +298,8 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1",
-          "latestVersionId": "v1",
-          "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+          "latestversionid": "v1",
+          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
           "labels": {
             "vv2": "v11"
           },
@@ -324,16 +324,16 @@ func TestSetLabels(t *testing.T) {
               }
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs/d1/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
     }
   },
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `)
 }

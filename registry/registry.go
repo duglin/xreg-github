@@ -64,7 +64,7 @@ func NewRegistry(id string) (*Registry, error) {
 		return nil, err
 	}
 
-	reg.Set("specVersion", SpecVersion)
+	reg.Set("specversion", SpecVersion)
 	reg.Set("id", reg.UID)
 	reg.Set("epoch", 1)
 	Registries[id] = reg

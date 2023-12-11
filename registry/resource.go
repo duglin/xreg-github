@@ -18,7 +18,7 @@ func (r *Resource) Get(name string) any {
 		return r.Entity.GetPropFromUI(name[1:])
 	}
 
-	if name == "id" || name == "latestVersionId" || name == "latestVersionUrl" {
+	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
 		return r.Entity.GetPropFromUI(name)
 	}
 
@@ -34,15 +34,15 @@ func (r *Resource) Set(name string, val any) error {
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
 		if name == ".latestVersionId" {
 			log.Printf("Shouldn't be setting .latestVersionId directly-1")
-			panic("can't set .latestVersionId directly")
+			panic("can't set .latestversionid directly")
 		}
 		return r.Entity.SetFromUI(name[1:], val)
 	}
 
-	if name == "id" || name == "latestVersionId" || name == "latestVersionUrl" {
-		if name == "latestVersionId" {
+	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
+		if name == "latestversionid" {
 			log.Printf("Shouldn't be setting .latestVersionId directly-2")
-			panic("can't set .latestVersionId directly")
+			panic("can't set .latestversionid directly")
 		}
 		return r.Entity.SetFromUI(name, val)
 	}
@@ -103,7 +103,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 
 // Maybe replace error with a panic?
 func (r *Resource) GetLatest() (*Version, error) {
-	val := r.GetPropFromUI("latestVersionId")
+	val := r.GetPropFromUI("latestversionid")
 	if val == nil {
 		return nil, nil
 		// panic("No latest is set")
@@ -122,7 +122,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	}
 
 	// TODO: do both of these in one transaction to make it atomic
-	r.Entity.SetFromUI("latestVersionId", newLatest.UID)
+	r.Entity.SetFromUI("latestversionid", newLatest.UID)
 	return newLatest.Set("latest", true)
 }
 

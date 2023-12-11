@@ -3,7 +3,6 @@ package registry
 import (
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -213,9 +212,6 @@ func (e *Entity) Refresh() error {
 	return nil
 }
 
-var RegexpPropName = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_./]*$")
-var RegexpMapKey = regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9_.\\-]*$")
-
 // Maybe replace error with a panic?
 func (e *Entity) SetFromDB(name string, val any) error {
 	pp, err := PropPathFromDB(name)
@@ -234,9 +230,10 @@ func (e *Entity) SetFromUI(name string, val any) error {
 }
 
 func (e *Entity) SetPP(pp *PropPath, val any) error {
-	name := pp.DB()
 	log.VPrintf(3, ">Enter: SetPP(%s=%v)", pp, val)
 	defer log.VPrintf(3, "<Exit SetPP")
+
+	name := pp.DB()
 
 	if pp.Top() == "labels" {
 		if pp.Len() == 1 {
@@ -247,11 +244,6 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 		if len(key) == 0 {
 			return fmt.Errorf("Map %q key is empty", mapName)
 		}
-		if !RegexpMapKey.MatchString(key) {
-			return fmt.Errorf("Invalid label key: %s", key)
-		}
-	} else if pp.Top()[0] != '#' && !RegexpPropName.MatchString(pp.Top()) {
-		return fmt.Errorf("Invalid property name: %s", pp.Top())
 	}
 
 	if e.DbSID == "" {
@@ -261,7 +253,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 		log.Fatalf("RegistrySID should not be empty")
 	}
 
-	// Make sure the attribute is defined in the model
+	// Make sure the attribute is defined in the model and has valid chars
 	attrType, err := GetAttributeType(e.RegistrySID, e.Abstract, pp)
 	if err != nil {
 		// log.Printf("Error on getAttr(%s): %s", pp.UI(), err)
@@ -452,8 +444,8 @@ type SpecProp struct {
 
 // This allows for us to choose the order and define custom logic per prop
 var OrderedSpecProps = []*SpecProp{
-	{"specVersion", STRING, "0", false, nil, &Attribute{
-		Name:     "specVersion",
+	{"specversion", STRING, "0", false, nil, &Attribute{
+		Name:     "specversion",
 		Type:     STRING,
 		Required: true,
 	}},
@@ -484,19 +476,19 @@ var OrderedSpecProps = []*SpecProp{
 		Type:     BOOLEAN,
 		Required: true,
 	}},
-	{"latestVersionId", STRING, "2", false, nil, &Attribute{
-		Name:     "latestVersionId",
+	{"latestversionid", STRING, "2", false, nil, &Attribute{
+		Name:     "latestversionid",
 		Type:     STRING,
 		Required: true,
 	}},
-	{"latestVersionUrl", URL, "2", false, func(e *Entity, info *RequestInfo) any {
-		val := e.Props[NewPPP("latestVersionId").DB()]
+	{"latestversionurl", URL, "2", false, func(e *Entity, info *RequestInfo) any {
+		val := e.Props[NewPPP("latestversionid").DB()]
 		if IsNil(val) {
 			return nil
 		}
 		return info.BaseURL + "/" + e.Path + "/versions/" + val.(string)
 	}, &Attribute{
-		Name:     "latestVersionUrl",
+		Name:     "latestversionurl",
 		Type:     URL,
 		Required: true,
 	}},
@@ -538,20 +530,20 @@ var OrderedSpecProps = []*SpecProp{
 		Name: "format",
 		Type: STRING,
 	}},
-	{"createdBy", STRING, "", false, nil, &Attribute{
-		Name: "createdBy",
+	{"createdby", STRING, "", false, nil, &Attribute{
+		Name: "createdby",
 		Type: STRING,
 	}},
-	{"createdOn", TIME, "", false, nil, &Attribute{
-		Name: "createdOn",
+	{"createdon", TIME, "", false, nil, &Attribute{
+		Name: "createdon",
 		Type: TIME,
 	}},
-	{"modifiedBy", STRING, "", false, nil, &Attribute{
-		Name: "modifiedBy",
+	{"modifiedby", STRING, "", false, nil, &Attribute{
+		Name: "modifiedby",
 		Type: STRING,
 	}},
-	{"modifiedOn", TIME, "", false, nil, &Attribute{
-		Name: "modifiedOn",
+	{"modifiedon", TIME, "", false, nil, &Attribute{
+		Name: "modifiedon",
 		Type: TIME,
 	}},
 	{"model", OBJECT, "0", false, func(e *Entity, info *RequestInfo) any {

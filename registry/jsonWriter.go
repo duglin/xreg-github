@@ -89,8 +89,8 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 		extra = saveExtra
 	}
 
-	jw.Printf("%s\n%s\"%sCount\": %d,\n", extra, jw.indent, myPlural, count)
-	jw.Printf("%s\"%sUrl\": %q", jw.indent, myPlural, myURL)
+	jw.Printf("%s\n%s\"%scount\": %d,\n", extra, jw.indent, myPlural, count)
+	jw.Printf("%s\"%surl\": %q", jw.indent, myPlural, myURL)
 
 	return ",", nil
 }
@@ -242,8 +242,8 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int
 			extra = ","
 		}
 
-		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
-		jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
+		jw.Printf("%s\n%s\"%scount\": 0,\n", extra, jw.indent, collName)
+		jw.Printf("%s\"%surl\": \"%s/%s%s\"", jw.indent, collName,
 			jw.info.BaseURL, jw.collPaths[level], collName)
 		extra = ","
 	}
@@ -258,8 +258,8 @@ func (jw *JsonWriter) WritePostCollections(extra string, level int) string {
 			extra = ","
 		}
 
-		jw.Printf("%s\n%s\"%sCount\": 0,\n", extra, jw.indent, collName)
-		jw.Printf("%s\"%sUrl\": \"%s/%s%s\"", jw.indent, collName,
+		jw.Printf("%s\n%s\"%scount\": 0,\n", extra, jw.indent, collName)
+		jw.Printf("%s\"%surl\": \"%s/%s%s\"", jw.indent, collName,
 			jw.info.BaseURL, jw.collPaths[level], collName)
 		extra = ","
 	}

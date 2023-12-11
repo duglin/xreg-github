@@ -35,7 +35,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "No Filter",
 			URL:  "?",
 			Exp: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -43,8 +43,8 @@ func TestBasicFilters(t *testing.T) {
     "reg1": "1ger"
   },
 
-  "dirsCount": 2,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 2,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `,
 		},
@@ -170,7 +170,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter reg.labels - match",
 			URL:  "?filter=labels.reg1=1ger",
 			Exp: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -178,8 +178,8 @@ func TestBasicFilters(t *testing.T) {
     "reg1": "1ger"
   },
 
-  "dirsCount": 2,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 2,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `,
 		},
@@ -187,7 +187,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter labels",
 			URL:  "?filter=dirs.files.labels.file1=1elif",
 			Exp: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -195,8 +195,8 @@ func TestBasicFilters(t *testing.T) {
     "reg1": "1ger"
   },
 
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `,
 		},
@@ -204,7 +204,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter dir file.labels - match",
 			URL:  "?inline&filter=dirs.files.labels.file1=1elif",
 			Exp: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -223,8 +223,8 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
-          "latestVersionId": "v1.1",
-          "latestVersionUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestversionid": "v1.1",
+          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
           "labels": {
             "file1": "1elif"
           },
@@ -245,16 +245,16 @@ func TestBasicFilters(t *testing.T) {
               }
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs/d2/files/f2/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs/d2/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d2/files"
     }
   },
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `,
 		},
@@ -277,7 +277,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter dir file.labels - match non-empty string",
 			URL:  "?inline&filter=dirs.files.labels.file1",
 			Exp: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -296,8 +296,8 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
-          "latestVersionId": "v1.1",
-          "latestVersionUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestversionid": "v1.1",
+          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
           "labels": {
             "file1": "1elif"
           },
@@ -318,16 +318,16 @@ func TestBasicFilters(t *testing.T) {
               }
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs/d2/files/f2/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs/d2/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d2/files"
     }
   },
-  "dirsCount": 1,
-  "dirsUrl": "http://localhost:8181/dirs"
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `,
 		},
@@ -431,12 +431,12 @@ func TestANDORFilters(t *testing.T) {
 		},
 		{
 			Name: "dirsOR and schemaGroupsOR - match second",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestVersionId=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestversionid=v2.0",
 			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and schemaGroupsOR - both match",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestVersionId=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestversionid=v2.0",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 	}

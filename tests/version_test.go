@@ -81,14 +81,14 @@ func TestCreateVersion(t *testing.T) {
 	err = f1.Refresh()
 	xNoErr(t, err)
 
-	xJSONCheck(t, f1.Get("latestVersionId"), "v1")
+	xJSONCheck(t, f1.Get("latestversionid"), "v1")
 
 	vt, err = f1.AddVersion("v2")
 	xCheck(t, vt != nil && err == nil, "Adding v2 again")
 
 	vt, err = f1.AddVersion("v3")
 	xCheck(t, vt != nil && err == nil, "Added v3")
-	xJSONCheck(t, f1.Get("latestVersionId"), "v3")
+	xJSONCheck(t, f1.Get("latestversionid"), "v3")
 
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{},"v3":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
@@ -96,24 +96,24 @@ func TestCreateVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1",
-  "latestVersionId": "v3",
-  "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v3",
+  "latestversionid": "v3",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3",
 
-  "versionsCount": 3,
-  "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 	vt, err = f1.FindVersion("v2")
 	xNoErr(t, err)
 	err = vt.Delete()
 	xNoErr(t, err)
-	xJSONCheck(t, f1.Get("latestVersionId"), "v3")
+	xJSONCheck(t, f1.Get("latestversionid"), "v3")
 
 	vt, err = f1.FindVersion("v3")
 	xNoErr(t, err)
 	err = vt.Delete()
 	xNoErr(t, err)
-	xJSONCheck(t, f1.Get("latestVersionId"), "v1")
+	xJSONCheck(t, f1.Get("latestversionid"), "v1")
 
 	vt, err = f1.FindVersion("v1")
 	xNoErr(t, err)

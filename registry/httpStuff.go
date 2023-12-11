@@ -402,7 +402,7 @@ FROM FullTree WHERE RegSID=? AND `
 	versionsCount := 0
 	if info.VersionUID == "" {
 		// We're on a Resource, so go find the right Version
-		vID := entity.GetPropFromUI("latestVersionId").(string)
+		vID := entity.GetPropFromUI("latestversionid").(string)
 		for {
 			v := readNextEntity(results)
 			if v == nil && version == nil {
@@ -444,9 +444,9 @@ FROM FullTree WHERE RegSID=? AND `
 	}
 
 	if info.VersionUID == "" {
-		info.AddHeader("xRegistry-versionsCount",
+		info.AddHeader("xRegistry-versionscount",
 			fmt.Sprintf("%d", versionsCount))
-		info.AddHeader("xRegistry-versionsUrl",
+		info.AddHeader("xRegistry-versionsurl",
 			info.BaseURL+"/"+entity.Path+"/versions")
 
 		info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
@@ -459,7 +459,7 @@ FROM FullTree WHERE RegSID=? AND `
 		singular := rModel.Singular
 
 		url = val.(string)
-		info.AddHeader("xRegistry-"+singular+"Url", url)
+		info.AddHeader("xRegistry-"+singular+"url", url)
 
 		if info.StatusCode == 0 {
 			// If we set it during a PUT/POST, don't override the 201

@@ -38,15 +38,15 @@ func TestBasicInline(t *testing.T) {
 			Name: "No Inline",
 			URL:  "?",
 			Exp: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",
 
-  "dirsCount": 2,
-  "dirsUrl": "http://localhost:8181/dirs",
-  "dirs2Count": 1,
-  "dirs2Url": "http://localhost:8181/dirs2"
+  "dirscount": 2,
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs2count": 1,
+  "dirs2url": "http://localhost:8181/dirs2"
 }
 `,
 		},
@@ -54,7 +54,7 @@ func TestBasicInline(t *testing.T) {
 			Name: "Inline - No Filter - full",
 			URL:  "?inline",
 			Exp: `{
-  "specVersion": "0.5",
+  "specversion": "0.5",
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -70,8 +70,8 @@ func TestBasicInline(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1",
-          "latestVersionId": "v2",
-          "latestVersionUrl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+          "latestversionid": "v2",
+          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
 
           "versions": {
             "v1": {
@@ -86,12 +86,12 @@ func TestBasicInline(t *testing.T) {
               "latest": true
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs/d1/files/f1/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs/d1/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
     },
     "d2": {
       "id": "d2",
@@ -103,8 +103,8 @@ func TestBasicInline(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2",
-          "latestVersionId": "v1.1",
-          "latestVersionUrl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestversionid": "v1.1",
+          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
 
           "versions": {
             "v1": {
@@ -119,16 +119,16 @@ func TestBasicInline(t *testing.T) {
               "latest": true
             }
           },
-          "versionsCount": 2,
-          "versionsUrl": "http://localhost:8181/dirs/d2/files/f2/versions"
+          "versionscount": 2,
+          "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs/d2/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d2/files"
     }
   },
-  "dirsCount": 2,
-  "dirsUrl": "http://localhost:8181/dirs",
+  "dirscount": 2,
+  "dirsurl": "http://localhost:8181/dirs",
   "dirs2": {
     "d2": {
       "id": "d2",
@@ -140,8 +140,8 @@ func TestBasicInline(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs2/d2/files/f2",
-          "latestVersionId": "v1",
-          "latestVersionUrl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
+          "latestversionid": "v1",
+          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
 
           "versions": {
             "v1": {
@@ -151,16 +151,16 @@ func TestBasicInline(t *testing.T) {
               "latest": true
             }
           },
-          "versionsCount": 1,
-          "versionsUrl": "http://localhost:8181/dirs2/d2/files/f2/versions"
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs2/d2/files/f2/versions"
         }
       },
-      "filesCount": 1,
-      "filesUrl": "http://localhost:8181/dirs2/d2/files"
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs2/d2/files"
     }
   },
-  "dirs2Count": 1,
-  "dirs2Url": "http://localhost:8181/dirs2"
+  "dirs2count": 1,
+  "dirs2url": "http://localhost:8181/dirs2"
 }
 `,
 		},

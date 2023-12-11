@@ -3,10 +3,14 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	log "github.com/duglin/dlog"
 )
+
+var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]*$")
+var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]*$")
 
 type Model struct {
 	Registry   *Registry              `json:"-"`
@@ -55,9 +59,9 @@ type ResourceModel struct {
 	Plural      string                `json:"plural"`
 	Singular    string                `json:"singular"`
 	Versions    int                   `json:"versions"`
-	VersionId   bool                  `json:"versionId"`
+	VersionId   bool                  `json:"versionid"`
 	Latest      bool                  `json:"latest"`
-	HasDocument bool                  `json:"hasDocument"`
+	HasDocument bool                  `json:"hasdocument"`
 	Attributes  map[string]*Attribute `json:"attributes,omitempty"`
 }
 
@@ -145,25 +149,33 @@ func (m *Model) SetSchemas(schemas []string) error {
 }
 
 func (m *Model) AddAttr(name, daType string) *Attribute {
-	return m.AddAttribute(&Attribute{
+	attr, err := m.AddAttribute(&Attribute{
 		Name: name,
 		Type: daType,
 	})
+	PanicIf(err != nil, "%s", err)
+	return attr
 }
 
 func (m *Model) AddAttrMap(name string, itemType string) *Attribute {
-	return m.AddAttribute(&Attribute{
+	attr, err := m.AddAttribute(&Attribute{
 		Name: name,
 		Type: MAP,
 		Item: &Item{
 			Type: itemType,
 		},
 	})
+	PanicIf(err != nil, "%s", err)
+	return attr
 }
 
-func (m *Model) AddAttribute(attr *Attribute) *Attribute {
+func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr == nil {
-		return nil
+		return nil, nil
+	}
+
+	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
 	if m.Attributes == nil {
@@ -172,7 +184,7 @@ func (m *Model) AddAttribute(attr *Attribute) *Attribute {
 
 	m.Attributes[attr.Name] = attr
 	m.Save()
-	return attr
+	return attr, nil
 }
 
 func (m *Model) DelAttribute(name string) {
@@ -454,25 +466,33 @@ func (gm *GroupModel) Save() error {
 }
 
 func (gm *GroupModel) AddAttr(name, daType string) *Attribute {
-	return gm.AddAttribute(&Attribute{
+	attr, err := gm.AddAttribute(&Attribute{
 		Name: name,
 		Type: daType,
 	})
+	PanicIf(err != nil, "%s", err)
+	return attr
 }
 
 func (gm *GroupModel) AddAttrMap(name string, itemType string) *Attribute {
-	return gm.AddAttribute(&Attribute{
+	attr, err := gm.AddAttribute(&Attribute{
 		Name: name,
 		Type: MAP,
 		Item: &Item{
 			Type: itemType,
 		},
 	})
+	PanicIf(err != nil, "%s", err)
+	return attr
 }
 
-func (gm *GroupModel) AddAttribute(attr *Attribute) *Attribute {
+func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr == nil {
-		return nil
+		return nil, nil
+	}
+
+	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
 	if gm.Attributes == nil {
@@ -481,7 +501,7 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) *Attribute {
 
 	gm.Attributes[attr.Name] = attr
 	gm.Save()
-	return attr
+	return attr, nil
 }
 
 func (gm *GroupModel) DelAttribute(name string) {
@@ -588,25 +608,33 @@ func (rm *ResourceModel) Save() error {
 }
 
 func (rm *ResourceModel) AddAttr(name, daType string) *Attribute {
-	return rm.AddAttribute(&Attribute{
+	attr, err := rm.AddAttribute(&Attribute{
 		Name: name,
 		Type: daType,
 	})
+	PanicIf(err != nil, "%s", err)
+	return attr
 }
 
 func (rm *ResourceModel) AddAttrMap(name string, itemType string) *Attribute {
-	return rm.AddAttribute(&Attribute{
+	attr, err := rm.AddAttribute(&Attribute{
 		Name: name,
 		Type: MAP,
 		Item: &Item{
 			Type: itemType,
 		},
 	})
+	PanicIf(err != nil, "%s", err)
+	return attr
 }
 
-func (rm *ResourceModel) AddAttribute(attr *Attribute) *Attribute {
+func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr == nil {
-		return nil
+		return nil, nil
+	}
+
+	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
 	if rm.Attributes == nil {
@@ -615,7 +643,7 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) *Attribute {
 
 	rm.Attributes[attr.Name] = attr
 	rm.Save()
-	return attr
+	return attr, nil
 }
 
 func (rm *ResourceModel) DelAttribute(name string) {
@@ -686,17 +714,25 @@ func (a *Attribute) IsScalar() bool {
 }
 
 func (a *Attribute) AddAttr(name, daType string) *Attribute {
-	return a.AddAttribute(&Attribute{
+	attr, err := a.AddAttribute(&Attribute{
 		Name: name,
 		Type: daType,
 	})
-}
-
-func (a *Attribute) AddAttribute(attr *Attribute) *Attribute {
-	a.Item.Attributes[attr.Name] = attr
+	PanicIf(err != nil, "%s", err)
 	return attr
 }
 
+func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
+	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	}
+
+	a.Item.Attributes[attr.Name] = attr
+	return attr, nil
+}
+
+// Note this will also validate that the names used to build up the path
+// of the attribute are valid (e.g. wrt case and valid chars)
 func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error) {
 	if pp.Len() == 0 {
 		panic("PropPath can't be empty for GetAttributeType")
@@ -713,12 +749,25 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		panic("Attributes can't be nil for: %s" + abstractEntity)
 	}
 
+	in := OBJECT
 	for {
 		// We're on an object
 		if pp.Len() == 0 {
 			return OBJECT, nil
 		}
+
 		top := pp.Top()
+		if in == OBJECT {
+			if !RegexpPropName.MatchString(top) {
+				return "", fmt.Errorf("Attribute name %q isn't valid", top)
+			}
+		} else {
+			// Must be a MAP
+			if !RegexpMapKey.MatchString(top) {
+				return "", fmt.Errorf("Map key %q isn't valid", top)
+			}
+		}
+
 		attr := attrs[top]
 
 		if attr == nil {
@@ -746,6 +795,7 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 			attrs = attr.Item.Attributes
 			attr = nil // let loop grab next one
 			pp = pp.Next()
+			in = OBJECT
 			continue
 		}
 
@@ -781,6 +831,9 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 			pp = pp.Next()
 			if attr.Item.Type == OBJECT || attr.Type == "" {
 				attrs = attr.Item.Attributes
+				in = OBJECT
+			} else {
+				in = MAP
 			}
 			continue
 		}
@@ -801,6 +854,9 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 			pp = pp.Next()
 			if attr.Item.Type == OBJECT || attr.Item.Type == "" {
 				attrs = attr.Item.Attributes
+				in = OBJECT
+			} else {
+				in = MAP
 			}
 			attr = nil // let loop grab the next one
 			continue
