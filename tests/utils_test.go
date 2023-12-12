@@ -165,6 +165,7 @@ func xCheckEqual(t *testing.T, extra string, got string, exp string) bool {
 	t.Errorf(Caller()+"\n%s"+
 		"Expected:\n%s\nGot:\n%s\nDiff at(%d)[%x/%x]:\n%q",
 		extra, exp, got, pos, exp[pos], got[pos], got[pos:])
+	t.FailNow()
 	return false
 }
 

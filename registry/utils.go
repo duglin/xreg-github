@@ -125,6 +125,14 @@ func ToJSON(obj interface{}) string {
 	return string(buf)
 }
 
+func ToJSONOneLine(obj interface{}) string {
+	buf, err := json.Marshal(obj)
+	if err != nil {
+		log.Fatalf("Error Marshaling: %s", err)
+	}
+	return string(buf)
+}
+
 func URLBuild(base string, paths ...string) string {
 	isFrag := strings.Index(base, "#") >= 0
 	url := base

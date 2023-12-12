@@ -657,7 +657,7 @@ func HTTPPutPost(info *RequestInfo) error {
 				}
 			} else {
 				// key = "labels." + key[7:]
-				pp := NewPPP("labels").P(key[7:])
+				pp := NewPPP("labels").P(strings.ToLower(key[7:]))
 				key = pp.UI()
 			}
 

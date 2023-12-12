@@ -75,13 +75,13 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		// TODO Support "model" being part of the Registry struct above
 	}
 
-	g, _ := reg.Model.AddGroupModel("apiProviders", "apiProvider")
+	g, _ := reg.Model.AddGroupModel("apiproviders", "apiprovider")
 	_, err = g.AddResourceModel("apis", "api", 2, true, true, true)
 	g.AddAttr("xxx", registry.INTEGER)
 	g.AddAttr("yyy", registry.STRING)
 	g.AddAttr("zzz", registry.STRING)
 
-	g, _ = reg.Model.AddGroupModel("schemaGroups", "schemaGroup")
+	g, _ = reg.Model.AddGroupModel("schemagroups", "schemagroup")
 	_, err = g.AddResourceModel("schemas", "schema", 1, true, true, true)
 
 	m := reg.LoadModel()
@@ -116,11 +116,11 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		// org/service/version/file
 		// org/version/file
 
-		group, err := reg.FindGroup("apiProviders", parts[0])
+		group, err := reg.FindGroup("apiproviders", parts[0])
 		ErrFatalf(err, "FindGroup: %s", err)
 
 		if group == nil {
-			group, err = reg.AddGroup("apiProviders", parts[0])
+			group, err = reg.AddGroup("apiproviders", parts[0])
 			ErrFatalf(err, "AddGroup: %s", err)
 		}
 
@@ -135,7 +135,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		group.Set("modifiedOn", nil) // delete prop
 		group.Set("zzz", nil)        // delete prop
 
-		// group2 := reg.FindGroup("apiProviders", parts[0])
+		// group2 := reg.FindGroup("apiproviders", parts[0])
 		// log.Printf("Find Group:\n%s", registry.ToJSON(group2))
 
 		resName := "core"
@@ -147,12 +147,12 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 		res, _ := group.AddResource("apis", resName, "v1")
 
-		g2, err := reg.FindGroup("schemaGroups", parts[0])
-		ErrFatalf(err, "FindGroup(%s/%s): %s", "schemaGroups", parts[0], err)
+		g2, err := reg.FindGroup("schemagroups", parts[0])
+		ErrFatalf(err, "FindGroup(%s/%s): %s", "schemagroups", parts[0], err)
 
 		if g2 == nil {
-			g2, err = reg.AddGroup("schemaGroups", parts[0])
-			ErrFatalf(err, "AddGroup(%s/%s): %s", "schemaGroups", parts[0], err)
+			g2, err = reg.AddGroup("schemagroups", parts[0])
+			ErrFatalf(err, "AddGroup(%s/%s): %s", "schemagroups", parts[0], err)
 		}
 		g2.Set("name", group.Get("name"))
 		/*
@@ -200,25 +200,33 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 		reg.Set("labels.stage", "prod")
 
-		reg.Model.AddAttribute(&registry.Attribute{Name: "bool1",
-			Type: registry.BOOLEAN})
-		reg.Model.AddAttribute(&registry.Attribute{Name: "int1",
-			Type: registry.INTEGER})
-		reg.Model.AddAttribute(&registry.Attribute{Name: "dec1",
-			Type: registry.DECIMAL})
-		reg.Model.AddAttribute(&registry.Attribute{Name: "str1",
-			Type: registry.STRING})
-		reg.Model.AddAttribute(&registry.Attribute{Name: "map1",
-			Type: registry.MAP,
-			Item: &registry.Item{
-				Type: registry.STRING,
-			}})
+		reg.Model.AddAttr("bool1", registry.BOOLEAN)
+		reg.Model.AddAttr("int1", registry.INTEGER)
+		reg.Model.AddAttr("str1", registry.STRING)
+		reg.Model.AddAttrMap("map1", registry.NewItem(registry.STRING))
+		reg.Model.AddAttrArray("arr1", registry.NewItem(registry.STRING))
+
+		item := registry.NewItemObj()
+		item.AddAttr("inint", registry.INTEGER)
+		reg.Model.AddAttrMap("mapobj", item)
+
+		reg.Model.AddAttrArray("arrmap",
+			registry.NewItemMap(
+				registry.NewItem(registry.STRING)))
 
 		reg.Set("bool1", true)
 		reg.Set("int1", 1)
 		reg.Set("dec1", 1.1)
 		reg.Set("str1", "hi")
 		reg.Set("map1.k1", "v1")
+
+		reg.Set("arr1[1]", "arr1-value")
+		err := reg.Set("mapobj.mapkey.inint", 5)
+		ErrFatalf(err, "%s\n", err)
+		err = reg.Set("mapobj['cool.key'].inint", 666)
+		ErrFatalf(err, "%s\n", err)
+		err = reg.Set("arrmap[1].key1", "arrmapk1-value")
+		ErrFatalf(err, "%s\n", err)
 	}
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
@@ -253,7 +261,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	}
 
 	gm, _ := reg.Model.AddGroupModel("endpoints", "endpoint")
-	gm.AddAttribute(&registry.Attribute{Name: "ext", Type: "string"})
+	gm.AddAttr("ext", registry.STRING)
 
 	_, err = gm.AddResourceModel("definitions", "definition", 2, true, true, true)
 

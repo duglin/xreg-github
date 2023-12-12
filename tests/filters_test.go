@@ -9,8 +9,10 @@ func TestBasicFilters(t *testing.T) {
 	reg := NewRegistry("TestBasicFilters")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
-	gm.AddResourceModel("files", "file", 0, true, true, true)
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	xNoErr(t, err)
+	_, err = gm.AddResourceModel("files", "file", 0, true, true, true)
+	xNoErr(t, err)
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
 	f.AddVersion("v2")
@@ -201,7 +203,7 @@ func TestBasicFilters(t *testing.T) {
 `,
 		},
 		{
-			Name: "Get/filter dir file.labels - match",
+			Name: "Get/filter dir file.labels - match 1elif",
 			URL:  "?inline&filter=dirs.files.labels.file1=1elif",
 			Exp: `{
   "specversion": "0.5",
@@ -345,8 +347,10 @@ func TestANDORFilters(t *testing.T) {
 	reg := NewRegistry("TestANDORFilters")
 	defer PassDeleteReg(t, reg)
 
-	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
-	gm.AddResourceModel("files", "file", 0, true, true, true)
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	xNoErr(t, err)
+	_, err = gm.AddResourceModel("files", "file", 0, true, true, true)
+	xNoErr(t, err)
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
 	f.AddVersion("v2")
@@ -356,10 +360,14 @@ func TestANDORFilters(t *testing.T) {
 	f.AddVersion("v1.1")
 	f.Set("name", "f2")
 
-	gm, _ = reg.Model.AddGroupModel("schemaGroups", "schemaGroup")
-	gm.AddResourceModel("schemas", "schema", 0, true, true, true)
-	sg, _ := reg.AddGroup("schemaGroups", "sg1")
-	s, _ := sg.AddResource("schemas", "s1", "v1.0")
+	gm, err = reg.Model.AddGroupModel("schemagroups", "schemagroup")
+	xNoErr(t, err)
+	_, err = gm.AddResourceModel("schemas", "schema", 0, true, true, true)
+	xNoErr(t, err)
+	sg, err := reg.AddGroup("schemagroups", "sg1")
+	xNoErr(t, err)
+	s, err := sg.AddResource("schemas", "s1", "v1.0")
+	xNoErr(t, err)
 	s.AddVersion("v2.0")
 
 	reg.Set("labels.reg1", "1ger")
@@ -369,7 +377,7 @@ func TestANDORFilters(t *testing.T) {
 	//            /v2
 	//      /d2/f2/v1     f2.name=f2
 	//             v1.1
-	// /schemaGroups/sg1/schemas/s1/v1.0
+	// /s/sg1/schemas/s1/v1.0
 	//                             /v2.0
 
 	tests := []struct {
@@ -380,7 +388,7 @@ func TestANDORFilters(t *testing.T) {
 		{
 			Name: "AND same obj/level - match",
 			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.name=f1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "AND same obj/level - no match",
@@ -390,12 +398,12 @@ func TestANDORFilters(t *testing.T) {
 		{
 			Name: "OR same obj/level - match",
 			URL:  "?oneline&inline&filter=dirs.files.id=f1&filter=dirs.files.name=f1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "multi result 2 levels down - match",
 			URL:  "?oneline&inline&filter=dirs.files.versions.id=v1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"schemaGroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - match",
@@ -410,34 +418,34 @@ func TestANDORFilters(t *testing.T) {
 
 		// Span group types
 		{
-			Name: "dirs and schemaGroups - match both",
-			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemaGroups.id=sg1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
+			Name: "dirs and s - match both",
+			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemagroups.id=sg1",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
 		},
 		{
-			Name: "dirs and schemaGroups - match first",
-			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemaGroups.id=xxx",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemaGroups":{}}`,
+			Name: "dirs and s - match first",
+			URL:  "?oneline&inline&filter=dirs.id=d1&filter=schemagroups.id=xxx",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
-			Name: "dirs and schemaGroups - match second",
-			URL:  "?oneline&inline&filter=dirs.id=xxx&filter=schemaGroups.id=sg1",
-			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
+			Name: "dirs and s - match second",
+			URL:  "?oneline&inline&filter=dirs.id=xxx&filter=schemagroups.id=sg1",
+			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
 		},
 		{
-			Name: "dirsOR and schemaGroupsOR - match first",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v1.0,schemaGroups.schemas.versions.id=v2.0",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{}}`,
+			Name: "dirsOR and sOR - match first",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemagroups.schemas.versions.id=v1.0,schemagroups.schemas.versions.id=v2.0",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
-			Name: "dirsOR and schemaGroupsOR - match second",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestversionid=v2.0",
-			Exp:  `{"dirs":{},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
+			Name: "dirsOR and sOR - match second",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.latestversionid=v2.0",
+			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 		{
-			Name: "dirsOR and schemaGroupsOR - both match",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemaGroups.schemas.versions.id=v2.0,schemaGroups.schemas.latestversionid=v2.0",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemaGroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
+			Name: "dirsOR and sOR - both match",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.latestversionid=v2.0",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 	}
 

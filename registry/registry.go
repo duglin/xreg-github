@@ -402,6 +402,7 @@ func ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) 
 
 	err := info.ParseRequestURL()
 	if err != nil {
+		info.StatusCode = http.StatusBadRequest
 		return info, err
 	}
 
@@ -420,10 +421,12 @@ func ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) 
 						// want: p = info.Abstract + "." + p  in UI format
 						absPP, err := PropPathFromPath(info.Abstract)
 						if err != nil {
+							info.StatusCode = http.StatusBadRequest
 							return info, err
 						}
 						pPP, err := PropPathFromUI(p)
 						if err != nil {
+							info.StatusCode = http.StatusBadRequest
 							return info, err
 						}
 						p = absPP.Append(pPP).UI()
@@ -441,6 +444,9 @@ func ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) 
 	}
 
 	err = info.ParseFilters()
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+	}
 
 	return info, err
 }

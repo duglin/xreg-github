@@ -291,11 +291,22 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 			propType = GoToOurType(val)
 		}
 
+		// Convert booleans to true/false instead of 1/0 so filter works
+		// ...=true and not ...=1
+		dbVal := val
+		if propType == BOOLEAN {
+			if val == true {
+				dbVal = "true"
+			} else {
+				dbVal = "false"
+			}
+		}
+
 		err = DoOneTwo(`
             REPLACE INTO Props(
               RegistrySID, EntitySID, PropName, PropValue, PropType)
             VALUES( ?,?,?,?,? )`,
-			e.RegistrySID, e.DbSID, name, val, propType)
+			e.RegistrySID, e.DbSID, name, dbVal, propType)
 	}
 
 	if err != nil {
@@ -327,7 +338,8 @@ func (e *Entity) SetPropFromString(name string, val *string, propType string) {
 		propType == URI_TEMPLATE || propType == URL || propType == TIME {
 		e.Props[name] = *val
 	} else if propType == BOOLEAN {
-		e.Props[name] = (*val == "1")
+		// Technically "1" check shouldn't be needed, but just in case
+		e.Props[name] = (*val == "1") || (*val == "true")
 	} else if propType == INTEGER || propType == UINTEGER {
 		tmpInt, err := strconv.Atoi(*val)
 		if err != nil {
@@ -574,12 +586,9 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 
 	daObj := e.Materialize(info)
 
-	// fmt.Printf("----\n")
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
-		// fmt.Printf("Trying to serialize: %s\n", prop.name)
 		if val, ok := daObj[prop.name]; ok {
-			// fmt.Printf("  found it\n")
 			if err := fn(e, info, prop.name, val); err != nil {
 				log.Printf("Error serializing %q(%v): %s", prop.name, val, err)
 				return err

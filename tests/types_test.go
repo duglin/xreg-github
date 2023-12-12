@@ -33,68 +33,18 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttr("reganystr", registry.ANY)
 	reg.Model.AddAttr("reganyobj", registry.ANY)
 
-	reg.Model.AddAttribute(&registry.Attribute{
-		Name: "regarrayarrayint",
-		Type: registry.ARRAY,
-		Item: &registry.Item{
-			Type: registry.ARRAY,
-			Item: &registry.Item{
-				Type: registry.INTEGER,
-			},
-		},
-	})
+	reg.Model.AddAttrArray("regarrayarrayint",
+		registry.NewItemArray(registry.NewItem(registry.INTEGER)))
 
-	reg.Model.AddAttribute(&registry.Attribute{
-		Name: "regarrayint",
-		Type: registry.ARRAY,
-		Item: &registry.Item{Type: registry.INTEGER},
-	})
+	reg.Model.AddAttrArray("regarrayint", registry.NewItem(registry.INTEGER))
+	reg.Model.AddAttrMap("regmapint", registry.NewItem(registry.INTEGER))
+	reg.Model.AddAttrMap("regmapstring", registry.NewItem(registry.STRING))
 
-	reg.Model.AddAttribute(&registry.Attribute{
-		Name: "regmapint",
-		Type: registry.MAP,
-		Item: &registry.Item{Type: registry.INTEGER},
-	})
-	reg.Model.AddAttribute(&registry.Attribute{
-		Name: "regmapstring",
-		Type: registry.MAP,
-		Item: &registry.Item{Type: registry.STRING},
-	})
-	reg.Model.AddAttribute(&registry.Attribute{
-		Name: "regobj",
-		Type: registry.OBJECT,
-		Item: &registry.Item{
-			Attributes: map[string]*registry.Attribute{
-				"objbool": &registry.Attribute{
-					Name: "objbool",
-					Type: registry.BOOLEAN,
-				},
-				"objint": &registry.Attribute{
-					Name: "objint",
-					Type: registry.INTEGER,
-				},
-				"objobj": &registry.Attribute{
-					Name: "objobj",
-					Type: registry.OBJECT,
-					Item: &registry.Item{
-						Attributes: map[string]*registry.Attribute{
-							"ooint": &registry.Attribute{
-								Name: "ooint",
-								Type: registry.INTEGER,
-							},
-						},
-					},
-				},
-				"objstr": &registry.Attribute{
-					Name: "objstr",
-					Type: registry.STRING,
-				},
-			},
-		},
-	})
-
-	// TODO - do we need this?
-	reg.Model.Save()
+	item := reg.Model.AddAttrObj("regobj").Item
+	item.AddAttr("objbool", registry.BOOLEAN)
+	item.AddAttr("objint", registry.INTEGER)
+	item.AddAttrObj("objobj").Item.AddAttr("ooint", registry.INTEGER)
+	item.AddAttr("objstr", registry.STRING)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddAttr("dirbool1", registry.BOOLEAN)
@@ -121,6 +71,9 @@ func TestBasicTypes(t *testing.T) {
 	rm.AddAttr("fileint3", registry.INTEGER)
 	rm.AddAttr("filestring1", registry.STRING)
 	rm.AddAttr("filestring2", registry.STRING)
+
+	// Model is fully defined, so save it
+	reg.Model.Save()
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
@@ -531,6 +484,7 @@ func TestWildcard2LayersTypes(t *testing.T) {
 		fmt.Sprintf("set obj.map.foo.k1.k2: %s", err))
 
 	err = reg.Set("obj.myany.foo.k1.k2", 5)
+	xCheck(t, err == nil, fmt.Sprintf("set obj.myany.foo.k1.k2: %s", err))
 	reg.Refresh()
 	val = reg.Get("obj.myany.foo.k1.k2")
 	xCheck(t, val == 5, fmt.Sprintf("set obj.myany.foo.k1.k2: %v", val))

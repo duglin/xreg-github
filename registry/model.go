@@ -12,12 +12,22 @@ import (
 var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]*$")
 var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]*$")
 
+func IsValidAttributeName(name string) bool {
+	return RegexpPropName.MatchString(name)
+}
+
+func IsValidMapKey(key string) bool {
+	return RegexpMapKey.MatchString(key)
+}
+
 type Model struct {
 	Registry   *Registry              `json:"-"`
 	Schemas    []string               `json:"schemas,omitempty"`
-	Attributes map[string]*Attribute  `json:"attributes,omitempty"` // attrName
-	Groups     map[string]*GroupModel `json:"groups,omitempty"`     // Plural
+	Attributes Attributes             `json:"attributes,omitempty"`
+	Groups     map[string]*GroupModel `json:"groups,omitempty"` // Plural
 }
+
+type Attributes map[string]*Attribute // AttrName->Attr
 
 type Attribute struct {
 	Name        string   `json:"name,omitempty"`
@@ -32,9 +42,9 @@ type Attribute struct {
 }
 
 type Item struct {
-	Attributes map[string]*Attribute `json:"attributes,omitempty"` //attrName
-	Type       string                `json:"type,omitempty"`
-	Item       *Item                 `json:"item,omitempty"`
+	Attributes Attributes `json:"attributes,omitempty"` //attrName
+	Type       string     `json:"type,omitempty"`
+	Item       *Item      `json:"item,omitempty"`
 }
 
 type IfValue struct {
@@ -157,13 +167,32 @@ func (m *Model) AddAttr(name, daType string) *Attribute {
 	return attr
 }
 
-func (m *Model) AddAttrMap(name string, itemType string) *Attribute {
+func (m *Model) AddAttrMap(name string, item *Item) *Attribute {
 	attr, err := m.AddAttribute(&Attribute{
 		Name: name,
 		Type: MAP,
-		Item: &Item{
-			Type: itemType,
-		},
+		Item: item,
+	})
+	PanicIf(err != nil, "%s", err)
+
+	return attr
+}
+
+func (m *Model) AddAttrObj(name string) *Attribute {
+	attr, err := m.AddAttribute(&Attribute{
+		Name: name,
+		Type: OBJECT,
+		Item: &Item{},
+	})
+	PanicIf(err != nil, "%s", err)
+	return attr
+}
+
+func (m *Model) AddAttrArray(name string, item *Item) *Attribute {
+	attr, err := m.AddAttribute(&Attribute{
+		Name: name,
+		Type: ARRAY,
+		Item: item,
 	})
 	PanicIf(err != nil, "%s", err)
 	return attr
@@ -174,7 +203,7 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
@@ -183,7 +212,6 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	m.Attributes[attr.Name] = attr
-	m.Save()
 	return attr, nil
 }
 
@@ -193,7 +221,6 @@ func (m *Model) DelAttribute(name string) {
 	}
 
 	delete(m.Attributes, name)
-	m.Save()
 }
 
 func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, error) {
@@ -202,6 +229,14 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 	}
 	if singular == "" {
 		return nil, fmt.Errorf("Can't add a GroupModel with an empty sigular name")
+	}
+
+	if !IsValidAttributeName(plural) {
+		return nil, fmt.Errorf("GroupModel plural name is not valid")
+	}
+
+	if !IsValidAttributeName(singular) {
+		return nil, fmt.Errorf("GroupModel singular name is not valid")
 	}
 
 	for _, gm := range m.Groups {
@@ -239,6 +274,97 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 	return gm, nil
 }
 
+func NewItem(daType string) *Item {
+	return &Item{
+		Type: daType,
+	}
+}
+
+func NewItemObj() *Item {
+	return &Item{
+		Type: OBJECT,
+	}
+}
+
+func NewItemMap(item *Item) *Item {
+	return &Item{
+		Type: MAP,
+		Item: item,
+	}
+}
+
+func NewItemArray(item *Item) *Item {
+	return &Item{
+		Type: ARRAY,
+		Item: item,
+	}
+}
+
+func (i *Item) AddAttr(name, daType string) *Attribute {
+	attr, err := i.AddAttribute(&Attribute{
+		Name: name,
+		Type: daType,
+	})
+	PanicIf(err != nil, "%s", err)
+	return attr
+}
+
+func (i *Item) AddAttrMap(name string, item *Item) *Attribute {
+	attr, err := i.AddAttribute(&Attribute{
+		Name: name,
+		Type: MAP,
+		Item: item,
+	})
+	PanicIf(err != nil, "%s", err)
+
+	return attr
+}
+
+func (i *Item) AddAttrObj(name string) *Attribute {
+	attr, err := i.AddAttribute(&Attribute{
+		Name: name,
+		Type: OBJECT,
+		Item: &Item{},
+	})
+	PanicIf(err != nil, "%s", err)
+	return attr
+}
+
+func (i *Item) AddAttrArray(name string, item *Item) *Attribute {
+	attr, err := i.AddAttribute(&Attribute{
+		Name: name,
+		Type: ARRAY,
+		Item: item,
+	})
+	PanicIf(err != nil, "%s", err)
+	return attr
+}
+
+func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
+	if attr == nil {
+		return nil, nil
+	}
+
+	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
+		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	}
+
+	if i.Attributes == nil {
+		i.Attributes = map[string]*Attribute{}
+	}
+
+	i.Attributes[attr.Name] = attr
+	return attr, nil
+}
+
+func (i *Item) DelAttribute(name string) {
+	if i.Attributes == nil {
+		return
+	}
+
+	delete(i.Attributes, name)
+}
+
 func LoadModel(reg *Registry) *Model {
 	groups := map[string]*GroupModel{} // Model SID -> *GroupModel
 
@@ -263,7 +389,6 @@ func LoadModel(reg *Registry) *Model {
 
 	if row[0] != nil {
 		json.Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
-
 	}
 
 	// Load Schemas
@@ -474,13 +599,11 @@ func (gm *GroupModel) AddAttr(name, daType string) *Attribute {
 	return attr
 }
 
-func (gm *GroupModel) AddAttrMap(name string, itemType string) *Attribute {
+func (gm *GroupModel) AddAttrMap(name string, item *Item) *Attribute {
 	attr, err := gm.AddAttribute(&Attribute{
 		Name: name,
 		Type: MAP,
-		Item: &Item{
-			Type: itemType,
-		},
+		Item: item,
 	})
 	PanicIf(err != nil, "%s", err)
 	return attr
@@ -491,7 +614,7 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
@@ -500,7 +623,6 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	gm.Attributes[attr.Name] = attr
-	gm.Save()
 	return attr, nil
 }
 
@@ -510,7 +632,6 @@ func (gm *GroupModel) DelAttribute(name string) {
 	}
 
 	delete(gm.Attributes, name)
-	gm.Save()
 }
 
 func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool, hasDocument bool) (*ResourceModel, error) {
@@ -522,6 +643,12 @@ func (gm *GroupModel) AddResourceModel(plural string, singular string, versions 
 	}
 	if versions < 0 {
 		return nil, fmt.Errorf("'versions'(%d) must be >= 0", versions)
+	}
+	if !IsValidAttributeName(plural) {
+		return nil, fmt.Errorf("ResourceModel plural name is not valid")
+	}
+	if !IsValidAttributeName(singular) {
+		return nil, fmt.Errorf("ResourceModel singular name is not valid")
 	}
 
 	for _, r := range gm.Resources {
@@ -616,13 +743,11 @@ func (rm *ResourceModel) AddAttr(name, daType string) *Attribute {
 	return attr
 }
 
-func (rm *ResourceModel) AddAttrMap(name string, itemType string) *Attribute {
+func (rm *ResourceModel) AddAttrMap(name string, item *Item) *Attribute {
 	attr, err := rm.AddAttribute(&Attribute{
 		Name: name,
 		Type: MAP,
-		Item: &Item{
-			Type: itemType,
-		},
+		Item: item,
 	})
 	PanicIf(err != nil, "%s", err)
 	return attr
@@ -633,7 +758,7 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
@@ -642,7 +767,6 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	rm.Attributes[attr.Name] = attr
-	rm.Save()
 	return attr, nil
 }
 
@@ -652,7 +776,6 @@ func (rm *ResourceModel) DelAttribute(name string) {
 	}
 
 	delete(rm.Attributes, name)
-	rm.Save()
 }
 
 func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
@@ -723,7 +846,7 @@ func (a *Attribute) AddAttr(name, daType string) *Attribute {
 }
 
 func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
-	if attr.Name != "*" && !RegexpPropName.MatchString(attr.Name) {
+	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
@@ -734,6 +857,9 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 // Note this will also validate that the names used to build up the path
 // of the attribute are valid (e.g. wrt case and valid chars)
 func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error) {
+	log.VPrintf(3, ">Enter: GetAttributeType: %s / %s", abstractEntity, pp.UI())
+	defer log.VPrintf(3, "<Exit: GetAttributeType")
+
 	if pp.Len() == 0 {
 		panic("PropPath can't be empty for GetAttributeType")
 	}
@@ -749,120 +875,82 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		panic("Attributes can't be nil for: %s" + abstractEntity)
 	}
 
-	in := OBJECT
+	item := &Item{ // model definition of current thing we're processing
+		Attributes: attrs,
+		Type:       OBJECT,
+		Item:       nil,
+	}
+	prevTop := ""
+	top := ""
+
 	for {
-		// We're on an object
+		// Nothing to do so just return current item
 		if pp.Len() == 0 {
-			return OBJECT, nil
+			return item.Type, nil
 		}
 
-		top := pp.Top()
-		if in == OBJECT {
-			if !RegexpPropName.MatchString(top) {
+		prevTop = top
+
+		top = pp.Top()
+
+		if IsScalar(item.Type) {
+			if pp.Len() != 0 {
+				sub := ""
+				if pp.Parts[0].Index >= 0 {
+					sub = fmt.Sprintf("[%d]", pp.Parts[0].Index)
+				}
+				return "", fmt.Errorf("Traversing into scalar "+
+					"\"%s%s\": %s", prevTop, sub, savePP.UI())
+			}
+			return item.Type, nil
+		}
+
+		if item.Type == OBJECT {
+			// We're looking at the attribute name in the object
+			if !IsValidAttributeName(top) {
 				return "", fmt.Errorf("Attribute name %q isn't valid", top)
 			}
-		} else {
-			// Must be a MAP
-			if !RegexpMapKey.MatchString(top) {
+
+			attr := item.Attributes[top]
+			if attr == nil {
+				attr = item.Attributes["*"]
+				if attr == nil {
+					return "", nil
+				}
+			}
+
+			if attr.Type == ANY {
+				return attr.Type, nil
+			}
+
+			item = &Item{
+				Attributes: nil,
+				Type:       attr.Type,
+				Item:       attr.Item,
+			}
+
+			if attr.Item != nil {
+				item.Attributes = attr.Item.Attributes
+			}
+		} else if item.Type == ARRAY {
+			// We're looking at the index of the array
+			if pp.Parts[0].Index < 0 {
+				return "", fmt.Errorf("Array index %q isn't an integer", top)
+			}
+
+			item = item.Item
+		} else if item.Type == MAP {
+			// We're looking at the map key name
+			if !IsValidMapKey(top) {
 				return "", fmt.Errorf("Map key %q isn't valid", top)
 			}
+			item = item.Item
+		} else {
+			panic(fmt.Sprintf("Can't deal with type: %s\npp:%v",
+				item.Type, savePP.UI()))
 		}
 
-		attr := attrs[top]
-
-		if attr == nil {
-			attr = attrs["*"]
-			if attr == nil {
-				return "", nil
-			}
-		}
-
-		// Just a scalar, return it
-		if attr.IsScalar() {
-			if pp.Len() != 1 {
-				panic(fmt.Sprintf("Trying to traverse into scalar %q: %s",
-					attr.Name, top))
-			}
-			return attr.Type, nil
-		}
-
-		if attr.Type == ANY {
-			return attr.Type, nil
-		}
-
-		// Is non-scalar (obj, map, array)
-		if attr.Type == OBJECT || attr.Type == "" {
-			attrs = attr.Item.Attributes
-			attr = nil // let loop grab next one
-			pp = pp.Next()
-			in = OBJECT
-			continue
-		}
-
-		if attr.Type == ARRAY {
-			saveTop := pp.Top()
-			for {
-				pp = pp.Next() // Next is the index of the array
-				if pp.Len() == 0 {
-					return ARRAY, nil // No index so just return the array itself
-				}
-				if pp.Parts[0].Index < 0 {
-					return "", fmt.Errorf("Array index for %q isn't an integer: %v",
-						saveTop, pp.Top())
-				}
-				if attr.Item.Type != ARRAY {
-					break
-				}
-				attr = &Attribute{
-					Type: attr.Item.Type,
-					Item: attr.Item.Item,
-				}
-			}
-
-			if IsScalar(attr.Item.Type) {
-				if pp.Len() != 1 {
-					return "", fmt.Errorf("Traversing into scalar "+
-						"\"%s[%d]\": %s", saveTop, pp.Parts[0].Index,
-						savePP.UI())
-				}
-				return attr.Item.Type, nil
-			}
-			// Skip key
-			pp = pp.Next()
-			if attr.Item.Type == OBJECT || attr.Type == "" {
-				attrs = attr.Item.Attributes
-				in = OBJECT
-			} else {
-				in = MAP
-			}
-			continue
-		}
-
-		if attr.Type == MAP {
-			pp = pp.Next() // Next is the key, if present
-			if pp.Len() == 0 {
-				return MAP, nil // No key so just return the map itself
-			}
-			if IsScalar(attr.Item.Type) {
-				if pp.Len() != 1 {
-					return "", fmt.Errorf("Traversing into scalar "+
-						"%q: %s", pp.Top(), savePP.UI())
-				}
-				return attr.Item.Type, nil
-			}
-			// Skip key
-			pp = pp.Next()
-			if attr.Item.Type == OBJECT || attr.Item.Type == "" {
-				attrs = attr.Item.Attributes
-				in = OBJECT
-			} else {
-				in = MAP
-			}
-			attr = nil // let loop grab the next one
-			continue
-		}
-
-		panic(fmt.Sprintf("Can't deal with type: %s\npp:%v", attr.Type, savePP.UI()))
+		pp = pp.Next()
 	}
 }
 
