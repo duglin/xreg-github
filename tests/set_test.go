@@ -2,8 +2,50 @@ package tests
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
+
+func TestSetAttributeNames(t *testing.T) {
+	reg := NewRegistry("TestSetAttributeName")
+	defer PassDeleteReg(t, reg)
+
+	type test struct {
+		name string
+		msg  string
+	}
+
+	sixty := "a23456789012345678901234567890123456789012345678901234567890"
+
+	tests := []test{
+		{sixty + "12", ""},
+		{sixty + "123", ""},
+		{"_123", ""},
+		{"_12_3", ""},
+		{"_123_", ""},
+		{"_123_", ""},
+		{"_", ""},
+		{"__", ""},
+		{sixty + "1234", "Invalid attribute name: "},
+		{"1234", "Invalid attribute name: "},
+		{"A", "Invalid attribute name: "},
+		{"aA", "Invalid attribute name: "},
+		{"_A", "Invalid attribute name: "},
+		{"_ _", "Invalid attribute name: "},
+	}
+
+	for _, test := range tests {
+		_, err := reg.Model.AddAttr(test.name, registry.STRING)
+		if test.msg == "" && err != nil {
+			t.Errorf("Name: %q failed: %s", test.name, err)
+		}
+		if test.msg != "" && (err == nil || !strings.HasPrefix(err.Error(), test.msg)) {
+			t.Errorf("Name: %q should have failed", test.name)
+		}
+	}
+}
 
 func TestSetResource(t *testing.T) {
 	reg := NewRegistry("TestSetResource")

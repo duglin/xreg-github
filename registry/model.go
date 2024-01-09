@@ -9,8 +9,8 @@ import (
 	log "github.com/duglin/dlog"
 )
 
-var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]*$")
-var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]*$")
+var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]{0,62}$")
+var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]{0,62}$")
 
 func IsValidAttributeName(name string) bool {
 	return RegexpPropName.MatchString(name)
@@ -158,44 +158,35 @@ func (m *Model) SetSchemas(schemas []string) error {
 	return nil
 }
 
-func (m *Model) AddAttr(name, daType string) *Attribute {
-	attr, err := m.AddAttribute(&Attribute{
+func (m *Model) AddAttr(name, daType string) (*Attribute, error) {
+	return m.AddAttribute(&Attribute{
 		Name: name,
 		Type: daType,
 	})
-	PanicIf(err != nil, "%s", err)
-	return attr
 }
 
-func (m *Model) AddAttrMap(name string, item *Item) *Attribute {
-	attr, err := m.AddAttribute(&Attribute{
+func (m *Model) AddAttrMap(name string, item *Item) (*Attribute, error) {
+	return m.AddAttribute(&Attribute{
 		Name: name,
 		Type: MAP,
 		Item: item,
 	})
-	PanicIf(err != nil, "%s", err)
-
-	return attr
 }
 
-func (m *Model) AddAttrObj(name string) *Attribute {
-	attr, err := m.AddAttribute(&Attribute{
+func (m *Model) AddAttrObj(name string) (*Attribute, error) {
+	return m.AddAttribute(&Attribute{
 		Name: name,
 		Type: OBJECT,
 		Item: &Item{},
 	})
-	PanicIf(err != nil, "%s", err)
-	return attr
 }
 
-func (m *Model) AddAttrArray(name string, item *Item) *Attribute {
-	attr, err := m.AddAttribute(&Attribute{
+func (m *Model) AddAttrArray(name string, item *Item) (*Attribute, error) {
+	return m.AddAttribute(&Attribute{
 		Name: name,
 		Type: ARRAY,
 		Item: item,
 	})
-	PanicIf(err != nil, "%s", err)
-	return attr
 }
 
 func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {

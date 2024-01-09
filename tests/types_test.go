@@ -40,7 +40,9 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttrMap("regmapint", registry.NewItem(registry.INTEGER))
 	reg.Model.AddAttrMap("regmapstring", registry.NewItem(registry.STRING))
 
-	item := reg.Model.AddAttrObj("regobj").Item
+	attr, err := reg.Model.AddAttrObj("regobj")
+	xNoErr(t, err)
+	item := attr.Item
 	item.AddAttr("objbool", registry.BOOLEAN)
 	item.AddAttr("objint", registry.INTEGER)
 	item.AddAttrObj("objobj").Item.AddAttr("ooint", registry.INTEGER)
