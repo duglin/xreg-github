@@ -47,9 +47,11 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 	}
 
 	res, err := client.Do(req)
+	resBody, _ := io.ReadAll(res.Body)
+
 	xNoErr(t, err)
 	xCheck(t, res.StatusCode == test.Code,
-		fmt.Sprintf("Expected status %d, got %d", test.Code, res.StatusCode))
+		fmt.Sprintf("Expected status %d, got %d\n%s", test.Code, res.StatusCode, string(resBody)))
 
 	testHeaders := map[string]bool{}
 	for _, header := range test.ResHeaders {
@@ -87,7 +89,6 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 		t.Errorf("%s: Extra header(%s)\nWant: %v", test.Name, k, res.Header)
 	}
 
-	resBody, _ := io.ReadAll(res.Body)
 	testBody := test.ResBody
 
 	for _, mask := range test.BodyMasks {
@@ -373,6 +374,13 @@ func TestHTTPGroups(t *testing.T) {
 	gm.AddAttr("format", registry.STRING)
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
+	attr, _ := gm.AddAttrObj("myobj")
+	attr.Item.AddAttr("foo", registry.STRING)
+
+	item := registry.NewItem(registry.ANY)
+	attr, _ = gm.AddAttrArray("myarray", item)
+	attr, _ = gm.AddAttrMap("mymap", item)
+
 	xCheckHTTP(t, &HTTPTest{
 		Name:       "PUT groups - fail",
 		URL:        "/dirs",
@@ -459,6 +467,7 @@ func TestHTTPGroups(t *testing.T) {
     "label3": "123.456",
     "label4": ""
   },
+  "format": "my group",
 
   "filescount": 0,
   "filesurl": "http://localhost:8181/dirs/dir1/files"
@@ -480,7 +489,7 @@ func TestHTTPGroups(t *testing.T) {
   "labels": {
     "label.new": "new"
   },
-  "format":"myformat/1"
+  "format": "myformat/1"
 }`,
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
@@ -494,6 +503,7 @@ func TestHTTPGroups(t *testing.T) {
   "labels": {
     "label.new": "new"
   },
+  "format": "myformat/1",
 
   "filescount": 0,
   "filesurl": "http://localhost:8181/dirs/dir1/files"
@@ -566,7 +576,7 @@ func TestHTTPGroups(t *testing.T) {
   "labels": {
     "label.new": "new"
   },
-  "format":"myformat/1"
+  "format": "myformat/1"
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},

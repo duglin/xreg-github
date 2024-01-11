@@ -45,7 +45,8 @@ func TestBasicTypes(t *testing.T) {
 	item := attr.Item
 	item.AddAttr("objbool", registry.BOOLEAN)
 	item.AddAttr("objint", registry.INTEGER)
-	item.AddAttrObj("objobj").Item.AddAttr("ooint", registry.INTEGER)
+	attr, _ = item.AddAttrObj("objobj")
+	attr.Item.AddAttr("ooint", registry.INTEGER)
 	item.AddAttr("objstr", registry.STRING)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
@@ -61,6 +62,14 @@ func TestBasicTypes(t *testing.T) {
 	gm.AddAttr("dirstring1", registry.STRING)
 	gm.AddAttr("dirstring2", registry.STRING)
 
+	gm.AddAttr("diranyarray", registry.ANY)
+	gm.AddAttr("diranymap", registry.ANY)
+	gm.AddAttr("diranyobj", registry.ANY)
+	gm.AddAttrArray("dirarrayint", registry.NewItem(registry.INTEGER))
+	gm.AddAttrMap("dirmapint", registry.NewItem(registry.INTEGER))
+	attr, _ = gm.AddAttrObj("dirobj")
+	attr.Item.AddAttr("*", registry.ANY)
+
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
 	rm.AddAttr("filebool1", registry.BOOLEAN)
 	rm.AddAttr("filebool2", registry.BOOLEAN)
@@ -75,18 +84,21 @@ func TestBasicTypes(t *testing.T) {
 	rm.AddAttr("filestring2", registry.STRING)
 
 	// Model is fully defined, so save it
-	reg.Model.Save()
+	// reg.Model.Save()
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
 	ver, _ := file.FindVersion("v1")
 
+	dir2, _ := reg.AddGroup("dirs", "dir2")
+
 	// /dirs/d1/f1/v1
 
 	type Prop struct {
-		Name   string
-		Value  any
-		ErrMsg string
+		Name     string
+		Value    any
+		ExpValue any
+		ErrMsg   string
 	}
 
 	type Test struct {
@@ -96,127 +108,135 @@ func TestBasicTypes(t *testing.T) {
 
 	tests := []Test{
 		Test{reg, []Prop{
-			{"regarrayarrayint[1][1]", 66, ""},
-			{"regarrayint[0]", 1, ""},
-			{"regarrayint[2]", 3, ""},
-			{"regarrayint[1]", 2, ""},
-			{"regbool1", true, ""},
-			{"regbool2", false, ""},
-			{"regdec1", 123.5, ""},
-			{"regdec2", -123.5, ""},
-			{"regdec3", 124.0, ""},
-			{"regdec4", 0.0, ""},
-			{"regint1", 123, ""},
-			{"regint2", -123, ""},
-			{"regint3", 0, ""},
-			{"regmapint.k1", 123, ""},
-			{"regmapint.k2", 234, ""},
-			{"regmapstring.k1", "v1", ""},
-			{"regmapstring.k2", "v2", ""},
-			{"regstring1", "str1", ""},
-			{"regstring2", "", ""},
-			{"regtime1", "2006-01-02T15:04:05Z", ""},
-			{"reguint1", 0, ""},
-			{"reguint2", 333, ""},
+			{"regarrayarrayint[1][1]", 66, nil, ""},
+			{"regarrayint[0]", 1, nil, ""},
+			{"regarrayint[2]", 3, nil, ""},
+			{"regarrayint[1]", 2, nil, ""},
+			{"regbool1", true, nil, ""},
+			{"regbool2", false, nil, ""},
+			{"regdec1", 123.5, nil, ""},
+			{"regdec2", -123.5, nil, ""},
+			{"regdec3", 124.0, nil, ""},
+			{"regdec4", 0.0, nil, ""},
+			{"regint1", 123, nil, ""},
+			{"regint2", -123, nil, ""},
+			{"regint3", 0, nil, ""},
+			{"regmapint.k1", 123, nil, ""},
+			{"regmapint.k2", 234, nil, ""},
+			{"regmapstring.k1", "v1", nil, ""},
+			{"regmapstring.k2", "v2", nil, ""},
+			{"regstring1", "str1", nil, ""},
+			{"regstring2", "", nil, ""},
+			{"regtime1", "2006-01-02T15:04:05Z", nil, ""},
+			{"reguint1", 0, nil, ""},
+			{"reguint2", 333, nil, ""},
 
-			{"reganyarrayint[2]", 5, ""},
-			{"reganyarrayobj[2].int1", 55, ""},
-			{"reganyarrayobj[2].myobj.int2", 555, ""},
-			{"reganyarrayobj[0]", -5, ""},
-			{"reganyint", 123, ""},
-			{"reganyobj.int", 345, ""},
-			{"reganyobj.str", "substr", ""},
-			{"reganystr", "mystr", ""},
-			{"regobj.objbool", true, ""},
-			{"regobj.objint", 345, ""},
-			{"regobj.objobj.ooint", 999, ""},
-			{"regobj.objstr", "in1", ""},
+			{"reganyarrayint[2]", 5, nil, ""},
+			{"reganyarrayobj[2].int1", 55, nil, ""},
+			{"reganyarrayobj[2].myobj.int2", 555, nil, ""},
+			{"reganyarrayobj[0]", -5, nil, ""},
+			{"reganyint", 123, nil, ""},
+			{"reganyobj.int", 345, nil, ""},
+			{"reganyobj.str", "substr", nil, ""},
+			{"reganystr", "mystr", nil, ""},
+			{"regobj.objbool", true, nil, ""},
+			{"regobj.objint", 345, nil, ""},
+			{"regobj.objobj.ooint", 999, nil, ""},
+			{"regobj.objstr", "in1", nil, ""},
 
-			{"reganyobj.nestobj.int", 123, ""},
+			{"reganyobj.nestobj.int", 123, nil, ""},
 
 			// Syntax checking
-			// {"MiXeD", 123, ""},
-			{"regarrayint[~abc]", 123,
+			// {"MiXeD", 123,nil, ""},
+			{"regarrayint[~abc]", 123, nil,
 				`Unexpected ~ in "regarrayint[~abc]" at pos 13`},
-			{"regarrayint['~abc']", 123,
+			{"regarrayint['~abc']", 123, nil,
 				`Unexpected ~ in "regarrayint['~abc']" at pos 14`},
-			{"regmapstring.~abc", 123,
+			{"regmapstring.~abc", 123, nil,
 				`Unexpected ~ in "regmapstring.~abc" at pos 14`},
-			{"regmapstring[~abc]", 123,
+			{"regmapstring[~abc]", 123, nil,
 				`Unexpected ~ in "regmapstring[~abc]" at pos 14`},
-			{"regmapstring['~abc']", 123,
+			{"regmapstring['~abc']", 123, nil,
 				`Unexpected ~ in "regmapstring['~abc']" at pos 15`},
 
 			// Type checking
-			{"epoch", -123,
+			{"epoch", -123, nil,
 				`"-123" should be an uinteger`}, // bad uint
-			{"reganyobj2.str", "substr",
+			{"reganyobj2.str", "substr", nil,
 				`Can't find attribute "reganyobj2.str"`}, // unknown attr
-			{"regarrayarrayint[0][0]", "abc",
+			{"regarrayarrayint[0][0]", "abc", nil,
 				`"abc" should be an integer`}, // bad type
-			{"regarrayint[2]", "abc",
+			{"regarrayint[2]", "abc", nil,
 				`"abc" should be an integer`}, // bad type
-			{"regbool1", "123",
+			{"regbool1", "123", nil,
 				`"123" should be a boolean`}, // bad type
-			{"regdec1", "123",
+			{"regdec1", "123", nil,
 				`"123" should be a decimal`}, // bad type
-			{"regint1", "123",
+			{"regint1", "123", nil,
 				`"123" should be an integer`}, // bad type
-			{"regmapint", "123",
-				`Unsupported type: map`}, // bad type
-			{"regmapint.k1", "123",
+			{"regmapint", "123", nil,
+				`Value must be an empty map`}, // must be empty
+			{"regmapint.k1", "123", nil,
 				`"123" should be an integer`}, // bad type
-			{"regmapstring.k1", 123,
+			{"regmapstring.k1", 123, nil,
 				`"123" should be a string`}, // bad type
-			{"regstring1", 123,
+			{"regstring1", 123, nil,
 				`"123" should be a string`}, // bad type
-			{"regtime1", "not a time",
+			{"regtime1", "not a time", nil,
 				`Malformed timestamp "not a time": parsing time "not a time" as "2006-01-02T15:04:05Z07:00": cannot parse "not a time" as "2006"`}, // bad date format
-			{"reguint1", -1,
+			{"reguint1", -1, nil,
 				`"-1" should be an uinteger`}, // bad uint
-			{"unknown_int", 123,
+			{"unknown_int", 123, nil,
 				`Can't find attribute "unknown_int"`}, // unknown attr
-			{"unknown_str", "error",
+			{"unknown_str", "error", nil,
 				`Can't find attribute "unknown_str"`}, // unknown attr
 		}},
 		Test{dir, []Prop{
-			{"dirstring1", "str2", ""},
-			{"dirstring2", "", ""},
-			{"dirint1", 234, ""},
-			{"dirint2", -234, ""},
-			{"dirint3", 0, ""},
-			{"dirbool1", true, ""},
-			{"dirbool2", false, ""},
-			{"dirdec1", 234.5, ""},
-			{"dirdec2", -234.5, ""},
-			{"dirdec3", 235.0, ""},
-			{"dirdec4", 0.0, ""},
+			{"dirstring1", "str2", nil, ""},
+			{"dirstring2", "", nil, ""},
+			{"dirint1", 234, nil, ""},
+			{"dirint2", -234, nil, ""},
+			{"dirint3", 0, nil, ""},
+			{"dirbool1", true, nil, ""},
+			{"dirbool2", false, nil, ""},
+			{"dirdec1", 234.5, nil, ""},
+			{"dirdec2", -234.5, nil, ""},
+			{"dirdec3", 235.0, nil, ""},
+			{"dirdec4", 0.0, nil, ""},
+		}},
+		Test{dir2, []Prop{
+			{"diranyarray", []any{}, nil, ""},
+			{"diranymap", map[string]any{}, nil, ""},
+			{"diranyobj", struct{}{}, map[string]any{}, ""},
+			{"dirarrayint", []int{}, []any{}, ""},
+			{"dirmapint", map[string]any{}, nil, ""},
+			{"dirobj", struct{}{}, map[string]any{}, ""},
 		}},
 		Test{file, []Prop{
-			{"filestring1", "str3", ""},
-			{"filestring2", "", ""},
-			{"fileint1", 345, ""},
-			{"fileint2", -345, ""},
-			{"fileint3", 0, ""},
-			{"filebool1", true, ""},
-			{"filebool2", false, ""},
-			{"filedec1", 345.5, ""},
-			{"filedec2", -345.5, ""},
-			{"filedec3", 346.0, ""},
-			{"filedec4", 0.0, ""},
+			{"filestring1", "str3", nil, ""},
+			{"filestring2", "", nil, ""},
+			{"fileint1", 345, nil, ""},
+			{"fileint2", -345, nil, ""},
+			{"fileint3", 0, nil, ""},
+			{"filebool1", true, nil, ""},
+			{"filebool2", false, nil, ""},
+			{"filedec1", 345.5, nil, ""},
+			{"filedec2", -345.5, nil, ""},
+			{"filedec3", 346.0, nil, ""},
+			{"filedec4", 0.0, nil, ""},
 		}},
 		Test{ver, []Prop{
-			{"filestring1", "str4", ""},
-			{"filestring2", "", ""},
-			{"fileint1", 456, ""},
-			{"fileint2", -456, ""},
-			{"fileint3", 0, ""},
-			{"filebool1", true, ""},
-			{"filebool2", false, ""},
-			{"filedec1", 456.5, ""},
-			{"filedec2", -456.5, ""},
-			{"filedec3", 457.0, ""},
-			{"filedec4", 0.0, ""},
+			{"filestring1", "str4", nil, ""},
+			{"filestring2", "", nil, ""},
+			{"fileint1", 456, nil, ""},
+			{"fileint2", -456, nil, ""},
+			{"fileint3", 0, nil, ""},
+			{"filebool1", true, nil, ""},
+			{"filebool2", false, nil, ""},
+			{"filedec1", 456.5, nil, ""},
+			{"filedec2", -456.5, nil, ""},
+			{"filedec3", 457.0, nil, ""},
+			{"filedec4", 0.0, nil, ""},
 		}},
 	}
 
@@ -252,7 +272,12 @@ func TestBasicTypes(t *testing.T) {
 				continue
 			}
 			got := setter.Get(prop.Name) // test.Entity.Get(prop.Name)
-			if got != prop.Value {
+			expected := prop.ExpValue
+			if expected == nil {
+				expected = prop.Value
+			}
+			if !reflect.DeepEqual(got, expected) {
+				// if got != expected {
 				t.Errorf("%T) %s: got %v(%T), expected %v(%T)\n",
 					test.Entity, prop.Name, got, got, prop.Value, prop.Value)
 				return // stop fast
@@ -393,9 +418,24 @@ func TestBasicTypes(t *testing.T) {
       },
       "filescount": 1,
       "filesurl": "http://localhost:8181/dirs/d1/files"
+    },
+    "dir2": {
+      "id": "dir2",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/dir2",
+      "diranyarray": [],
+      "diranymap": {},
+      "diranyobj": {},
+      "dirarrayint": [],
+      "dirmapint": {},
+      "dirobj": {},
+
+      "files": {},
+      "filescount": 0,
+      "filesurl": "http://localhost:8181/dirs/dir2/files"
     }
   },
-  "dirscount": 1,
+  "dirscount": 2,
   "dirsurl": "http://localhost:8181/dirs"
 }
 `)
@@ -406,7 +446,7 @@ func TestWildcardBoolTypes(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	reg.Model.AddAttr("*", registry.BOOLEAN)
-	reg.Model.Save()
+	// reg.Model.Save()
 
 	err := reg.Set("bogus", "foo")
 	xCheck(t, err.Error() == `"foo" should be a boolean`,
@@ -429,7 +469,7 @@ func TestWildcardAnyTypes(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	reg.Model.AddAttr("*", registry.ANY)
-	reg.Model.Save()
+	// reg.Model.Save()
 
 	// Make sure we can set the same attr to two different types
 	err := reg.Set("ext1", 5.5)
@@ -473,7 +513,7 @@ func TestWildcard2LayersTypes(t *testing.T) {
 			},
 		},
 	})
-	reg.Model.Save()
+	// reg.Model.Save()
 
 	err := reg.Set("obj.map.k1", 5)
 	xCheck(t, err == nil, fmt.Sprintf("set foo.k1: %s", err))

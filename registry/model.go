@@ -30,18 +30,20 @@ type Model struct {
 type Attributes map[string]*Attribute // AttrName->Attr
 
 type Attribute struct {
-	Name        string   `json:"name,omitempty"`
-	Type        string   `json:"type,omitempty"`
-	Description string   `json:"description,omitempty"`
-	Enum        []string `json:"enum,omitempty"`
-	Strict      bool     `json:"strict,omitempty"`
-	Required    bool     `json:"required,omitempty"`
+	Registry    *Registry `json:"-"`
+	Name        string    `json:"name,omitempty"`
+	Type        string    `json:"type,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Enum        []string  `json:"enum,omitempty"`
+	Strict      bool      `json:"strict,omitempty"`
+	Required    bool      `json:"required,omitempty"`
 
 	Item    *Item               `json:"item,omitempty"`
 	IfValue map[string]*IfValue `json:"ifValue,omitempty"` // Value
 }
 
 type Item struct {
+	Registry   *Registry  `json:"-"`
 	Attributes Attributes `json:"attributes,omitempty"` //attrName
 	Type       string     `json:"type,omitempty"`
 	Item       *Item      `json:"item,omitempty"`
@@ -124,6 +126,10 @@ func (m *Model) DelSchema(schema string) error {
 	return nil
 }
 
+// Save() should be called by these funcs automatically but there may be
+// cases where someone would need to call it manually (e.g. setting an
+// attribute's property - we should technically find a way to catch those
+// cases so code above this shouldn't need to think about it
 func (m *Model) Save() error {
 	buf, _ := json.Marshal(m.Attributes)
 	attrs := string(buf)
@@ -159,34 +165,19 @@ func (m *Model) SetSchemas(schemas []string) error {
 }
 
 func (m *Model) AddAttr(name, daType string) (*Attribute, error) {
-	return m.AddAttribute(&Attribute{
-		Name: name,
-		Type: daType,
-	})
+	return m.AddAttribute(&Attribute{Name: name, Type: daType})
 }
 
 func (m *Model) AddAttrMap(name string, item *Item) (*Attribute, error) {
-	return m.AddAttribute(&Attribute{
-		Name: name,
-		Type: MAP,
-		Item: item,
-	})
+	return m.AddAttribute(&Attribute{Name: name, Type: MAP, Item: item})
 }
 
 func (m *Model) AddAttrObj(name string) (*Attribute, error) {
-	return m.AddAttribute(&Attribute{
-		Name: name,
-		Type: OBJECT,
-		Item: &Item{},
-	})
+	return m.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
 }
 
 func (m *Model) AddAttrArray(name string, item *Item) (*Attribute, error) {
-	return m.AddAttribute(&Attribute{
-		Name: name,
-		Type: ARRAY,
-		Item: item,
-	})
+	return m.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
 }
 
 func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
@@ -203,6 +194,15 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	m.Attributes[attr.Name] = attr
+
+	if attr.Registry == nil {
+		attr.Registry = m.Registry
+	}
+
+	attr.Item.SetRegistry(m.Registry)
+
+	m.Save()
+
 	return attr, nil
 }
 
@@ -212,6 +212,8 @@ func (m *Model) DelAttribute(name string) {
 	}
 
 	delete(m.Attributes, name)
+
+	m.Save()
 }
 
 func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, error) {
@@ -291,44 +293,29 @@ func NewItemArray(item *Item) *Item {
 	}
 }
 
-func (i *Item) AddAttr(name, daType string) *Attribute {
-	attr, err := i.AddAttribute(&Attribute{
-		Name: name,
-		Type: daType,
-	})
-	PanicIf(err != nil, "%s", err)
-	return attr
+func (i *Item) SetRegistry(reg *Registry) {
+	if i == nil {
+		return
+	}
+
+	i.Registry = reg
+	i.Attributes.SetRegistry(reg)
 }
 
-func (i *Item) AddAttrMap(name string, item *Item) *Attribute {
-	attr, err := i.AddAttribute(&Attribute{
-		Name: name,
-		Type: MAP,
-		Item: item,
-	})
-	PanicIf(err != nil, "%s", err)
-
-	return attr
+func (i *Item) AddAttr(name, daType string) (*Attribute, error) {
+	return i.AddAttribute(&Attribute{Name: name, Type: daType})
 }
 
-func (i *Item) AddAttrObj(name string) *Attribute {
-	attr, err := i.AddAttribute(&Attribute{
-		Name: name,
-		Type: OBJECT,
-		Item: &Item{},
-	})
-	PanicIf(err != nil, "%s", err)
-	return attr
+func (i *Item) AddAttrMap(name string, item *Item) (*Attribute, error) {
+	return i.AddAttribute(&Attribute{Name: name, Type: MAP, Item: item})
 }
 
-func (i *Item) AddAttrArray(name string, item *Item) *Attribute {
-	attr, err := i.AddAttribute(&Attribute{
-		Name: name,
-		Type: ARRAY,
-		Item: item,
-	})
-	PanicIf(err != nil, "%s", err)
-	return attr
+func (i *Item) AddAttrObj(name string) (*Attribute, error) {
+	return i.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+}
+
+func (i *Item) AddAttrArray(name string, item *Item) (*Attribute, error) {
+	return i.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
 }
 
 func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
@@ -345,6 +332,14 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	i.Attributes[attr.Name] = attr
+
+	if attr.Registry == nil {
+		attr.Registry = i.Registry
+	}
+	if i.Registry != nil {
+		i.Registry.Model.Save()
+	}
+
 	return attr, nil
 }
 
@@ -354,6 +349,10 @@ func (i *Item) DelAttribute(name string) {
 	}
 
 	delete(i.Attributes, name)
+
+	if i.Registry != nil {
+		i.Registry.Model.Save()
+	}
 }
 
 func LoadModel(reg *Registry) *Model {
@@ -381,6 +380,8 @@ func LoadModel(reg *Registry) *Model {
 	if row[0] != nil {
 		json.Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
 	}
+
+	model.Attributes.SetRegistry(reg)
 
 	// Load Schemas
 	results, err = Query(`
@@ -581,23 +582,20 @@ func (gm *GroupModel) Save() error {
 	return err
 }
 
-func (gm *GroupModel) AddAttr(name, daType string) *Attribute {
-	attr, err := gm.AddAttribute(&Attribute{
-		Name: name,
-		Type: daType,
-	})
-	PanicIf(err != nil, "%s", err)
-	return attr
+func (gm *GroupModel) AddAttr(name, daType string) (*Attribute, error) {
+	return gm.AddAttribute(&Attribute{Name: name, Type: daType})
 }
 
-func (gm *GroupModel) AddAttrMap(name string, item *Item) *Attribute {
-	attr, err := gm.AddAttribute(&Attribute{
-		Name: name,
-		Type: MAP,
-		Item: item,
-	})
-	PanicIf(err != nil, "%s", err)
-	return attr
+func (gm *GroupModel) AddAttrMap(name string, item *Item) (*Attribute, error) {
+	return gm.AddAttribute(&Attribute{Name: name, Type: MAP, Item: item})
+}
+
+func (gm *GroupModel) AddAttrObj(name string) (*Attribute, error) {
+	return gm.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+}
+
+func (gm *GroupModel) AddAttrArray(name string, item *Item) (*Attribute, error) {
+	return gm.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
 }
 
 func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
@@ -614,6 +612,12 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	gm.Attributes[attr.Name] = attr
+
+	if attr.Registry == nil {
+		attr.Registry = gm.Registry
+	}
+	gm.Registry.Model.Save()
+
 	return attr, nil
 }
 
@@ -623,6 +627,8 @@ func (gm *GroupModel) DelAttribute(name string) {
 	}
 
 	delete(gm.Attributes, name)
+
+	gm.Registry.Model.Save()
 }
 
 func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool, hasDocument bool) (*ResourceModel, error) {
@@ -725,23 +731,20 @@ func (rm *ResourceModel) Save() error {
 	return err
 }
 
-func (rm *ResourceModel) AddAttr(name, daType string) *Attribute {
-	attr, err := rm.AddAttribute(&Attribute{
-		Name: name,
-		Type: daType,
-	})
-	PanicIf(err != nil, "%s", err)
-	return attr
+func (rm *ResourceModel) AddAttr(name, daType string) (*Attribute, error) {
+	return rm.AddAttribute(&Attribute{Name: name, Type: daType})
 }
 
-func (rm *ResourceModel) AddAttrMap(name string, item *Item) *Attribute {
-	attr, err := rm.AddAttribute(&Attribute{
-		Name: name,
-		Type: MAP,
-		Item: item,
-	})
-	PanicIf(err != nil, "%s", err)
-	return attr
+func (rm *ResourceModel) AddAttrMap(name string, item *Item) (*Attribute, error) {
+	return rm.AddAttribute(&Attribute{Name: name, Type: MAP, Item: item})
+}
+
+func (rm *ResourceModel) AddAttrObj(name string) (*Attribute, error) {
+	return rm.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+}
+
+func (rm *ResourceModel) AddAttrArray(name string, item *Item) (*Attribute, error) {
+	return rm.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
 }
 
 func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
@@ -758,6 +761,12 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	rm.Attributes[attr.Name] = attr
+
+	if attr.Registry == nil {
+		attr.Registry = rm.GroupModel.Registry
+	}
+	rm.GroupModel.Registry.Model.Save()
+
 	return attr, nil
 }
 
@@ -767,6 +776,19 @@ func (rm *ResourceModel) DelAttribute(name string) {
 	}
 
 	delete(rm.Attributes, name)
+
+	rm.GroupModel.Registry.Model.Save()
+}
+
+func (attrs *Attributes) SetRegistry(reg *Registry) {
+	if attrs == nil {
+		return
+	}
+
+	for _, attr := range *attrs {
+		attr.Registry = reg
+		attr.Item.SetRegistry(reg)
+	}
 }
 
 func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
@@ -829,8 +851,9 @@ func (a *Attribute) IsScalar() bool {
 
 func (a *Attribute) AddAttr(name, daType string) *Attribute {
 	attr, err := a.AddAttribute(&Attribute{
-		Name: name,
-		Type: daType,
+		Registry: a.Registry,
+		Name:     name,
+		Type:     daType,
 	})
 	PanicIf(err != nil, "%s", err)
 	return attr
@@ -842,6 +865,8 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	a.Item.Attributes[attr.Name] = attr
+	attr.Registry = a.Registry
+	a.Registry.Model.Save()
 	return attr, nil
 }
 
@@ -875,6 +900,7 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 	top := ""
 
 	for {
+		log.VPrintf(3, "PP: %q Item: %#q", pp.UI(), item)
 		// Nothing to do so just return current item
 		if pp.Len() == 0 {
 			return item.Type, nil

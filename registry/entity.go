@@ -44,6 +44,12 @@ func GoToOurType(val any) string {
 		return STRING
 	case reflect.Uint64:
 		return UINTEGER
+	case reflect.Slice:
+		return ARRAY
+	case reflect.Map:
+		return MAP
+	case reflect.Struct:
+		return OBJECT
 	}
 	panic(fmt.Sprintf("Bad Kind: %v", reflect.ValueOf(val).Kind()))
 }
@@ -222,6 +228,8 @@ func (e *Entity) SetFromDB(name string, val any) error {
 }
 
 func (e *Entity) SetFromUI(name string, val any) error {
+	log.VPrintf(3, ">Enter: SetFromUI(%s=%v)", name, val)
+	defer log.VPrintf(3, "<Exit SetFromUI")
 	pp, err := PropPathFromUI(name)
 	if err != nil {
 		return err
@@ -230,7 +238,7 @@ func (e *Entity) SetFromUI(name string, val any) error {
 }
 
 func (e *Entity) SetPP(pp *PropPath, val any) error {
-	log.VPrintf(3, ">Enter: SetPP(%s=%v)", pp, val)
+	log.VPrintf(3, ">Enter: SetPP(%s=%v)", pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetPP")
 
 	name := pp.DB()
@@ -302,6 +310,24 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 			}
 		}
 
+		switch reflect.ValueOf(val).Kind() {
+		case reflect.Slice:
+			if reflect.ValueOf(val).Len() > 0 {
+				return fmt.Errorf("Can't set non-empty arrays")
+			}
+			dbVal = ""
+		case reflect.Map:
+			if reflect.ValueOf(val).Len() > 0 {
+				return fmt.Errorf("Can't set non-empty maps")
+			}
+			dbVal = ""
+		case reflect.Struct:
+			if reflect.ValueOf(val).NumField() > 0 {
+				return fmt.Errorf("Can't set non-empty objects")
+			}
+			dbVal = ""
+		}
+
 		err = DoOneTwo(`
             REPLACE INTO Props(
               RegistrySID, EntitySID, PropName, PropValue, PropType)
@@ -352,6 +378,21 @@ func (e *Entity) SetPropFromString(name string, val *string, propType string) {
 			panic(fmt.Sprintf("error parsing float: %s", *val))
 		}
 		e.Props[name] = tmpFloat
+	} else if propType == MAP {
+		if *val != "" {
+			panic(fmt.Sprintf("MAP value should be empty string"))
+		}
+		e.Props[name] = map[string]any{}
+	} else if propType == ARRAY {
+		if *val != "" {
+			panic(fmt.Sprintf("MAP value should be empty string"))
+		}
+		e.Props[name] = []any{}
+	} else if propType == OBJECT {
+		if *val != "" {
+			panic(fmt.Sprintf("MAP value should be empty string"))
+		}
+		e.Props[name] = map[string]any{}
 	} else {
 		panic(fmt.Sprintf("bad type(%s): %v", propType, name))
 	}
@@ -396,7 +437,38 @@ func ValidatePropValue(val any, attrType string) error {
 		if err != nil {
 			return fmt.Errorf("Malformed timestamp %q: %s", str, err)
 		}
+
+	// For the non-scalar types, these should only be used when someone
+	// passing in something like:
+	//    "foo": {}
+	// and we need to save an empty (non-scalar) value. Hence the "if" below.
+	case MAP:
+		// anything but an empty map means we did something wrong before this
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.Map || v.Len() > 0 {
+			return fmt.Errorf("Value must be an empty map")
+		}
+		val = ""
+
+	case ARRAY:
+		// anything but an empty map means we did something wrong before this
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.Slice || v.Len() > 0 {
+			return fmt.Errorf("Value must be an empty slice")
+		}
+		val = ""
+
+	case OBJECT:
+		// anything but an empty map means we did something wrong before this
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.Struct || v.NumField() > 0 {
+			return fmt.Errorf("Value must be an empty struct")
+		}
+		val = ""
+
 	default:
+		ShowStack()
+		log.Printf("AttrType: %q  Val: %#q", attrType, val)
 		return fmt.Errorf("Unsupported type: %s", attrType)
 	}
 	return nil
@@ -538,7 +610,7 @@ var OrderedSpecProps = []*SpecProp{
 			Type: STRING,
 		},
 	}},
-	{"format", STRING, "23", true, nil, &Attribute{
+	{"format", STRING, "123", true, nil, &Attribute{
 		Name: "format",
 		Type: STRING,
 	}},
