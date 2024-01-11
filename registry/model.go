@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -836,6 +837,11 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 	}
 
 	return res
+}
+
+func KindIsScalar(k reflect.Kind) bool {
+	// SOOOO risky :-)
+	return k < reflect.Array || k == reflect.String
 }
 
 func IsScalar(daType string) bool {

@@ -110,7 +110,7 @@ func TestResourceContents(t *testing.T) {
 		URL:  "dirs/d1/files/f1",
 		Body: "",
 		Headers: []string{
-			"xRegistry-fileUrl: http://example.com",
+			"xRegistry-fileurl: http://example.com",
 			"Location: http://example.com",
 		},
 	})
@@ -120,7 +120,7 @@ func TestResourceContents(t *testing.T) {
 		URL:  "dirs/d1/files/f1/versions/v4",
 		Body: "",
 		Headers: []string{
-			"xRegistry-fileUrl: http://example.com",
+			"xRegistry-fileurl: http://example.com",
 			"Location: http://example.com",
 		},
 	})

@@ -425,16 +425,20 @@ FROM FullTree WHERE RegSID=? AND `
 
 	headerIt := func(e *Entity, info *RequestInfo, key string, val any) error {
 		str := ""
-		if key == "labels" {
-			for name, value := range val.(map[string]string) {
-				info.AddHeader("xRegistry-labels-"+name, value)
+		v := reflect.ValueOf(val)
+		if v.Kind() == reflect.Map {
+			t := v.Type()
+			if t.Key().Kind() == reflect.String && KindIsScalar(t.Elem().Kind()) {
+				for name, value := range val.(map[string]string) {
+					info.AddHeader("xRegistry-"+key+"-"+name, value)
+				}
+				return nil
 			}
-			return nil
 		}
 
 		str = fmt.Sprintf("%v", val)
-
 		info.AddHeader("xRegistry-"+key, str)
+
 		return nil
 	}
 
@@ -464,8 +468,8 @@ FROM FullTree WHERE RegSID=? AND `
 		if info.StatusCode == 0 {
 			// If we set it during a PUT/POST, don't override the 201
 			info.StatusCode = http.StatusSeeOther
+			info.AddHeader("Location", url)
 		}
-		info.AddHeader("Location", url)
 		/*
 			http.Redirect(info.OriginalResponse, info.OriginalRequest, url,
 				http.StatusSeeOther)
@@ -643,22 +647,26 @@ func HTTPPutPost(info *RequestInfo) error {
 				val = nil
 			}
 
-			if !strings.HasPrefix(lowerKey, "labels-") {
-				// Not a label
-				if lowerKey == lowerSingular+"url" {
-					// is #resourceURL
-					if len(body) != 0 {
-						return fmt.Errorf("'xRegistry-%sUrl' isn't allowed "+
-							"if there's a body", resourceModel.Singular)
-					}
-
-					entityData.Props["#resourceURL"] = nil
-					key = "#resourceURL"
+			if lowerKey == lowerSingular+"url" {
+				// is #resourceURL
+				if len(body) != 0 {
+					return fmt.Errorf("'xRegistry-%surl' isn't allowed "+
+						"if there's a body", resourceModel.Singular)
 				}
-			} else {
-				// key = "labels." + key[7:]
-				pp := NewPPP("labels").P(strings.ToLower(key[7:]))
-				key = pp.UI()
+
+				entityData.Props["#resourceURL"] = nil
+				key = "#resourceURL"
+				lowerKey = key // strings.ToLower(key) // special case for URL
+			}
+
+			// If there are -'s then it's a non-scalar, convert it
+			parts := strings.Split(lowerKey, "-")
+			if len(parts) > 0 {
+				tmpPP := NewPP()
+				for _, part := range parts {
+					tmpPP = tmpPP.P(part)
+				}
+				key = tmpPP.UI()
 			}
 
 			entityData.Props[key] = val
@@ -699,7 +707,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 				if k == singular+"Base64" {
 					if body != nil {
-						return fmt.Errorf("Only one of '%s', '%sUrl' and "+
+						return fmt.Errorf("Only one of '%s', '%surl' and "+
 							" '%sBase64' can be present at a time",
 							singular, singular, singular)
 					}
@@ -717,9 +725,9 @@ func HTTPPutPost(info *RequestInfo) error {
 					entityData.Props["#resourceURL"] = nil
 				}
 
-				if k == resourceModel.Singular+"Url" {
+				if k == resourceModel.Singular+"url" {
 					if body != nil {
-						return fmt.Errorf("'%sUrl' and an HTTP body can not "+
+						return fmt.Errorf("'%surl' and an HTTP body can not "+
 							"both be present", resourceModel.Singular)
 					}
 
@@ -1003,10 +1011,9 @@ type EntityData struct {
 // check for props to be removed - old props
 // check for casing against list of existing props
 func UserUpdateEntity(entity *Entity, ed *EntityData) error {
-	var err error
-	hadLabel := false
-
 	log.VPrintf(3, "Updating:\n%s\n", ToJSON(ed))
+
+	var err error
 
 	tmp := entity.GetPropFromUI("epoch")
 	epoch := NotNilInt(&tmp)
@@ -1045,8 +1052,6 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		}
 	}
 
-	oldLabels := map[string]bool{}
-
 	// Find all existing mutable spec-defined props or extensions
 	// and save them in a map (key=lower-name) for easy reference
 	// and these are the ones we'll want to delete when done.
@@ -1065,15 +1070,12 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		if !isSpec || specProp.mutable == true {
 			toDeleteEntityProps[lowerK] = k
 		}
-
-		// Save existing label keys too
-		// if strings.HasPrefix(k, "labels"+string(DB_IN)) {
-		if top == "labels" {
-			oldLabels[k] = true
-		}
 	}
 
-	for k, v := range ed.Props {
+	prevTop := ""
+	for _, k := range SortedKeys(ed.Props) {
+		v := ed.Props[k]
+
 		lowerK := strings.ToLower(k)
 		pp, err := PropPathFromUI(k)
 		PanicIf(err != nil, "%s", err)
@@ -1089,6 +1091,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 			}
 			if specProp.mutable == false {
 				log.VPrintf(4, "Skipping immutable prop %q", k)
+				prevTop = pp.Top()
 				continue
 			}
 
@@ -1119,10 +1122,15 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 			} else {
 				// Not an existing prop so just let it thru so we can set it
 			}
+		}
 
-			if pp.Top() == "labels" { // if strings.HasPrefix(lowerK, "labels"+string(DB_IN))
-				hadLabel = true
-				delete(oldLabels, k)
+		// If the top-level attribute's name is new then delete all of its
+		// children properties since we require the full specification of
+		// each property - no patching
+		if prevTop != pp.Top() {
+			err = entity.DeletePropTree(pp.Top())
+			if err != nil {
+				return err
 			}
 		}
 
@@ -1130,15 +1138,8 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		if err != nil {
 			return err
 		}
-	}
 
-	if hadLabel {
-		for k, _ := range oldLabels {
-			err := entity.SetFromDB(k, nil)
-			if err != nil {
-				return err
-			}
-		}
+		prevTop = pp.Top()
 	}
 
 	// Delete any remaining properties from the Entity, if not patching

@@ -237,6 +237,41 @@ func (e *Entity) SetFromUI(name string, val any) error {
 	return e.SetPP(pp, val)
 }
 
+func (e *Entity) DeletePropTree(name string) error {
+	log.VPrintf(3, ">Enter: DeletePropTree(%s)", name)
+	defer log.VPrintf(3, "<Exit DeleteProp")
+
+	pp, err := PropPathFromUI(name)
+	if err != nil {
+		return err
+	}
+
+	prefix := pp.DB()
+
+	if e.DbSID == "" {
+		log.Fatalf("DbSID should not be empty")
+	}
+	if e.RegistrySID == "" {
+		log.Fatalf("RegistrySID should not be empty")
+	}
+
+	for pName, _ := range e.Props {
+		// Trailing separator in pName allows for simple prefix checking
+		if strings.HasPrefix(pName, prefix) {
+			err := Do(`DELETE FROM Props WHERE EntitySID=? and PropName LIKE ?`,
+				e.DbSID, pName+"%")
+
+			if err != nil {
+				log.Printf("Error deleting prop(%s): %s", pName, err)
+				return fmt.Errorf("Error deleting prop(%s): %s", pName, err)
+			}
+
+			delete(e.Props, pName)
+		}
+	}
+	return nil
+}
+
 func (e *Entity) SetPP(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: SetPP(%s=%v)", pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetPP")

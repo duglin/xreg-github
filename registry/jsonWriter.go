@@ -175,7 +175,7 @@ func (jw *JsonWriter) WriteEntity() error {
 			singular := rModel.Singular
 
 			url := val.(string)
-			jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular+"Url", url)
+			jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular+"url", url)
 			extra = ","
 		}
 	}
