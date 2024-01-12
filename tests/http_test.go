@@ -376,6 +376,7 @@ func TestHTTPGroups(t *testing.T) {
 
 	attr, _ := gm.AddAttrObj("myobj")
 	attr.Item.AddAttr("foo", registry.STRING)
+	attr.Item.AddAttr("*", registry.ANY)
 
 	item := registry.NewItem(registry.ANY)
 	attr, _ = gm.AddAttrArray("myarray", item)
@@ -445,12 +446,15 @@ func TestHTTPGroups(t *testing.T) {
   "documentation":"docs-url",
   "labels": {
     "label1": "value1",
-    "label2": 5,
-    "label3": 123.456,
+    "label2": "5",
+    "label3": "123.456",
     "label4": "",
     "label5": null
   },
-  "format":"my group"
+  "format":"my group",
+  "myarray": [ "hello", 5 ],
+  "mymap": { "item1": 5.5 },
+  "myobj": { "item2": [ "hi" ] }
 }`,
 		Code:       201,
 		ResHeaders: []string{"Content-Type:application/json"},
@@ -468,6 +472,18 @@ func TestHTTPGroups(t *testing.T) {
     "label4": ""
   },
   "format": "my group",
+  "myarray": [
+    "hello",
+    5
+  ],
+  "mymap": {
+    "item1": 5.5
+  },
+  "myobj": {
+    "item2": [
+      "hi"
+    ]
+  },
 
   "filescount": 0,
   "filesurl": "http://localhost:8181/dirs/dir1/files"
@@ -489,7 +505,10 @@ func TestHTTPGroups(t *testing.T) {
   "labels": {
     "label.new": "new"
   },
-  "format": "myformat/1"
+  "format": "myformat/1",
+  "myarray": [],
+  "mymap": {},
+  "myobj": {}
 }`,
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
@@ -497,6 +516,48 @@ func TestHTTPGroups(t *testing.T) {
   "id": "dir1",
   "name": "my group new",
   "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1",
+  "description": "desc new",
+  "documentation": "docs-url-new",
+  "labels": {
+    "label.new": "new"
+  },
+  "format": "myformat/1",
+  "myarray": [],
+  "mymap": {},
+  "myobj": {},
+
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT group - update - null",
+		URL:        "/dirs/dir1",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "id":"dir1",
+  "name":"my group new",
+  "epoch": 2,
+  "description":"desc new",
+  "documentation":"docs-url-new",
+  "labels": {
+    "label.new": "new"
+  },
+  "format": "myformat/1",
+  "myarray": null,
+  "mymap": null,
+  "myobj": null
+}`,
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "id": "dir1",
+  "name": "my group new",
+  "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1",
   "description": "desc new",
   "documentation": "docs-url-new",
@@ -529,7 +590,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group(dir1): Incoming epoch(10) doesn't match existing epoch(2)\n",
+		ResBody:    "Error processing group(dir1): Incoming epoch(10) doesn't match existing epoch(3)\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -553,7 +614,7 @@ func TestHTTPGroups(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "id": "dir1",
-  "epoch": 3,
+  "epoch": 4,
   "self": "http://localhost:8181/dirs/dir1",
 
   "filescount": 0,

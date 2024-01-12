@@ -161,31 +161,35 @@ func TestBasicTypes(t *testing.T) {
 
 			// Type checking
 			{"epoch", -123, nil,
-				`"-123" should be an uinteger`}, // bad uint
+				`"epoch": "-123" should be a uinteger`}, // bad uint
+			{"regobj[1]", "", nil,
+				`Attribute name "1" isn't valid`}, // Not an array
+			{"regobj", []any{}, nil,
+				`"regobj": [] must be an object`}, // Not an array
 			{"reganyobj2.str", "substr", nil,
 				`Can't find attribute "reganyobj2.str"`}, // unknown attr
 			{"regarrayarrayint[0][0]", "abc", nil,
-				`"abc" should be an integer`}, // bad type
+				`"regarrayarrayint[0][0]": "abc" should be an integer`}, // bad type
 			{"regarrayint[2]", "abc", nil,
-				`"abc" should be an integer`}, // bad type
+				`"regarrayint[2]": "abc" should be an integer`}, // bad type
 			{"regbool1", "123", nil,
-				`"123" should be a boolean`}, // bad type
+				`"regbool1": "123" should be a boolean`}, // bad type
 			{"regdec1", "123", nil,
-				`"123" should be a decimal`}, // bad type
+				`"regdec1": "123" should be a decimal`}, // bad type
 			{"regint1", "123", nil,
-				`"123" should be an integer`}, // bad type
+				`"regint1": "123" should be an integer`}, // bad type
 			{"regmapint", "123", nil,
-				`Value must be an empty map`}, // must be empty
+				`"regmapint": "123" must be a map`}, // must be empty
 			{"regmapint.k1", "123", nil,
-				`"123" should be an integer`}, // bad type
+				`"regmapint.k1": "123" should be an integer`}, // bad type
 			{"regmapstring.k1", 123, nil,
-				`"123" should be a string`}, // bad type
+				`"regmapstring.k1": "123" should be a string`}, // bad type
 			{"regstring1", 123, nil,
-				`"123" should be a string`}, // bad type
+				`"regstring1": "123" should be a string`}, // bad type
 			{"regtime1", "not a time", nil,
-				`Malformed timestamp "not a time": parsing time "not a time" as "2006-01-02T15:04:05Z07:00": cannot parse "not a time" as "2006"`}, // bad date format
+				`"regtime1": Malformed timestamp "not a time": parsing time "not a time" as "2006-01-02T15:04:05Z07:00": cannot parse "not a time" as "2006"`}, // bad date format
 			{"reguint1", -1, nil,
-				`"-1" should be an uinteger`}, // bad uint
+				`"reguint1": "-1" should be a uinteger`}, // bad uint
 			{"unknown_int", 123, nil,
 				`Can't find attribute "unknown_int"`}, // unknown attr
 			{"unknown_str", "error", nil,
@@ -449,7 +453,7 @@ func TestWildcardBoolTypes(t *testing.T) {
 	// reg.Model.Save()
 
 	err := reg.Set("bogus", "foo")
-	xCheck(t, err.Error() == `"foo" should be a boolean`,
+	xCheck(t, err.Error() == `"bogus": "foo" should be a boolean`,
 		fmt.Sprintf("bogus=foo: %s", err))
 
 	err = reg.Set("ext1", true)

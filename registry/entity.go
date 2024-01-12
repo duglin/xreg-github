@@ -308,7 +308,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 
 	if !IsNil(val) {
 		if err = ValidatePropValue(val, attrType); err != nil {
-			return err
+			return fmt.Errorf("%q: %s", pp.UI(), err)
 		}
 	}
 
@@ -457,7 +457,7 @@ func ValidatePropValue(val any, attrType string) error {
 		}
 		i := val.(int)
 		if i < 0 {
-			return fmt.Errorf(`"%v" should be an uinteger`, val)
+			return fmt.Errorf(`"%v" should be a uinteger`, val)
 		}
 	case STRING, URI, URI_REFERENCE, URI_TEMPLATE, URL: // cheat
 		if vKind != reflect.String {
@@ -481,7 +481,7 @@ func ValidatePropValue(val any, attrType string) error {
 		// anything but an empty map means we did something wrong before this
 		v := reflect.ValueOf(val)
 		if v.Kind() != reflect.Map || v.Len() > 0 {
-			return fmt.Errorf("Value must be an empty map")
+			return fmt.Errorf(`%q must be a map`, val)
 		}
 		val = ""
 
@@ -489,22 +489,25 @@ func ValidatePropValue(val any, attrType string) error {
 		// anything but an empty map means we did something wrong before this
 		v := reflect.ValueOf(val)
 		if v.Kind() != reflect.Slice || v.Len() > 0 {
-			return fmt.Errorf("Value must be an empty slice")
+			return fmt.Errorf(`%q must be a slice`, val)
 		}
 		val = ""
 
 	case OBJECT:
-		// anything but an empty map means we did something wrong before this
+		// Anything but an empty struct means we did something wrong before this
+		// Allow for a map since we can't tell sometimes
 		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.Struct || v.NumField() > 0 {
-			return fmt.Errorf("Value must be an empty struct")
+		if (v.Kind() != reflect.Struct || v.NumField() > 0) &&
+			(v.Kind() != reflect.Map || v.Len() > 0) {
+			ShowStack()
+			return fmt.Errorf(`%q must be an object`, val)
 		}
 		val = ""
 
 	default:
 		ShowStack()
 		log.Printf("AttrType: %q  Val: %#q", attrType, val)
-		return fmt.Errorf("Unsupported type: %s", attrType)
+		return fmt.Errorf("unsupported type: %s", attrType)
 	}
 	return nil
 }

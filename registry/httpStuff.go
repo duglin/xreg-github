@@ -686,7 +686,9 @@ func HTTPPutPost(info *RequestInfo) error {
 		entityData.UpdateCase = true
 
 		// Fix labels and check for RESOURCE properties
-		for k, v := range entityData.Props {
+		for _, k := range SortedKeys(entityData.Props) {
+			v := entityData.Props[k]
+
 			lowerK := strings.ToLower(k)
 			if lowerK == "labels" && k != "labels" {
 				return fmt.Errorf("Property name %q is invalid, one in "+
@@ -698,11 +700,11 @@ func HTTPPutPost(info *RequestInfo) error {
 				singular := resourceModel.Singular
 
 				if k == singular {
-					delete(entityData.Props, k)
-					delete(entityData.RawProps, k)
-
 					entityData.Props["#resourceURL"] = nil
 					entityData.Props["#resource"] = entityData.RawProps[k]
+
+					delete(entityData.Props, k)
+					delete(entityData.RawProps, k)
 				}
 
 				if k == singular+"Base64" {
@@ -731,35 +733,75 @@ func HTTPPutPost(info *RequestInfo) error {
 							"both be present", resourceModel.Singular)
 					}
 
-					delete(entityData.Props, k)
-					delete(entityData.RawProps, k)
-
 					entityData.Props["#resourceURL"] = v
 					entityData.Props["#resource"] = nil
+
+					delete(entityData.Props, k)
+					delete(entityData.RawProps, k)
 				}
 			}
 
-			if k != "labels" {
-				continue
-			}
+			// Convert the property tree into a set of individual entries
+			// in entityData.Props
 
-			labelMap, ok := v.(map[string]any)
-			if !ok {
-				return fmt.Errorf("Property 'labels' must be a "+
-					"map(string,any), not %T", v)
-			}
+			delete(entityData.Props, k)
+			delete(entityData.RawProps, k)
 
-			for k, v := range labelMap {
-				if v == nil {
-					continue
+			pp := NewPPP(k)
+
+			var traverse func(pp *PropPath, val any) error
+			traverse = func(pp *PropPath, val any) error {
+				// log.Printf("pp: %q  val: %v", pp.UI(), val)
+				value := reflect.ValueOf(val)
+				if IsNil(val) {
+					return nil
 				}
-				// Be nice and convert any non-string into a string
-				// entityData.Props["labels.['"+k+"']"] = fmt.Sprintf("%v", v)
-				k = NewPPP("labels").P(k).UI()
-				entityData.Props[k] = fmt.Sprintf("%v", v)
+
+				switch value.Kind() {
+				case reflect.Map:
+					vMap := val.(map[string]any)
+					for k, v := range vMap {
+						traverse(pp.P(k), v)
+					}
+					if len(vMap) == 0 {
+						// log.Printf("added: %q = %v", pp.UI(), "{}")
+						entityData.Props[pp.UI()] = map[string]any{}
+					}
+
+				case reflect.Slice:
+					vArray := val.([]any)
+					for i, v := range vArray {
+						traverse(pp.I(i), v)
+					}
+					if len(vArray) == 0 {
+						// log.Printf("added: %q = %v", pp.UI(), "[]")
+						entityData.Props[pp.UI()] = []any{}
+					}
+
+				case reflect.Struct:
+					vMap := val.(map[string]any)
+					for k, v := range vMap {
+						traverse(pp.P(k), v)
+					}
+					if len(vMap) == 0 {
+						// log.Printf("added: %q = %v", pp.UI(), "{}")
+						entityData.Props[pp.UI()] = struct{}{}
+					}
+
+				default:
+					// must be scalar so add it
+					// TODO: don't convert to a string, just pass as-is
+					// log.Printf("added: %q = %v", pp.UI(), val)
+					entityData.Props[pp.UI()] = val // fmt.Sprintf("%v", val)
+				}
+				return nil
 			}
 
-			delete(entityData.Props, "labels")
+			err = traverse(pp, v)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
 		}
 	}
 
