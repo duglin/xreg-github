@@ -64,7 +64,7 @@ func ToGoType(s string) reflect.Type {
 		return reflect.TypeOf(float64(1.1))
 	case INTEGER:
 		return reflect.TypeOf(int(1))
-	case STRING, TIME, URI, URI_REFERENCE, URI_TEMPLATE, URL:
+	case STRING, TIMESTAMP, URI, URI_REFERENCE, URI_TEMPLATE, URL:
 		return reflect.TypeOf("")
 	case UINTEGER:
 		return reflect.TypeOf(uint(0))
@@ -91,7 +91,10 @@ func (e *Entity) GetPropPP(pp *PropPath) any {
 		results, err := Query(`
             SELECT Content
             FROM ResourceContents
-            WHERE VersionSID=?`, e.DbSID)
+            WHERE VersionSID=? OR
+			      VersionSID=(SELECT eSID FROM FullTree WHERE ParentSID=? AND
+				  PropName=? and PropValue='true')
+			`, e.DbSID, e.DbSID, NewPPP("latest").DB())
 		defer results.Close()
 
 		if err != nil {
@@ -316,13 +319,19 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	if pp.Len() == 1 && pp.Top() == "#resource" {
 		if IsNil(val) {
 			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
+			return err
 		} else {
 			// The actual contents
 			err = DoOneTwo(`
                 REPLACE INTO ResourceContents(VersionSID, Content)
             	VALUES(?,?)`, e.DbSID, val)
+			if err != nil {
+				return err
+			}
+			val = ""
+			// Fall thru to normal processing so we save a placeholder
+			// attribute in the resource
 		}
-		return err
 	}
 
 	if IsNil(val) {
@@ -396,7 +405,7 @@ func (e *Entity) SetPropFromString(name string, val *string, propType string) {
 	}
 
 	if propType == STRING || propType == URI || propType == URI_REFERENCE ||
-		propType == URI_TEMPLATE || propType == URL || propType == TIME {
+		propType == URI_TEMPLATE || propType == URL || propType == TIMESTAMP {
 		e.Props[name] = *val
 	} else if propType == BOOLEAN {
 		// Technically "1" check shouldn't be needed, but just in case
@@ -463,7 +472,7 @@ func ValidatePropValue(val any, attrType string) error {
 		if vKind != reflect.String {
 			return fmt.Errorf(`"%v" should be a string`, val)
 		}
-	case TIME:
+	case TIMESTAMP:
 		if vKind != reflect.String {
 			return fmt.Errorf(`"%v" should be a timestamp`, val)
 		}
@@ -587,6 +596,9 @@ var OrderedSpecProps = []*SpecProp{
 		Required: true,
 	}},
 	{"self", STRING, "", false, func(e *Entity, info *RequestInfo) any {
+		if e.Level > 1 { // && (info.ResourceType == "" || (info.ResourceType != "" && info.ShowMeta)) {
+			return info.BaseURL + "/" + e.Path + "?meta"
+		}
 		return info.BaseURL + "/" + e.Path
 	}, &Attribute{
 		Name:     "self",
@@ -608,7 +620,7 @@ var OrderedSpecProps = []*SpecProp{
 		if IsNil(val) {
 			return nil
 		}
-		return info.BaseURL + "/" + e.Path + "/versions/" + val.(string)
+		return info.BaseURL + "/" + e.Path + "/versions/" + val.(string) + "?meta"
 	}, &Attribute{
 		Name:     "latestversionurl",
 		Type:     URL,
@@ -656,17 +668,17 @@ var OrderedSpecProps = []*SpecProp{
 		Name: "createdby",
 		Type: STRING,
 	}},
-	{"createdon", TIME, "", false, nil, &Attribute{
+	{"createdon", TIMESTAMP, "", false, nil, &Attribute{
 		Name: "createdon",
-		Type: TIME,
+		Type: TIMESTAMP,
 	}},
 	{"modifiedby", STRING, "", false, nil, &Attribute{
 		Name: "modifiedby",
 		Type: STRING,
 	}},
-	{"modifiedon", TIME, "", false, nil, &Attribute{
+	{"modifiedon", TIMESTAMP, "", false, nil, &Attribute{
 		Name: "modifiedon",
-		Type: TIME,
+		Type: TIMESTAMP,
 	}},
 	{"model", OBJECT, "0", false, func(e *Entity, info *RequestInfo) any {
 		if info.ShowModel {

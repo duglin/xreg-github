@@ -45,9 +45,9 @@ func TestCreateResource(t *testing.T) {
 		`{
   "id": "f1",
   "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
   "latestversionid": "v2",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"

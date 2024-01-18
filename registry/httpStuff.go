@@ -58,6 +58,12 @@ func (s *Server) Serve() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/EMPTY") {
+		tmp := fmt.Sprintf("hello%s", r.URL.Path[6:])
+		w.Write([]byte(tmp))
+		return
+	}
+
 	if DefaultReg == nil {
 		panic("No registry specified")
 	}
@@ -72,128 +78,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	log.VPrintf(2, "%s %s", r.Method, r.URL)
 
-	if r.URL.Query().Has("reg") {
-		list := ""
-		list += fmt.Sprintf("<li onclick=choose('/')>Default</li>\n")
-		for _, name := range GetRegistryNames() {
-			list += fmt.Sprintf("<li onclick=choose('/reg-%s')>%s</li>\n",
-				name, name)
-		}
-
-		w.Header().Add("Content-Type", "text/html")
-		w.Write([]byte(`<html>
-<style>
-  form {
-    display: inline ;
-  }
-  body {
-    display: flex ;
-    flex-direction: row ;
-    flex-wrap: nowrap ;
-    justify-content: flex-start ;
-    height: 100% ;
-    margin: 0 ;
-  }
-  #left {
-    padding: 8 20 8 8 ;
-    background-color: lightsteelblue;
-    white-space: nowrap ;
-  }
-  #right {
-    display: flex ;
-    flex-direction: column ;
-    flex-wrap: nowrap ;
-    justify-content: flex-start ;
-    width: 100% ;
-
-  }
-  #url {
-    background-color: lightgray;
-    border: 0px ;
-    display: flex ;
-    flex-direction: row ;
-    align-items: center ;
-    padding: 5px ;
-    margin: 0px ;
-  }
-  #myURL {
-    width: 40em ;
-  }
-  button {
-    margin-left: 5px ;
-  }
-  #output {
-    background-color: ghostwhite;
-    border: 0px ;
-    flex: 1 ;
-  }
-  #myOutput {
-    background-color: ghostwhite;
-    border: 0px ;
-	padding: 5px ;
-    flex: 1 ;
-	overflow: auto ;
-  }
-  pre {
-    margin: 0px ;
-  }
-  li {
-    white-space: nowrap ;
-    cursor: pointer ;
-  }
-</style>
-<script>
-  function choose(e) {
-    var val = "http://ubuntu:8080" + e ;
-    document.getElementById('myURL').value = val ;
-    go(val);
-  }
-
-  function go() {
-    var val1 = document.getElementById('myURL').value ;
-    // val1 += (val1.includes("?") ? "&":"?") + "html"
-
-    // document.getElementById('output').src = val1 ;
-	getPage(val1)
-  }
-
-  function go1(url) {
-    document.getElementById('myURL').value = url ;
-	go(url)
-  }
-
-  function getPage(url) {
-    var req = new XMLHttpRequest();
-    req.open("GET", url, false);
-    req.send(null);
-    var text = req.responseText ;
-    text = "<pre>" + text + "</pre>" ;
-
-	// text.replace('"(https?://ubuntu[^"\n]*?)"','"<a href=\'$1\'>$1</a>"');
-	const regex = new RegExp('"(https?://ubuntu[^"\n]*)"',"g");
-	text = text.replaceAll(regex,'"<a onclick=\'go1("$1");return false;\' href=\'$1\'>$1</a>"');
-    document.getElementById('myOutput').innerHTML = text ;
-  }
-</script>
-<div id=left>
-<b>Choose a registry:</b>
-<br><br>
-` + list + `
-</div>
-<div id=right>
-    <form id=url target=iframe onsubmit="go();return false;">
-      <div style="margin:0 5 0 10">URL:</div>
-      <input id=myURL type=text>
-      <button type=submit> Go! </button>
-    </form>
-  <!-- <iframe id=output name='iframe'></iframe> -->
-  <div id=myOutput>
-  </div>
-</div>
-`))
-		return
-	}
-
 	info, err := ParseRequest(w, r)
 	if err != nil {
 		w.WriteHeader(info.StatusCode)
@@ -207,8 +91,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		info.HTTPWriter.Done()
 	}()
 
-	// If we want to tweak the output we'll need to buffer it
-	if r.URL.Query().Has("html") || r.URL.Query().Has("noprops") {
+	if r.URL.Query().Has("reg") { // Wrap in html page
+		info.HTTPWriter = NewPageWriter(info)
+	}
+
+	if r.URL.Query().Has("html") || r.URL.Query().Has("noprops") { //HTMLify it
 		info.HTTPWriter = NewBufferedWriter(info)
 	}
 
@@ -228,7 +115,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if info.StatusCode == 0 {
-			// Only default to BadRequest is not set by someone else
+			// Only default to BadRequest if not set by someone else
 			info.StatusCode = http.StatusBadRequest
 		}
 		info.Write([]byte(err.Error() + "\n"))
@@ -245,6 +132,7 @@ type HTTPWriter interface {
 var _ HTTPWriter = &DefaultWriter{}
 var _ HTTPWriter = &BufferedWriter{}
 var _ HTTPWriter = &DiscardWriter{}
+var _ HTTPWriter = &PageWriter{}
 
 func DefaultHTTPWriter(info *RequestInfo) HTTPWriter {
 	return &DefaultWriter{
@@ -276,16 +164,18 @@ func (dw *DefaultWriter) Done() {
 }
 
 type BufferedWriter struct {
-	Info    *RequestInfo
-	Headers *map[string]string
-	Buffer  *bytes.Buffer
+	Info      *RequestInfo
+	OldWriter HTTPWriter
+	Headers   *map[string]string
+	Buffer    *bytes.Buffer
 }
 
 func NewBufferedWriter(info *RequestInfo) *BufferedWriter {
 	return &BufferedWriter{
-		Info:    info,
-		Headers: &map[string]string{},
-		Buffer:  &bytes.Buffer{},
+		Info:      info,
+		OldWriter: info.HTTPWriter,
+		Headers:   &map[string]string{},
+		Buffer:    &bytes.Buffer{},
 	}
 }
 
@@ -305,14 +195,8 @@ func (bw *BufferedWriter) Done() {
 	}
 
 	for k, v := range *bw.Headers {
-		bw.Info.OriginalResponse.Header()[k] = []string{v}
+		bw.OldWriter.AddHeader(k, v)
 	}
-
-	code := bw.Info.StatusCode
-	if code == 0 {
-		code = http.StatusOK
-	}
-	bw.Info.OriginalResponse.WriteHeader(code)
 
 	buf := bw.Buffer.Bytes()
 	/*
@@ -327,7 +211,7 @@ func (bw *BufferedWriter) Done() {
 		bw.Info.OriginalResponse.Write([]byte("<pre>\n"))
 		buf = HTMLify(req, buf)
 	}
-	bw.Info.OriginalResponse.Write(buf)
+	bw.OldWriter.Write(buf)
 }
 
 type DiscardWriter struct{}
@@ -337,6 +221,133 @@ func (dw *DiscardWriter) AddHeader(name, value string) {}
 func (dw *DiscardWriter) Done()                        {}
 
 var DefaultDiscardWriter = &DiscardWriter{}
+
+type PageWriter struct {
+	Info      *RequestInfo
+	OldWriter HTTPWriter
+	Headers   *map[string]string
+	Buffer    *bytes.Buffer
+}
+
+func NewPageWriter(info *RequestInfo) *PageWriter {
+	return &PageWriter{
+		Info:      info,
+		OldWriter: info.HTTPWriter,
+		Headers:   &map[string]string{},
+		Buffer:    &bytes.Buffer{},
+	}
+}
+
+func (pw *PageWriter) Write(b []byte) (int, error) {
+	return pw.Buffer.Write(b)
+}
+
+func (pw *PageWriter) AddHeader(name, value string) {
+	(*pw.Headers)[name] = value
+}
+
+func (pw *PageWriter) Done() {
+	pw.AddHeader("Content-Type", "text/html")
+
+	if !pw.Info.SentStatus {
+		pw.Info.SentStatus = true
+		if pw.Info.StatusCode == 0 {
+			pw.Info.StatusCode = http.StatusOK
+		}
+		pw.Info.OriginalResponse.WriteHeader(pw.Info.StatusCode)
+	}
+
+	for k, v := range *pw.Headers {
+		pw.OldWriter.AddHeader(k, v)
+	}
+
+	buf := pw.Buffer.Bytes()
+
+	list := ""
+	list += fmt.Sprintf("<li><a href='/?reg'>Default</a></li>\n")
+	for _, name := range GetRegistryNames() {
+		list += fmt.Sprintf("<li><a href='/reg-%s?reg'>%s</a></li>\n",
+			name, name)
+	}
+
+	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
+<style>
+  form {
+    display: inline ;
+  }
+  body {
+    display: flex ;
+    flex-direction: row ;
+    flex-wrap: nowrap ;
+    justify-content: flex-start ;
+    height: 100%% ;
+    margin: 0 ;
+  }
+  #left {
+    padding: 8 20 8 8 ;
+    background-color: lightsteelblue;
+    white-space: nowrap ;
+  }
+  #right {
+    display: flex ;
+    flex-direction: column ;
+    flex-wrap: nowrap ;
+    justify-content: flex-start ;
+    width: 100%% ;
+
+  }
+  #url {
+    background-color: lightgray;
+    border: 0px ;
+    display: flex ;
+    flex-direction: row ;
+    align-items: center ;
+    padding: 5px ;
+    margin: 0px ;
+  }
+  #myURL {
+    width: 40em ;
+  }
+  button {
+    margin-left: 5px ;
+  }
+  #myOutput {
+    background-color: ghostwhite;
+    border: 0px ;
+	padding: 5px ;
+    flex: 1 ;
+	overflow: auto ;
+  }
+  pre {
+    margin: 0px ;
+  }
+  li {
+    white-space: nowrap ;
+    cursor: pointer ;
+  }
+</style>
+<div id=left>
+  <b>Choose a registry:</b>
+  <br><br>
+  `+list+`
+</div>
+
+<div id=right>
+	<!--
+    <form id=url onsubmit="go();return false;">
+      <div style="margin:0 5 0 10">URL:</div>
+      <input id=myURL type=text>
+      <button type=submit> Go! </button>
+    </form>
+	-->
+  <div id=myOutput>
+    <pre>%s</pre>
+  </div>
+</div>
+`, RegHTMLify(pw.Info.OriginalRequest, buf))))
+
+	pw.OldWriter.Done()
+}
 
 func HTTPGETModel(info *RequestInfo) error {
 	if len(info.Parts) > 1 {
@@ -707,7 +718,7 @@ func HTTPPutPost(info *RequestInfo) error {
 					delete(entityData.RawProps, k)
 				}
 
-				if k == singular+"Base64" {
+				if k == singular+"base64" {
 					if body != nil {
 						return fmt.Errorf("Only one of '%s', '%surl' and "+
 							" '%sBase64' can be present at a time",

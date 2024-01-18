@@ -51,7 +51,9 @@ func main() {
 
 	if reg == nil {
 		reg = LoadDirsSample(reg)
-		_ = LoadEndpointsSample(nil)
+		LoadEndpointsSample(nil)
+		LoadMessagesSample(nil)
+		LoadSchemasSample(nil)
 		reg = LoadAPIGuru(reg, "APIs-guru", "openapi-directory")
 	}
 

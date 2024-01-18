@@ -150,7 +150,7 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "id": "v1",
   "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta"
 }
 `,
 		},
@@ -224,9 +224,9 @@ func TestBasicFilters(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d2/files/f2",
+          "self": "http://localhost:8181/dirs/d2/files/f2?meta",
           "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
           "labels": {
             "file1": "1elif"
           },
@@ -235,12 +235,12 @@ func TestBasicFilters(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1"
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
               "latest": true,
               "labels": {
                 "file1": "1elif"
@@ -297,9 +297,9 @@ func TestBasicFilters(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d2/files/f2",
+          "self": "http://localhost:8181/dirs/d2/files/f2?meta",
           "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
           "labels": {
             "file1": "1elif"
           },
@@ -308,12 +308,12 @@ func TestBasicFilters(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1"
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
               "latest": true,
               "labels": {
                 "file1": "1elif"

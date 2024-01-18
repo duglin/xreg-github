@@ -103,6 +103,8 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 	m := reg.LoadModel()
 	log.VPrintf(3, "Model: %#v\n", m)
 
+	iter := 0
+
 	for {
 		header, err := reader.Next()
 		if err == io.EOF {
@@ -124,6 +126,8 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		}
 
 		if strings.Index(header.Name, "/docker.com/") < 0 &&
+			strings.Index(header.Name, "/adobe.com/") < 0 &&
+			strings.Index(header.Name, "/fec.gov/") < 0 &&
 			strings.Index(header.Name, "/apiz.ebay.com/") < 0 {
 			continue
 		}
@@ -197,11 +201,18 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		// give the registry a URL to it and ask it to server it via proxy.
 		// We could have also just set the resourceURI to the file but
 		// I wanted the URL to the file to be the registry and not github
+
 		base := "https://raw.githubusercontent.com/APIs-guru/" +
 			"openapi-directory/main/APIs/"
-		// version.Set("resourceURL", base + header.Name[i+6:])
-		// version.Set("resource", buf.Bytes())
-		ErrFatalf(version.Set("#resourceProxyURL", base+header.Name[i+6:]))
+		switch iter % 3 {
+		case 0:
+			ErrFatalf(version.Set("#resource", buf.Bytes()))
+		case 1:
+			ErrFatalf(version.Set("#resourceURL", base+header.Name[i+6:]))
+		case 2:
+			ErrFatalf(version.Set("#resourceProxyURL", base+header.Name[i+6:]))
+		}
+		iter++
 	}
 
 	return reg
@@ -209,9 +220,9 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "SampleRegistry")
+	log.VPrintf(1, "Loading registry '%s'", "ApisRegistry")
 	if reg == nil {
-		reg, err = registry.NewRegistry("SampleRegistry")
+		reg, err = registry.NewRegistry("ApisRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 
 		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
@@ -241,7 +252,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		_, err = reg.Model.AddAttrObj("emptyobj")
 		ErrFatalf(err)
 
-		item := registry.NewItemObj()
+		item := registry.NewItemObject()
 		item.AddAttr("inint", registry.INTEGER)
 		_, err = reg.Model.AddAttrMap("mapobj", item)
 		ErrFatalf(err)
@@ -286,36 +297,78 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "EndpointsRegistry")
+	log.VPrintf(1, "Loading registry '%s'", "Endpoints")
 	if reg == nil {
-		reg, err = registry.FindRegistry("EndpointsRegistry")
+		reg, err = registry.FindRegistry("Endpoints")
 		ErrFatalf(err)
 		if reg != nil {
 			return reg
 		}
 
-		reg, err = registry.NewRegistry("EndpointsRegistry")
+		reg, err = registry.NewRegistry("Endpoints")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 
 		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
-		ErrFatalf(reg.Set("name", "Test Registry"))
-		ErrFatalf(reg.Set("description", "A test reg"))
+		ErrFatalf(reg.Set("name", "Endpoints Registry"))
+		ErrFatalf(reg.Set("description", "An impl of the endpoints spec"))
 		ErrFatalf(reg.Set("documentation", "https://github.com/duglin/xreg-github"))
 	}
 
-	gm, err := reg.Model.AddGroupModel("endpoints", "endpoint")
+	ep, err := reg.Model.AddGroupModel("endpoints", "endpoint")
 	ErrFatalf(err)
-	_, err = gm.AddAttr("ext", registry.STRING)
+	attr, err := ep.AddAttr("usage", registry.STRING)
+	ErrFatalf(err)
+	attr.Required = true
+	_, err = ep.AddAttr("origin", registry.URI)
+	ErrFatalf(err)
+	_, err = ep.AddAttr("channel", registry.STRING)
+	ErrFatalf(err)
+	attr, err = ep.AddAttrObj("deprecated")
+	ErrFatalf(err)
+	_, err = attr.AddAttr("effective", registry.TIMESTAMP)
+	ErrFatalf(err)
+	_, err = attr.AddAttr("removal", registry.TIMESTAMP)
+	ErrFatalf(err)
+	_, err = attr.AddAttr("alternative", registry.URL)
+	ErrFatalf(err)
+	_, err = attr.AddAttr("docs", registry.URL)
 	ErrFatalf(err)
 
-	_, err = gm.AddResourceModel("definitions", "definition", 2, true, true, true)
+	config, err := attr.AddAttrObj("config")
 	ErrFatalf(err)
+	_, err = config.AddAttr("protocol", registry.STRING)
+	ErrFatalf(err)
+	obj, err := config.AddAttrMap("endpoints", registry.NewItemObject())
+	ErrFatalf(err)
+	_, err = obj.Item.AddAttr("*", registry.ANY)
+	ErrFatalf(err)
+
+	auth, err := config.AddAttrObj("authorization")
+	ErrFatalf(err)
+	attr, err = auth.AddAttr("type", registry.STRING)
+	ErrFatalf(err)
+	attr, err = auth.AddAttr("resourceurl", registry.STRING)
+	ErrFatalf(err)
+	attr, err = auth.AddAttr("authorityurl", registry.STRING)
+	ErrFatalf(err)
+	attr, err = auth.AddAttrArray("grant_types", registry.NewItem(registry.STRING))
+	ErrFatalf(err)
+
+	_, err = config.AddAttr("strict", registry.BOOLEAN)
+	ErrFatalf(err)
+
+	_, err = config.AddAttrMap("options", registry.NewItem(registry.ANY))
+	ErrFatalf(err)
+
+	_, err = ep.AddResourceModel("definitions", "definition", 2, true, true, true)
+	ErrFatalf(err)
+
+	// End of model
 
 	g, err := reg.AddGroup("endpoints", "e1")
 	ErrFatalf(err)
 	ErrFatalf(g.Set("name", "end1"))
 	ErrFatalf(g.Set("epoch", 1))
-	ErrFatalf(g.Set("ext", "ext1"))
 	ErrFatalf(g.Set("labels.stage", "dev"))
 	ErrFatalf(g.Set("labels.stale", "true"))
 
@@ -343,7 +396,88 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	ErrFatalf(g.Set("name", "end1"))
 	ErrFatalf(g.Set("epoch", 1))
-	ErrFatalf(g.Set("ext", "ext1"))
+
+	return reg
+}
+
+func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
+	var err error
+	log.VPrintf(1, "Loading registry '%s'", "Messages")
+	if reg == nil {
+		reg, err = registry.FindRegistry("Messages")
+		ErrFatalf(err)
+		if reg != nil {
+			return reg
+		}
+
+		reg, err = registry.NewRegistry("Messages")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+
+		reg.Set("#baseURL", "http://soaphub.org:8585/")
+		reg.Set("name", "Messages Registry")
+		reg.Set("description", "An impl of the messages spec")
+		reg.Set("documentation", "https://github.com/duglin/xreg-github")
+	}
+
+	msgs, _ := reg.Model.AddGroupModel("messagegroups", "messagegroup")
+	msgs.AddAttr("binding", registry.STRING)
+
+	msg, _ := msgs.AddResourceModel("messages", "message", 1, true, true, false)
+
+	// Modify core attribute
+	attr, _ := msg.AddAttr("format", registry.STRING)
+	attr.Required = true
+
+	msg.AddAttr("basedefinitionurl", registry.URL)
+
+	meta, _ := msg.AddAttrObj("metadata")
+	meta.AddAttr("required", registry.BOOLEAN)
+	meta.AddAttr("description", registry.STRING)
+	meta.AddAttr("value", registry.ANY)
+	meta.AddAttr("type", registry.STRING)
+	meta.AddAttr("specurl", registry.URL)
+
+	obj := registry.NewItemObject()
+	meta.AddAttrMap("attributes", obj)
+	obj.AddAttr("type", registry.STRING)
+	obj.AddAttr("value", registry.ANY)
+	obj.AddAttr("required", registry.BOOLEAN)
+
+	meta.AddAttr("binding", registry.STRING)
+	meta.AddAttrMap("message", registry.NewItem(registry.ANY))
+
+	meta.AddAttr("schemaformat", registry.STRING)
+	meta.AddAttr("schema", registry.ANY)
+	meta.AddAttr("schemaurl", registry.URL)
+
+	// End of model
+
+	return reg
+}
+
+func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
+	var err error
+	log.VPrintf(1, "Loading registry '%s'", "Schemas")
+	if reg == nil {
+		reg, err = registry.FindRegistry("Schemas")
+		ErrFatalf(err)
+		if reg != nil {
+			return reg
+		}
+
+		reg, err = registry.NewRegistry("Schemas")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+
+		reg.Set("#baseURL", "http://soaphub.org:8585/")
+		reg.Set("name", "Schemas Registry")
+		reg.Set("description", "An impl of the schemas spec")
+		reg.Set("documentation", "https://github.com/duglin/xreg-github")
+	}
+
+	msgs, _ := reg.Model.AddGroupModel("schemagroups", "schemagroup")
+	msgs.AddResourceModel("schemas", "schema", 0, true, true, true)
+
+	// End of model
 
 	return reg
 }

@@ -25,7 +25,7 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttr("regstring2", registry.STRING)
 	reg.Model.AddAttr("reguint1", registry.UINTEGER)
 	reg.Model.AddAttr("reguint2", registry.UINTEGER)
-	reg.Model.AddAttr("regtime1", registry.TIME)
+	reg.Model.AddAttr("regtime1", registry.TIMESTAMP)
 
 	reg.Model.AddAttr("reganyarrayint", registry.ANY)
 	reg.Model.AddAttr("reganyarrayobj", registry.ANY)
@@ -382,9 +382,9 @@ func TestBasicTypes(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1?meta",
           "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
           "filebool1": true,
           "filebool2": false,
           "filedec1": 456.5,
@@ -401,7 +401,7 @@ func TestBasicTypes(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
               "latest": true,
               "filebool1": true,
               "filebool2": false,

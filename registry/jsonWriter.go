@@ -1,9 +1,12 @@
 package registry
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	log "github.com/duglin/dlog"
+	"io"
+	"net/http"
 	"path"
 	"strings"
 )
@@ -151,6 +154,7 @@ func (jw *JsonWriter) WriteEntity() error {
 	extra := ""
 	myLevel := jw.Entity.Level
 	log.VPrintf(4, "Level: %d", myLevel)
+	log.VPrintf(4, "JW:\n%s\n", ToJSON(jw))
 
 	jw.Printf("{")
 	jw.Indent()
@@ -167,16 +171,58 @@ func (jw *JsonWriter) WriteEntity() error {
 		panic(err)
 	}
 
-	// Add resource content released properties
+	// Add resource content properties
 	if myLevel >= 2 {
-		if val := jw.Entity.GetPropFromUI("#resourceURL"); val != nil {
-			gModel := jw.info.Registry.Model.Groups[jw.info.GroupType]
-			rModel := gModel.Resources[jw.info.ResourceType]
-			singular := rModel.Singular
+		absParts := strings.Split(jw.Entity.Abstract, string(DB_IN))
+		gName := absParts[0]
+		gModel := jw.info.Registry.Model.Groups[gName]
+		rModel := gModel.Resources[absParts[1]]
+		singular := rModel.Singular
 
+		if val := jw.Entity.GetPropFromUI("#resourceURL"); val != nil {
 			url := val.(string)
 			jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular+"url", url)
 			extra = ","
+		} else {
+			p2, _ := PropPathFromDB(jw.Entity.Abstract)
+			p := p2.P(singular).DB()
+			if jw.info.ShouldInline(p) {
+				data := []byte{}
+				if val := jw.Entity.GetPropFromUI("#resource"); val != nil {
+					var ok bool
+					data, ok = val.([]byte)
+					PanicIf(!ok, "Can't convert to []byte: %s", val)
+				}
+				if val := jw.Entity.GetPropFromUI("#resourceProxyURL"); val != nil {
+					url := val.(string)
+					resp, err := http.Get(url)
+					if err != nil {
+						data = []byte("GET error:" + err.Error())
+					} else if resp.StatusCode/100 != 2 {
+						data = []byte("GET error:" + resp.Status)
+					} else {
+						data, err = io.ReadAll(resp.Body)
+						if err != nil {
+							data = []byte("GET error:" + err.Error())
+						}
+					}
+				}
+
+				if len(data) > 0 {
+					tmp := map[string]any{}
+					err = json.Unmarshal(data, tmp)
+
+					if err == nil {
+						jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular,
+							string(data))
+					} else {
+						str := base64.StdEncoding.EncodeToString(data)
+						jw.Printf("%s\n%s\"%sbase64\": %q",
+							extra, jw.indent, singular, str)
+					}
+					extra = ","
+				}
+			}
 		}
 	}
 

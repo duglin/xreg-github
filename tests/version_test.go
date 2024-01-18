@@ -48,7 +48,7 @@ func TestCreateVersion(t *testing.T) {
 		`{
   "id": "v1",
   "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta"
 }
 `)
 	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/xxx", "Not found\n")
@@ -95,9 +95,9 @@ func TestCreateVersion(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1/files/f1?meta", `{
   "id": "f1",
   "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
   "latestversionid": "v3",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"

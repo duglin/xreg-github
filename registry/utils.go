@@ -210,10 +210,18 @@ func RemoveProps(buf []byte) []byte {
 }
 
 func HTMLify(r *http.Request, buf []byte) []byte {
-	str := fmt.Sprintf(`"(https?://%s[^"\n]*?)"`, r.Host)
+	str := fmt.Sprintf(`"(https?://[^"\n]*?)"`)
 	re := regexp.MustCompile(str)
 	repl := fmt.Sprintf(`"<a href="$1?%s">$1?%s</a>"`,
 		r.URL.RawQuery, r.URL.RawQuery)
+
+	return re.ReplaceAll(buf, []byte(repl))
+}
+
+func RegHTMLify(r *http.Request, buf []byte) []byte {
+	str := fmt.Sprintf(`"(https?://[^?"\n]*)(\??)([^"\n]*)"`)
+	re := regexp.MustCompile(str)
+	repl := fmt.Sprintf(`"<a href='$1?reg&$3'>$1$2$3</a>"`)
 
 	return re.ReplaceAll(buf, []byte(repl))
 }

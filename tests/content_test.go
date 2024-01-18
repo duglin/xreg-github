@@ -137,6 +137,7 @@ type Test struct {
 func CompareContentMeta(t *testing.T, test *Test) {
 	u := test.URL
 
+	t.Logf("Testing: URL: %s", test.URL)
 	metaResp, err := http.Get("http://localhost:8181/" + u + "?meta")
 	xNoErr(t, err)
 	if metaResp == nil {
@@ -179,7 +180,7 @@ func CompareContentMeta(t *testing.T, test *Test) {
 		xCheckEqual(t, "", string(resBody), test.Body)
 	} else {
 		if !strings.Contains(string(resBody), test.Body[1:]) {
-			t.Errorf("Unexpected body for %q\nGot:\n%s\nExpected:\n%s",
+			t.Fatalf("Unexpected body for %q\nGot:\n%s\nExpected:\n%s",
 				u, string(resBody), test.Body[1:])
 		}
 	}
@@ -211,12 +212,14 @@ func CompareContentMeta(t *testing.T, test *Test) {
 			// TODO will need to sort the maps before diff'ing
 			str := ""
 			str = fmt.Sprintf("%v", propValue)
-			// t.Logf("Checking %q: %q vs %q", name, str, value[0])
-			xCheckEqual(t, "", value[0], str)
+			if !xCheckEqual(t, "", value[0], str) {
+				t.Logf("Checked %q: (body) %q vs (hdr) %q", name, str, value[0])
+				t.FailNow()
+			}
 			break
 		}
 		if !foundIt {
-			t.Errorf("Missing %q in ?meta version(%s)", name, u)
+			t.Fatalf("Missing %q in ?meta version(%s)", name, u)
 		}
 	}
 
@@ -228,25 +231,25 @@ func CompareContentMeta(t *testing.T, test *Test) {
 	for k, v := range headerLabels {
 		metaVal, ok := metaLabels[k]
 		if !ok {
-			t.Errorf("metaLabel %v is missing: %s", k, u)
+			t.Fatalf("metaLabel %v is missing: %s", k, u)
 			continue
 		}
 
 		metaStr := fmt.Sprintf("%v", metaVal)
 		if v != metaStr {
-			t.Errorf("metaLabel %v value mismatch(%q vs %q): %s",
+			t.Fatalf("metaLabel %v value mismatch(%q vs %q): %s",
 				k, v, metaStr, u)
 		}
 		delete(metaLabels, k)
 	}
 	if len(metaLabels) != 0 {
-		t.Errorf("Extra metaLabels: %v for url: %q", metaLabels, u)
+		t.Fatalf("Extra metaLabels: %v for url: %q", metaLabels, u)
 	}
 
 	for propName, _ := range metaProps {
 		if propName == "labels" {
 			continue
 		}
-		t.Errorf("Extra prop %q in ?meta, not in header: %s", propName, u)
+		t.Fatalf("Extra prop %q in ?meta, not in header: %s", propName, u)
 	}
 }

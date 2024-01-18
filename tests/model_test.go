@@ -360,9 +360,9 @@ func TestResourceModelCreate(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/dir1/files/f1",
+          "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
           "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+          "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
 
           "versionscount": 1,
           "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -664,20 +664,20 @@ func TestMultModel2Create(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs1/d1/files/f1",
+          "self": "http://localhost:8181/dirs1/d1/files/f1?meta",
           "latestversionid": "v2",
-          "latestversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
+          "latestversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1"
+              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1?meta"
             },
             "v2": {
               "id": "v2",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
               "latest": true
             }
           },
@@ -697,20 +697,20 @@ func TestMultModel2Create(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs1/d2/files/f2",
+          "self": "http://localhost:8181/dirs1/d2/files/f2?meta",
           "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
+          "latestversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1"
+              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1?meta"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
               "latest": true
             }
           },
@@ -734,15 +734,15 @@ func TestMultModel2Create(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs2/d2/files/f2",
+          "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
           "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
+          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
+              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
               "latest": true
             }
           },

@@ -274,7 +274,7 @@ func NewItem(daType string) *Item {
 	}
 }
 
-func NewItemObj() *Item {
+func NewItemObject() *Item {
 	return &Item{
 		Type: OBJECT,
 	}
@@ -846,7 +846,7 @@ func KindIsScalar(k reflect.Kind) bool {
 
 func IsScalar(daType string) bool {
 	return daType == BOOLEAN || daType == DECIMAL || daType == INTEGER ||
-		daType == STRING || daType == TIME || daType == UINTEGER ||
+		daType == STRING || daType == TIMESTAMP || daType == UINTEGER ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
 		daType == URL
 }
@@ -855,19 +855,32 @@ func (a *Attribute) IsScalar() bool {
 	return IsScalar(a.Type)
 }
 
-func (a *Attribute) AddAttr(name, daType string) *Attribute {
-	attr, err := a.AddAttribute(&Attribute{
+func (a *Attribute) AddAttr(name, daType string) (*Attribute, error) {
+	return a.AddAttribute(&Attribute{
 		Registry: a.Registry,
 		Name:     name,
 		Type:     daType,
 	})
-	PanicIf(err != nil, "%s", err)
-	return attr
 }
 
+func (a *Attribute) AddAttrMap(name string, item *Item) (*Attribute, error) {
+	return a.AddAttribute(&Attribute{Name: name, Type: MAP, Item: item})
+}
+
+func (a *Attribute) AddAttrObj(name string) (*Attribute, error) {
+	return a.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+}
+
+func (a *Attribute) AddAttrArray(name string, item *Item) (*Attribute, error) {
+	return a.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
+}
 func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	}
+
+	if a.Item.Attributes == nil {
+		a.Item.Attributes = map[string]*Attribute{}
 	}
 
 	a.Item.Attributes[attr.Name] = attr

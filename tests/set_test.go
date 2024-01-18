@@ -275,9 +275,9 @@ func TestSetLabels(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1?meta",
           "latestversionid": "v2",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
           "labels": {
             "2nd": "3rd",
             "ff": "ff.bar"
@@ -287,7 +287,7 @@ func TestSetLabels(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
               "labels": {
                 "vv2": "v11"
               }
@@ -295,7 +295,7 @@ func TestSetLabels(t *testing.T) {
             "v2": {
               "id": "v2",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
               "latest": true,
               "labels": {
                 "2nd": "3rd",
@@ -339,9 +339,9 @@ func TestSetLabels(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1?meta",
           "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
           "labels": {
             "vv2": "v11"
           },
@@ -350,7 +350,7 @@ func TestSetLabels(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
               "latest": true,
               "labels": {
                 "vv2": "v11"
@@ -359,7 +359,7 @@ func TestSetLabels(t *testing.T) {
             "v2": {
               "id": "v2",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
               "labels": {
                 "2nd": "3rd",
                 "ff": "ff.bar"

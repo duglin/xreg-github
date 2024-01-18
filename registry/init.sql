@@ -238,7 +238,7 @@ JOIN Resources AS r ON (r.SID=v.ResourceSID)
 JOIN Props AS p1 ON (p1.EntitySID=r.SID)
 WHERE p1.PropName='latestVersionId,' AND v.UID=p1.PropValue AND
       p.PropName<>'id,';     # Don't overwrite 'id'
-# NOTE!!! is DB_IN changes then the above 2 lines MUST change
+# NOTE!!! if DB_IN changes then the above 2 lines MUST change
 # TODO move the creation of this into the code then we can dynamically
 # use DB_IN instead of hard-coding the "," in here
 

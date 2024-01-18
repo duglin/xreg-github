@@ -1,6 +1,10 @@
 package tests
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+	"regexp"
 	"testing"
 )
 
@@ -69,20 +73,20 @@ func TestBasicInline(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d1/files/f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1?meta",
           "latestversionid": "v2",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta"
             },
             "v2": {
               "id": "v2",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
               "latest": true
             }
           },
@@ -102,20 +106,20 @@ func TestBasicInline(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d2/files/f2",
+          "self": "http://localhost:8181/dirs/d2/files/f2?meta",
           "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1"
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
               "latest": true
             }
           },
@@ -139,15 +143,15 @@ func TestBasicInline(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs2/d2/files/f2",
+          "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
           "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
+          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1",
+              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
               "latest": true
             }
           },
@@ -286,6 +290,278 @@ func TestBasicInline(t *testing.T) {
 	for _, test := range tests {
 		t.Logf("Testing: %s", test.Name)
 		if !xCheckGet(t, reg, test.URL, test.Exp) {
+			break
+		}
+	}
+}
+
+func TestResourceInline(t *testing.T) {
+	reg := NewRegistry("TestResourceInline")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	d, _ := reg.AddGroup("dirs", "d1")
+
+	// ProxyURL
+	f, _ := d.AddResource("files", "f1-proxy", "v1")
+	f.Set(NewPP().P("#resource").UI(), "Hello world! v1")
+
+	v, _ := f.AddVersion("v2")
+	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+
+	v, _ = f.AddVersion("v3")
+	v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+
+	// URL
+	f, _ = d.AddResource("files", "f2-url", "v1")
+	f.Set(NewPP().P("#resource").UI(), "Hello world! v1")
+
+	v, _ = f.AddVersion("v2")
+	v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+
+	v, _ = f.AddVersion("v3")
+	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+
+	// Resource
+	f, _ = d.AddResource("files", "f3-resource", "v1")
+	f.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+
+	v, _ = f.AddVersion("v2")
+	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+
+	v, _ = f.AddVersion("v3")
+	v.Set(NewPP().P("#resource").UI(), "Hello world! v3")
+
+	// /dirs/d1/files/f1-proxy/v1 - resource
+	//                        /v2 - URL
+	//                        /v3 - ProxyURL  <- latest
+	// /dirs/d1/files/f2-url/v1 - resource
+	//                      /v2 - ProxyURL
+	//                      /v3 - URL  <- latest
+	// /dirs/d1/files/f3-resource/v1 - ProxyURL
+	//                           /v2 - URL
+	//                           /v3 - resource  <- latest
+
+	tests := []struct {
+		Name string
+		URL  string
+		Exp  string
+	}{
+		{
+			Name: "No Inline",
+			URL:  "?",
+			Exp: `{
+  "dirscount": 1,
+}
+`,
+		},
+		{
+			Name: "Inline - No Filter - full",
+			URL:  "?inline",
+			Exp: `{
+  "dirs": {
+    "d1": {
+      "files": {
+        "f1-proxy": {
+          "latestversionid": "v3",
+          "filebase64": "aGVsbG8tUHJveHk=",
+          "versions": {
+            "v1": {
+              "filebase64": "SGVsbG8gd29ybGQhIHYx"
+            },
+            "v2": {
+              "fileurl": "http://localhost:8181/EMPTY-URL"
+            },
+            "v3": {
+              "filebase64": "aGVsbG8tUHJveHk="
+            }
+          },
+          "versionscount": 3,
+        },
+        "f2-url": {
+          "latestversionid": "v3",
+          "fileurl": "http://localhost:8181/EMPTY-URL",
+          "versions": {
+            "v1": {
+              "filebase64": "SGVsbG8gd29ybGQhIHYx"
+            },
+            "v2": {
+              "filebase64": "aGVsbG8tUHJveHk="
+            },
+            "v3": {
+              "fileurl": "http://localhost:8181/EMPTY-URL"
+            }
+          },
+          "versionscount": 3,
+        },
+        "f3-resource": {
+          "latestversionid": "v3",
+          "filebase64": "SGVsbG8gd29ybGQhIHYz",
+          "versions": {
+            "v1": {
+              "filebase64": "aGVsbG8tUHJveHk="
+            },
+            "v2": {
+              "fileurl": "http://localhost:8181/EMPTY-URL"
+            },
+            "v3": {
+              "filebase64": "SGVsbG8gd29ybGQhIHYz"
+            }
+          },
+          "versionscount": 3,
+        }
+      },
+      "filescount": 3,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
+    }
+  },
+  "dirscount": 1,
+}
+`,
+		},
+		{
+			Name: "Inline - filter + inline file",
+			URL:  "?filter=dirs.files.id=f1-proxy&inline=dirs.files.file",
+			Exp: `{
+  "dirs": {
+    "d1": {
+      "files": {
+        "f1-proxy": {
+          "latestversionid": "v3",
+          "filebase64": "aGVsbG8tUHJveHk=",
+          "versionscount": 3,
+        }
+      },
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
+    }
+  },
+  "dirscount": 1,
+}
+`,
+		},
+		{
+			Name: "Inline - filter + inline vers.file",
+			URL:  "?filter=dirs.files.id=f1-proxy&inline=dirs.files.versions.file",
+			Exp: `{
+  "dirs": {
+    "d1": {
+      "files": {
+        "f1-proxy": {
+          "latestversionid": "v3",
+          "versions": {
+            "v1": {
+              "filebase64": "SGVsbG8gd29ybGQhIHYx"
+            },
+            "v2": {
+              "fileurl": "http://localhost:8181/EMPTY-URL"
+            },
+            "v3": {
+              "filebase64": "aGVsbG8tUHJveHk="
+            }
+          },
+          "versionscount": 3,
+        }
+      },
+      "filescount": 1,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
+    }
+  },
+  "dirscount": 1,
+}
+`,
+		},
+		{
+			Name: "file-proxy",
+			URL:  "/dirs/d1/files/f1-proxy",
+			Exp:  `hello-Proxy`,
+		},
+		{
+			Name: "file-url",
+			URL:  "/dirs/d1/files/f2-url",
+			Exp:  `hello-URL`,
+		},
+		{
+			Name: "file-resource",
+			URL:  "/dirs/d1/files/f3-resource",
+			Exp:  `Hello world! v3`,
+		},
+		{
+			Name: "Inline - at file + inline file",
+			URL:  "/dirs/d1/files/f1-proxy?meta&inline=file",
+			Exp: `{
+  "latestversionid": "v3",
+  "filebase64": "aGVsbG8tUHJveHk=",
+  "versionscount": 3,
+}
+`,
+		},
+		{
+			Name: "Inline - at file + inline file",
+			URL:  "/dirs/d1/files/f1-proxy?meta&inline=versions.file",
+			Exp: `{
+  "latestversionid": "v3",
+  "versions": {
+    "v1": {
+      "filebase64": "SGVsbG8gd29ybGQhIHYx"
+    },
+    "v2": {
+      "fileurl": "http://localhost:8181/EMPTY-URL"
+    },
+    "v3": {
+      "filebase64": "aGVsbG8tUHJveHk="
+    }
+  },
+  "versionscount": 3,
+}
+`,
+		},
+		{
+			Name: "Bad inline xx",
+			URL:  "/dirs/d1/files/f1-proxy?meta&inline=XXversions.file",
+			Exp:  "Invalid 'inline' value: \"dirs.files.XXversions.file\"\n",
+		},
+		{
+			Name: "Bad inline yy",
+			URL:  "/?inline=dirs.files.yy",
+			Exp:  "Invalid 'inline' value: \"dirs.files.yy\"\n",
+		},
+		{
+			Name: "Bad inline vers.yy",
+			URL:  "/?inline=dirs.files.version.yy",
+			Exp:  "Invalid 'inline' value: \"dirs.files.version.yy\"\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Logf("Testing: %s", test.Name)
+
+		remove := []string{
+			`"specversion"`,
+			`"id"`,
+			`"epoch"`,
+			`"self"`,
+			`"latest"`,
+			`"latestversionurl"`,
+			`"versionsurl"`,
+			`"dirsurl"`,
+		}
+
+		res, err := http.Get("http://localhost:8181/" + test.URL)
+		xCheck(t, err == nil, fmt.Sprintf("%s", err))
+
+		body, _ := io.ReadAll(res.Body)
+
+		for _, str := range remove {
+			str = fmt.Sprintf(`(?m)^ *%s.*$\n`, str)
+			re := regexp.MustCompile(str)
+			body = re.ReplaceAll(body, []byte{})
+		}
+		body = regexp.MustCompile(`(?m)^ *$\n`).ReplaceAll(body, []byte{})
+
+		if !xCheckEqual(t, "Test: "+test.Name+"\n", string(body), test.Exp) {
 			break
 		}
 	}
