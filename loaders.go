@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	log "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
@@ -69,7 +70,13 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 	reader := tar.NewReader(gzf)
 
 	if reg == nil {
-		reg, err = registry.NewRegistry("123-4567-3456")
+		reg, err = registry.FindRegistry("API-Guru")
+		ErrFatalf(err)
+		if reg != nil {
+			return reg
+		}
+
+		reg, err = registry.NewRegistry("API-Guru")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		// log.VPrintf(3, "New registry:\n%#v", reg)
 
@@ -87,21 +94,6 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 	ErrFatalf(err)
 	_, err = g.AddResourceModel("apis", "api", 2, true, true, true)
 	ErrFatalf(err)
-	_, err = g.AddAttr("xxx", registry.INTEGER)
-	ErrFatalf(err)
-	_, err = g.AddAttr("yyy", registry.STRING)
-	ErrFatalf(err)
-	_, err = g.AddAttr("zzz", registry.STRING)
-	ErrFatalf(err)
-
-	g, err = reg.Model.AddGroupModel("schemagroups", "schemagroup")
-	ErrFatalf(err)
-	_, err = g.AddResourceModel("schemas", "schema", 1, true, true, true)
-	ErrFatalf(err)
-	// reg.Model.Save()
-
-	m := reg.LoadModel()
-	log.VPrintf(3, "Model: %#v\n", m)
 
 	iter := 0
 
@@ -125,6 +117,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 			continue
 		}
 
+		// Just a subset for now
 		if strings.Index(header.Name, "/docker.com/") < 0 &&
 			strings.Index(header.Name, "/adobe.com/") < 0 &&
 			strings.Index(header.Name, "/fec.gov/") < 0 &&
@@ -146,14 +139,8 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 		ErrFatalf(group.Set("name", group.UID))
 		ErrFatalf(group.Set("modifiedby", "me"))
-		ErrFatalf(group.Set("modifiedon", "2024-01-01T12:00:00Z"))
+		ErrFatalf(group.Set("modifiedon", time.Now().Format(time.RFC3339)))
 		ErrFatalf(group.Set("epoch", 5))
-		ErrFatalf(group.Set("xxx", 5))
-		ErrFatalf(group.Set("yyy", "6"))
-		ErrFatalf(group.Set("zzz", "6"))
-
-		ErrFatalf(group.Set("modifiedon", nil)) // delete prop
-		ErrFatalf(group.Set("zzz", nil))        // delete prop
 
 		// group2 := reg.FindGroup("apiproviders", parts[0])
 		// log.Printf("Find Group:\n%s", registry.ToJSON(group2))
@@ -168,22 +155,6 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		res, err := group.AddResource("apis", resName, "v1")
 		ErrFatalf(err)
 
-		g2, err := reg.FindGroup("schemagroups", parts[0])
-		ErrFatalf(err, "FindGroup(%s/%s): %s", "schemagroups", parts[0], err)
-
-		if g2 == nil {
-			g2, err = reg.AddGroup("schemagroups", parts[0])
-			ErrFatalf(err, "AddGroup(%s/%s): %s", "schemagroups", parts[0], err)
-		}
-		ErrFatalf(g2.Set("name", group.Get("name")))
-		/*
-			r2,err := g2.AddResource("schemas", resName, parts[verIndex])
-			ErrFatalf(err)
-			v2,err := r2.FindVersion(parts[verIndex])
-			ErrFatalf(err)
-			v2.Name = parts[verIndex+1]
-			v2.Format = "openapi/3.0.6"
-		*/
 		version, err := res.FindVersion(parts[verIndex])
 		ErrFatalf(err)
 		if version != nil {
@@ -220,9 +191,15 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "ApisRegistry")
+	log.VPrintf(1, "Loading registry '%s'", "TestRegistry")
 	if reg == nil {
-		reg, err = registry.NewRegistry("ApisRegistry")
+		reg, err = registry.FindRegistry("TestRegistry")
+		ErrFatalf(err)
+		if reg != nil {
+			return reg
+		}
+
+		reg, err = registry.NewRegistry("TestRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 
 		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))

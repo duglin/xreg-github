@@ -11,15 +11,17 @@ To run it:
 # Start a mysql server. Give it about 30 seconds to fully start
 $ make mysql
 
-# Run the xreg server (creates a new DB each time):
+# Run the tests & xreg server (creates a new DB each time):
 $ make
 
-or to use existing DB:
+or to use existing DB (no tests):
 $ make start
 
 # Try it:
 $ curl http://localhost:8080
 $ curl http://localhost:8080?inline
+
+In a browser go to: http://localhost:8080?reg
 
 # To run a mysql client:
 $ make mysql-client
@@ -50,3 +52,4 @@ TODOs:
 - see if we can move "#resource??" into the attributes struct
 - support overriding spec defined attributes - like "format"
 - write down the model for the spec defined attributes
+- support the create/modify by/on attributes
