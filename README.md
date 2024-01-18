@@ -28,11 +28,11 @@ $ make mysql-client
 TODOs:
 - add tests for multiple registries at the same time
 - test filtering for (non)empty values - e.g. filter=id=  filter=id
+  - empty complex types too
 - test for filtering case-insensitive string compares
 - test for filtering with string being part of value
 - test for exact match of numerics, bools
 - pagination
-- GET of resources blobs - all 3 variants(in DB, URL, proxy URL)
 - PUT/POST operations
 - see if we can prepend Path with / or append it with /
 - Don't allow creation of Resource w/o version - for HTTP PUT
@@ -40,3 +40,13 @@ TODOs:
   if not provided by the client
 - transactions
 - add complex filters testcases
+- create a schema (xreg model) checker so we can remove all checks during
+  the set() calls and just check the entire entity all at once before we
+  call set()
+- support for IfValues
+- test/support changing the model
+  - test for invalid changes
+- stop treating "labels" as special
+- see if we can move "#resource??" into the attributes struct
+- support overriding spec defined attributes - like "format"
+- write down the model for the spec defined attributes
