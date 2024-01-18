@@ -1,8 +1,10 @@
 all: run
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
+IMAGE := duglin/xreg-server
 
-test: server
+test: .test
+.test: server
 	@go clean -testcache
 	go test -failfast $(TESTDIRS)
 	@echo
@@ -10,12 +12,20 @@ test: server
 	@go clean -testcache
 	NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
 	@echo
+	@touch .test
 
 server: *.go registry/*
 	go build -o $@ .
 
-image: server Dockerfile
-	docker build -f Dockerfile -t duglin/xreg-server .
+image: .xreg-server
+.xreg-server: server Dockerfile
+	docker build -f Dockerfile -t $(IMAGE) . --network host --no-cache
+	@touch .xreg-server
+
+push: .push
+.push: .xreg-server
+	docker push $(IMAGE)
+	@touch .push
 
 run: server test
 	./server --recreate

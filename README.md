@@ -16,14 +16,18 @@ $ make
 
 or to use existing DB (no tests):
 $ make start
+```
 
-# Try it:
+Try it:
+```
+# In a browser go to:
+  http://localhost:8080?reg
+
+# Or just:
 $ curl http://localhost:8080
 $ curl http://localhost:8080?inline
 
-In a browser go to: http://localhost:8080?reg
-
-# To run a mysql client:
+# To run a mysql client to see the DBs:
 $ make mysql-client
 ```
 
