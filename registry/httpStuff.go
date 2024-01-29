@@ -1210,6 +1210,12 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		epoch++
 	}
 
+	// TESTING
+	entity.Refresh()
+	errs := entity.Validate()
+	PanicIf(len(errs) != 0, "Errors: %v", errs)
+	// E-TESTING
+
 	return entity.SetFromUI("epoch", epoch)
 }
 

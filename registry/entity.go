@@ -18,9 +18,9 @@ type Entity struct {
 	UID         string // Entity's UID
 	Props       map[string]any
 
-	// These were added just for convinience and so we can use the same
+	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
-	Level    int
+	Level    int // 0=registry, 1=group, 2=resource, 3=version
 	Path     string
 	Abstract string
 }
@@ -596,10 +596,14 @@ var OrderedSpecProps = []*SpecProp{
 		Required: true,
 	}},
 	{"self", STRING, "", false, func(e *Entity, info *RequestInfo) any {
-		if e.Level > 1 { // && (info.ResourceType == "" || (info.ResourceType != "" && info.ShowMeta)) {
-			return info.BaseURL + "/" + e.Path + "?meta"
+		base := ""
+		if info != nil {
+			base = info.BaseURL
 		}
-		return info.BaseURL + "/" + e.Path
+		if e.Level > 1 {
+			return base + "/" + e.Path + "?meta"
+		}
+		return base + "/" + e.Path
 	}, &Attribute{
 		Name:     "self",
 		Type:     STRING,
@@ -620,7 +624,11 @@ var OrderedSpecProps = []*SpecProp{
 		if IsNil(val) {
 			return nil
 		}
-		return info.BaseURL + "/" + e.Path + "/versions/" + val.(string) + "?meta"
+		base := ""
+		if info != nil {
+			base = info.BaseURL
+		}
+		return base + "/" + e.Path + "/versions/" + val.(string) + "?meta"
 	}, &Attribute{
 		Name:     "latestversionurl",
 		Type:     URL,
@@ -681,7 +689,7 @@ var OrderedSpecProps = []*SpecProp{
 		Type: TIMESTAMP,
 	}},
 	{"model", OBJECT, "0", false, func(e *Entity, info *RequestInfo) any {
-		if info.ShowModel {
+		if info != nil && info.ShowModel {
 			model := info.Registry.Model
 			if model == nil {
 				model = &Model{}

@@ -1054,3 +1054,90 @@ func unused__GetAttributeValue(rsid, abstractEntity, name string) any {
 		panic(fmt.Sprintf("Can't deal with type: %s", attr.Type))
 	}
 }
+
+func (e *Entity) Validate() []error {
+	obj := e.Materialize(nil)
+	fmt.Printf("Obj:\n%s\n", ToJSON(obj))
+	reg, err := FindRegistryBySID(e.RegistrySID)
+	Must(err)
+	return ValidateObj(reg, obj, e.Abstract)
+}
+
+func ValidateObj(reg *Registry, obj map[string]any, abstract string) []error {
+	absParts := strings.Split(abstract, string(DB_IN))
+	// attrs := (Attributes)(nil)
+
+	// Remove global attributes that are owned by the server
+	delete(obj, "self")
+
+	// Remove level specific attributes that are owned by the server.
+	// Grab the appropriate Attributes (attrs)
+	if absParts[0] == "" { // Registry
+		for _, gm := range reg.Model.Groups {
+			plural := gm.Plural
+			delete(obj, plural)
+			delete(obj, plural+"count")
+			delete(obj, plural+"url")
+		}
+		// attrs = reg.Model.Attributes
+	} else if len(absParts) == 1 { // Group
+		gm := reg.Model.Groups[absParts[0]]
+		PanicIf(gm == nil, "Can't find group: %s", absParts[0])
+
+		for _, rm := range gm.Resources {
+			plural := rm.Plural
+			delete(obj, plural)
+			delete(obj, plural+"count")
+			delete(obj, plural+"url")
+		}
+		// attrs = gm.Attributes
+	} else { // Resource or Version
+		gm := reg.Model.Groups[absParts[0]]
+		PanicIf(gm == nil, "Can't find group: %s", absParts[0])
+		rm := gm.Resources[absParts[1]]
+		PanicIf(rm == nil, "Can't find resource: %s/%s", absParts[0],
+			absParts[1])
+
+		if len(absParts) == 2 { // Resource
+			delete(obj, rm.Singular)
+			delete(obj, rm.Singular+"base64")
+			delete(obj, "latestversionid")
+			delete(obj, "latestversionurl")
+			delete(obj, "versions")
+			delete(obj, "versionscount")
+			delete(obj, "versionsurl")
+		} else { // Version
+			delete(obj, rm.Singular)
+			delete(obj, rm.Singular+"base64")
+			delete(obj, "latest")
+		}
+		// attrs = rm.Attributes
+	}
+
+	attrs := GetAttributes(reg.RegistrySID, abstract)
+
+	return ValidateAttributes(obj, attrs)
+}
+
+// This should be called after all level-specific properties have been
+// removed - such as collections
+func ValidateAttributes(obj map[string]any, attrs Attributes) []error {
+	log.Printf("In validateAttr")
+	errs := []error(nil)
+	keys := map[string]struct{}{}
+	for k, _ := range obj {
+		keys[k] = struct{}{}
+	}
+	log.Printf("keys: %v", keys)
+
+	for key, _ := range attrs {
+		delete(keys, key)
+	}
+
+	if len(keys) != 0 {
+		log.Printf("Extra: %v", keys)
+		errs = append(errs, fmt.Errorf("Extra keys: %v", keys))
+	}
+
+	return errs
+}
