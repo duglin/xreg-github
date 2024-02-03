@@ -25,6 +25,7 @@ same way... via the generic Get/Set methods.
 
 
 SET GLOBAL sql_mode = 'ANSI_QUOTES' ;
+SET sql_mode = 'ANSI_QUOTES' ;
 
 CREATE TABLE Registries (
     SID     VARCHAR(255) NOT NULL,  # System ID
