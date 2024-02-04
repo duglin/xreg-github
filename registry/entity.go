@@ -606,8 +606,15 @@ type SpecProp struct {
 	getFn   func(*Entity, *RequestInfo) any // return its value
 	checkFn func(newObj map[string]any, oldObj map[string]any) error
 	// prep newObj for an update to the DB
-	updateFn       func(newObj map[string]any, oldObj map[string]any) error
+	updateFn       func(*UpdateFnArgs) error
 	modelAttribute *Attribute
+}
+
+type UpdateFnArgs struct {
+	NewObj   map[string]any
+	OldObj   map[string]any
+	Abstract string
+	IsNew    bool
 }
 
 // This allows for us to choose the order and define custom logic per prop
@@ -617,7 +624,8 @@ var OrderedSpecProps = []*SpecProp{
 			return SPECVERSION
 		},
 		func(newObj map[string]any, oldObj map[string]any) error {
-			if tmp := newObj["specversion"]; !IsNil(tmp) && tmp != "" && tmp != SPECVERSION {
+			tmp := newObj["specversion"]
+			if !IsNil(tmp) && tmp != "" && tmp != SPECVERSION {
 				return fmt.Errorf("Invalid 'specversion': %s", tmp)
 			}
 			return nil
@@ -639,10 +647,10 @@ var OrderedSpecProps = []*SpecProp{
 			}
 			return nil
 		},
-		func(newObj map[string]any, oldObj map[string]any) error {
-			if oldObj != nil {
-				if IsNil(newObj["id"]) {
-					newObj["id"] = oldObj["id"]
+		func(args *UpdateFnArgs) error {
+			if args.OldObj != nil {
+				if IsNil(args.NewObj["id"]) {
+					args.NewObj["id"] = args.OldObj["id"]
 					return nil
 				}
 			}
@@ -683,13 +691,16 @@ var OrderedSpecProps = []*SpecProp{
 			}
 			return nil
 		},
-		func(newObj map[string]any, oldObj map[string]any) error {
-			tmp := oldObj["epoch"]
+		func(args *UpdateFnArgs) error {
+			tmp := args.OldObj["epoch"]
 			epoch := NotNilInt(&tmp)
 			if epoch < 0 {
 				epoch = 0
 			}
-			newObj["epoch"] = epoch + 1
+			if args.IsNew {
+				epoch = 0
+			}
+			args.NewObj["epoch"] = epoch + 1
 			return nil
 		},
 		&Attribute{
@@ -889,13 +900,18 @@ func (e *Entity) Save(obj map[string]any) error {
 		switch reflect.ValueOf(val).Kind() {
 		case reflect.Map:
 			vMap := val.(map[string]any)
-			if len(vMap) == 0 {
-				return e.SetPPValidate(pp, map[string]any{}, false)
-			}
+			count := 0
 			for k, v := range vMap {
+				if IsNil(v) {
+					continue
+				}
 				if err := traverse(pp.P(k), v); err != nil {
 					return err
 				}
+				count++
+			}
+			if count == 0 {
+				return e.SetPPValidate(pp, map[string]any{}, false)
 			}
 
 		case reflect.Slice:
@@ -911,13 +927,18 @@ func (e *Entity) Save(obj map[string]any) error {
 
 		case reflect.Struct:
 			vMap := val.(map[string]any)
-			if len(vMap) == 0 {
-				return e.SetPPValidate(pp, struct{}{}, false)
-			}
+			count := 0
 			for k, v := range vMap {
+				if IsNil(v) {
+					continue
+				}
 				if err := traverse(pp.P(k), v); err != nil {
 					return err
 				}
+				count++
+			}
+			if count == 0 {
+				return e.SetPPValidate(pp, struct{}{}, false)
 			}
 		default:
 			// must be scalar so add it

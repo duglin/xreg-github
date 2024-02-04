@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -588,6 +589,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	isNew := false
 	method := strings.ToUpper(info.OriginalRequest.Method)
 	entityData := EntityData{
+		Obj:   map[string]any{},
 		Props: map[string]any{},
 	}
 
@@ -690,24 +692,18 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		err = json.Unmarshal(body, &entityData.RawProps)
 		err = json.Unmarshal(body, &entityData.Props)
+		maps.Copy(entityData.Obj, entityData.Props)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Error parsing body: %s", err)
 		}
-		entityData.UpdateCase = true
 
-		// Fix labels and check for RESOURCE properties
+		// Check for RESOURCE properties
 		for _, k := range SortedKeys(entityData.Props) {
 			v := entityData.Props[k]
 
-			lowerK := strings.ToLower(k)
-			if lowerK == "labels" && k != "labels" {
-				return fmt.Errorf("Property name %q is invalid, one in "+
-					"a different case already exists", k)
-			}
-
 			// TODO: NEW  only continue for entities using the old stuff
-			if len(info.Parts) == 0 { // in reg
+			if len(info.Parts) < 1 { // in reg
 				continue
 			}
 
@@ -860,17 +856,20 @@ func HTTPPutPost(info *RequestInfo) error {
 	// ////////////////////////////////////////////////////////////////
 	if len(info.Parts) == 0 {
 		// MUST be PUT /
-		newObj := entityData.Props
 		currObj := info.Registry.Entity.Materialize(nil)
 
-		if err == nil {
-			err = ValidateEntity(info.Registry, newObj, currObj,
-				info.Registry.Entity.Abstract)
-		}
+		err = ValidateEntity(info.Registry, entityData.Obj, currObj,
+			info.Registry.Entity.Abstract)
 
 		if err == nil {
-			err = PrepUpdateEntity(info.Registry, newObj, currObj,
-				info.Registry.Entity.Abstract)
+			args := &UpdateFnArgs{
+				NewObj:   entityData.Obj,
+				OldObj:   currObj,
+				Abstract: info.Registry.Entity.Abstract,
+				IsNew:    false,
+			}
+
+			err = PrepUpdateEntity(info.Registry, args)
 		}
 
 		if err != nil {
@@ -878,7 +877,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			return fmt.Errorf("Error processing registry: %s", err)
 		}
 
-		err = info.Registry.Entity.Save(newObj)
+		err = info.Registry.Entity.Save(entityData.Obj)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error processing registry: %s", err)
@@ -901,30 +900,50 @@ func HTTPPutPost(info *RequestInfo) error {
 	} else {
 		// must be PUT/POST /GROUPs/gID...
 		group, err = info.Registry.FindGroup(info.GroupType, groupUID)
+
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
+		}
 	}
-	if err == nil && group == nil {
+
+	if group == nil {
 		// Group doesn't exist so create it
 		isNew = true
 		group, err = info.Registry.AddGroup(info.GroupType, groupUID)
-	}
 
-	if err == nil && len(info.Parts) < 3 {
-		// Either /GROUPs or /GROUPs/gID
-		entityData.IsNew = isNew
-		entityData.Level = 1
-		entityData.Plural = groupModel.Plural
-		entityData.Singular = groupModel.Singular
-		entityData.Attributes = groupModel.Attributes
-		err = UserUpdateEntity(&group.Entity, &entityData)
-	}
-
-	if err != nil {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
+		}
 	}
 
 	if len(info.Parts) < 3 {
-		// Either /GROUPs or /GROUPs/gID - so all done
+		// Either /GROUPs or /GROUPs/gID
+		currObj := group.Materialize(nil)
+
+		err = ValidateEntity(info.Registry, entityData.Obj, currObj,
+			group.Abstract)
+		if err == nil {
+			args := &UpdateFnArgs{
+				NewObj:   entityData.Obj,
+				OldObj:   currObj,
+				Abstract: group.Abstract,
+				IsNew:    isNew,
+			}
+			err = PrepUpdateEntity(info.Registry, args)
+		}
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf("Error processing group: %s", err)
+		}
+
+		err = group.Save(entityData.Obj)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error processing group: %s", err)
+		}
+
 		info.Parts = []string{info.Parts[0], groupUID}
 		info.What = "Entity"
 		info.GroupUID = groupUID
@@ -1084,11 +1103,11 @@ type EntityData struct {
 	TrueAbstract string
 
 	// Incoming data
-	Props      map[string]any             // key=incoming JSON key
-	RawProps   map[string]json.RawMessage // key=incoming JSON key
-	UpdateCase bool
-	Patch      bool
-	IsNew      bool
+	Obj      map[string]any             // incoming Object
+	Props    map[string]any             // key=incoming JSON key
+	RawProps map[string]json.RawMessage // key=incoming JSON key
+	Patch    bool
+	IsNew    bool
 }
 
 // check for props to be removed - old props
@@ -1181,10 +1200,6 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 		specProp := SpecProps[lowerK]
 		if specProp != nil {
 			// It's a spec defined property name
-			if ed.UpdateCase && k != specProp.name {
-				return fmt.Errorf("Property name %q is invalid, one in "+
-					"a different case already exists", k)
-			}
 			if specProp.mutable == false {
 				log.VPrintf(4, "Skipping immutable prop %q", k)
 				prevTop = pp.Top()
@@ -1204,7 +1219,7 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 
 				// Case doesn't match and we're not supposed to update it
 				// so just use the existing case instead
-				if caseProp != k && !ed.UpdateCase {
+				if caseProp != k {
 					// k = caseProp
 					// Convert to the UI version since 'k' is UI not DB view
 					pp, _ := PropPathFromDB(caseProp)

@@ -1096,15 +1096,13 @@ func ValidateEntity(reg *Registry, newObj map[string]any,
 	return ValidateObject(obj, oldObj, attrs, NewPP())
 }
 
-func PrepUpdateEntity(reg *Registry, newObj map[string]any,
-	oldObj map[string]any, abstract string) error {
-
-	attrs := GetAttributes(reg.RegistrySID, abstract)
+func PrepUpdateEntity(reg *Registry, args *UpdateFnArgs) error {
+	attrs := GetAttributes(reg.RegistrySID, args.Abstract)
 
 	for key, _ := range attrs {
 		specProp := SpecProps[key]
 		if specProp != nil && specProp.updateFn != nil {
-			if err := specProp.updateFn(newObj, oldObj); err != nil {
+			if err := specProp.updateFn(args); err != nil {
 				return err
 			}
 		}
@@ -1281,6 +1279,9 @@ func ValidateMap(val any, item *Item, path *PropPath) error {
 	for _, k := range valValue.MapKeys() {
 		keyName := k.Interface().(string)
 		v := valValue.MapIndex(k).Interface()
+		if IsNil(v) {
+			continue
+		}
 		if err := ValidateAttribute(v, attr, path.P(keyName)); err != nil {
 			return err
 		}

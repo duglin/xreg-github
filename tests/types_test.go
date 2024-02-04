@@ -165,7 +165,7 @@ func TestBasicTypes(t *testing.T) {
 			{"regobj[1]", "", nil,
 				`Attribute name "1" isn't valid`}, // Not an array
 			{"regobj", []any{}, nil,
-				`"regobj": [] must be an object`}, // Not an array
+				`"regobj": [] must be an empty object`}, // Not an array
 			{"reganyobj2.str", "substr", nil,
 				`Can't find attribute "reganyobj2.str"`}, // unknown attr
 			{"regarrayarrayint[0][0]", "abc", nil,
@@ -179,7 +179,7 @@ func TestBasicTypes(t *testing.T) {
 			{"regint1", "123", nil,
 				`"regint1": "123" should be an integer`}, // bad type
 			{"regmapint", "123", nil,
-				`"regmapint": "123" must be a map`}, // must be empty
+				`"regmapint": "123" must be an empty map`}, // must be empty
 			{"regmapint.k1", "123", nil,
 				`"regmapint.k1": "123" should be an integer`}, // bad type
 			{"regmapstring.k1", 123, nil,

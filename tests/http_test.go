@@ -319,6 +319,43 @@ func TestHTTPRegistry(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
+	reg.Model.AddAttr("myany", registry.ANY)
+	reg.Model.AddAttr("mybool", registry.BOOLEAN)
+	reg.Model.AddAttr("mydec", registry.DECIMAL)
+	reg.Model.AddAttr("myint", registry.INTEGER)
+	reg.Model.AddAttr("mystr", registry.STRING)
+	reg.Model.AddAttr("mytime", registry.TIMESTAMP)
+	reg.Model.AddAttr("myuint", registry.UINTEGER)
+	reg.Model.AddAttr("myuri", registry.URI)
+	reg.Model.AddAttr("myuriref", registry.URI_REFERENCE)
+	reg.Model.AddAttr("myuritemplate", registry.URI_TEMPLATE)
+	reg.Model.AddAttr("myurl", registry.URL)
+
+	attr, _ := reg.Model.AddAttrObj("myobj1")
+	attr.Item.AddAttr("mystr1", registry.STRING)
+	attr.Item.AddAttr("myint1", registry.INTEGER)
+	attr.Item.AddAttr("*", registry.ANY)
+
+	attr, _ = reg.Model.AddAttrObj("myobj2")
+	attr.Item.AddAttr("mystr2", registry.STRING)
+	obj2, _ := attr.Item.AddAttrObj("myobj2_1")
+	obj2.AddAttr("*", registry.INTEGER)
+
+	item := registry.NewItem(registry.ANY)
+	attr, _ = reg.Model.AddAttrArray("myarrayany", item)
+	attr, _ = reg.Model.AddAttrMap("mymapany", item)
+
+	item = registry.NewItem(registry.UINTEGER)
+	attr, _ = reg.Model.AddAttrArray("myarrayuint", item)
+	attr, _ = reg.Model.AddAttrMap("mymapuint", item)
+
+	item = registry.NewItemObject()
+	attr, _ = reg.Model.AddAttrArray("myarrayemptyobj", item)
+
+	item = registry.NewItemObject()
+	item.AddAttr("mapobj_int", registry.INTEGER)
+	attr, _ = reg.Model.AddAttrMap("mymapobj", item)
+
 	xCheckHTTP(t, &HTTPTest{
 		Name:       "POST reg",
 		URL:        "/",
@@ -363,6 +400,382 @@ func TestHTTPRegistry(t *testing.T) {
 }
 `,
 	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - good epoch",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "epoch": 3
+}`,
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 4,
+  "self": "http://localhost:8181/"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - bad epoch",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "epoch":33
+}`,
+		Code:       400,
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
+		ResBody:    "Error processing registry: Attribute \"epoch\" doesn't match existing value (4)\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - full good",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 4,
+
+  "myany": 5.5,
+  "mybool": true,
+  "mydec": 2.4,
+  "myint": -666,
+  "mystr": "hello",
+  "mytime": "2024-01-01T12:01:02Z",
+  "myuint": 123,
+  "myuri": "http://foo.com",
+  "myuriref": "/foo",
+  "myuritemplate": "...",
+  "myurl": "http://someurl.com",
+  "myobj1": {
+    "mystr1": "str1",
+    "myint1": 345,
+    "myobj1_ext": 9.2
+  },
+  "myobj2": {
+    "mystr2": "str2",
+    "myobj2_1": {
+      "myobj2_1_ext": 444
+    }
+  },
+  "myarrayany": [
+    { "any1": -333},
+    "any2-str"
+  ],
+  "mymapany": {
+    "key1": 1,
+    "key2": "2"
+  },
+  "myarrayuint": [ 2, 999 ],
+  "myarrayemptyobj": [],
+  "mymapobj": {
+    "mymapobj_k1": { "mapobj_int": 333 }
+  }
+}`,
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 5,
+  "self": "http://localhost:8181/",
+  "myany": 5.5,
+  "myarrayany": [
+    {
+      "any1": -333
+    },
+    "any2-str"
+  ],
+  "myarrayemptyobj": [],
+  "myarrayuint": [
+    2,
+    999
+  ],
+  "mybool": true,
+  "mydec": 2.4,
+  "myint": -666,
+  "mymapany": {
+    "key1": 1,
+    "key2": "2"
+  },
+  "mymapobj": {
+    "mymapobj_k1": {
+      "mapobj_int": 333
+    }
+  },
+  "myobj1": {
+    "myint1": 345,
+    "myobj1_ext": 9.2,
+    "mystr1": "str1"
+  },
+  "myobj2": {
+    "myobj2_1": {
+      "myobj2_1_ext": 444
+    },
+    "mystr2": "str2"
+  },
+  "mystr": "hello",
+  "mytime": "2024-01-01T12:01:02Z",
+  "myuint": 123,
+  "myuri": "http://foo.com",
+  "myuriref": "/foo",
+  "myuritemplate": "...",
+  "myurl": "http://someurl.com"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - bad object",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "mymapobj": {
+    "mapobj_int": 333
+  }
+}`,
+		Code:       400,
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
+		ResBody: `Error processing registry: Attribute "mymapobj.mapobj_int" must be an object
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - full empties",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 5,
+
+  "myany": 5.5,
+  "myint": 4.0,
+  "mybool": null,
+  "myuri": null,
+  "myobj1": {},
+  "myobj2": null,
+  "myarrayany": [],
+  "mymapany": {},
+  "myarrayuint": null,
+  "myarrayemptyobj": [],
+  "mymapobj": {
+    "mymapobj_key1": {}
+  },
+  "mymapuint": {
+    "asd": null
+  }
+}`,
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 6,
+  "self": "http://localhost:8181/",
+  "myany": 5.5,
+  "myarrayany": [],
+  "myarrayemptyobj": [],
+  "myint": 4,
+  "mymapany": {},
+  "mymapobj": {
+    "mymapobj_key1": {}
+  },
+  "mymapuint": {},
+  "myobj1": {}
+}
+`,
+	})
+
+	type typeTest struct {
+		request  string
+		response string
+	}
+
+	typeTests := []typeTest{
+		{request: `{"epoch":123}`,
+			response: `Attribute "epoch" doesn't match existing value (6)`},
+		{request: `{"epoch":-123}`,
+			response: `Attribute "epoch" must be a uinteger`},
+		{request: `{"epoch":"asd"}`,
+			response: `Attribute "epoch" must be a uinteger`},
+		{request: `{"mybool":123}`,
+			response: `Attribute "mybool" must be a boolean`},
+		{request: `{"mybool":"False"}`,
+			response: `Attribute "mybool" must be a boolean`},
+		{request: `{"mydec":[ 1 ]}`,
+			response: `Attribute "mydec" must be a decimal`},
+		{request: `{"mydec": "asd" }`,
+			response: `Attribute "mydec" must be a decimal`},
+		{request: `{"myint": 1.01 }`,
+			response: `Attribute "myint" must be an integer`},
+		{request: `{"myint": {} }`,
+			response: `Attribute "myint" must be an integer`},
+		{request: `{"mystr": {} }`,
+			response: `Attribute "mystr" must be a string`},
+		{request: `{"mystr": 123 }`,
+			response: `Attribute "mystr" must be a string`},
+		{request: `{"mystr": true }`,
+			response: `Attribute "mystr" must be a string`},
+		{request: `{"mytime": true }`,
+			response: `Attribute "mytime" must be a timestamp`},
+		{request: `{"mytime": "12-12-12" }`,
+			response: `Attribute "mytime" is a malformed timestamp`},
+		{request: `{"myuint": "str" }`,
+			response: `Attribute "myuint" must be a uinteger`},
+		{request: `{"myuint": "123" }`,
+			response: `Attribute "myuint" must be a uinteger`},
+		{request: `{"myuint": -123 }`,
+			response: `Attribute "myuint" must be a uinteger`},
+		{request: `{"myuri": 123 }`,
+			response: `Attribute "myuri" must be a uri`},
+		{request: `{"myuriref": 123 }`,
+			response: `Attribute "myuriref" must be a uri-reference`},
+		{request: `{"myuritemplate": 123 }`,
+			response: `Attribute "myuritemplate" must be a uri-template`},
+		{request: `{"myurl": 123 }`,
+			response: `Attribute "myurl" must be a url`},
+		{request: `{"myobj1": 123 }`,
+			response: `Attribute "myobj1" must be an object`},
+		{request: `{"myobj1": [ 123 ] }`,
+			response: `Attribute "myobj1" must be an object`},
+		{request: `{"myobj1": { "mystr1": 123 } }`,
+			response: `Attribute "myobj1.mystr1" must be a string`},
+		{request: `{"myobj2": { "ext": 123 } }`,
+			response: `Invalid extension(s) in "myobj2": ext`},
+		{request: `{"myobj2": { "myobj2_1": { "ext": "str" } } }`,
+			response: `Attribute "myobj2.myobj2_1.ext" must be an integer`},
+		{request: `{"myarrayuint": [ 123, -123 ] }`,
+			response: `Attribute "myarrayuint[1]" must be a uinteger`},
+		{request: `{"myarrayuint": [ "asd" ] }`,
+			response: `Attribute "myarrayuint[0]" must be a uinteger`},
+		{request: `{"myarrayuint": [ 123, null] }`,
+			response: `Attribute "myarrayuint[1]" must be a uinteger`},
+		{request: `{"myarrayuint": 123 }`,
+			response: `Attribute "myarrayuint" must be an array`},
+		{request: `{"mymapuint": 123 }`,
+			response: `Attribute "mymapuint" must be a map`},
+		{request: `{"mymapuint": { "asd" : -123 }}`,
+			response: `Attribute "mymapuint.asd" must be a uinteger`},
+		// {request: `{"mymapuint": { "asd" : null }}`,
+		// response: `Attribute "mymapuint.asd" must be a uinteger`},
+		{request: `{"myarrayemptyobj": [ { "asd": true } ] }`,
+			response: `Invalid extension(s) in "myarrayemptyobj[0]": asd`},
+		{request: `{"myarrayemptyobj": [ [ true ] ] }`,
+			response: `Attribute "myarrayemptyobj[0]" must be an object`},
+		{request: `{"mymapobj": { "asd" : { "mapobj_int" : true } } }`,
+			response: `Attribute "mymapobj.asd.mapobj_int" must be an integer`},
+		{request: `{"mymapobj": { "asd" : { "qwe" : true } } }`,
+			response: `Invalid extension(s) in "mymapobj.asd": qwe`},
+		{request: `{"mymapobj": [ true ]}`,
+			response: `Attribute "mymapobj" must be a map`},
+	}
+
+	for _, test := range typeTests {
+		xCheckHTTP(t, &HTTPTest{
+			Name:       "PUT reg - bad type - request: " + test.request,
+			URL:        "/",
+			Method:     "PUT",
+			ReqHeaders: []string{},
+			ReqBody:    test.request,
+			Code:       400,
+			ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
+			ResBody:    `Error processing registry: ` + test.response + "\n",
+		})
+	}
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - bad self - ignored",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "self": 123
+}`,
+		Code:       200,
+		ResHeaders: []string{"application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 7,
+  "self": "http://localhost:8181/"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - bad id",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "id": 123
+}`,
+		Code:       400,
+		ResHeaders: []string{"application/json"},
+		ResBody:    "Attribute \"id\" must be a string\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - bad id",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "id": "foo"
+}`,
+		Code:       400,
+		ResHeaders: []string{"application/json"},
+		ResBody:    "Error processing registry: Can't change the ID of an entity\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - options",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "documentation": "docs"
+}`,
+		Code:       200,
+		ResHeaders: []string{"application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 8,
+  "self": "http://localhost:8181/",
+  "documentation": "docs"
+}
+`})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - options - del",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "id": null,
+  "self": null
+}`,
+		Code:       200,
+		ResHeaders: []string{"application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 9,
+  "self": "http://localhost:8181/"
+}
+`})
+
 }
 
 func TestHTTPGroups(t *testing.T) {
@@ -441,7 +854,6 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody: `{
   "id":"dir1",
   "name":"my group",
-  "epoch": 5,
   "description":"desc",
   "documentation":"docs-url",
   "labels": {
@@ -590,7 +1002,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group(dir1): Incoming epoch(10) doesn't match existing epoch(3)\n",
+		ResBody:    "Error processing group: Attribute \"epoch\" doesn't match existing value (3)\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -601,7 +1013,7 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody:    `{ "id":"dir2" }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group(dir1): Metadata id(dir2) doesn't match ID in URL(dir1)\n",
+		ResBody:    "Error processing group: Can't change the ID of an entity\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -641,7 +1053,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group(dir2): Metadata id(dir3) doesn't match ID in URL(dir2)\n",
+		ResBody:    "Error processing group: Can't change the ID of an entity\n",
 	})
 
 }
@@ -1007,6 +1419,75 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResBody: "another body",
 	})
 
+	// Checking GET+PUTs
+
+	// 1
+	res, err := http.Get("http://localhost:8181/dirs/dir1/files/f3")
+	xNoErr(t, err)
+	body, err := io.ReadAll(res.Body)
+	xNoErr(t, err)
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "PUT resources - echo'ing resource GET",
+		URL:         "/dirs/dir1/files/f3",
+		Method:      "PUT",
+		ReqHeaders:  []string{},
+		ReqBody:     string(body),
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"xRegistry-id: f3",
+			"xRegistry-name: my doc",
+			"xRegistry-epoch: 8",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-latestversionid: 1",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-documentation: my doc url",
+			"xRegistry-format: ce/1.0",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
+			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+		},
+		ResBody: string(body),
+	})
+
+	// 2
+	res, err = http.Get("http://localhost:8181/dirs/dir1/files/f3?meta")
+	xNoErr(t, err)
+	body, err = io.ReadAll(res.Body)
+	xNoErr(t, err)
+
+	resBody := strings.Replace(string(body), `"epoch": 8`, `"epoch": 9`, 1)
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "PUT resources - echo'ing resource GET?meta",
+		URL:         "/dirs/dir1/files/f3?meta",
+		Method:      "PUT",
+		ReqHeaders:  []string{},
+		ReqBody:     string(body),
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody:     resBody,
+	})
+
+	// 3
+	res, err = http.Get("http://localhost:8181/")
+	xNoErr(t, err)
+	body, err = io.ReadAll(res.Body)
+	xNoErr(t, err)
+
+	resBody = strings.Replace(string(body), `"epoch": 1`, `"epoch": 2`, 1)
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "PUT resources - echo'ing rergistry GET",
+		URL:         "/",
+		Method:      "PUT",
+		ReqHeaders:  []string{},
+		ReqBody:     string(body),
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody:     resBody,
+	})
 }
 
 func TestHTTPResourcesContentHeaders(t *testing.T) {
