@@ -69,6 +69,10 @@ func NotNilString(val *any) string {
 		return (*val).(string)
 	}
 
+	if reflect.ValueOf(*val).Kind() != reflect.Slice {
+		panic("Not a slice")
+	}
+
 	b := (*val).([]byte)
 	return string(b)
 }
@@ -224,4 +228,27 @@ func RegHTMLify(r *http.Request, buf []byte) []byte {
 	repl := fmt.Sprintf(`"<a href='$1?reg&$3'>$1$2$3</a>"`)
 
 	return re.ReplaceAll(buf, []byte(repl))
+}
+
+func AnyToUInt(val any) (int, error) {
+	var err error
+
+	kind := reflect.ValueOf(val).Kind()
+	resInt := 0
+	if kind == reflect.Float64 { // JSON ints show up as floats
+		resInt = int(val.(float64))
+		if float64(resInt) != val.(float64) {
+			err = fmt.Errorf("must be a uinteger")
+		}
+	} else if kind != reflect.Int {
+		err = fmt.Errorf("must be a uinteger")
+	} else {
+		resInt = val.(int)
+	}
+
+	if err == nil && resInt < 0 {
+		err = fmt.Errorf("must be a uinteger")
+	}
+
+	return resInt, err
 }

@@ -40,6 +40,7 @@ TODOs:
 - test for exact match of numerics, bools
 - pagination
 - PUT/POST operations
+- DELETE operations
 - see if we can prepend Path with / or append it with /
 - Don't allow creation of Resource w/o version - for HTTP PUT
 - save latest highest "versionId" in Resource so we can assign a new value

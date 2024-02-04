@@ -13,7 +13,6 @@ type Registry struct {
 	Model *Model
 }
 
-var SpecVersion = "0.5"
 var Registries = map[string]*Registry{}      // User UID->Reg
 var RegistriesBySID = map[string]*Registry{} // SID->Reg
 
@@ -64,7 +63,7 @@ func NewRegistry(id string) (*Registry, error) {
 		return nil, err
 	}
 
-	reg.Set("specversion", SpecVersion)
+	reg.Set("specversion", SPECVERSION)
 	reg.Set("id", reg.UID)
 	reg.Set("epoch", 1)
 	Registries[id] = reg

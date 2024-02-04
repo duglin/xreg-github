@@ -1,5 +1,7 @@
 package registry
 
+const SPECVERSION = "0.5"
+
 // Model attributes
 const VERSIONS = 1
 const VERSIONID = true

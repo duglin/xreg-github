@@ -4,7 +4,7 @@ TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
 
 test: .test
-.test: server
+.test: server */*test.go
 	@go clean -testcache
 	go test -failfast $(TESTDIRS)
 	@echo
@@ -63,5 +63,7 @@ k3dserver: k3d image
 
 clean:
 	rm -f server
+	rm -f .test .xreg-server .push
 	go clean -cache -testcache
-	k3d cluster delete xreg
+	-k3d cluster delete xreg
+	-docker rm -f mysql

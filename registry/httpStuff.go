@@ -208,7 +208,7 @@ func (bw *BufferedWriter) Done() {
 		}
 	*/
 	if req.URL.Query().Has("html") {
-		bw.Info.OriginalResponse.Write([]byte("<pre>\n"))
+		bw.OldWriter.Write([]byte("<pre>\n"))
 		buf = HTMLify(req, buf)
 	}
 	bw.OldWriter.Write(buf)
@@ -706,6 +706,11 @@ func HTTPPutPost(info *RequestInfo) error {
 					"a different case already exists", k)
 			}
 
+			// TODO: NEW  only continue for entities using the old stuff
+			if len(info.Parts) == 0 { // in reg
+				continue
+			}
+
 			// If we're on a resource or version, check for its content
 			if resourceModel != nil {
 				singular := resourceModel.Singular
@@ -840,7 +845,13 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("POST not allowed on a version")
 	}
 
+	// TODO shouldn't need this check once we're using the new stuff
 	tmp := entityData.Props["id"]
+	if !IsNil(tmp) {
+		if reflect.ValueOf(tmp).Kind() != reflect.String {
+			return fmt.Errorf("Attribute \"id\" must be a string")
+		}
+	}
 	propsID := NotNilString(&tmp)
 
 	// All ready to go, let's walk the path
@@ -849,11 +860,25 @@ func HTTPPutPost(info *RequestInfo) error {
 	// ////////////////////////////////////////////////////////////////
 	if len(info.Parts) == 0 {
 		// MUST be PUT /
-		entityData.IsNew = isNew
-		entityData.Level = 0
-		entityData.Attributes = info.Registry.Model.Attributes
-		err = UserUpdateEntity(&info.Registry.Entity, &entityData)
+		newObj := entityData.Props
+		currObj := info.Registry.Entity.Materialize(nil)
 
+		if err == nil {
+			err = ValidateEntity(info.Registry, newObj, currObj,
+				info.Registry.Entity.Abstract)
+		}
+
+		if err == nil {
+			err = PrepUpdateEntity(info.Registry, newObj, currObj,
+				info.Registry.Entity.Abstract)
+		}
+
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf("Error processing registry: %s", err)
+		}
+
+		err = info.Registry.Entity.Save(newObj)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error processing registry: %s", err)
@@ -978,7 +1003,9 @@ func HTTPPutPost(info *RequestInfo) error {
 			version, err = resource.FindVersion(versionUID)
 		}
 		if err == nil && version == nil {
-			if versionUID == "" {
+			// Use the ID from the entity only if the URL pointed to a
+			// version and not the resource
+			if versionUID == "" && len(info.Parts) == 5 {
 				versionUID = propsID
 			}
 			if versionUID == "" {
@@ -1002,6 +1029,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	entityData.Attributes = resourceModel.Attributes
 
 	if len(info.Parts) < 5 {
+		// URL points to resource, not version
+		entityData.TrueAbstract = resource.Abstract
 		entityData.Props["id"] = version.UID
 	}
 	/*
@@ -1048,10 +1077,11 @@ func HTTPPutPost(info *RequestInfo) error {
 
 type EntityData struct {
 	// Info from entity
-	Level      int
-	Plural     string
-	Singular   string
-	Attributes map[string]*Attribute
+	Level        int
+	Plural       string
+	Singular     string
+	Attributes   map[string]*Attribute
+	TrueAbstract string
 
 	// Incoming data
 	Props      map[string]any             // key=incoming JSON key
@@ -1064,8 +1094,6 @@ type EntityData struct {
 // check for props to be removed - old props
 // check for casing against list of existing props
 func UserUpdateEntity(entity *Entity, ed *EntityData) error {
-	log.VPrintf(3, "Updating:\n%s\n", ToJSON(ed))
-
 	var err error
 
 	tmp := entity.GetPropFromUI("epoch")
@@ -1124,6 +1152,21 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 			toDeleteEntityProps[lowerK] = k
 		}
 	}
+
+	// new-ish
+	abs := ed.TrueAbstract
+	if abs == "" {
+		abs = entity.Abstract
+	}
+
+	// Remove all collections - newish
+	for _, coll := range GetCollections(entity.RegistrySID, abs) {
+		log.VPrintf(0, "Deleting collection: %q", coll)
+		delete(ed.Props, coll)
+		delete(ed.Props, coll+"count")
+		delete(ed.Props, coll+"url")
+	}
+	// e-new-ish
 
 	prevTop := ""
 	for _, k := range SortedKeys(ed.Props) {
@@ -1209,12 +1252,6 @@ func UserUpdateEntity(entity *Entity, ed *EntityData) error {
 	if !ed.IsNew {
 		epoch++
 	}
-
-	// TESTING
-	entity.Refresh()
-	errs := entity.Validate()
-	PanicIf(len(errs) != 0, "Errors: %v", errs)
-	// E-TESTING
 
 	return entity.SetFromUI("epoch", epoch)
 }
