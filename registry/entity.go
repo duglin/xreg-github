@@ -320,17 +320,18 @@ func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool) error {
 		return err
 	}
 	if attrType == "" {
+		ShowStack()
 		return fmt.Errorf("Can't find attribute %q", pp.UI())
 	}
 
 	if !IsNil(val) && validate {
 		if err = ValidatePropValue(val, attrType); err != nil {
-			log.Printf("E: %s", ToJSON(e))
 			return fmt.Errorf("%q: %s", pp.UI(), err)
 		}
 	}
 
 	// #resource is special and is saved in it's own table
+	// Need to explicitly set #resoure to nil to delete it.
 	if pp.Len() == 1 && pp.Top() == "#resource" {
 		if IsNil(val) {
 			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
@@ -642,7 +643,8 @@ var OrderedSpecProps = []*SpecProp{
 			if oldObj != nil {
 				v := newObj["id"]
 				if !IsNil(v) && v != oldObj["id"] {
-					return fmt.Errorf("Can't change the ID of an entity")
+					return fmt.Errorf("Can't change the ID of an "+
+						"entity(%s->%s)", oldObj["id"], v)
 				}
 			}
 			return nil
@@ -715,7 +717,11 @@ var OrderedSpecProps = []*SpecProp{
 			base = info.BaseURL
 		}
 		if e.Level > 1 {
-			return base + "/" + e.Path + "?meta"
+			if info != nil && (info.ShowMeta || info.ResourceUID == "") {
+				return base + "/" + e.Path + "?meta"
+			} else {
+				return base + "/" + e.Path
+			}
 		}
 		return base + "/" + e.Path
 	}, nil, nil, &Attribute{
@@ -745,7 +751,12 @@ var OrderedSpecProps = []*SpecProp{
 		if info != nil {
 			base = info.BaseURL
 		}
-		return base + "/" + e.Path + "/versions/" + val.(string) + "?meta"
+
+		tmp := base + "/" + e.Path + "/versions/" + val.(string)
+		if info != nil && (info.ShowMeta || info.ResourceUID == "") {
+			tmp += "?meta"
+		}
+		return tmp
 	}, nil, nil, &Attribute{
 		Name:     "latestversionurl",
 		Type:     URL,
@@ -761,7 +772,7 @@ var OrderedSpecProps = []*SpecProp{
 		Type: STRING,
 	}},
 	{"labels", MAP, "", true, func(e *Entity, info *RequestInfo) any {
-		var res map[string]string
+		var res map[string]any
 
 		for _, key := range SortedKeys(e.Props) {
 			if key[0] > 't' { // Why t and not l ? can't remember. typo?
@@ -772,7 +783,7 @@ var OrderedSpecProps = []*SpecProp{
 			if pp.Len() == 2 && pp.Top() == "labels" {
 				val, _ := e.Props[key]
 				if res == nil {
-					res = map[string]string{}
+					res = map[string]any{}
 				}
 				// Convert it to a string per the spec
 				res[pp.Next().Top()] = fmt.Sprintf("%v", val)
@@ -820,7 +831,11 @@ var OrderedSpecProps = []*SpecProp{
 			return httpModel
 		}
 		return nil
-	}, nil, nil, nil},
+	}, nil, nil, &Attribute{
+		Name:     "model",
+		Type:     ANY,
+		ReadOnly: true,
+	}},
 }
 
 var SpecProps = map[string]*SpecProp{}
@@ -831,20 +846,30 @@ func init() {
 		SpecProps[strings.ToLower(sp.name)] = sp
 		PanicIf(sp.modelAttribute != nil && sp.name != sp.modelAttribute.Name,
 			"Key & name mismatch in OrderedSpecProps: %s", sp.name)
+		if sp.checkFn != nil && sp.modelAttribute != nil {
+			sp.modelAttribute.checkFn = sp.checkFn
+			sp.modelAttribute.updateFn = sp.updateFn
+		}
 	}
 }
 
 // This is used to serialize Prop regardless of the format.
 func (e *Entity) SerializeProps(info *RequestInfo,
-	fn func(*Entity, *RequestInfo, string, any) error) error {
+	fn func(*Entity, *RequestInfo, string, any, *Attribute) error) error {
 
 	daObj := e.Materialize(info)
+	attrs := GetAttributes(e.RegistrySID, e.Abstract)
 
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
+		attr, ok := attrs[prop.name]
+		if !ok {
+			delete(daObj, prop.name)
+			continue // not allowed at this level so skip it
+		}
+
 		if val, ok := daObj[prop.name]; ok {
-			if err := fn(e, info, prop.name, val); err != nil {
-				log.Printf("Error serializing %q(%v): %s", prop.name, val, err)
+			if err := fn(e, info, prop.name, val, attr); err != nil {
 				return err
 			}
 			delete(daObj, prop.name)
@@ -854,9 +879,13 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	// Now do all other props (extensions) alphabetically
 	for _, key := range SortedKeys(daObj) {
 		val, _ := daObj[key]
+		attr := attrs[key]
+		if attr == nil {
+			attr = attrs["*"]
+			PanicIf(key[0] != '#' && attr == nil, "Can't find attr for %q", key)
+		}
 
-		if err := fn(e, info, key, val); err != nil {
-			log.Printf("Error serializing %q(%v): %s", key, val, err)
+		if err := fn(e, info, key, val, attr); err != nil {
 			return err
 		}
 	}
@@ -868,7 +897,7 @@ func (e *Entity) Save(obj map[string]any) error {
 	log.VPrintf(3, ">Enter: Save(%s/%s)", e.Plural, e.UID)
 	defer log.VPrintf(3, "<Exit: Save")
 
-	// log.Printf("Saving - obj:\n%s\n", ToJSON(obj))
+	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID, ToJSON(obj))
 
 	// make a dup so we can delete some attributes
 	newObj := map[string]any{}
@@ -892,7 +921,6 @@ func (e *Entity) Save(obj map[string]any) error {
 
 	var traverse func(pp *PropPath, val any) error
 	traverse = func(pp *PropPath, val any) error {
-		// log.Printf("pp: %q  val: %v", pp.UI(), val)
 		if IsNil(val) { // Skip empty attributes
 			return nil
 		}
@@ -902,11 +930,17 @@ func (e *Entity) Save(obj map[string]any) error {
 			vMap := val.(map[string]any)
 			count := 0
 			for k, v := range vMap {
-				if IsNil(v) {
-					continue
-				}
-				if err := traverse(pp.P(k), v); err != nil {
-					return err
+				if k[0] == '#' {
+					if err := e.SetPPValidate(pp.P(k), v, true); err != nil {
+						return err
+					}
+				} else {
+					if IsNil(v) {
+						continue
+					}
+					if err := traverse(pp.P(k), v); err != nil {
+						return err
+					}
 				}
 				count++
 			}
@@ -954,6 +988,25 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 	result := map[string]any{}
 	usedProps := map[string]bool{}
 
+	// Copy all Version props into the Resource (except for a few)
+	if e.Level == 2 {
+		// On Resource, grab latest Version's properties
+		paths := strings.Split(e.Path, "/")
+		reg, _ := FindRegistryBySID(e.RegistrySID)
+		group, _ := reg.FindGroup(paths[0], paths[1])
+		resource, _ := group.FindResource(paths[2], paths[3])
+		ver, _ := resource.GetLatest()
+
+		// delete(e.Props, "latestversionid")
+		for k, v := range ver.Props {
+			pp, _ := PropPathFromDB(k)
+			if pp.Top() == "latest" || pp.Top() == "id" {
+				continue
+			}
+			e.Props[k] = v
+		}
+	}
+
 	for _, prop := range OrderedSpecProps {
 		pp := NewPPP(prop.name)
 		propName := pp.DB()
@@ -979,7 +1032,8 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 	}
 
 	for key, val := range e.Props {
-		if key[0] == '#' || usedProps[key] { // Skip internal and "done" ones
+		// if key[0] == '#' || usedProps[key] { // Skip internal and "done" ones
+		if usedProps[key] {
 			continue
 		}
 
@@ -1046,17 +1100,3 @@ func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
 	daMap[pp.Top()], err = MaterializeProp(daMap[pp.Top()], pp.Next(), val)
 	return daMap, err
 }
-
-/*
-func (e *Entity) MaterializeProperty(name string) (any, error) {
-	keys := map[string]bool{}
-
-	for key, _ := range e.Props {
-		if !strings.HasPrefix(key, name+string(DB_IN)) && key != name {
-			continue
-		}
-	}
-
-	pp, err := PropPathFromDB(name)
-}
-*/

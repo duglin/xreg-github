@@ -86,7 +86,9 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 		if testHeaders[k] == true {
 			continue
 		}
-		t.Errorf("%s: Extra header(%s)\nWant: %v", test.Name, k, res.Header)
+		t.Errorf("%s:\nExtra header(%s)\nGot:\n%s", test.Name, k,
+			ToJSON(res.Header))
+		t.FailNow()
 	}
 
 	testBody := test.ResBody
@@ -111,6 +113,9 @@ func xCheckHTTP(t *testing.T, test *HTTPTest) {
 
 	xCheckEqual(t, "Test: "+test.Name+"\nBody:\n",
 		string(resBody), testBody)
+	if t.Failed() {
+		t.FailNow()
+	}
 }
 
 var savedREs = map[string]*regexp.Regexp{}
@@ -701,14 +706,9 @@ func TestHTTPRegistry(t *testing.T) {
 		ReqBody: `{
   "self": 123
 }`,
-		Code:       200,
+		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody: `{
-  "specversion": "0.5",
-  "id": "TestHTTPRegistry",
-  "epoch": 7,
-  "self": "http://localhost:8181/"
-}
+		ResBody: `Error processing registry: Attribute "self" must be a string
 `,
 	})
 
@@ -722,7 +722,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody:    "Attribute \"id\" must be a string\n",
+		ResBody:    "Error processing registry: Attribute \"id\" must be a string\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -735,7 +735,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody:    "Error processing registry: Can't change the ID of an entity\n",
+		ResBody:    "Error processing registry: Can't change the ID of an entity(TestHTTPRegistry->foo)\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -751,7 +751,7 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPRegistry",
-  "epoch": 8,
+  "epoch": 7,
   "self": "http://localhost:8181/",
   "documentation": "docs"
 }
@@ -771,7 +771,7 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPRegistry",
-  "epoch": 9,
+  "epoch": 8,
   "self": "http://localhost:8181/"
 }
 `})
@@ -1013,7 +1013,7 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody:    `{ "id":"dir2" }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group: Can't change the ID of an entity\n",
+		ResBody:    "Error processing group: Can't change the ID of an entity(dir1->dir2)\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -1053,7 +1053,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group: Can't change the ID of an entity\n",
+		ResBody:    "Error processing group: Can't change the ID of an entity(dir2->dir3)\n",
 	})
 
 }
@@ -1094,8 +1094,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: xxx",
 			"xRegistry-epoch: 1",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1?meta",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/xxx?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/xxx",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/xxx/versions",
 			"Location: http://localhost:8181/dirs/dir1/files/xxx",
@@ -1121,8 +1121,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: xxx",
 			"xRegistry-epoch: 1",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1?meta",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/xxx?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/xxx",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/xxx/versions",
 			"Location: http://localhost:8181/dirs/dir1/files/xxx",
@@ -1144,8 +1144,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 1",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1?meta",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
 			"Location: http://localhost:8181/dirs/dir1/files/f1",
@@ -1190,9 +1190,9 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 1",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -1220,9 +1220,9 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 2",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -1251,9 +1251,9 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f4",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 1",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f4?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f4",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f4/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f4/versions/1",
 			"xRegistry-name: my doc",
 			"xRegistry-fileurl: http://example.com",
 			"xRegistry-versionscount: 1",
@@ -1278,9 +1278,9 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 3",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -1323,9 +1323,9 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 4",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -1350,9 +1350,9 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 5",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -1379,9 +1379,9 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 6",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
@@ -1407,11 +1407,12 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 7",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-format: ce/1.0",
+			"xRegistry-labels-l2: 5",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -1439,11 +1440,12 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 8",
-			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
 			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-format: ce/1.0",
+			"xRegistry-labels-l2: 5",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -1458,6 +1460,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	xNoErr(t, err)
 
 	resBody := strings.Replace(string(body), `"epoch": 8`, `"epoch": 9`, 1)
+	fmt.Printf("Body: %s", string(body))
 	xCheckHTTP(t, &HTTPTest{
 		Name:        "PUT resources - echo'ing resource GET?meta",
 		URL:         "/dirs/dir1/files/f3?meta",
@@ -1550,9 +1553,9 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f1-proxy",
 			"xRegistry-epoch: 1",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy?meta",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy",
 			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
 			"xRegistry-versionscount: 3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
@@ -1576,7 +1579,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: v3",
 			"xRegistry-epoch: 1",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3?meta",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
 			"xRegistry-latest: true",
 		},
 		ResBody: "hello-Proxy",
@@ -1598,7 +1601,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: v2",
 			"xRegistry-epoch: 1",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2",
 			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
 			"Location: http://localhost:8181/EMPTY-URL",
 		},
@@ -1622,9 +1625,9 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f2-url",
 			"xRegistry-epoch: 1",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2-url?meta",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2-url",
 			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f2-url/versions/v3?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f2-url/versions/v3",
 			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2-url/versions",
 			"xRegistry-versionscount: 3",
@@ -1650,9 +1653,9 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f3-resource",
 			"xRegistry-epoch: 1",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f3-resource?meta",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f3-resource",
 			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f3-resource/versions/v3?meta",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f3-resource/versions/v3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f3-resource/versions",
 			"xRegistry-versionscount: 3",
 		},
@@ -1664,4 +1667,454 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		Headers: []string{},
 		Body:    "Hello world! v3",
 	})
+}
+
+func TestHTTPVersions(t *testing.T) {
+	reg := NewRegistry("TestHTTPVersions")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	reg.AddGroup("dirs", "d1")
+
+	// ProxyURL
+	// f, _ := d.AddResource("files", "f1-proxy", "v1")
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT file f1-proxy",
+		URL:        "/dirs/d1/files/f1-proxy?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "file": "Hello world! v1"
+}`,
+		Code:        201,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f1-proxy",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
+}
+`,
+	})
+
+	// Now inline "file"
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "GET file f1-proxy + inline",
+		URL:         "/dirs/d1/files/f1-proxy?meta&inline=file",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		ReqBody:     ``,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f1-proxy",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
+  "filebase64": "SGVsbG8gd29ybGQhIHYx",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
+}
+`,
+	})
+
+	// add new version via POST to "versions" collection
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST file f1-proxy - create v2",
+		URL:        "/dirs/d1/files/f1-proxy/versions?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "id": "v2",
+          "file": "Hello world! v2"
+		}`,
+		Code:        201,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "v2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+  "latest": true
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "GET file f1-proxy - v2 + inline",
+		URL:         "/dirs/d1/files/f1-proxy/versions/v2?meta&inline=file",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		ReqBody:     ``,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "v2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+  "latest": true,
+  "filebase64": "SGVsbG8gd29ybGQhIHYy"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "GET file f1-proxy - file + inline",
+		URL:         "/dirs/d1/files/f1-proxy?meta&inline=file",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		ReqBody:     ``,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f1-proxy",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
+  "latestversionid": "v2",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+  "filebase64": "SGVsbG8gd29ybGQhIHYy",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
+}
+`,
+	})
+
+	// Update latest with fileURL
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT file f1-proxy - use fileurl",
+		URL:        "/dirs/d1/files/f1-proxy?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "id": "f1-proxy",
+		  "fileurl": "http://localhost:8181/EMPTY-URL"
+		}`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f1-proxy",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
+  "latestversionid": "v2",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+  "fileurl": "http://localhost:8181/EMPTY-URL",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
+}
+`,
+	})
+
+	// Update latest - delete fileurl, notice no "id" either
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT file f1-proxy - del fileurl",
+		URL:        "/dirs/d1/files/f1-proxy?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		}`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f1-proxy",
+  "epoch": 3,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
+  "latestversionid": "v2",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
+}
+`,
+	})
+
+	// Update latest - set 'file' and 'fileurl' - error
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT file f1-proxy - dup files",
+		URL:        "/dirs/d1/files/f1-proxy?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "file": "hello world",
+		  "fileurl": "http://example.com"
+		}`,
+		Code:        400,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `Error processing resource: Only one of file,fileurl,filebase64 can be present at a time
+`,
+	})
+
+	// Update latest - set 'filebase64' and 'fileurl' - error
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT file f1-proxy - dup files base64",
+		URL:        "/dirs/d1/files/f1-proxy?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "filebase64": "aGVsbG8K",
+		  "fileurl": "http://example.com"
+		}`,
+		Code:        400,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `Error processing resource: Only one of file,fileurl,filebase64 can be present at a time
+`,
+	})
+
+	// Update latest - with 'filebase64'
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT file f1-proxy - use base64",
+		URL:        "/dirs/d1/files/f1-proxy?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "filebase64": "aGVsbG8K"
+		}`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f1-proxy",
+  "epoch": 4,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
+  "latestversionid": "v2",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
+}
+`,
+	})
+
+	// Get latest
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "GET file f1-proxy - use base64",
+		URL:         "/dirs/d1/files/f1-proxy",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		ReqBody:     "",
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"xRegistry-id: f1-proxy",
+			"xRegistry-epoch: 4",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy",
+			"xRegistry-latestversionid: v2",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2",
+			"xRegistry-versionscount: 2",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
+		},
+		ResBody: `hello
+`,
+	})
+
+	return
+
+	// v, _ := f.AddVersion("v3")
+	// v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+	// Add new version via POST to resource (same a previous)
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST file f1-proxy - create v3",
+		URL:        "/dirs/d1/files/f1-proxy?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "id": "v3",
+		  "latest": false,
+		  "fileurl": "http://localhost:8181/EMPTY-URL"
+		}`,
+		Code:        201,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "v3",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3?meta",
+  "latest": false,
+  "fileurl": "http://localhost:8181/EMPTY-URL"
+}
+`,
+	})
+
+	/*
+	   v, _ = f.AddVersion("v3")
+	   v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+
+	   // URL
+	   f, _ = d.AddResource("files", "f2-url", "v1")
+	   f.Set(NewPP().P("#resource").UI(), "Hello world! v1")
+
+	   v, _ = f.AddVersion("v2")
+	   v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+
+	   v, _ = f.AddVersion("v3")
+	   v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+
+	   // Resource
+	   f, _ = d.AddResource("files", "f3-resource", "v1")
+	   f.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+
+	   v, _ = f.AddVersion("v2")
+	   v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+
+	   v, _ = f.AddVersion("v3")
+	   v.Set(NewPP().P("#resource").UI(), "Hello world! v3")
+
+	   // /dirs/d1/files/f1-proxy/v1 - resource
+	   //                        /v2 - URL
+	   //                        /v3 - ProxyURL  <- latest
+	   // /dirs/d1/files/f2-url/v1 - resource
+	   //                      /v2 - ProxyURL
+	   //                      /v3 - URL  <- latest
+	   // /dirs/d1/files/f3-resource/v1 - ProxyURL
+	   //                           /v2 - URL
+	   //                           /v3 - resource  <- latest
+
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:        "GET resource - latest - f1",
+	   		URL:         "/dirs/d1/files/f1-proxy",
+	   		Method:      "GET",
+	   		ReqHeaders:  []string{},
+	   		Code:        200,
+	   		HeaderMasks: []string{},
+	   		ResHeaders: []string{
+	   			"xRegistry-id: f1-proxy",
+	   			"xRegistry-epoch: 1",
+	   			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy",
+	   			"xRegistry-latestversionid: v3",
+	   			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
+	   			"xRegistry-versionscount: 3",
+	   			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
+	   			"Content-Location: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
+	   		},
+	   		ResBody: "hello-Proxy",
+	   	})
+
+	   	CompareContentMeta(t, &Test{
+	   		Code:    200,
+	   		URL:     "dirs/d1/files/f1-proxy",
+	   		Body:    "hello-Proxy",
+	   		Headers: nil,
+	   	})
+
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:        "GET resource - latest - f1/v3",
+	   		URL:         "/dirs/d1/files/f1-proxy/versions/v3",
+	   		Method:      "GET",
+	   		ReqHeaders:  []string{},
+	   		Code:        200,
+	   		HeaderMasks: []string{},
+	   		ResHeaders: []string{
+	   			"xRegistry-id: v3",
+	   			"xRegistry-epoch: 1",
+	   			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
+	   			"xRegistry-latest: true",
+	   		},
+	   		ResBody: "hello-Proxy",
+	   	})
+
+	   	CompareContentMeta(t, &Test{
+	   		Code:    200,
+	   		URL:     "dirs/d1/files/f1-proxy/versions/v3",
+	   		Body:    "hello-Proxy",
+	   		Headers: nil,
+	   	})
+
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:        "GET resource - latest - f1/v2",
+	   		URL:         "/dirs/d1/files/f1-proxy/versions/v2",
+	   		Method:      "GET",
+	   		ReqHeaders:  []string{},
+	   		Code:        303,
+	   		HeaderMasks: []string{},
+	   		ResHeaders: []string{
+	   			"xRegistry-id: v2",
+	   			"xRegistry-epoch: 1",
+	   			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2",
+	   			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
+	   			"Location: http://localhost:8181/EMPTY-URL",
+	   		},
+	   		ResBody: "",
+	   	})
+
+	   	CompareContentMeta(t, &Test{
+	   		Code: 303,
+	   		URL:  "dirs/d1/files/f1-proxy/versions/v2",
+	   		Headers: []string{
+	   			"Location: http://localhost:8181/EMPTY-URL",
+	   		},
+	   	})
+
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:        "GET resource - latest - f2",
+	   		URL:         "/dirs/d1/files/f2-url",
+	   		Method:      "GET",
+	   		ReqHeaders:  []string{},
+	   		Code:        303,
+	   		HeaderMasks: []string{},
+	   		ResHeaders: []string{
+	   			"xRegistry-id: f2-url",
+	   			"xRegistry-epoch: 1",
+	   			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2-url",
+	   			"xRegistry-latestversionid: v3",
+	   			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f2-url/versions/v3",
+	   			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
+	   			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2-url/versions",
+	   			"xRegistry-versionscount: 3",
+	   			"Location: http://localhost:8181/EMPTY-URL",
+	   		},
+	   		ResBody: "",
+	   	})
+
+	   	CompareContentMeta(t, &Test{
+	   		Code: 303,
+	   		URL:  "dirs/d1/files/f2-url",
+	   		Headers: []string{
+	   			"Location: http://localhost:8181/EMPTY-URL",
+	   		},
+	   	})
+
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:        "GET resource - latest - f3",
+	   		URL:         "/dirs/d1/files/f3-resource",
+	   		Method:      "GET",
+	   		ReqHeaders:  []string{},
+	   		Code:        200,
+	   		HeaderMasks: []string{},
+	   		ResHeaders: []string{
+	   			"xRegistry-id: f3-resource",
+	   			"xRegistry-epoch: 1",
+	   			"xRegistry-self: http://localhost:8181/dirs/d1/files/f3-resource",
+	   			"xRegistry-latestversionid: v3",
+	   			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f3-resource/versions/v3",
+	   			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f3-resource/versions",
+	   			"xRegistry-versionscount: 3",
+	   		},
+	   		ResBody: "Hello world! v3",
+	   	})
+
+	   	CompareContentMeta(t, &Test{
+	   		Code:    200,
+	   		URL:     "dirs/d1/files/f3-resource/versions/v3",
+	   		Headers: []string{},
+	   		Body:    "Hello world! v3",
+	   	})
+	*/
 }

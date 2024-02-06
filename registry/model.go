@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"maps"
@@ -44,6 +45,10 @@ type Attribute struct {
 
 	Item    *Item               `json:"item,omitempty"`
 	IfValue map[string]*IfValue `json:"ifValue,omitempty"` // Value
+
+	// Internal fields
+	checkFn  func(newObj map[string]any, oldObj map[string]any) error
+	updateFn func(*UpdateFnArgs) error
 }
 
 type Item struct {
@@ -828,6 +833,7 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 
 	var attrs map[string]*Attribute
 	level := '0'
+	singular := ""
 
 	paths := strings.Split(abstractEntity, string(DB_IN))
 	if len(paths) == 0 || paths[0] == "" {
@@ -847,6 +853,7 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 				panic(fmt.Sprintf("Can't find Resource %q", paths[1]))
 			}
 			attrs = rm.Attributes
+			singular = rm.Singular
 		}
 	}
 
@@ -861,6 +868,78 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 			if specProp.modelAttribute != nil {
 				res[specProp.name] = specProp.modelAttribute
 			}
+		}
+	}
+
+	if singular != "" {
+		checkFn := func(newObj map[string]any, oldObj map[string]any) error {
+			list := []string{singular, singular + "url", singular + "base64"}
+			count := 0
+			for _, name := range list {
+				if v, ok := newObj[name]; ok && !IsNil(v) {
+					count++
+				}
+			}
+			if count > 1 {
+				return fmt.Errorf("Only one of %s can be present at a time",
+					strings.Join(list, ","))
+			}
+			return nil
+		}
+
+		// Add resource content attributes
+		res[singular] = &Attribute{
+			Name:    singular,
+			Type:    ANY,
+			checkFn: checkFn,
+			updateFn: func(args *UpdateFnArgs) error {
+				v, ok := args.NewObj[singular]
+				if ok {
+					args.NewObj["#resource"] = v
+					// args.NewObj["#resourceURL"] = nil
+					delete(args.NewObj, singular)
+				}
+				return nil
+			},
+		}
+		res[singular+"url"] = &Attribute{
+			Name:    singular + "url",
+			Type:    URL,
+			checkFn: checkFn,
+			updateFn: func(args *UpdateFnArgs) error {
+				v, ok := args.NewObj[singular+"url"]
+				if !ok {
+					return nil
+				}
+				args.NewObj["#resource"] = nil
+				args.NewObj["#resourceURL"] = v
+				delete(args.NewObj, singular+"url")
+				return nil
+			},
+		}
+		res[singular+"base64"] = &Attribute{
+			Name:    singular + "base64",
+			Type:    STRING,
+			checkFn: checkFn,
+			updateFn: func(args *UpdateFnArgs) error {
+				v, ok := args.NewObj[singular+"base64"]
+				if !ok {
+					return nil
+				}
+				if !IsNil(v) {
+					data := v.(string)
+					content, err := base64.StdEncoding.DecodeString(data)
+					if err != nil {
+						return fmt.Errorf("Error decoding \"%sbase64\" "+
+							"attribute: "+"%s", singular, err)
+					}
+					v = any(content)
+				}
+				args.NewObj["#resource"] = v
+				// args.NewObj["#resourceURL"] = nil
+				delete(args.NewObj, singular+"base64")
+				return nil
+			},
 		}
 	}
 
@@ -1050,17 +1129,6 @@ func ValidateEntity(reg *Registry, newObj map[string]any,
 	obj := map[string]any{}
 	maps.Copy(obj, newObj)
 
-	absParts := strings.Split(abstract, string(DB_IN))
-	// attrs := (Attributes)(nil)
-
-	// Remove global attributes that are owned by the server
-	// delete(obj, "id") // assumed checked before now
-	// delete(obj, "self")
-	// delete(obj, "epoch") // assumed checked before now
-
-	// Remove level specific attributes that are owned by the server.
-	// Grab the appropriate Attributes (attrs)
-
 	for _, coll := range GetCollections(reg.RegistrySID, abstract) {
 		log.VPrintf(3, "Deleting collection: %q", coll)
 		delete(obj, coll)
@@ -1068,31 +1136,7 @@ func ValidateEntity(reg *Registry, newObj map[string]any,
 		delete(obj, coll+"url")
 	}
 
-	if absParts[0] == "" { // Registry
-	} else if len(absParts) == 1 { // Group
-	} else { // Resource or Version
-		/*
-			gm := reg.Model.Groups[absParts[0]]
-			PanicIf(gm == nil, "Can't find group: %s", absParts[0])
-			rm := gm.Resources[absParts[1]]
-			PanicIf(rm == nil, "Can't find resource: %s/%s", absParts[0],
-				absParts[1])
-
-			if len(absParts) == 2 { // Resource
-				// delete(obj, rm.Singular)
-				// delete(obj, rm.Singular+"base64")
-				// delete(obj, "latestversionid")
-				// delete(obj, "latestversionurl")
-			} else { // Version
-				// delete(obj, rm.Singular)
-				// delete(obj, rm.Singular+"base64")
-				// delete(obj, "latest")
-			}
-		*/
-	}
-
 	attrs := GetAttributes(reg.RegistrySID, abstract)
-
 	return ValidateObject(obj, oldObj, attrs, NewPP())
 }
 
@@ -1100,9 +1144,9 @@ func PrepUpdateEntity(reg *Registry, args *UpdateFnArgs) error {
 	attrs := GetAttributes(reg.RegistrySID, args.Abstract)
 
 	for key, _ := range attrs {
-		specProp := SpecProps[key]
-		if specProp != nil && specProp.updateFn != nil {
-			if err := specProp.updateFn(args); err != nil {
+		attr := attrs[key]
+		if attr != nil && attr.updateFn != nil {
+			if err := attr.updateFn(args); err != nil {
 				return err
 			}
 		}
@@ -1171,13 +1215,23 @@ func ValidateObject(val any, oldObj map[string]any,
 		for _, key = range keys {
 			val, ok := newObj[key]
 
+			// Based on the attribute's type check the incoming 'val'.
+			// This will check for adherence to the model (eg type),
+			// the next section (checkFn) will allow for more detailed
+			// checking, like for valid values
+			if !IsNil(val) {
+				err := ValidateAttribute(val, attr, path.P(key))
+				if err != nil {
+					return err
+				}
+			}
+
 			// We normally skip read-only attrs, but if it has a checkFn
 			// then allow for that to be called
 			if attr.ReadOnly {
 				// Call the attr's checkFn if there
-				specProp := SpecProps[key]
-				if specProp != nil && specProp.checkFn != nil {
-					if err := specProp.checkFn(newObj, oldObj); err != nil {
+				if attr.checkFn != nil {
+					if err := attr.checkFn(newObj, oldObj); err != nil {
 						return err
 					}
 				}
@@ -1196,18 +1250,9 @@ func ValidateObject(val any, oldObj map[string]any,
 				continue
 			}
 
-			// Based on the attribute's type check the incoming 'val'.
-			// This will check for adherence to the model (eg type),
-			// the next section (checkFn) will allow for more detailed
-			// checking, like for valid values
-			if err := ValidateAttribute(val, attr, path.P(key)); err != nil {
-				return err
-			}
-
 			// Call the attr's checkFn if there - for more refined checks
-			specProp := SpecProps[key]
-			if specProp != nil && specProp.checkFn != nil {
-				if err := specProp.checkFn(newObj, oldObj); err != nil {
+			if attr.checkFn != nil {
+				if err := attr.checkFn(newObj, oldObj); err != nil {
 					return err
 				}
 			}
@@ -1218,12 +1263,21 @@ func ValidateObject(val any, oldObj map[string]any,
 	}
 
 	// See if we have any extra keys and if so, generate an error
+	del := []string{}
+	for k, _ := range objKeys {
+		if k[0] == '#' {
+			del = append(del, k)
+		}
+	}
+	for _, k := range del {
+		delete(objKeys, k)
+	}
 	if len(objKeys) != 0 {
 		where := path.UI()
-		if where == "" {
-			where = "the Registry"
+		if where != "" {
+			where = " in \"" + where + "\""
 		}
-		return fmt.Errorf("Invalid extension(s) in %q: %s", where,
+		return fmt.Errorf("Invalid extension(s)%s: %s", where,
 			strings.Join(SortedKeys(objKeys), ","))
 	}
 
@@ -1393,4 +1447,22 @@ func ValidateScalar(val any, attr *Attribute, path *PropPath) error {
 	}
 
 	return nil
+}
+
+func AbstractToSingular(reg *Registry, abs string) string {
+	absParts := strings.Split(abs, string(DB_IN))
+
+	if len(absParts) == 0 {
+		panic("help")
+	}
+	gm := reg.Model.Groups[absParts[0]]
+	PanicIf(gm == nil, "no gm")
+
+	if len(absParts) == 1 {
+		return gm.Singular
+	}
+
+	rm := gm.Resources[absParts[1]]
+	PanicIf(rm == nil, "no rm")
+	return rm.Singular
 }

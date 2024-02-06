@@ -60,3 +60,6 @@ TODOs:
 - support the create/modify by/on attributes
 - add checks for valid obj/map key names in new validation funcs ****
 - copy all of the types tests in http from Reg to groups, resources and vers
+- test to make sure an ID in the body == ID in URL for reg and group
+- support multiple resources/versions in POSTs
+- support setting "latest" to false on a PUT/POST

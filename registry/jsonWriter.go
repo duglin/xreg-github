@@ -159,7 +159,10 @@ func (jw *JsonWriter) WriteEntity() error {
 	jw.Printf("{")
 	jw.Indent()
 
-	jsonIt := func(e *Entity, info *RequestInfo, key string, val any) error {
+	jsonIt := func(e *Entity, info *RequestInfo, key string, val any, attr *Attribute) error {
+		if key[0] == '#' {
+			return nil
+		}
 		buf, _ := json.MarshalIndent(val, jw.indent, "  ")
 		jw.Printf("%s\n%s%q: %s", extra, jw.indent, key, string(buf))
 		extra = ","
