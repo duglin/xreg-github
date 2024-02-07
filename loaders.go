@@ -92,7 +92,8 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 	g, err := reg.Model.AddGroupModel("apiproviders", "apiprovider")
 	ErrFatalf(err)
-	_, err = g.AddResourceModel("apis", "api", 2, true, true, true)
+	r, err := g.AddResourceModel("apis", "api", 2, true, true, true)
+	_, err = r.AddAttr("format", registry.STRING)
 	ErrFatalf(err)
 
 	iter := 0
@@ -295,7 +296,8 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	attr, err := ep.AddAttr("usage", registry.STRING)
 	ErrFatalf(err)
-	attr.Required = true
+	attr.ClientRequired = true
+	attr.ServerRequired = true
 	_, err = ep.AddAttr("origin", registry.URI)
 	ErrFatalf(err)
 	_, err = ep.AddAttr("channel", registry.STRING)
@@ -403,7 +405,8 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 
 	// Modify core attribute
 	attr, _ := msg.AddAttr("format", registry.STRING)
-	attr.Required = true
+	attr.ClientRequired = true
+	attr.ServerRequired = true
 
 	msg.AddAttr("basedefinitionurl", registry.URL)
 

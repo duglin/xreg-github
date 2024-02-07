@@ -34,14 +34,15 @@ type Model struct {
 type Attributes map[string]*Attribute // AttrName->Attr
 
 type Attribute struct {
-	Registry    *Registry `json:"-"`
-	Name        string    `json:"name,omitempty"`
-	Type        string    `json:"type,omitempty"`
-	Description string    `json:"description,omitempty"`
-	Enum        []string  `json:"enum,omitempty"`
-	Strict      bool      `json:"strict,omitempty"`
-	Required    bool      `json:"required,omitempty"`
-	ReadOnly    bool      `json:"readonly,omitempty"`
+	Registry       *Registry `json:"-"`
+	Name           string    `json:"name,omitempty"`
+	Type           string    `json:"type,omitempty"`
+	Description    string    `json:"description,omitempty"`
+	Enum           []string  `json:"enum,omitempty"`
+	Strict         bool      `json:"strict,omitempty"`
+	ReadOnly       bool      `json:"readonly,omitempty"`
+	ClientRequired bool      `json:"clientrequired,omitempty"`
+	ServerRequired bool      `json:"serverrequired,omitempty"`
 
 	Item    *Item               `json:"item,omitempty"`
 	IfValue map[string]*IfValue `json:"ifValue,omitempty"` // Value
@@ -1240,12 +1241,12 @@ func ValidateObject(val any, oldObj map[string]any,
 				continue
 			}
 
-			if attr.Required && !ok { // Required but not present
+			if attr.ClientRequired && !ok { // Required but not present
 				return fmt.Errorf("Required property %q is missing",
 					path.P(key).UI())
 			}
 
-			if !attr.Required && (!ok || IsNil(val)) { // treat nil as absent
+			if !attr.ClientRequired && (!ok || IsNil(val)) { // treat nil as absent
 				delete(objKeys, key)
 				continue
 			}

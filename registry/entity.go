@@ -320,7 +320,7 @@ func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool) error {
 		return err
 	}
 	if attrType == "" {
-		ShowStack()
+		// ShowStack()
 		return fmt.Errorf("Can't find attribute %q", pp.UI())
 	}
 
@@ -633,10 +633,10 @@ var OrderedSpecProps = []*SpecProp{
 		},
 		nil,
 		&Attribute{
-			Name:     "specversion",
-			Type:     STRING,
-			Required: true,
-			ReadOnly: true,
+			Name:           "specversion",
+			Type:           STRING,
+			ServerRequired: true,
+			ReadOnly:       true,
 		}},
 	{"id", STRING, "", false, nil,
 		func(newObj map[string]any, oldObj map[string]any) error {
@@ -659,15 +659,13 @@ var OrderedSpecProps = []*SpecProp{
 			return nil
 		},
 		&Attribute{
-			Name:     "id",
-			Type:     STRING,
-			Required: true,
-			ReadOnly: true,
+			Name:           "id",
+			Type:           STRING,
+			ServerRequired: true,
 		}},
 	{"name", STRING, "", true, nil, nil, nil, &Attribute{
-		Name:     "name",
-		Type:     STRING,
-		Required: false,
+		Name: "name",
+		Type: STRING,
 	}},
 	{"epoch", UINTEGER, "", false, nil,
 		func(newObj map[string]any, oldObj map[string]any) error {
@@ -708,7 +706,6 @@ var OrderedSpecProps = []*SpecProp{
 		&Attribute{
 			Name:     "epoch",
 			Type:     UINTEGER,
-			Required: false,
 			ReadOnly: true,
 		}},
 	{"self", STRING, "", false, func(e *Entity, info *RequestInfo) any {
@@ -725,22 +722,20 @@ var OrderedSpecProps = []*SpecProp{
 		}
 		return base + "/" + e.Path
 	}, nil, nil, &Attribute{
-		Name:     "self",
-		Type:     STRING,
-		Required: true,
-		ReadOnly: true,
+		Name:           "self",
+		Type:           STRING,
+		ServerRequired: true,
+		ReadOnly:       true,
 	}},
 	{"latest", BOOLEAN, "3", false, nil, nil, nil, &Attribute{
-		Name:     "latest",
-		Type:     BOOLEAN,
-		Required: false,
-		ReadOnly: false,
+		Name: "latest",
+		Type: BOOLEAN,
 	}},
 	{"latestversionid", STRING, "2", false, nil, nil, nil, &Attribute{
-		Name:     "latestversionid",
-		Type:     STRING,
-		Required: true,
-		ReadOnly: true,
+		Name:           "latestversionid",
+		Type:           STRING,
+		ServerRequired: true,
+		ReadOnly:       true,
 	}},
 	{"latestversionurl", URL, "2", false, func(e *Entity, info *RequestInfo) any {
 		val := e.Props[NewPPP("latestversionid").DB()]
@@ -758,10 +753,10 @@ var OrderedSpecProps = []*SpecProp{
 		}
 		return tmp
 	}, nil, nil, &Attribute{
-		Name:     "latestversionurl",
-		Type:     URL,
-		Required: true,
-		ReadOnly: true,
+		Name:           "latestversionurl",
+		Type:           URL,
+		ServerRequired: true,
+		ReadOnly:       true,
 	}},
 	{"description", STRING, "", true, nil, nil, nil, &Attribute{
 		Name: "description",
@@ -797,8 +792,8 @@ var OrderedSpecProps = []*SpecProp{
 			Type: STRING,
 		},
 	}},
-	{"format", STRING, "123", true, nil, nil, nil, &Attribute{
-		Name: "format",
+	{"origin", URI, "123", true, nil, nil, nil, &Attribute{
+		Name: "origin",
 		Type: STRING,
 	}},
 	{"createdby", STRING, "", false, nil, nil, nil, &Attribute{
@@ -898,6 +893,9 @@ func (e *Entity) Save(obj map[string]any) error {
 	defer log.VPrintf(3, "<Exit: Save")
 
 	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID, ToJSON(obj))
+	if obj["epoch"] == 9 {
+		ShowStack()
+	}
 
 	// make a dup so we can delete some attributes
 	newObj := map[string]any{}

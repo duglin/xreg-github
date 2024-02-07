@@ -134,7 +134,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 	var err error
 
 	if id == "" {
-		// No versionID provided so grab the next aailable one
+		// No versionID provided so grab the next available one
 		tmp := r.Props[NewPPP("#nextVersionID").DB()]
 		nextID := NotNilInt(&tmp)
 		for {

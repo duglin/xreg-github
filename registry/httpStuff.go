@@ -468,9 +468,8 @@ FROM FullTree WHERE RegSID=? AND `
 			fmt.Sprintf("%d", versionsCount))
 		info.AddHeader("xRegistry-versionsurl",
 			info.BaseURL+"/"+entity.Path+"/versions")
-
-		info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
 	}
+	info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
 
 	url := ""
 	if val := entity.GetPropFromUI("#resourceURL"); val != nil {
@@ -594,6 +593,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	IncomingObj := map[string]any{}
 	propsID := "" // ID from body or http header
 	isNew := false
+
+	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
 	info.Root = strings.Trim(info.Root, "/")
 
@@ -854,7 +855,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			if versionUID == "" && len(info.Parts) == 5 {
 				versionUID = propsID
 			}
-			if versionUID == "" {
+			if len(info.Parts) == 4 && versionUID == "" {
 				version, err = resource.GetLatest()
 			} else {
 				isNew = true
@@ -867,6 +868,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
 	}
+	versionUID = version.UID
 
 	currObj := (map[string]any)(nil)
 	abs := ""
@@ -885,6 +887,8 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		// IncomingObj["#resource"] = body // save new body
 		IncomingObj[resSingular] = body // save new body
+
+		seenMaps := map[string]bool{}
 
 		for key, value := range info.OriginalRequest.Header {
 			key := strings.ToLower(key)
@@ -924,6 +928,13 @@ func HTTPPutPost(info *RequestInfo) error {
 			parts := strings.Split(key, "-")
 			if len(parts) > 1 {
 				obj := IncomingObj
+
+				if _, ok := seenMaps[parts[0]]; !ok {
+					// First time we've seen this map, delete old stuff
+					delete(IncomingObj, parts[0])
+					seenMaps[parts[0]] = true
+				}
+
 				for i, part := range parts {
 					if i+1 == len(parts) {
 						obj[part] = val
@@ -944,7 +955,14 @@ func HTTPPutPost(info *RequestInfo) error {
 				}
 			} else {
 				if IsNil(val) {
-					delete(IncomingObj, key)
+					if _, ok := seenMaps[key]; ok {
+						// Do nothing if we've seen keys for this map already.
+						// We don't want to erase any keys we just added.
+						// This is an edge/error? case where someone included
+						// xReg-label:null AND xreg-label-foo:foo - keep "foo"
+					} else {
+						delete(IncomingObj, key)
+					}
 				} else {
 					IncomingObj[key] = val
 				}
@@ -1001,7 +1019,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	if originalLen > 4 || (originalLen == 4 && method == "POST") {
 		info.Parts = append(info.Parts, "versions", versionUID)
 		info.VersionUID = versionUID
-		location += "/version" + info.VersionUID
+		location += "/versions/" + info.VersionUID
 		// location = version.Path
 	}
 

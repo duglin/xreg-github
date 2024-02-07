@@ -63,3 +63,4 @@ TODOs:
 - test to make sure an ID in the body == ID in URL for reg and group
 - support multiple resources/versions in POSTs
 - support setting "latest" to false on a PUT/POST
+- add support for hasdocument
