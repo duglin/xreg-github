@@ -1095,3 +1095,351 @@ func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
 	daMap[pp.Top()], err = MaterializeProp(daMap[pp.Top()], pp.Next(), val)
 	return daMap, err
 }
+
+// This will check to ensure that the entity adheres to the model
+func (e *Entity) Validate(currentEntity *Entity) error {
+	obj := e.Materialize(nil)
+	reg, err := FindRegistryBySID(e.RegistrySID)
+	Must(err)
+
+	currentObj := (map[string]any)(nil)
+	if currentEntity != nil {
+		currentObj = currentEntity.Materialize(nil)
+	}
+
+	err = ValidateEntity(reg, obj, currentObj, e.Abstract)
+	if err != nil {
+		fmt.Printf("Obj:\n%s\n", ToJSON(obj))
+	}
+	return err
+}
+
+// Doesn't fully validate in the sense that it'll assume read-only fields
+// are not worth cheching since the server generated them.
+// This is mainly used for validating input from a client
+func ValidateEntity(reg *Registry, newObj map[string]any,
+	oldObj map[string]any, abstract string) error {
+
+	// Don't touch what was passed in
+	obj := map[string]any{}
+	maps.Copy(obj, newObj)
+
+	for _, coll := range GetCollections(reg.RegistrySID, abstract) {
+		log.VPrintf(3, "Deleting collection: %q", coll)
+		delete(obj, coll)
+		delete(obj, coll+"count")
+		delete(obj, coll+"url")
+	}
+
+	attrs := GetAttributes(reg.RegistrySID, abstract)
+	return ValidateObject(obj, oldObj, attrs, NewPP())
+}
+
+func PrepUpdateEntity(reg *Registry, args *UpdateFnArgs) error {
+	attrs := GetAttributes(reg.RegistrySID, args.Abstract)
+
+	for key, _ := range attrs {
+		attr := attrs[key]
+		if attr != nil && attr.updateFn != nil {
+			if err := attr.updateFn(args); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// This should be called after all level-specific calculated properties have
+// been removed - such as collections
+func ValidateObject(val any, oldObj map[string]any,
+	origAttrs Attributes, path *PropPath) error {
+
+	log.VPrintf(3, ">Enter: ValidateObject(%s)", path)
+	defer log.VPrintf(3, "<Exit: ValidateObject")
+	log.VPrintf(3, "NewObj:\n%s", ToJSON(val))
+	log.VPrintf(3, "OrigAttrs:\n%s", ToJSON(origAttrs))
+
+	valValue := reflect.ValueOf(val)
+	if valValue.Kind() != reflect.Map ||
+		valValue.Type().Key().Kind() != reflect.String {
+
+		return fmt.Errorf("Attribute %q must be an object", path.UI())
+	}
+	newObj := val.(map[string]any)
+
+	// Convert origAttrs to a slice of *Attribute where "*" is first, if there
+	attrs := make([]*Attribute, len(origAttrs))
+	count := 1
+	for _, attr := range origAttrs {
+		if attr.Name == "*" {
+			attrs[0] = attr // "*" must appear first in the slice
+		} else if count == len(attrs) {
+			attrs[0] = attr // at last one and no "*" so use [0]
+		} else {
+			attrs[count] = attr
+			count++
+		}
+	}
+
+	// Don't touch what was passed in
+	objKeys := map[string]bool{}
+	for k, _ := range newObj {
+		objKeys[k] = true
+	}
+
+	attr := (*Attribute)(nil)
+	key := ""
+	for len(attrs) > 0 {
+		l := len(attrs)
+		attr = attrs[l-1] // grab last one & remove it
+		attrs = attrs[:l-1]
+
+		// Keys are all of the attribute names in newObj we need to check.
+		// Normally there's just one (attr.Name) but if attr.Name is "*"
+		// then we'll have a list of all remaining attribute names in newObj to
+		// check, hence it's a slice not a single string
+		keys := []string{}
+		if attr.Name != "*" {
+			keys = []string{attr.Name}
+		} else {
+			keys = SortedKeys(objKeys) // no need to be sorted, just grab keys
+		}
+
+		// For each attribute (key) in newObj, check its type
+		for _, key = range keys {
+			val, ok := newObj[key]
+
+			// Based on the attribute's type check the incoming 'val'.
+			// This will check for adherence to the model (eg type),
+			// the next section (checkFn) will allow for more detailed
+			// checking, like for valid values
+			if !IsNil(val) {
+				err := ValidateAttribute(val, attr, path.P(key))
+				if err != nil {
+					return err
+				}
+			}
+
+			// We normally skip read-only attrs, but if it has a checkFn
+			// then allow for that to be called
+			if attr.ReadOnly {
+				// Call the attr's checkFn if there
+				if attr.checkFn != nil {
+					if err := attr.checkFn(newObj, oldObj); err != nil {
+						return err
+					}
+				}
+
+				delete(objKeys, key)
+				continue
+			}
+
+			if attr.ClientRequired && !ok { // Required but not present
+				return fmt.Errorf("Required property %q is missing",
+					path.P(key).UI())
+			}
+
+			if !attr.ClientRequired && (!ok || IsNil(val)) { // treat nil as absent
+				delete(objKeys, key)
+				continue
+			}
+
+			// Call the attr's checkFn if there - for more refined checks
+			if attr.checkFn != nil {
+				if err := attr.checkFn(newObj, oldObj); err != nil {
+					return err
+				}
+			}
+
+			// Everything is good, so remove it
+			delete(objKeys, key)
+		}
+	}
+
+	// See if we have any extra keys and if so, generate an error
+	del := []string{}
+	for k, _ := range objKeys {
+		if k[0] == '#' {
+			del = append(del, k)
+		}
+	}
+	for _, k := range del {
+		delete(objKeys, k)
+	}
+	if len(objKeys) != 0 {
+		where := path.UI()
+		if where != "" {
+			where = " in \"" + where + "\""
+		}
+		return fmt.Errorf("Invalid extension(s)%s: %s", where,
+			strings.Join(SortedKeys(objKeys), ","))
+	}
+
+	return nil
+}
+
+func ValidateAttribute(val any, attr *Attribute, path *PropPath) error {
+	log.VPrintf(3, ">Enter: ValidateAttribute(%s)", path.UI())
+	defer log.VPrintf(3, "<Exit: ValidateAttribute")
+
+	log.VPrintf(3, "ValidateAttribute:")
+	log.VPrintf(3, " val: %v", val)
+	log.VPrintf(3, " path: %v", path.UI())
+	log.VPrintf(3, " attr: %v", ToJSON(attr))
+
+	if attr.Type == ANY {
+		// All good - let it thru
+		return nil
+	} else if IsScalar(attr.Type) {
+		return ValidateScalar(val, attr, path)
+	} else if attr.Type == MAP {
+		return ValidateMap(val, attr.Item, path)
+	} else if attr.Type == ARRAY {
+		return ValidateArray(val, attr.Item, path)
+	} else if attr.Type == OBJECT {
+		return ValidateObject(val, nil, attr.Item.Attributes, path)
+	}
+
+	ShowStack()
+	panic(fmt.Sprintf("Unknown type(%s): %s", path.UI(), attr.Type))
+}
+
+func ValidateMap(val any, item *Item, path *PropPath) error {
+	log.VPrintf(3, ">Enter: ValidateMap(%s)", path.UI())
+	defer log.VPrintf(3, "<Exit: ValidateMap")
+
+	log.VPrintf(3, "ValidateMap:")
+	log.VPrintf(3, " val: %v", val)
+	log.VPrintf(3, " path: %v", path.UI())
+	log.VPrintf(3, " item: %v", ToJSON(item))
+
+	valValue := reflect.ValueOf(val)
+	if valValue.Kind() != reflect.Map {
+		return fmt.Errorf("Attribute %q must be a map", path.UI())
+	}
+
+	// All values in the map must be of the same type
+	attr := &Attribute{
+		Type: item.Type,
+		Item: item,
+	}
+
+	for _, k := range valValue.MapKeys() {
+		keyName := k.Interface().(string)
+		v := valValue.MapIndex(k).Interface()
+		if IsNil(v) {
+			continue
+		}
+		if err := ValidateAttribute(v, attr, path.P(keyName)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ValidateArray(val any, item *Item, path *PropPath) error {
+	log.VPrintf(3, ">Enter: ValidateArray(%s)", path.UI())
+	defer log.VPrintf(3, "<Exit: ValidateArray")
+
+	valValue := reflect.ValueOf(val)
+	if valValue.Kind() != reflect.Slice {
+		return fmt.Errorf("Attribute %q must be an array", path.UI())
+	}
+
+	// All values in the array must be of the same type
+	attr := &Attribute{
+		Type: item.Type,
+		Item: item,
+	}
+
+	for i := 0; i < valValue.Len(); i++ {
+		v := valValue.Index(i).Interface()
+		if err := ValidateAttribute(v, attr, path.I(i)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ValidateScalar(val any, attr *Attribute, path *PropPath) error {
+	log.VPrintf(3, ">Enter: ValidateScalar(%s:%v)", path, val)
+	defer log.VPrintf(3, "<Exit: ValidateScalar")
+
+	valKind := reflect.ValueOf(val).Kind()
+
+	switch attr.Type {
+	case BOOLEAN:
+		if valKind != reflect.Bool {
+			return fmt.Errorf("Attribute %q must be a boolean", path.UI())
+		}
+	case DECIMAL:
+		if valKind != reflect.Int && valKind != reflect.Float64 {
+			return fmt.Errorf("Attribute %q must be a decimal", path.UI())
+		}
+	case INTEGER:
+		if valKind == reflect.Float64 {
+			f := val.(float64)
+			if f != float64(int(f)) {
+				return fmt.Errorf("Attribute %q must be an integer", path.UI())
+			}
+			return nil
+		}
+		if valKind != reflect.Int {
+			return fmt.Errorf("Attribute %q must be an integer", path.UI())
+		}
+	case UINTEGER:
+		i := 0
+		if valKind == reflect.Float64 {
+			f := val.(float64)
+			i = int(f)
+			if f != float64(i) {
+				return fmt.Errorf("Attribute %q must be a uinteger", path.UI())
+			}
+		} else if valKind != reflect.Int {
+			return fmt.Errorf("Attribute %q must be a uinteger", path.UI())
+		} else {
+			i = val.(int)
+			if valKind != reflect.Int {
+				return fmt.Errorf("Attribute %q must be a uinteger", path.UI())
+			}
+		}
+		if i < 0 {
+			return fmt.Errorf("Attribute %q must be a uinteger", path.UI())
+		}
+	case STRING:
+		if valKind != reflect.String {
+			return fmt.Errorf("Attribute %q must be a string", path.UI())
+		}
+	case URI:
+		if valKind != reflect.String {
+			return fmt.Errorf("Attribute %q must be a uri", path.UI())
+		}
+	case URI_REFERENCE:
+		if valKind != reflect.String {
+			return fmt.Errorf("Attribute %q must be a uri-reference", path.UI())
+		}
+	case URI_TEMPLATE:
+		if valKind != reflect.String {
+			return fmt.Errorf("Attribute %q must be a uri-template", path.UI())
+		}
+	case URL: // cheat
+		if valKind != reflect.String {
+			return fmt.Errorf("Attribute %q must be a url", path.UI())
+		}
+	case TIMESTAMP:
+		if valKind != reflect.String {
+			return fmt.Errorf("Attribute %q must be a timestamp", path.UI())
+		}
+		str := val.(string)
+		_, err := time.Parse(time.RFC3339, str)
+		if err != nil {
+			return fmt.Errorf("Attribute %q is a malformed timestamp",
+				path.UI())
+		}
+	}
+
+	return nil
+}
