@@ -905,18 +905,15 @@ func HTTPPutPost(info *RequestInfo) error {
 					"header", key)
 			}
 
-			if key == resSingular+"url" {
-				// is #resourceURL
+			if key == resSingular+"url" || key == resSingular+"proxyurl" {
 				if len(body) != 0 {
-					return fmt.Errorf("'xRegistry-%surl' isn't allowed "+
-						"if there's a body", resSingular)
+					return fmt.Errorf("'xRegistry-%s' isn't allowed "+
+						"if there's a body", key)
 				}
 
+				delete(IncomingObj, "#resourceProxyURL")
 				delete(IncomingObj, "#resourceURL")
-				// delete(IncomingObj, "#resource")
-				// IncomingObj["#resource"] = nil
-				// key = "#resourceURL"
-				key = resSingular + "url"
+				delete(IncomingObj, "#resource")
 			}
 
 			val := any(value[0])
@@ -1021,6 +1018,10 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.VersionUID = versionUID
 		location += "/versions/" + info.VersionUID
 		// location = version.Path
+	}
+
+	if info.ShowMeta { // not 100% sure this the right way/spot
+		location += "?meta"
 	}
 
 	if isNew { // 201, else let it default to 200

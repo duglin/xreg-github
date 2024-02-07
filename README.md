@@ -64,3 +64,4 @@ TODOs:
 - support multiple resources/versions in POSTs
 - support setting "latest" to false on a PUT/POST
 - add support for hasdocument
+- save content-type for resources, and return them on a GET

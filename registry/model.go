@@ -874,7 +874,12 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 
 	if singular != "" {
 		checkFn := func(newObj map[string]any, oldObj map[string]any) error {
-			list := []string{singular, singular + "url", singular + "base64"}
+			list := []string{
+				singular,
+				singular + "url",
+				singular + "base64",
+				singular + "proxyurl",
+			}
 			count := 0
 			for _, name := range list {
 				if v, ok := newObj[name]; ok && !IsNil(v) {
@@ -883,7 +888,7 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 			}
 			if count > 1 {
 				return fmt.Errorf("Only one of %s can be present at a time",
-					strings.Join(list, ","))
+					strings.Join(list[:3], ",")) // exclude proxy
 			}
 			return nil
 		}
@@ -915,6 +920,21 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 				args.NewObj["#resource"] = nil
 				args.NewObj["#resourceURL"] = v
 				delete(args.NewObj, singular+"url")
+				return nil
+			},
+		}
+		res[singular+"proxyurl"] = &Attribute{
+			Name:    singular + "proxyurl",
+			Type:    URL,
+			checkFn: checkFn,
+			updateFn: func(args *UpdateFnArgs) error {
+				v, ok := args.NewObj[singular+"proxyurl"]
+				if !ok {
+					return nil
+				}
+				args.NewObj["#resource"] = nil
+				args.NewObj["#resourceProxyURL"] = v
+				delete(args.NewObj, singular+"proxyurl")
 				return nil
 			},
 		}

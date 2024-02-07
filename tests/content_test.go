@@ -159,11 +159,13 @@ func CompareContentMeta(t *testing.T, test *Test) {
 
 	res, err := client.Get("http://localhost:8181/" + u)
 	xNoErr(t, err)
-	xCheck(t, res.StatusCode == test.Code,
-		fmt.Sprintf("\nTest: %s\nBad http code: %d should be %d", u,
-			res.StatusCode, test.Code))
+
 	resBody, err := io.ReadAll(res.Body)
 	xNoErr(t, err)
+
+	xCheck(t, res.StatusCode == test.Code,
+		fmt.Sprintf("\nTest: %s\nBad http code: %d should be %d\n%s", u,
+			res.StatusCode, test.Code, string(resBody)))
 
 	// Make sure any headers have the expected text someplace
 	for _, header := range test.Headers {

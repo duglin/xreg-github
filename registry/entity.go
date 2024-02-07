@@ -893,9 +893,6 @@ func (e *Entity) Save(obj map[string]any) error {
 	defer log.VPrintf(3, "<Exit: Save")
 
 	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID, ToJSON(obj))
-	if obj["epoch"] == 9 {
-		ShowStack()
-	}
 
 	// make a dup so we can delete some attributes
 	newObj := map[string]any{}
