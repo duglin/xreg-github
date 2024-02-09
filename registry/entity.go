@@ -1385,9 +1385,7 @@ func ValidateScalar(val any, attr *Attribute, path *PropPath) error {
 			if f != float64(int(f)) {
 				return fmt.Errorf("Attribute %q must be an integer", path.UI())
 			}
-			return nil
-		}
-		if valKind != reflect.Int {
+		} else if valKind != reflect.Int {
 			return fmt.Errorf("Attribute %q must be an integer", path.UI())
 		}
 	case UINTEGER:
@@ -1425,7 +1423,7 @@ func ValidateScalar(val any, attr *Attribute, path *PropPath) error {
 		if valKind != reflect.String {
 			return fmt.Errorf("Attribute %q must be a uri-template", path.UI())
 		}
-	case URL: // cheat
+	case URL:
 		if valKind != reflect.String {
 			return fmt.Errorf("Attribute %q must be a url", path.UI())
 		}
@@ -1438,6 +1436,30 @@ func ValidateScalar(val any, attr *Attribute, path *PropPath) error {
 		if err != nil {
 			return fmt.Errorf("Attribute %q is a malformed timestamp",
 				path.UI())
+		}
+	}
+
+	// don't "return nil" above, we may need to check enum values
+	if len(attr.Enum) > 0 && attr.Strict {
+		foundOne := false
+		valStr := fmt.Sprintf("%v", val)
+		for _, enumVal := range attr.Enum {
+			enumValStr := fmt.Sprintf("%v", enumVal)
+			if enumValStr == valStr {
+				foundOne = true
+				break
+			}
+		}
+		if !foundOne {
+			valids := ""
+			for i, v := range attr.Enum {
+				if i > 0 {
+					valids += ", "
+				}
+				valids += fmt.Sprintf("%v", v)
+			}
+			return fmt.Errorf("Attribute %q(%v) must be one of the enum "+
+				"values: %s", path.UI(), val, valids)
 		}
 	}
 

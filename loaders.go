@@ -187,6 +187,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		iter++
 	}
 
+	ErrFatalf(reg.Model.Verify())
 	return reg
 }
 
@@ -270,6 +271,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(r.Set("labels.stage", "dev"))
 	ErrFatalf(r.Set("labels.none", ""))
 
+	ErrFatalf(reg.Model.Verify())
 	return reg
 }
 
@@ -376,6 +378,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(g.Set("name", "end1"))
 	ErrFatalf(g.Set("epoch", 1))
 
+	ErrFatalf(reg.Model.Verify())
 	return reg
 }
 
@@ -432,6 +435,7 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 
 	// End of model
 
+	ErrFatalf(reg.Model.Verify())
 	return reg
 }
 
@@ -459,5 +463,6 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 
 	// End of model
 
+	ErrFatalf(reg.Model.Verify())
 	return reg
 }

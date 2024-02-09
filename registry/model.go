@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	log "github.com/duglin/dlog"
 )
@@ -36,7 +37,7 @@ type Attribute struct {
 	Name           string    `json:"name,omitempty"`
 	Type           string    `json:"type,omitempty"`
 	Description    string    `json:"description,omitempty"`
-	Enum           []string  `json:"enum,omitempty"`
+	Enum           []any     `json:"enum,omitempty"` // just scalars though
 	Strict         bool      `json:"strict,omitempty"`
 	ReadOnly       bool      `json:"readonly,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
@@ -965,14 +966,16 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 	return res
 }
 
-func KindIsScalar(k reflect.Kind) bool {
-	// SOOOO risky :-)
-	return k < reflect.Array || k == reflect.String
-}
-
 func IsScalar(daType string) bool {
 	return daType == BOOLEAN || daType == DECIMAL || daType == INTEGER ||
 		daType == STRING || daType == TIMESTAMP || daType == UINTEGER ||
+		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
+		daType == URL
+}
+
+// Is some string variant
+func IsString(daType string) bool {
+	return daType == STRING || daType == TIMESTAMP ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
 		daType == URL
 }
@@ -1117,6 +1120,231 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 		}
 
 		pp = pp.Next()
+	}
+}
+
+func (m *Model) Verify() error {
+	// Check Registry attributes
+	for name, attr := range m.Attributes {
+		if err := attr.Verify(name); err != nil {
+			return err
+		}
+	}
+
+	for gmName, gm := range m.Groups {
+		if err := gm.Verify(gmName); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (gm *GroupModel) Verify(gmName string) error {
+	if !IsValidAttributeName(gmName) {
+		return fmt.Errorf("Invalid Group name/key %q - must match %q",
+			gmName, RegexpPropName.String())
+	}
+
+	if gm.Plural != gmName {
+		return fmt.Errorf("Group %q must have a `plural` value of %q, not %q",
+			gmName, gmName, gm.Plural)
+	}
+
+	if !IsValidAttributeName(gm.Singular) {
+		return fmt.Errorf("Invalid Group 'singular' value %q - must match %q",
+			gm.Singular, RegexpPropName.String())
+	}
+
+	for attrName, attr := range gm.Attributes {
+		if err := attr.Verify(attrName); err != nil {
+			return err
+		}
+	}
+
+	for rmName, rm := range gm.Resources {
+		if err := rm.Verify(rmName); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (rm *ResourceModel) Verify(rmName string) error {
+	if !IsValidAttributeName(rmName) {
+		return fmt.Errorf("Invalid Resource name/key %q - must match %q",
+			rmName, RegexpPropName.String())
+	}
+
+	if rm.Plural != rmName {
+		return fmt.Errorf("Resource %q must have a 'plural' value of %q, "+
+			"not %q", rmName, rmName, rm.Plural)
+	}
+
+	if rm.Versions < 0 {
+		return fmt.Errorf("Resource %q must have a 'versions' value >= 0",
+			rmName)
+	}
+
+	for attrName, attr := range rm.Attributes {
+		if err := attr.Verify(attrName); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+var DefinedTypes = map[string]bool{
+	ANY:     true,
+	BOOLEAN: true,
+	DECIMAL: true, INTEGER: true, UINTEGER: true,
+	ARRAY:     true,
+	MAP:       true,
+	OBJECT:    true,
+	STRING:    true,
+	TIMESTAMP: true,
+	URI:       true, URI_REFERENCE: true, URI_TEMPLATE: true, URL: true}
+
+func (attr *Attribute) Verify(name string) error {
+	if name != "*" && !IsValidAttributeName(name) {
+		return fmt.Errorf("Invalid Attribute name/key '%s' - must match '%s'",
+			name, RegexpPropName.String())
+	}
+
+	if name != attr.Name {
+		return fmt.Errorf("Attribute '%s's 'name' property must be '%s' not "+
+			"'%s'", name, name, attr.Name)
+	}
+
+	if _, ok := DefinedTypes[attr.Type]; !ok {
+		return fmt.Errorf("Attribute '%s' has an invalid type: '%s'",
+			name, attr.Type)
+	}
+
+	// Is it ok for strict=true and enum=[] ? Require no value???
+	// if attr.Strict == true && len(attr.Enum) == 0 {
+	// }
+
+	// check enum values
+	if attr.Enum != nil && !IsScalar(attr.Type) {
+		return fmt.Errorf("Attribute '%s' must be a scalar, not: %s",
+			attr.Name, attr.Type)
+	}
+	if len(attr.Enum) > 0 {
+		for _, val := range attr.Enum {
+			if !IsOfType(val, attr.Type) {
+				return fmt.Errorf("Attribute '%s' enum value of '%v' must be "+
+					"of type: %s", attr.Name, val, attr.Type)
+			}
+		}
+	}
+
+	if attr.ClientRequired && !attr.ServerRequired {
+		return fmt.Errorf("Attribute '%s' is 'clientrequired' so "+
+			"'serverrequired' must be 'true' as well", attr.Name)
+	}
+
+	/* Not true since Item defaults to empty Object - odd but ok
+	if !IsScalar(attr.Type) && attr.Type != OBJECT && attr.Item == nil {
+		return fmt.Errorf("Attribute '%s' is non-scalar so it must have an "+
+			"item section", attr.Name)
+	}
+	*/
+
+	if attr.Item != nil {
+		if IsScalar(attr.Type) || attr.Type == "ANY" {
+			return fmt.Errorf("Attribute '%s' can't have an 'item' section "+
+				"because its of type '%s'", name, attr.Type)
+		}
+		if err := attr.Item.Verify(attr.Name, attr.Type); err != nil {
+			return err
+		}
+	}
+
+	// check ifvalues
+
+	return nil
+}
+
+func (i *Item) Verify(attrName string, attrType string) error {
+	iType := i.Type
+	if iType == "" {
+		iType = OBJECT
+	}
+
+	if _, ok := DefinedTypes[iType]; !ok {
+		return fmt.Errorf("Attribute '%s' has an invalid item.type: %s",
+			attrName, iType)
+	}
+
+	if attrType == OBJECT && iType != OBJECT {
+		return fmt.Errorf("Attribute '%s' must not have an item.type of: "+
+			"object", attrName)
+	}
+
+	if _, ok := DefinedTypes[iType]; !ok {
+		return fmt.Errorf("Attribute '%s's 'item.type' isn't a valid "+
+			"type: '%s'", attrName, iType)
+
+	}
+
+	if i.Item != nil {
+		if IsScalar(iType) || iType == "ANY" {
+			return fmt.Errorf("Attribute '%s' can't have an 'item' section "+
+				"because its parent type is '%s'",
+				attrName, iType)
+		}
+		if err := i.Item.Verify(attrName, iType); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// attr.Type must be a scalar
+// Used to check JSON type vs our types
+func IsOfType(val any, attrType string) bool {
+	switch reflect.ValueOf(val).Kind() {
+	case reflect.Bool:
+		return attrType == BOOLEAN
+
+	case reflect.String:
+		if attrType == TIMESTAMP {
+			str := val.(string)
+			_, err := time.Parse(time.RFC3339, str)
+			return err == nil
+		}
+
+		return IsString(attrType)
+
+	case reflect.Float64: // JSON ints show up as floats
+		if attrType == DECIMAL {
+			return true
+		}
+		if attrType == INTEGER || attrType == UINTEGER {
+			valInt := int(val.(float64))
+			if float64(valInt) != val.(float64) {
+				return false
+			}
+			return attrType == INTEGER || valInt >= 0
+		}
+		return false
+
+	case reflect.Int:
+		if attrType == DECIMAL {
+			return true
+		}
+		if attrType == INTEGER || attrType == UINTEGER {
+			valInt := val.(int)
+			return attrType == INTEGER || valInt >= 0
+		}
+		return false
+
+	default:
+		return false
 	}
 }
 

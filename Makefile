@@ -6,7 +6,8 @@ IMAGE := duglin/xreg-server
 test: .test
 .test: server */*test.go
 	@go clean -testcache
-	go test -failfast $(TESTDIRS)
+	for s in $(TESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
+	# go test -failfast $(TESTDIRS)
 	@echo
 	@echo "# Run the tests again w/o deleting the Registry after each one"
 	@go clean -testcache
