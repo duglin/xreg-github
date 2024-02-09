@@ -2548,3 +2548,103 @@ func TestHTTPVersions(t *testing.T) {
 		ResBody: "In resource ff3-resource",
 	})
 }
+
+func TestHTTPEnum(t *testing.T) {
+	reg := NewRegistry("TestHTTPEnum")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	attr, _ := reg.Model.AddAttribute(&registry.Attribute{
+		Name:   "myint",
+		Type:   registry.INTEGER,
+		Enum:   []any{1, 2, 3},
+		Strict: true,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - baseline",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+}`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPEnum",
+  "epoch": 2,
+  "self": "http://localhost:8181/"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - int valid",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+  "myint": 2
+}`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPEnum",
+  "epoch": 3,
+  "self": "http://localhost:8181/",
+  "myint": 2
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - int invalid",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+  "myint": 4
+}`,
+		Code: 400,
+		ResBody: "Error processing registry: Attribute \"myint\"(4) must be " +
+			"one of the enum values: 1, 2, 3\n",
+	})
+
+	attr.Strict = false
+	reg.Model.Save()
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - int valid - no-strict",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+  "myint": 4
+}`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPEnum",
+  "epoch": 4,
+  "self": "http://localhost:8181/",
+  "myint": 4
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - int valid - no-strict - valid enum",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+  "myint": 1
+}`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPEnum",
+  "epoch": 5,
+  "self": "http://localhost:8181/",
+  "myint": 1
+}
+`,
+	})
+
+	// TODO test other enum types and test in Groups and Resources
+}

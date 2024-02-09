@@ -28,20 +28,22 @@ push: .push
 	docker push $(IMAGE)
 	@touch .push
 
-run: server test
+run: mysql server test
 	./server --recreate
 
-start: server
+start: mysql server
 	./server
 
-notest: server
+notest: mysql server
 	./server --recreate
 
 mysql:
+	@docker container inspect mysql > /dev/null 2>&1 || \
+	(echo "Starting mysql..." && \
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password --network host \
-		--name mysql mysql
+		--name mysql mysql )
 
-mysql-client:
+mysql-client: mysql
 	docker run -ti --rm --network host mysql \
 		mysql --port 3306 --password=password --protocol tcp
 
