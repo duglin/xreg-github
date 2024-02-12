@@ -59,16 +59,16 @@ type Item struct {
 }
 
 type IfValue struct {
-	SiblingAttributes map[string]*Attribute `json:"siblingAttributes,omitempty"`
+	SiblingAttributes Attributes `json:"siblingAttributes,omitempty"`
 }
 
 type GroupModel struct {
 	SID      string    `json:"-"`
 	Registry *Registry `json:"-"`
 
-	Plural     string                `json:"plural"`
-	Singular   string                `json:"singular"`
-	Attributes map[string]*Attribute `json:"attributes,omitempty"`
+	Plural     string     `json:"plural"`
+	Singular   string     `json:"singular"`
+	Attributes Attributes `json:"attributes,omitempty"`
 
 	Resources map[string]*ResourceModel `json:"resources,omitempty"` // Plural
 }
@@ -77,13 +77,13 @@ type ResourceModel struct {
 	SID        string      `json:"-"`
 	GroupModel *GroupModel `json:"-"`
 
-	Plural      string                `json:"plural"`
-	Singular    string                `json:"singular"`
-	Versions    int                   `json:"versions"`
-	VersionId   bool                  `json:"versionid"`
-	Latest      bool                  `json:"latest"`
-	HasDocument bool                  `json:"hasdocument"`
-	Attributes  map[string]*Attribute `json:"attributes,omitempty"`
+	Plural      string     `json:"plural"`
+	Singular    string     `json:"singular"`
+	Versions    int        `json:"versions"`
+	VersionId   bool       `json:"versionid"`
+	Latest      bool       `json:"latest"`
+	HasDocument bool       `json:"hasdocument"`
+	Attributes  Attributes `json:"attributes,omitempty"`
 }
 
 func (r *ResourceModel) UnmarshalJSON(data []byte) error {
@@ -140,6 +140,10 @@ func (m *Model) DelSchema(schema string) error {
 // attribute's property - we should technically find a way to catch those
 // cases so code above this shouldn't need to think about it
 func (m *Model) Save() error {
+	if err := m.Verify(); err != nil {
+		return err
+	}
+
 	buf, _ := json.Marshal(m.Attributes)
 	attrs := string(buf)
 
@@ -147,12 +151,16 @@ func (m *Model) Save() error {
 		attrs, m.Registry.DbSID)
 	if err != nil {
 		log.Printf("Error updating model: %s", err)
+		return err
 	}
 
 	for _, gm := range m.Groups {
-		gm.Save()
+		if err := gm.Save(); err != nil {
+			return err
+		}
 	}
-	return err
+
+	return nil
 }
 
 func (m *Model) SetSchemas(schemas []string) error {
@@ -199,7 +207,7 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	if m.Attributes == nil {
-		m.Attributes = map[string]*Attribute{}
+		m.Attributes = Attributes{}
 	}
 
 	m.Attributes[attr.Name] = attr
@@ -337,7 +345,7 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	if i.Attributes == nil {
-		i.Attributes = map[string]*Attribute{}
+		i.Attributes = Attributes{}
 	}
 
 	i.Attributes[attr.Name] = attr
@@ -424,7 +432,7 @@ func LoadModel(reg *Registry) *Model {
 	}
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		attrs := (map[string]*Attribute)(nil)
+		attrs := (Attributes)(nil)
 		if row[5] != nil {
 			json.Unmarshal([]byte(NotNilString(row[5])), &attrs)
 		}
@@ -617,7 +625,7 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	if gm.Attributes == nil {
-		gm.Attributes = map[string]*Attribute{}
+		gm.Attributes = Attributes{}
 	}
 
 	gm.Attributes[attr.Name] = attr
@@ -766,7 +774,7 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	if rm.Attributes == nil {
-		rm.Attributes = map[string]*Attribute{}
+		rm.Attributes = Attributes{}
 	}
 
 	rm.Attributes[attr.Name] = attr
@@ -825,13 +833,13 @@ func GetCollections(rSID, abstractEntity string) []string {
 	return nil
 }
 
-func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
+func GetAttributes(rSID, abstractEntity string) Attributes {
 	reg, err := FindRegistryBySID(rSID)
 	if reg == nil {
 		log.Fatalf("Can't find registry(%s): %s", rSID, err)
 	}
 
-	var attrs map[string]*Attribute
+	var attrs Attributes
 	level := '0'
 	singular := ""
 
@@ -858,7 +866,7 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 	}
 
 	// Now copy and add the xReg defined attributes
-	res := map[string]*Attribute{}
+	res := Attributes{}
 	for key, value := range attrs {
 		res[key] = value
 	}
@@ -966,6 +974,11 @@ func GetAttributes(rSID, abstractEntity string) map[string]*Attribute {
 	return res
 }
 
+func KindIsScalar(k reflect.Kind) bool {
+	// SOOOO risky :-)
+	return k < reflect.Array || k == reflect.String
+}
+
 func IsScalar(daType string) bool {
 	return daType == BOOLEAN || daType == DECIMAL || daType == INTEGER ||
 		daType == STRING || daType == TIMESTAMP || daType == UINTEGER ||
@@ -1009,7 +1022,7 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	if a.Item.Attributes == nil {
-		a.Item.Attributes = map[string]*Attribute{}
+		a.Item.Attributes = Attributes{}
 	}
 
 	a.Item.Attributes[attr.Name] = attr

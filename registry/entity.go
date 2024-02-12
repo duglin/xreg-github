@@ -1170,8 +1170,10 @@ func ValidateObject(val any, oldObj map[string]any,
 
 	// Convert origAttrs to a slice of *Attribute where "*" is first, if there
 	attrs := make([]*Attribute, len(origAttrs))
+	allAttrNames := map[string]bool{}
 	count := 1
 	for _, attr := range origAttrs {
+		allAttrNames[attr.Name] = true
 		if attr.Name == "*" {
 			attrs[0] = attr // "*" must appear first in the slice
 		} else if count == len(attrs) {
@@ -1218,6 +1220,30 @@ func ValidateObject(val any, oldObj map[string]any,
 				err := ValidateAttribute(val, attr, path.P(key))
 				if err != nil {
 					return err
+				}
+			}
+
+			if len(attr.IfValue) > 0 {
+				valStr := fmt.Sprintf("%v", val)
+				for ifVal, ifValueData := range attr.IfValue {
+					ifValStr := fmt.Sprintf("%v", ifVal)
+					if valStr != ifValStr {
+						continue
+					}
+
+					for _, newAttr := range ifValueData.SiblingAttributes {
+						if _, ok := allAttrNames[newAttr.Name]; ok {
+							return fmt.Errorf(`Attribute %q has an "ifvalue"`+
+								`(%s) that conflicts with an existing `+
+								`attribute`, path.P(key), newAttr.Name)
+						}
+						if newAttr.Name == "*" {
+							attrs = append([]*Attribute{newAttr}, attrs...)
+						} else {
+							attrs = append(attrs, newAttr)
+						}
+						allAttrNames[newAttr.Name] = true
+					}
 				}
 			}
 

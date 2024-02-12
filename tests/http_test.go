@@ -2648,3 +2648,104 @@ func TestHTTPEnum(t *testing.T) {
 
 	// TODO test other enum types and test in Groups and Resources
 }
+
+func TestHTTPIfValue(t *testing.T) {
+	reg := NewRegistry("TestHTTPIfValue")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	_, err := reg.Model.AddAttribute(&registry.Attribute{
+		Name: "myint",
+		Type: registry.INTEGER,
+		IfValue: map[string]*registry.IfValue{
+			"1": &registry.IfValue{
+				SiblingAttributes: registry.Attributes{
+					"mystr": &registry.Attribute{
+						Name: "mystr",
+						Type: registry.STRING,
+					},
+				},
+			},
+			"2": &registry.IfValue{
+				SiblingAttributes: registry.Attributes{
+					"mystr": &registry.Attribute{
+						Name:           "mystr",
+						Type:           registry.STRING,
+						ClientRequired: true,
+					},
+					"*": &registry.Attribute{
+						Name: "*",
+						Type: registry.ANY,
+					},
+				},
+			},
+		},
+	})
+	xNoErr(t, err)
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - 1",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+  "myint": 1
+}`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 2,
+  "self": "http://localhost:8181/",
+  "myint": 1
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - verify ext isn't allowed",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+  "myint": 1,
+  "myext": 5.5
+}`,
+		Code:    400,
+		ResBody: "Error processing registry: Invalid extension(s): myext\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - required mystr",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+  "myint": 2
+}`,
+		Code:    400,
+		ResBody: "Error processing registry: Required property \"mystr\" is missing\n",
+	})
+
+	/*
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:   "PUT reg - ifvalue - required mystr, allow ext",
+	   		URL:    "",
+	   		Method: "PUT",
+	   		ReqBody: `{
+	     "myint": 2,
+	     "mystr": "hello",
+	     "myext": 5.5
+	   }`,
+	   		Code: 200,
+	   		ResBody: `{
+	     "specversion": "0.5",
+	     "id": "TestHTTPIfValue",
+	     "epoch": 3,
+	     "self": "http://localhost:8181/",
+	     "myext": 5.5,
+	     "myint": 2,
+	     "mystr": "hello"
+	   }
+	   `,
+	   	})
+	*/
+
+}
