@@ -16,7 +16,7 @@ func (g *Group) Get(name string) any {
 }
 
 func (g *Group) Set(name string, val any) error {
-	return g.Entity.SetFromUI(name, val)
+	return g.Entity.Set(name, val)
 }
 
 func (g *Group) FindResource(rType string, id string) (*Resource, error) {

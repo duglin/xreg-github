@@ -46,7 +46,7 @@ type Attribute struct {
 	IfValue map[string]*IfValue `json:"ifValue,omitempty"` // Value
 
 	// Internal fields
-	checkFn  func(e *Entity, newObj map[string]any, oldObj map[string]any) error
+	checkFn  func(e *Entity) error
 	updateFn func(*Entity, bool) error
 }
 

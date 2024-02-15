@@ -57,7 +57,6 @@ func main() {
 		r, err := g.AddResource("files", "f1", "v1")
 		v1, err := r.FindVersion("v1")
 		r.AddVersion("v2")
-		v1.Refresh()
 		v1.Set("name", "myname")
 		os.Exit(0)
 	}

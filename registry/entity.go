@@ -119,14 +119,61 @@ func (e *Entity) GetPropPP(pp *PropPath) any {
 		return (*(row[0])).([]byte)
 	}
 
-	val, _ := e.Props[name]
+	val, _ := ObjectGetProp(e.Object, pp)
 	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, name, val)
 	return val
 }
 
-func (e *Entity) Set(name string, val any) error {
-	fmt.Printf("E: %#v\n", e)
-	panic("NO!")
+func ObjectGetProp(obj any, pp *PropPath) (any, error) {
+	return NestedGetProp(obj, pp, NewPP())
+}
+
+func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, error) {
+	log.VPrintf(3, "ObjectGetProp: %q\nobj:\n%s", pp.UI(), ToJSON(obj))
+	if pp == nil || pp.Len() == 0 {
+		return obj, nil
+	}
+	if IsNil(obj) {
+		return nil, fmt.Errorf("Can't traverse into nothing: %s", prev.UI())
+	}
+
+	objValue := reflect.ValueOf(obj)
+	part := pp.Parts[0]
+	if index := part.Index; index >= 0 {
+		// Is an array
+		if objValue.Kind() != reflect.Slice {
+			return nil, fmt.Errorf("Can't index into non-array: %s", prev.UI())
+		}
+		if index < 0 || index >= objValue.Len() {
+			return nil, fmt.Errorf("Array reference %q out of bounds: "+
+				"(max:%d-1)", prev.Append(pp.First()).UI(), objValue.Len())
+		}
+		objValue = objValue.Index(index)
+		if objValue.IsValid() {
+			obj = objValue.Interface()
+		} else {
+			obj = nil
+		}
+		return NestedGetProp(obj, pp.Next(), prev.Append(pp.First()))
+	}
+
+	// Is map/object
+	if objValue.Kind() != reflect.Map {
+		return nil, fmt.Errorf("Can't reference a non-map/object: %s",
+			prev.UI())
+	}
+	if objValue.Type().Key().Kind() != reflect.String {
+		return nil, fmt.Errorf("Key of %q must be a string, not %s",
+			prev.UI(), objValue.Type().Key().Kind())
+	}
+
+	objValue = objValue.MapIndex(reflect.ValueOf(pp.Top()))
+	if objValue.IsValid() {
+		obj = objValue.Interface()
+	} else {
+		obj = nil
+	}
+	return NestedGetProp(obj, pp.Next(), prev.Append(pp.First()))
 }
 
 func RawEntityFromPath(regID string, path string) (*Entity, error) {
@@ -223,64 +270,21 @@ func (e *Entity) Refresh() error {
 		val := NotNilString(row[1])
 		propType := NotNilString(row[2])
 
-		e.SetPropFromString(name, &val, propType)
+		e.SetFromDBName(name, &val, propType)
 	}
 	return nil
 }
 
-// Maybe replace error with a panic?
-func (e *Entity) SetFromDB(name string, val any) error {
-	pp, err := PropPathFromDB(name)
-	if err != nil {
-		return err
-	}
-	return e.SetPP(pp, val)
-}
+func (e *Entity) Set(path string, val any) error {
+	log.VPrintf(3, ">Enter: Set(%s=%v)", path, val)
+	defer log.VPrintf(3, "<Exit Set")
 
-func (e *Entity) SetFromUI(name string, val any) error {
-	log.VPrintf(3, ">Enter: SetFromUI(%s=%v)", name, val)
-	defer log.VPrintf(3, "<Exit SetFromUI")
-	pp, err := PropPathFromUI(name)
-	if err != nil {
-		return err
+	pp, err := PropPathFromUI(path)
+	if err == nil {
+		err = e.SetPP(pp, val)
 	}
 
-	return e.SetPP(pp, val)
-}
-
-func (e *Entity) DeletePropTree(name string) error {
-	log.VPrintf(3, ">Enter: DeletePropTree(%s)", name)
-	defer log.VPrintf(3, "<Exit DeleteProp")
-
-	pp, err := PropPathFromUI(name)
-	if err != nil {
-		return err
-	}
-
-	prefix := pp.DB()
-
-	if e.DbSID == "" {
-		log.Fatalf("DbSID should not be empty")
-	}
-	if e.RegistrySID == "" {
-		log.Fatalf("RegistrySID should not be empty")
-	}
-
-	for pName, _ := range e.Props {
-		// Trailing separator in pName allows for simple prefix checking
-		if strings.HasPrefix(pName, prefix) {
-			err := Do(`DELETE FROM Props WHERE EntitySID=? and PropName LIKE ?`,
-				e.DbSID, pName+"%")
-
-			if err != nil {
-				log.Printf("Error deleting prop(%s): %s", pName, err)
-				return fmt.Errorf("Error deleting prop(%s): %s", pName, err)
-			}
-
-			delete(e.Props, pName)
-		}
-	}
-	return nil
+	return err
 }
 
 func (e *Entity) NewSetPP(pp *PropPath, val any) error {
@@ -298,7 +302,6 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: SetPP(%s: %s=%v)", e.DbSID, pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetPP")
 	defer func() {
-		log.VPrintf(3, "SetPP exit: e.Props:\n%s", ToJSON(e.Props))
 		log.VPrintf(3, "SetPP exit: e.Object:\n%s", ToJSON(e.Object))
 	}()
 
@@ -309,7 +312,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	}
 	e.NewObject = maps.Clone(e.Object)
 
-	// Cheat a little
+	// Cheat a little just to make caller's life easier
 	if val == struct{}{} {
 		val = map[string]any{}
 	}
@@ -331,7 +334,6 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	}
 
 	log.VPrintf(3, "Abstract/ID: %s/%s", e.Abstract, e.UID)
-	log.VPrintf(3, "e.Props:\n%s", ToJSON(e.Props))
 	log.VPrintf(3, "e.Object:\n%s", ToJSON(e.Object))
 	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
 
@@ -346,28 +348,13 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	}
 
 	log.VPrintf(3, "POST SetPP and ObjSet")
-	log.VPrintf(3, "  e.Props:\n%s", ToJSON(e.Props))
 	log.VPrintf(3, "  e.Object:\n%s", ToJSON(e.Object))
 	log.VPrintf(3, "  e.NewObject:\n%s", ToJSON(e.NewObject))
 
-	// log.Printf("-----")
-	// log.Printf("Set: %s = %v", pp.UI(), val)
-	// log.Printf("e.props:\n%s", ToJSON(e.Props))
-	// log.Printf("NewObj: \n%s", ToJSON(e.NewObject))
-
 	if err = e.Validate(true); err != nil {
-		log.Printf("Val Err: %s", err)
-		/*
-			log.Printf("e.props:\n%s", ToJSON(e.Props))
-			log.Printf("Object: %s", ToJSON(e.Object))
-			log.Printf("NewObject: %s", ToJSON(e.NewObject))
-		*/
+		// log.Printf("Val Err: %s", err)
 		return err
 	}
-
-	// e.Object = e.NewObject
-	// e.NewObject = nil
-	// return nil
 
 	save := e.SkipEpoch
 	e.SkipEpoch = true
@@ -385,32 +372,12 @@ func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool, obj map[str
 
 	name := pp.DB()
 
-	if pp.Top() == "labels" {
-		if pp.Len() == 1 {
-			return fmt.Errorf("Invalid property name: %s", pp.Top())
-		}
-		mapName := pp.Top()
-		key := pp.Next().Top()
-		if len(key) == 0 {
-			return fmt.Errorf("Map %q key is empty", mapName)
-		}
-	}
-
-	if e.DbSID == "" {
-		log.Fatalf("DbSID should not be empty")
-	}
-	if e.RegistrySID == "" {
-		log.Fatalf("RegistrySID should not be empty")
-	}
-
 	// Make sure the attribute is defined in the model and has valid chars
 	attrType, err := GetAttributeType(e, e.RegistrySID, obj, e.Abstract, pp)
 	if err != nil {
-		// log.Printf("Error on getAttr(%s): %s", pp.UI(), err)
 		return err
 	}
 	if attrType == "" {
-		// ShowStack()
 		return fmt.Errorf("Can't find attribute %q", pp.UI())
 	}
 
@@ -420,79 +387,12 @@ func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool, obj map[str
 		}
 	}
 
-	// #resource is special and is saved in it's own table
-	// Need to explicitly set #resoure to nil to delete it.
-	if pp.Len() == 1 && pp.Top() == "#resource" {
-		if IsNil(val) {
-			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
-			return err
-		} else {
-			// The actual contents
-			err = DoOneTwo(`
-                REPLACE INTO ResourceContents(VersionSID, Content)
-                VALUES(?,?)`, e.DbSID, val)
-			if err != nil {
-				return err
-			}
-			val = ""
-			// Fall thru to normal processing so we save a placeholder
-			// attribute in the resource
-		}
-	}
-
-	if IsNil(val) {
-		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
-			e.DbSID, name)
-	} else {
-		propType := attrType
-		if attrType == ANY {
-			propType = GoToOurType(val)
-		}
-
-		// Convert booleans to true/false instead of 1/0 so filter works
-		// ...=true and not ...=1
-		dbVal := val
-		if propType == BOOLEAN {
-			if val == true {
-				dbVal = "true"
-			} else {
-				dbVal = "false"
-			}
-		}
-
-		switch reflect.ValueOf(val).Kind() {
-		case reflect.Slice:
-			if reflect.ValueOf(val).Len() > 0 {
-				return fmt.Errorf("Can't set non-empty arrays")
-			}
-			dbVal = ""
-		case reflect.Map:
-			if reflect.ValueOf(val).Len() > 0 {
-				return fmt.Errorf("Can't set non-empty maps")
-			}
-			dbVal = ""
-		case reflect.Struct:
-			if reflect.ValueOf(val).NumField() > 0 {
-				return fmt.Errorf("Can't set non-empty objects")
-			}
-			dbVal = ""
-		}
-
-		err = DoOneTwo(`
-            REPLACE INTO Props(
-              RegistrySID, EntitySID, PropName, PropValue, PropType)
-            VALUES( ?,?,?,?,? )`,
-			e.RegistrySID, e.DbSID, name, dbVal, propType)
-	}
-
-	if err != nil {
-		log.Printf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
-		return fmt.Errorf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
-	}
-
 	if val == nil {
 		delete(e.Props, name)
 	} else {
+		if name == "#resource," {
+			val = ""
+		}
 		if e.Props == nil {
 			e.Props = map[string]any{}
 		}
@@ -539,7 +439,6 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 		// Should never use this but keeping it just in case
 		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
 			e.DbSID, name)
-		delete(e.Props, name) // old
 	} else {
 		propType := GoToOurType(val)
 
@@ -577,8 +476,6 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
               RegistrySID, EntitySID, PropName, PropValue, PropType)
             VALUES( ?,?,?,?,? )`,
 			e.RegistrySID, e.DbSID, name, dbVal, propType)
-
-		e.Props[name] = val // old
 	}
 
 	if err != nil {
@@ -589,7 +486,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	return nil
 }
 
-func (e *Entity) SetPropFromString(name string, val *string, propType string) {
+func (e *Entity) SetFromDBName(name string, val *string, propType string) {
 	if val == nil {
 		delete(e.Props, name)
 		e.NewSetPP(MustPropPathFromDB(name), nil)
@@ -783,7 +680,7 @@ func readNextEntity(results *Result) *Entity {
 			continue
 		}
 
-		entity.SetPropFromString(propName, &propVal, propType)
+		entity.SetFromDBName(propName, &propVal, propType)
 	}
 
 	return entity
@@ -795,7 +692,7 @@ type SpecProp struct {
 	levels  string                          // only show for these levels
 	mutable bool                            // user editable
 	getFn   func(*Entity, *RequestInfo) any // return its value
-	checkFn func(e *Entity, newObj map[string]any, oldObj map[string]any) error
+	checkFn func(e *Entity) error
 	// prep newObj for an update to the DB
 	updateFn       func(*Entity, bool) error
 	modelAttribute *Attribute
@@ -811,8 +708,8 @@ var OrderedSpecProps = []*SpecProp{
 		func(e *Entity, info *RequestInfo) any {
 			return SPECVERSION
 		},
-		func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
-			tmp := newObj["specversion"]
+		func(e *Entity) error {
+			tmp := e.NewObject["specversion"]
 			if !IsNil(tmp) && tmp != "" && tmp != SPECVERSION {
 				return fmt.Errorf("Invalid 'specversion': %s", tmp)
 			}
@@ -826,10 +723,10 @@ var OrderedSpecProps = []*SpecProp{
 			ReadOnly:       true,
 		}},
 	{"id", STRING, "", false, nil,
-		func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
-			if oldObj != nil {
-				oldID := any(oldObj["id"])
-				newID := any(newObj["id"])
+		func(e *Entity) error {
+			if e.Object != nil {
+				oldID := any(e.Object["id"])
+				newID := any(e.NewObject["id"])
 
 				if IsNil(oldID) {
 					oldID = ""
@@ -843,10 +740,10 @@ var OrderedSpecProps = []*SpecProp{
 						"entity(%s->%s)", oldID, newID)
 				}
 				/*
-					v := newObj["id"]
-					if !IsNil(v) && v != oldObj["id"] {
+					v := e.NewObject["id"]
+					if !IsNil(v) && v != e.Object["id"] {
 						return fmt.Errorf("Can't change the ID of an "+
-							"entity(%v->%s)", oldObj["id"], v)
+							"entity(%v->%s)", e.Object["id"], v)
 					}
 				*/
 			}
@@ -871,17 +768,17 @@ var OrderedSpecProps = []*SpecProp{
 		Type: STRING,
 	}},
 	{"epoch", UINTEGER, "", false, nil,
-		func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
+		func(e *Entity) error {
 			if e.SkipEpoch {
 				return nil
 			}
 
-			val := newObj["epoch"]
+			val := e.NewObject["epoch"]
 			if IsNil(val) {
 				return nil
 			}
 
-			tmp := oldObj["epoch"]
+			tmp := e.Object["epoch"]
 			oldEpoch := NotNilInt(&tmp)
 			if oldEpoch < 0 {
 				oldEpoch = 0
@@ -951,7 +848,7 @@ var OrderedSpecProps = []*SpecProp{
 		ReadOnly:       true,
 	}},
 	{"latestversionurl", URL, "2", false, func(e *Entity, info *RequestInfo) any {
-		val := e.Props[NewPPP("latestversionid").DB()]
+		val := e.Object["latestversionid"]
 		if IsNil(val) {
 			return nil
 		}
@@ -979,26 +876,7 @@ var OrderedSpecProps = []*SpecProp{
 		Name: "documentation",
 		Type: STRING,
 	}},
-	{"labels", MAP, "", true, func(e *Entity, info *RequestInfo) any {
-		var res map[string]any
-
-		for _, key := range SortedKeys(e.Props) {
-			if key[0] > 't' { // Why t and not l ? can't remember. typo?
-				break
-			}
-
-			pp, _ := PropPathFromDB(key)
-			if pp.Len() == 2 && pp.Top() == "labels" {
-				val, _ := e.Props[key]
-				if res == nil {
-					res = map[string]any{}
-				}
-				// Convert it to a string per the spec
-				res[pp.Next().Top()] = fmt.Sprintf("%v", val)
-			}
-		}
-		return res
-	}, nil, nil, &Attribute{
+	{"labels", MAP, "", true, nil, nil, nil, &Attribute{
 		Name: "labels",
 		Type: MAP,
 		Item: &Item{
@@ -1318,7 +1196,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 	// Add the RESOURCExxx attributes (for resources and versions)
 	if singular != "" {
-		checkFn := func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
+		checkFn := func(e *Entity) error {
 			list := []string{
 				singular,
 				singular + "url",
@@ -1327,7 +1205,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 			}
 			count := 0
 			for _, name := range list {
-				if v, ok := newObj[name]; ok && !IsNil(v) {
+				if v, ok := e.NewObject[name]; ok && !IsNil(v) {
 					count++
 				}
 			}
@@ -1632,7 +1510,7 @@ func ValidateObject(e *Entity, val any, oldObj map[string]any,
 			if attr.ReadOnly {
 				// Call the attr's checkFn if there
 				if attr.checkFn != nil {
-					if err := attr.checkFn(e, newObj, oldObj); err != nil {
+					if err := attr.checkFn(e); err != nil {
 						return err
 					}
 				}
@@ -1653,7 +1531,7 @@ func ValidateObject(e *Entity, val any, oldObj map[string]any,
 
 			// Call the attr's checkFn if there - for more refined checks
 			if attr.checkFn != nil {
-				if err := attr.checkFn(e, newObj, oldObj); err != nil {
+				if err := attr.checkFn(e); err != nil {
 					return err
 				}
 			}

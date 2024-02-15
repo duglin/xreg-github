@@ -47,6 +47,15 @@ func (pp *PropPath) IsIndexed() int {
 	return -1
 }
 
+func (pp *PropPath) First() *PropPath {
+	if pp.Len() == 0 {
+		return nil
+	}
+	return &PropPath{
+		Parts: pp.Parts[:1],
+	}
+}
+
 func (pp *PropPath) Next() *PropPath {
 	if pp.Len() == 1 {
 		return nil

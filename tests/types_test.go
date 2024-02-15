@@ -108,10 +108,9 @@ func TestBasicTypes(t *testing.T) {
 
 	tests := []Test{
 		Test{reg, []Prop{
-			// {"regarrayarrayint[1][1]", 66, nil, ""}, // [0]=null, ok?
+			{"regarrayarrayint[1][1]", 66, nil, "Attribute \"regarrayarrayint[1][0]\" must be an integer"},
 			{"regarrayint[0]", 1, nil, ""},
-			// {"regarrayint[2]", 3, nil, ""}, // [0,1]= null
-			// {"regarrayint[1]", 2, nil, ""}, // [0]=null
+			{"regarrayint[2]", 3, nil, "Attribute \"regarrayint[1]\" must be an integer"},
 			{"regarrayint[1]", 2, nil, ""},
 			{"regarrayint[2]", 3, nil, ""},
 
@@ -217,7 +216,7 @@ func TestBasicTypes(t *testing.T) {
 			{"diranyobj", struct{}{}, map[string]any{}, ""},
 			{"dirarrayint", []int{}, []any{}, ""},
 			{"dirmapint", map[string]any{}, nil, ""},
-			{"dirobj", map[string]any{}, map[string]any{}, ""},
+			{"dirobj", struct{}{}, map[string]any{}, ""},
 		}},
 		Test{file, []Prop{
 			{"filestring1", "str3", nil, ""},
@@ -321,17 +320,7 @@ func TestBasicTypes(t *testing.T) {
     },
     "str": "substr"
   },
-  "reganystr": "mystr",`+
-		/*
-		  "regarrayarrayint": [
-		    null,
-		    [
-		      null,
-		      66
-		    ]
-		  ],
-		*/
-		`
+  "reganystr": "mystr",
   "regarrayint": [
     1,
     2,

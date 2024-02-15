@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestMaterialiseProp(t *testing.T) {
+func TestSetProp(t *testing.T) {
 
 	type Obj map[string]any
 
@@ -271,10 +271,16 @@ func TestMaterialiseProp(t *testing.T) {
 
 		err = ObjectSetProp(obj, pp, test.Value)
 
-		if err == nil && test.Error != "" {
+		if (err == nil && test.Error != "") ||
+			(err != nil && test.Error != err.Error()) {
+
 			t.Errorf("Test: %s - should fail with: %s", test.Name, test.Error)
+			if err != nil {
+				t.Logf("Got: %s", err)
+			}
 			t.FailNow()
 		}
+
 		if err != nil && test.Error == "" {
 			t.Errorf("Test: %s - failed with: %s", test.Name, err)
 			t.FailNow()
@@ -284,6 +290,126 @@ func TestMaterialiseProp(t *testing.T) {
 		got := ToJSON(obj)
 		if got != exp {
 			t.Errorf("Test: %s:\nExp: %s\nGot: %s\n", test.Name, exp, got)
+			t.FailNow()
+		}
+
+		start = obj
+	}
+}
+
+func TestGetProp(t *testing.T) {
+
+	type Obj map[string]any
+
+	type Test struct {
+		Name   string
+		Start  Obj
+		Prop   string
+		Result any
+		Error  string
+	}
+
+	tests := []Test{
+		{
+			Name:   "{} - empty",
+			Start:  Obj{},
+			Prop:   "",
+			Result: Obj{},
+			Error:  "",
+		},
+		{
+			Name:   "{} - prop",
+			Start:  Obj{},
+			Prop:   "prop",
+			Result: nil,
+			Error:  "",
+		},
+		{
+			Name: "full - missing prop",
+			Start: Obj{
+				"int":      5,
+				"string":   "hello",
+				"decimal":  4.4,
+				"bool":     true,
+				"emptyobj": Obj{},
+				"obj": Obj{
+					"int":       123,
+					"array_int": []int{1, 2, 3},
+				},
+				"emptyarrayobj": []Obj{},
+				"arrayobj": []Obj{
+					Obj{},
+					Obj{"int": 321},
+				},
+			},
+			Prop:   "prop",
+			Result: nil,
+			Error:  "",
+		},
+		{Name: "int", Prop: "int", Result: 5},
+		{Name: "string", Prop: "string", Result: "hello"},
+		{Name: "bool", Prop: "bool", Result: true},
+		{Name: "emptyobj", Prop: "emptyobj", Result: Obj{}},
+
+		{Name: "obj", Prop: "obj", Result: Obj{
+			"int":       123,
+			"array_int": []int{1, 2, 3},
+		}},
+		{Name: "obj.nada", Prop: "obj.nada", Result: nil},
+		{Name: "obj.nada[2]", Prop: "obj.nada[2]",
+			Error: "Can't traverse into nothing: obj.nada"},
+		{Name: "obj.nada.xxx", Prop: "obj.nada.xxx",
+			Error: "Can't traverse into nothing: obj.nada"},
+		{Name: "obj.int", Prop: "obj.int", Result: 123},
+		{Name: "obj.array", Prop: "obj.array_int", Result: []int{1, 2, 3}},
+		{Name: "obj.array_int", Prop: "obj.array_int[1]", Result: 2},
+
+		{Name: "obj.array_int.0", Prop: "obj.array_int[0]", Result: 1},
+		{Name: "obj.array_int.3", Prop: "obj.array_int[3]",
+			Error: "Array reference \"obj.array_int[3]\" out of bounds: (max:3-1)"},
+		{Name: "emptyao", Prop: "emptyarrayobj", Result: []any{}},
+		{Name: "arrayobj", Prop: "arrayobj", Result: []Obj{
+			Obj{},
+			Obj{"int": 321},
+		}},
+		{Name: "arrayobj[0]", Prop: "arrayobj[0]", Result: Obj{}},
+		{Name: "arrayobj[1].int", Prop: "arrayobj[1].int", Result: 321},
+		{Name: "arrayobj[1].xxx", Prop: "arrayobj[1].xxx", Result: nil},
+		{Name: "arrayobj[3].xxx", Prop: "arrayobj[3].xxx", Error: "Array reference \"arrayobj[3]\" out of bounds: (max:2-1)"},
+	}
+
+	start := Obj{}
+
+	for _, test := range tests {
+		t.Logf("Test: %s   Prop: %s", test.Name, test.Prop)
+		pp, err := PropPathFromUI(test.Prop)
+		Must(err)
+
+		obj := test.Start
+		if IsNil(obj) {
+			obj = start
+		}
+
+		val, err := ObjectGetProp(obj, pp)
+
+		if (err == nil && test.Error != "") ||
+			(err != nil && test.Error != err.Error()) {
+
+			t.Errorf("Should fail with: %s", test.Error)
+			if err != nil {
+				t.Logf("Got: %s", err)
+			}
+			t.FailNow()
+		}
+		if err != nil && test.Error == "" {
+			t.Errorf("Failed with: %s", err)
+			t.FailNow()
+		}
+
+		exp := ToJSON(test.Result)
+		got := ToJSON(val)
+		if got != exp {
+			t.Errorf("\nExp: %s\nGot: %s\n", exp, got)
 			t.FailNow()
 		}
 

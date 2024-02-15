@@ -93,7 +93,7 @@ func (reg *Registry) Get(name string) any {
 }
 
 func (reg *Registry) Set(name string, val any) error {
-	return reg.Entity.SetFromUI(name, val)
+	return reg.Entity.Set(name, val)
 }
 
 func (reg *Registry) Delete() error {

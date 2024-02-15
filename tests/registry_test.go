@@ -94,14 +94,18 @@ func TestRegistryProps(t *testing.T) {
 	reg := NewRegistry("TestRegistryProps")
 	defer PassDeleteReg(t, reg)
 
-	reg.Set("specversion", "x.y")
+	err := reg.Set("specversion", "x.y")
+	if err == nil {
+		t.Errorf("Setting specversion to x.y should have failed")
+		t.FailNow()
+	}
 	reg.Set("name", "nameIt")
 	reg.Set("description", "a very cool reg")
 	reg.Set("documentation", "https://docs.com")
 	reg.Set("labels.stage", "dev")
 
 	xCheckGet(t, reg, "", `{
-  "specversion": "x.y",
+  "specversion": "0.5",
   "id": "TestRegistryProps",
   "name": "nameIt",
   "epoch": 1,

@@ -36,7 +36,7 @@ func (r *Resource) Set(name string, val any) error {
 			log.Printf("Shouldn't be setting .latestVersionId directly-1")
 			panic("can't set .latestversionid directly")
 		}
-		return r.Entity.SetFromUI(name[1:], val)
+		return r.Entity.Set(name[1:], val)
 	}
 
 	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
@@ -44,7 +44,7 @@ func (r *Resource) Set(name string, val any) error {
 			log.Printf("Shouldn't be setting .latestVersionId directly-2")
 			panic("can't set .latestversionid directly")
 		}
-		return r.Entity.SetFromUI(name, val)
+		return r.Entity.Set(name, val)
 	}
 
 	v, err := r.GetLatest()
@@ -94,7 +94,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	}
 
 	// TODO: do both of these in one transaction to make it atomic
-	r.Entity.SetFromUI("latestversionid", newLatest.UID)
+	r.Entity.Set("latestversionid", newLatest.UID)
 	newLatest.SkipEpoch = true
 	err = newLatest.Set("latest", true)
 	newLatest.SkipEpoch = false
