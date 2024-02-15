@@ -51,6 +51,7 @@ func (r *Resource) Set(name string, val any) error {
 	if err != nil {
 		panic(err)
 	}
+	v.SkipEpoch = r.SkipEpoch
 	return v.Set(name, val)
 }
 
@@ -94,7 +95,10 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 
 	// TODO: do both of these in one transaction to make it atomic
 	r.Entity.SetFromUI("latestversionid", newLatest.UID)
-	return newLatest.Set("latest", true)
+	newLatest.SkipEpoch = true
+	err = newLatest.Set("latest", true)
+	newLatest.SkipEpoch = false
+	return err
 }
 
 func (r *Resource) AddVersion(id string) (*Version, error) {
@@ -159,8 +163,10 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		log.Print(err)
 		return nil, err
 	}
+	v.SkipEpoch = true
 	v.Set("id", id)
 	v.Set("epoch", 1)
+	v.SkipEpoch = false
 
 	err = r.SetLatest(v)
 	if err != nil {

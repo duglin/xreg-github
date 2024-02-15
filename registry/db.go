@@ -109,16 +109,17 @@ func Query(cmd string, args ...interface{}) (*Result, error) {
 		log.Printf("Error Prepping query (%s)->%s\n", cmd, err)
 		return nil, fmt.Errorf("Error Prepping query (%s)->%s\n", cmd, err)
 	}
+	defer ps.Close()
 
 	rows, err := ps.Query(args...)
 	if err != nil {
-		log.Printf("Error querying DB(%s)->%s\n", cmd, err)
+		log.Printf("Error querying DB(%s)(%v)->%s\n", cmd, args, err)
 		return nil, fmt.Errorf("Error querying DB(%s)->%s\n", cmd, err)
 	}
 
 	colTypes, err := rows.ColumnTypes()
 	if err != nil {
-		log.Printf("Error querying DB(%s)->%s\n", cmd, err)
+		log.Printf("Error querying DB(%s)(%v)->%s\n", cmd, args, err)
 		return nil, fmt.Errorf("Error querying DB(%s)->%s\n", cmd, err)
 	}
 
@@ -142,6 +143,7 @@ func doCount(cmd string, args ...interface{}) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer ps.Close()
 
 	result, err := ps.Exec(args...)
 	if err != nil {
@@ -220,6 +222,7 @@ func DoZeroTwo(cmd string, args ...interface{}) error {
 }
 
 func DoCount(num int, cmd string, args ...interface{}) error {
+	log.VPrintf(4, "DoCount: %s", cmd)
 	count, err := doCount(cmd, args...)
 	if err != nil {
 		return err

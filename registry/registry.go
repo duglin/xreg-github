@@ -136,9 +136,11 @@ func FindRegistry(id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistry(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindRegistry")
 
+	/* TODO
 	if reg, ok := Registries[id]; ok {
 		return reg, nil
 	}
+	*/
 
 	results, err := Query(`
 	   	SELECT SID

@@ -256,7 +256,7 @@ func TestMaterialiseProp(t *testing.T) {
 	for _, test := range tests {
 		pp, err := PropPathFromUI(test.Prop)
 		if err != nil {
-			t.Errorf("Error in test prep %q: %s", test.Name, err)
+			t.Errorf("Error in test prep %q: %s(%s)", test.Name, test.Prop, err)
 			t.FailNow()
 		}
 
@@ -264,6 +264,11 @@ func TestMaterialiseProp(t *testing.T) {
 		if IsNil(obj) {
 			obj = start
 		}
+
+		t.Logf("Test: %s", test.Name)
+		t.Logf("  Prop: %s", test.Prop)
+		t.Logf("  Obj: %s", ToJSON(obj))
+
 		err = ObjectSetProp(obj, pp, test.Value)
 
 		if err == nil && test.Error != "" {

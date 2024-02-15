@@ -112,6 +112,7 @@ func ToJSON(obj interface{}) string {
 func xNoErr(t *testing.T, err error) bool {
 	if err != nil {
 		t.Errorf("%s: Unexpected error: %s", Caller(), err)
+		t.FailNow()
 		return false
 	}
 	return true

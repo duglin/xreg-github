@@ -249,9 +249,9 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 		ErrFatalf(reg.Set("emptymap", map[string]int{}))
 		ErrFatalf(reg.Set("emptyarr", []int{}))
-		ErrFatalf(reg.Set("emptyobj", struct{}{}))
+		ErrFatalf(reg.Set("emptyobj", map[string]any{})) // struct{}{}))
 
-		ErrFatalf(reg.Set("arr1[1]", "arr1-value"))
+		ErrFatalf(reg.Set("arr1[0]", "arr1-value"))
 		ErrFatalf(reg.Set("mapobj.mapkey.inint", 5))
 		ErrFatalf(reg.Set("mapobj['cool.key'].inint", 666))
 		ErrFatalf(reg.Set("arrmap[1].key1", "arrmapk1-value"))
@@ -298,8 +298,9 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	attr, err := ep.AddAttr("usage", registry.STRING)
 	ErrFatalf(err)
-	attr.ClientRequired = true
-	attr.ServerRequired = true
+	// TODO make these required
+	// attr.ClientRequired = true
+	// attr.ServerRequired = true
 	_, err = ep.AddAttr("origin", registry.URI)
 	ErrFatalf(err)
 	_, err = ep.AddAttr("channel", registry.STRING)

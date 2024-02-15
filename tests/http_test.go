@@ -438,7 +438,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing registry: Attribute \"epoch\" doesn't match existing value (4)\n",
+		ResBody:    "Error processing registry: Attribute \"epoch\"(33) doesn't match existing value (4)\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -611,7 +611,7 @@ func TestHTTPRegistry(t *testing.T) {
 
 	typeTests := []typeTest{
 		{request: `{"epoch":123}`,
-			response: `Attribute "epoch" doesn't match existing value (6)`},
+			response: `Attribute "epoch"(123) doesn't match existing value (6)`},
 		{request: `{"epoch":-123}`,
 			response: `Attribute "epoch" must be a uinteger`},
 		{request: `{"epoch":"asd"}`,
@@ -776,6 +776,60 @@ func TestHTTPRegistry(t *testing.T) {
   "id": "TestHTTPRegistry",
   "epoch": 8,
   "self": "http://localhost:8181/"
+}
+`})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - swap any - 1",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "myany": 5.5,
+  "mymapany": {
+    "any1": {
+	  "foo": "bar"
+	}
+  }
+}`,
+		Code:       200,
+		ResHeaders: []string{"application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 9,
+  "self": "http://localhost:8181/",
+  "myany": 5.5,
+  "mymapany": {
+    "any1": {
+      "foo": "bar"
+    }
+  }
+}
+`})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - swap any - 2",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "myany": "foo",
+  "mymapany": {
+    "any1": 2.3
+  }
+}`,
+		Code:       200,
+		ResHeaders: []string{"application/json"},
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPRegistry",
+  "epoch": 10,
+  "self": "http://localhost:8181/",
+  "myany": "foo",
+  "mymapany": {
+    "any1": 2.3
+  }
 }
 `})
 
@@ -1016,7 +1070,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group: Attribute \"epoch\" doesn't match existing value (3)\n",
+		ResBody:    "Error processing group: Attribute \"epoch\"(10) doesn't match existing value (3)\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -1895,7 +1949,7 @@ func TestHTTPVersions(t *testing.T) {
 
 	// add new version via POST to "versions" collection
 	xCheckHTTP(t, &HTTPTest{
-		Name:        "POST file f1-proxy - create v2 - no meta",
+		Name:        "POST file f1-proxy - create 2 - no meta",
 		URL:         "/dirs/d1/files/f1-proxy/versions",
 		Method:      "POST",
 		ReqHeaders:  []string{},

@@ -662,21 +662,12 @@ func HTTPPutPost(info *RequestInfo) error {
 	// ////////////////////////////////////////////////////////////////
 	if len(info.Parts) == 0 {
 		// MUST be PUT / - do PUT
-		// currObj := info.Registry.Entity.Materialize(nil)
-		currObj := info.Registry.Entity.Object
 
-		err = ValidateEntity(info.Registry, IncomingObj, currObj,
-			info.Registry.Entity.Abstract)
+		info.Registry.Entity.NewObject = IncomingObj
 
+		err = info.Registry.Entity.Validate(true)
 		if err == nil {
-			args := &UpdateFnArgs{
-				NewObj:   IncomingObj,
-				OldObj:   currObj,
-				Abstract: info.Registry.Entity.Abstract,
-				IsNew:    false,
-			}
-
-			err = PrepUpdateEntity(info.Registry, args)
+			err = PrepUpdateEntity(&info.Registry.Entity, false)
 		}
 
 		if err != nil {
@@ -684,7 +675,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			return fmt.Errorf("Error processing registry: %s", err)
 		}
 
-		err = info.Registry.Entity.Save(IncomingObj)
+		err = info.Registry.Entity.Save()
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error processing registry: %s", err)
@@ -727,25 +718,18 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	if len(info.Parts) < 3 {
 		// Either /GROUPs or /GROUPs/gID - do PUT
-		currObj := group.Materialize(nil)
+		group.NewObject = IncomingObj
 
-		err = ValidateEntity(info.Registry, IncomingObj, currObj,
-			group.Abstract)
+		err = group.Entity.Validate(true)
 		if err == nil {
-			args := &UpdateFnArgs{
-				NewObj:   IncomingObj,
-				OldObj:   currObj,
-				Abstract: group.Abstract,
-				IsNew:    isNew,
-			}
-			err = PrepUpdateEntity(info.Registry, args)
+			err = PrepUpdateEntity(&group.Entity, isNew)
 		}
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Error processing group: %s", err)
 		}
 
-		err = group.Save(IncomingObj)
+		err = group.Save()
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error processing group: %s", err)
@@ -872,14 +856,17 @@ func HTTPPutPost(info *RequestInfo) error {
 	versionUID = version.UID
 
 	currObj := (map[string]any)(nil)
-	abs := ""
+	entity := (*Entity)(nil)
+
 	if len(info.Parts) >= 5 || (len(info.Parts) == 4 && method == "POST") {
-		currObj = version.Materialize(info)
-		abs = version.Abstract
+		currObj = version.Object // Materialize(info)
+		entity = &version.Entity
+		entity.Object = currObj // replace Object with full attrs
 	} else {
 		// URL points to resource, not version
 		currObj = resource.Materialize(info)
-		abs = resource.Abstract
+		entity = &resource.Entity
+		entity.Object = currObj // replace Object with full attrs
 	}
 
 	if !info.ShowMeta {
@@ -968,24 +955,18 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 	} else {
 		// Remove all collections from incoming body, if there
-		for _, coll := range GetCollections(info.Registry.RegistrySID, abs) {
+		for _, coll := range entity.GetCollections() {
 			delete(IncomingObj, coll)
 			delete(IncomingObj, coll+"count")
 			delete(IncomingObj, coll+"url")
 		}
 	}
 
-	err = ValidateEntity(info.Registry, IncomingObj, currObj, abs)
+	entity.NewObject = IncomingObj
 
+	err = entity.Validate(true)
 	if err == nil {
-		args := &UpdateFnArgs{
-			NewObj:   IncomingObj,
-			OldObj:   currObj,
-			Abstract: abs,
-			IsNew:    isNew,
-		}
-
-		err = PrepUpdateEntity(info.Registry, args)
+		err = PrepUpdateEntity(entity, isNew)
 	}
 
 	if err != nil {
@@ -998,7 +979,9 @@ func HTTPPutPost(info *RequestInfo) error {
 	delete(IncomingObj, "latestversionid")
 	delete(IncomingObj, "latestversionurl")
 
-	err = version.Save(IncomingObj)
+	version.NewObject = IncomingObj
+
+	err = version.Save()
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf("Error processing resource: %s", err)

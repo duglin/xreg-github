@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"encoding/base64"
 	"fmt"
 	"maps"
 	"reflect"
@@ -19,12 +20,14 @@ type Entity struct {
 	UID         string // Entity's UID
 	Props       map[string]any
 	Object      map[string]any `json:"-"`
+	NewObject   map[string]any `json:"-"` // updated version, save() will update
 
 	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
-	Level    int // 0=registry, 1=group, 2=resource, 3=version
-	Path     string
-	Abstract string
+	Level     int // 0=registry, 1=group, 2=resource, 3=version
+	Path      string
+	Abstract  string
+	SkipEpoch bool
 }
 
 type EntitySetter interface {
@@ -212,6 +215,8 @@ func (e *Entity) Refresh() error {
 
 	// Erase all old props first
 	e.Props = map[string]any{}
+	e.Object = nil
+	e.NewObject = nil
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		name := NotNilString(row[0])
@@ -239,6 +244,7 @@ func (e *Entity) SetFromUI(name string, val any) error {
 	if err != nil {
 		return err
 	}
+
 	return e.SetPP(pp, val)
 }
 
@@ -289,28 +295,88 @@ func (e *Entity) NewSetPP(pp *PropPath, val any) error {
 }
 
 func (e *Entity) SetPP(pp *PropPath, val any) error {
-	log.VPrintf(3, ">Enter: SetPP(%s=%v)", pp.UI(), val)
+	log.VPrintf(3, ">Enter: SetPP(%s: %s=%v)", e.DbSID, pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetPP")
+	defer func() {
+		log.VPrintf(3, "SetPP exit: e.Props:\n%s", ToJSON(e.Props))
+		log.VPrintf(3, "SetPP exit: e.Object:\n%s", ToJSON(e.Object))
+	}()
 
-	// var err error
+	// Assume no other edits are pending
+	e.Refresh()
 	if e.Object == nil {
 		e.Object = map[string]any{}
 	}
+	e.NewObject = maps.Clone(e.Object)
 
-	err := ObjectSetProp(e.Object, pp, val)
-	if err != nil {
-		log.Printf("ObjecSetProp err: %s", err)
+	// Cheat a little
+	if val == struct{}{} {
+		val = map[string]any{}
+	}
+	valValue := reflect.ValueOf(val)
+	if valValue.Kind() == reflect.Slice && valValue.Len() == 0 {
+		val = []any{}
+	}
+	if valValue.Kind() == reflect.Map && valValue.Len() == 0 {
+		val = map[string]any{}
+	}
+	// end of cheat
+
+	if pp.Top() == "epoch" {
+		save := e.SkipEpoch
+		e.SkipEpoch = true
+		defer func() {
+			e.SkipEpoch = save
+		}()
 	}
 
-	/*
-		propName := pp.Top()
-		current := e.Object[propName]
-		e.Object[propName], _ = MaterializeProp(current, pp.Next(), val)
-		// Must(err)
-		// log.Printf("e.Obj: %s\nerr:%s", ToJSON(e.Object), err)
-	*/
+	log.VPrintf(3, "Abstract/ID: %s/%s", e.Abstract, e.UID)
+	log.VPrintf(3, "e.Props:\n%s", ToJSON(e.Props))
+	log.VPrintf(3, "e.Object:\n%s", ToJSON(e.Object))
+	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
 
-	return e.SetPPValidate(pp, val, true, nil)
+	var err error
+
+	if err = e.SetPPValidate(pp, val, true, nil); err != nil {
+		return err
+	}
+
+	if err = ObjectSetProp(e.NewObject, pp, val); err != nil {
+		return err
+	}
+
+	log.VPrintf(3, "POST SetPP and ObjSet")
+	log.VPrintf(3, "  e.Props:\n%s", ToJSON(e.Props))
+	log.VPrintf(3, "  e.Object:\n%s", ToJSON(e.Object))
+	log.VPrintf(3, "  e.NewObject:\n%s", ToJSON(e.NewObject))
+
+	// log.Printf("-----")
+	// log.Printf("Set: %s = %v", pp.UI(), val)
+	// log.Printf("e.props:\n%s", ToJSON(e.Props))
+	// log.Printf("NewObj: \n%s", ToJSON(e.NewObject))
+
+	if err = e.Validate(true); err != nil {
+		log.Printf("Val Err: %s", err)
+		/*
+			log.Printf("e.props:\n%s", ToJSON(e.Props))
+			log.Printf("Object: %s", ToJSON(e.Object))
+			log.Printf("NewObject: %s", ToJSON(e.NewObject))
+		*/
+		return err
+	}
+
+	// e.Object = e.NewObject
+	// e.NewObject = nil
+	// return nil
+
+	save := e.SkipEpoch
+	e.SkipEpoch = true
+	if err = PrepUpdateEntity(e, false); err != nil {
+		return err
+	}
+	e.SkipEpoch = save
+
+	return e.Save()
 }
 
 func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool, obj map[string]any) error {
@@ -338,7 +404,7 @@ func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool, obj map[str
 	}
 
 	// Make sure the attribute is defined in the model and has valid chars
-	attrType, err := GetAttributeType(e.RegistrySID, obj, e.Abstract, pp)
+	attrType, err := GetAttributeType(e, e.RegistrySID, obj, e.Abstract, pp)
 	if err != nil {
 		// log.Printf("Error on getAttr(%s): %s", pp.UI(), err)
 		return err
@@ -453,6 +519,9 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
 			return err
 		} else {
+			if val == "" {
+				return nil
+			}
 			// The actual contents
 			err = DoOneTwo(`
                 REPLACE INTO ResourceContents(VersionSID, Content)
@@ -472,7 +541,6 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 			e.DbSID, name)
 		delete(e.Props, name) // old
 	} else {
-		e.Props[name] = val // old
 		propType := GoToOurType(val)
 
 		// Convert booleans to true/false instead of 1/0 so filter works
@@ -509,6 +577,8 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
               RegistrySID, EntitySID, PropName, PropValue, PropType)
             VALUES( ?,?,?,?,? )`,
 			e.RegistrySID, e.DbSID, name, dbVal, propType)
+
+		e.Props[name] = val // old
 	}
 
 	if err != nil {
@@ -725,21 +795,14 @@ type SpecProp struct {
 	levels  string                          // only show for these levels
 	mutable bool                            // user editable
 	getFn   func(*Entity, *RequestInfo) any // return its value
-	checkFn func(newObj map[string]any, oldObj map[string]any) error
+	checkFn func(e *Entity, newObj map[string]any, oldObj map[string]any) error
 	// prep newObj for an update to the DB
-	updateFn       func(*UpdateFnArgs) error
+	updateFn       func(*Entity, bool) error
 	modelAttribute *Attribute
 }
 
 func (sp *SpecProp) InLevel(level int) bool {
 	return sp.levels == "" || strings.ContainsRune(sp.levels, rune('0'+level))
-}
-
-type UpdateFnArgs struct {
-	NewObj   map[string]any
-	OldObj   map[string]any
-	Abstract string
-	IsNew    bool
 }
 
 // This allows for us to choose the order and define custom logic per prop
@@ -748,7 +811,7 @@ var OrderedSpecProps = []*SpecProp{
 		func(e *Entity, info *RequestInfo) any {
 			return SPECVERSION
 		},
-		func(newObj map[string]any, oldObj map[string]any) error {
+		func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
 			tmp := newObj["specversion"]
 			if !IsNil(tmp) && tmp != "" && tmp != SPECVERSION {
 				return fmt.Errorf("Invalid 'specversion': %s", tmp)
@@ -763,20 +826,36 @@ var OrderedSpecProps = []*SpecProp{
 			ReadOnly:       true,
 		}},
 	{"id", STRING, "", false, nil,
-		func(newObj map[string]any, oldObj map[string]any) error {
+		func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
 			if oldObj != nil {
-				v := newObj["id"]
-				if !IsNil(v) && v != oldObj["id"] {
-					return fmt.Errorf("Can't change the ID of an "+
-						"entity(%s->%s)", oldObj["id"], v)
+				oldID := any(oldObj["id"])
+				newID := any(newObj["id"])
+
+				if IsNil(oldID) {
+					oldID = ""
 				}
+				if IsNil(newID) {
+					newID = ""
+				}
+
+				if newID != "" && oldID != "" && newID != oldID {
+					return fmt.Errorf("Can't change the ID of an "+
+						"entity(%s->%s)", oldID, newID)
+				}
+				/*
+					v := newObj["id"]
+					if !IsNil(v) && v != oldObj["id"] {
+						return fmt.Errorf("Can't change the ID of an "+
+							"entity(%v->%s)", oldObj["id"], v)
+					}
+				*/
 			}
 			return nil
 		},
-		func(args *UpdateFnArgs) error {
-			if args.OldObj != nil {
-				if IsNil(args.NewObj["id"]) {
-					args.NewObj["id"] = args.OldObj["id"]
+		func(e *Entity, isNew bool) error {
+			if e.Object != nil {
+				if IsNil(e.NewObject["id"]) && !IsNil(e.Object["id"]) {
+					e.NewObject["id"] = e.Object["id"]
 					return nil
 				}
 			}
@@ -792,7 +871,11 @@ var OrderedSpecProps = []*SpecProp{
 		Type: STRING,
 	}},
 	{"epoch", UINTEGER, "", false, nil,
-		func(newObj map[string]any, oldObj map[string]any) error {
+		func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
+			if e.SkipEpoch {
+				return nil
+			}
+
 			val := newObj["epoch"]
 			if IsNil(val) {
 				return nil
@@ -809,22 +892,28 @@ var OrderedSpecProps = []*SpecProp{
 				return fmt.Errorf("Attribute \"epoch\" must be a uinteger")
 			}
 
-			if newEpoch != oldEpoch {
-				return fmt.Errorf("Attribute %q doesn't match existing "+
-					"value (%d)", "epoch", oldEpoch)
+			if oldEpoch != 0 && newEpoch != oldEpoch {
+				return fmt.Errorf("Attribute %q(%d) doesn't match existing "+
+					"value (%d)", "epoch", newEpoch, oldEpoch)
 			}
 			return nil
 		},
-		func(args *UpdateFnArgs) error {
-			tmp := args.OldObj["epoch"]
+		func(e *Entity, isNew bool) error {
+			if e.SkipEpoch {
+				return nil
+			}
+			tmp := e.Object["epoch"]
+			if IsNil(tmp) {
+				return nil
+			}
 			epoch := NotNilInt(&tmp)
 			if epoch < 0 {
 				epoch = 0
 			}
-			if args.IsNew {
+			if isNew {
 				epoch = 0
 			}
-			args.NewObj["epoch"] = epoch + 1
+			e.NewObject["epoch"] = epoch + 1
 			return nil
 		},
 		&Attribute{
@@ -977,7 +1066,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	fn func(*Entity, *RequestInfo, string, any, *Attribute) error) error {
 
 	daObj := e.Materialize(info)
-	attrs := GetAttributes(e.RegistrySID, daObj, e.Abstract)
+	attrs := e.GetAttributes(false)
 
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
@@ -1012,22 +1101,19 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	return nil
 }
 
-func (e *Entity) Save(obj map[string]any) error {
+func (e *Entity) Save() error {
 	log.VPrintf(3, ">Enter: Save(%s/%s)", e.Plural, e.UID)
 	defer log.VPrintf(3, "<Exit: Save")
 
-	log.VPrintf(0, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID, ToJSON(obj))
+	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID, ToJSON(e.NewObject))
 
 	// make a dup so we can delete some attributes
-	newObj := map[string]any{}
-	for k, v := range obj {
-		newObj[k] = v
-	}
+	newObj := maps.Clone(e.NewObject)
 
 	// TODO calculate which to delete based on attr properties
 	delete(newObj, "self")
 
-	for _, coll := range GetCollections(e.RegistrySID, e.Abstract) {
+	for _, coll := range e.GetCollections() {
 		delete(newObj, coll)
 		delete(newObj, coll+"count")
 		delete(newObj, coll+"url")
@@ -1100,126 +1186,236 @@ func (e *Entity) Save(obj map[string]any) error {
 		return nil
 	}
 
-	e.Object = newObj
-	return traverse(NewPP(), newObj, obj)
+	err := traverse(NewPP(), newObj, e.NewObject)
+	if err == nil {
+		e.Object = newObj
+		e.NewObject = nil
+	}
+	return err
 }
 
 // Note that this will copy the latest version props to the resource.
 // This is mainly used for end-user facing serialization of the entity
 func (e *Entity) Materialize(info *RequestInfo) map[string]any {
-	mat := map[string]any{}
-	maps.Copy(mat, e.Object)
-
-	result := map[string]any{}
-	usedProps := map[string]bool{}
-
-	// Save old props so when we copy version props into it they're not
-	// saved outside of this func. very racy!
-	saveProps := map[string]any{}
-	maps.Copy(saveProps, e.Props)
-	defer func() {
-		e.Props = map[string]any{}
-		maps.Copy(e.Props, saveProps)
-	}()
+	mat := maps.Clone(e.Object)
 
 	// Copy all Version props into the Resource (except for a few)
 	if e.Level == 2 {
-		// On Resource grab latest Version attrs & delete Res-only attrs
+		// On Resource grab latest Version attrs
 		paths := strings.Split(e.Path, "/")
 		reg, _ := FindRegistryBySID(e.RegistrySID)
 		group, _ := reg.FindGroup(paths[0], paths[1])
 		resource, _ := group.FindResource(paths[2], paths[3])
 		ver, _ := resource.GetLatest()
 
-		// if ver != nil { // can be nil during resource.create()
-		// delete(e.Props, "latestversionid")
-		for k, v := range ver.Props {
-			pp, _ := PropPathFromDB(k)
-			if pp.Top() == "latest" || pp.Top() == "id" {
-				continue
-			}
-			e.Props[k] = v
-		}
-
-		// Delete Resource specific attributes not found in Versions
-		toDel := []string{}
-		for k, _ := range mat {
-			if prop, ok := SpecProps[k]; ok {
-				if prop.InLevel(2) && !prop.InLevel(3) {
-					toDel = append(toDel, k)
-				}
-			}
-		}
-		for _, k := range toDel {
-			delete(mat, k)
-		}
-
-		// Copy version specific attributes not found in Resources
-		for k, v := range ver.Object {
-			if k == "id" {
-				continue
-			}
-			if prop, ok := SpecProps[k]; ok {
-				if prop.InLevel(3) && !prop.InLevel(2) {
+		if ver != nil { // can be nil during resource.create()
+			// Copy version specific attributes not found in Resources
+			for k, v := range ver.Object {
+				if k == "id" { // Retain Resource ID
 					continue
 				}
-			}
+				// exclude props that appear in vers, not resource.latest
+				if prop, ok := SpecProps[k]; ok {
+					if prop.InLevel(3) && !prop.InLevel(2) {
+						continue
+					}
+				}
 
-			mat[k] = v
+				mat[k] = v
+			}
 		}
-		// }
 	}
 
+	// Regardless of the type of entity, set the generated properties
 	for _, prop := range OrderedSpecProps {
-		// Only show props that are for this level
-		ch := rune('0' + byte(e.Level))
-		if prop.levels != "" && !strings.ContainsRune(prop.levels, ch) {
+		// Only generate props that are for this level, and have a Fn
+		if prop.getFn == nil || !prop.InLevel(e.Level) {
 			continue
 		}
 
-		pp := NewPPP(prop.name)
-		propName := pp.DB()
-		usedProps[propName] = true
-
-		// Even if it has a func, if there's a val in Props let it override
-		val, ok := e.Props[propName]
-		if !ok && prop.getFn != nil {
-			val = prop.getFn(e, info)
-		}
-
-		// Only write it if we have a value
-		if !IsNil(val) {
-			result[pp.Top()] = val
-			if err := ObjectSetProp(mat, pp, val); err != nil {
-				panic(err)
+		// Only generate/set the value if it's not already set
+		if _, ok := mat[prop.name]; !ok {
+			if val := prop.getFn(e, info); !IsNil(val) {
+				// Only write it if we have a value
+				mat[prop.name] = val
 			}
 		}
-	}
-
-	for key, val := range e.Props {
-		// if key[0] == '#' || usedProps[key] { // Skip internal and "done" ones
-		if usedProps[key] {
-			continue
-		}
-
-		pp, err := PropPathFromDB(key)
-		PanicIf(err != nil, "Error DBparsing %q: %s", key, err)
-
-		propName := pp.Top()
-
-		// usedProps[k] = true
-
-		current := result[propName] // needed for non-scalars
-		result[propName], err = MaterializeProp(current, pp.Next(), val)
-		PanicIf(err != nil, "MaterializeProp: %s", err)
 	}
 
 	return mat
-	return result
+}
+
+func (e *Entity) GetCollections() []string {
+	reg, err := FindRegistryBySID(e.RegistrySID)
+	PanicIf(reg == nil, "Can't find registry(%s): %s", e.RegistrySID, err)
+
+	paths := strings.Split(e.Abstract, string(DB_IN))
+	if len(paths) == 0 || paths[0] == "" {
+		return SortedKeys(reg.Model.Groups)
+	} else {
+		gm := reg.Model.Groups[paths[0]]
+		PanicIf(gm == nil, "Can't find Group %q", paths[0])
+
+		if len(paths) == 1 {
+			return SortedKeys(gm.Resources)
+		} else if len(paths) == 2 {
+			return []string{"versions"}
+		}
+	}
+
+	return nil
+}
+
+func (e *Entity) GetAttributes(useNew bool) Attributes {
+	attrs := e.GetBaseAttributes()
+	if useNew {
+		attrs.AddIfValueAttributes(e.NewObject)
+	} else {
+		attrs.AddIfValueAttributes(e.Object)
+	}
+	return attrs
+}
+
+// Returns the initial set of attributes defined for the entity. So
+// no IfValue attributes yet as we need the current set of properties
+// to calculate that
+func (e *Entity) GetBaseAttributes() Attributes {
+	reg, err := FindRegistryBySID(e.RegistrySID)
+	Must(err)
+
+	attrs := Attributes{}
+	level := 0
+	singular := ""
+
+	// Add user-defined attributes
+	// TODO check for conflicts with xReg defined ones
+	paths := strings.Split(e.Abstract, string(DB_IN))
+	if len(paths) == 0 || paths[0] == "" {
+		maps.Copy(attrs, reg.Model.Attributes)
+	} else {
+		level = len(paths)
+		gm := reg.Model.Groups[paths[0]]
+		PanicIf(gm == nil, "Can't find Group %q", paths[0])
+		if len(paths) == 1 {
+			maps.Copy(attrs, gm.Attributes)
+		} else {
+			rm := gm.Resources[paths[1]]
+			PanicIf(rm == nil, "Cant find Resource %q", paths[1])
+			maps.Copy(attrs, rm.Attributes)
+			singular = rm.Singular
+		}
+	}
+
+	// Add xReg defied attributes
+	// TODO Check for conflicts
+	for _, specProp := range OrderedSpecProps {
+		if specProp.InLevel(level) {
+			if specProp.modelAttribute != nil {
+				attrs[specProp.name] = specProp.modelAttribute
+			}
+		}
+	}
+
+	// Add the RESOURCExxx attributes (for resources and versions)
+	if singular != "" {
+		checkFn := func(e *Entity, newObj map[string]any, oldObj map[string]any) error {
+			list := []string{
+				singular,
+				singular + "url",
+				singular + "base64",
+				singular + "proxyurl",
+			}
+			count := 0
+			for _, name := range list {
+				if v, ok := newObj[name]; ok && !IsNil(v) {
+					count++
+				}
+			}
+			if count > 1 {
+				return fmt.Errorf("Only one of %s can be present at a time",
+					strings.Join(list[:3], ",")) // exclude proxy
+			}
+			return nil
+		}
+
+		// Add resource content attributes
+		attrs[singular] = &Attribute{
+			Name:    singular,
+			Type:    ANY,
+			checkFn: checkFn,
+			updateFn: func(e *Entity, isNew bool) error {
+				v, ok := e.NewObject[singular]
+				if ok {
+					e.NewObject["#resource"] = v
+					// e.NewObject["#resourceURL"] = nil
+					delete(e.NewObject, singular)
+				}
+				return nil
+			},
+		}
+		attrs[singular+"url"] = &Attribute{
+			Name:    singular + "url",
+			Type:    URL,
+			checkFn: checkFn,
+			updateFn: func(e *Entity, isNew bool) error {
+				v, ok := e.NewObject[singular+"url"]
+				if !ok {
+					return nil
+				}
+				e.NewObject["#resource"] = nil
+				e.NewObject["#resourceURL"] = v
+				delete(e.NewObject, singular+"url")
+				return nil
+			},
+		}
+		attrs[singular+"proxyurl"] = &Attribute{
+			Name:    singular + "proxyurl",
+			Type:    URL,
+			checkFn: checkFn,
+			updateFn: func(e *Entity, isNew bool) error {
+				v, ok := e.NewObject[singular+"proxyurl"]
+				if !ok {
+					return nil
+				}
+				e.NewObject["#resource"] = nil
+				e.NewObject["#resourceProxyURL"] = v
+				delete(e.NewObject, singular+"proxyurl")
+				return nil
+			},
+		}
+		attrs[singular+"base64"] = &Attribute{
+			Name:    singular + "base64",
+			Type:    STRING,
+			checkFn: checkFn,
+			updateFn: func(e *Entity, isNew bool) error {
+				v, ok := e.NewObject[singular+"base64"]
+				if !ok {
+					return nil
+				}
+				if !IsNil(v) {
+					data := v.(string)
+					content, err := base64.StdEncoding.DecodeString(data)
+					if err != nil {
+						return fmt.Errorf("Error decoding \"%sbase64\" "+
+							"attribute: "+"%s", singular, err)
+					}
+					v = any(content)
+				}
+				e.NewObject["#resource"] = v
+				// e.NewObject["#resourceURL"] = nil
+				delete(e.NewObject, singular+"base64")
+				return nil
+			},
+		}
+	}
+
+	return attrs
 }
 
 func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
+	// TODO see if we can move this into MaterializeProp
 	if pp.Len() == 0 && IsNil(val) {
+		// A bit of a special case, not 100% sure if this is ok
 		for k, _ := range obj {
 			delete(obj, k)
 		}
@@ -1227,16 +1423,9 @@ func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
 	}
 	PanicIf(pp.Len() == 0, "Can't be zero w/non-nil val")
 
-	pName := pp.Top()
-	current := obj[pName]
-	res, err := MaterializeProp(current, pp.Next(), val)
+	_, err := MaterializeProp(obj, pp, val)
 	if err != nil {
 		return err
-	}
-	if IsNil(res) {
-		delete(obj, pName)
-	} else {
-		obj[pName] = res
 	}
 	return nil
 }
@@ -1300,52 +1489,38 @@ func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
 	return daMap, err
 }
 
-// This will check to ensure that the entity adheres to the model
-func (e *Entity) Validate(currentEntity *Entity) error {
-	obj := e.Materialize(nil)
-	reg, err := FindRegistryBySID(e.RegistrySID)
-	Must(err)
-
-	currentObj := (map[string]any)(nil)
-	if currentEntity != nil {
-		currentObj = currentEntity.Materialize(nil)
-	}
-
-	err = ValidateEntity(reg, obj, currentObj, e.Abstract)
-	if err != nil {
-		fmt.Printf("Obj:\n%s\n", ToJSON(obj))
-	}
-	return err
-}
-
 // Doesn't fully validate in the sense that it'll assume read-only fields
 // are not worth cheching since the server generated them.
 // This is mainly used for validating input from a client
-func ValidateEntity(reg *Registry, newObj map[string]any,
-	oldObj map[string]any, abstract string) error {
-
+func (e *Entity) Validate(useNew bool) error {
 	// Don't touch what was passed in
-	dupNewObj := map[string]any{}
-	maps.Copy(dupNewObj, newObj)
-
-	for _, coll := range GetCollections(reg.RegistrySID, abstract) {
-		log.VPrintf(3, "Deleting collection: %q", coll)
-		delete(dupNewObj, coll)
-		delete(dupNewObj, coll+"count")
-		delete(dupNewObj, coll+"url")
+	dupObj := (map[string]any)(nil)
+	if useNew {
+		dupObj = maps.Clone(e.NewObject)
+	} else {
+		dupObj = maps.Clone(e.Object)
 	}
 
-	attrs := GetAttributes(reg.RegistrySID, dupNewObj, abstract)
-	return ValidateObject(dupNewObj, oldObj, attrs, NewPP())
+	for _, coll := range e.GetCollections() {
+		log.VPrintf(3, "Deleting collection: %q", coll)
+		delete(dupObj, coll)
+		delete(dupObj, coll+"count")
+		delete(dupObj, coll+"url")
+	}
+
+	attrs := e.GetAttributes(true)
+	log.VPrintf(3, "========")
+	log.VPrintf(3, "Validating:\n%s", ToJSON(dupObj))
+	return ValidateObject(e, dupObj, e.Object, attrs, NewPP())
 }
 
-func PrepUpdateEntity(reg *Registry, args *UpdateFnArgs) error {
-	attrs := GetAttributes(reg.RegistrySID, args.NewObj, args.Abstract)
+func PrepUpdateEntity(e *Entity, isNew bool) error {
+	attrs := e.GetAttributes(true)
 
 	for key, _ := range attrs {
 		attr := attrs[key]
 		if attr != nil && attr.updateFn != nil {
-			if err := attr.updateFn(args); err != nil {
+			if err := attr.updateFn(e, isNew); err != nil {
 				return err
 			}
 		}
@@ -1356,11 +1531,12 @@ func PrepUpdateEntity(reg *Registry, args *UpdateFnArgs) error {
 
 // This should be called after all level-specific calculated properties have
 // been removed - such as collections
-func ValidateObject(val any, oldObj map[string]any,
+func ValidateObject(e *Entity, val any, oldObj map[string]any,
 	origAttrs Attributes, path *PropPath) error {
 
-	log.VPrintf(3, ">Enter: ValidateObject(%s)", path)
+	log.VPrintf(3, ">Enter: ValidateObject(path: %s)", path)
 	defer log.VPrintf(3, "<Exit: ValidateObject")
+
 	log.VPrintf(3, "NewObj:\n%s", ToJSON(val))
 	log.VPrintf(3, "OrigAttrs:\n%s", ToJSON(origAttrs))
 
@@ -1421,7 +1597,7 @@ func ValidateObject(val any, oldObj map[string]any,
 			// the next section (checkFn) will allow for more detailed
 			// checking, like for valid values
 			if !IsNil(val) {
-				err := ValidateAttribute(val, attr, path.P(key))
+				err := ValidateAttribute(e, val, attr, path.P(key))
 				if err != nil {
 					return err
 				}
@@ -1456,7 +1632,7 @@ func ValidateObject(val any, oldObj map[string]any,
 			if attr.ReadOnly {
 				// Call the attr's checkFn if there
 				if attr.checkFn != nil {
-					if err := attr.checkFn(newObj, oldObj); err != nil {
+					if err := attr.checkFn(e, newObj, oldObj); err != nil {
 						return err
 					}
 				}
@@ -1477,7 +1653,7 @@ func ValidateObject(val any, oldObj map[string]any,
 
 			// Call the attr's checkFn if there - for more refined checks
 			if attr.checkFn != nil {
-				if err := attr.checkFn(newObj, oldObj); err != nil {
+				if err := attr.checkFn(e, newObj, oldObj); err != nil {
 					return err
 				}
 			}
@@ -1509,40 +1685,45 @@ func ValidateObject(val any, oldObj map[string]any,
 	return nil
 }
 
-func ValidateAttribute(val any, attr *Attribute, path *PropPath) error {
+func ValidateAttribute(e *Entity, val any, attr *Attribute, path *PropPath) error {
 	log.VPrintf(3, ">Enter: ValidateAttribute(%s)", path.UI())
 	defer log.VPrintf(3, "<Exit: ValidateAttribute")
 
 	log.VPrintf(3, "ValidateAttribute:")
-	log.VPrintf(3, " val: %v", val)
-	log.VPrintf(3, " path: %v", path.UI())
+	log.VPrintf(3, " val: %v", ToJSON(val))
 	log.VPrintf(3, " attr: %v", ToJSON(attr))
 
 	if attr.Type == ANY {
 		// All good - let it thru
 		return nil
 	} else if IsScalar(attr.Type) {
-		return ValidateScalar(val, attr, path)
+		return ValidateScalar(e, val, attr, path)
 	} else if attr.Type == MAP {
-		return ValidateMap(val, attr.Item, path)
+		return ValidateMap(e, val, attr.Item, path)
 	} else if attr.Type == ARRAY {
-		return ValidateArray(val, attr.Item, path)
+		return ValidateArray(e, val, attr.Item, path)
 	} else if attr.Type == OBJECT {
-		return ValidateObject(val, nil, attr.Item.Attributes, path)
+		attrs := Attributes(nil)
+		if attr.Item != nil {
+			attrs = attr.Item.Attributes
+		}
+		return ValidateObject(e, val, nil, attrs, path)
 	}
 
 	ShowStack()
 	panic(fmt.Sprintf("Unknown type(%s): %s", path.UI(), attr.Type))
 }
 
-func ValidateMap(val any, item *Item, path *PropPath) error {
+func ValidateMap(e *Entity, val any, item *Item, path *PropPath) error {
 	log.VPrintf(3, ">Enter: ValidateMap(%s)", path.UI())
 	defer log.VPrintf(3, "<Exit: ValidateMap")
 
-	log.VPrintf(3, "ValidateMap:")
-	log.VPrintf(3, " val: %v", val)
-	log.VPrintf(3, " path: %v", path.UI())
 	log.VPrintf(3, " item: %v", ToJSON(item))
+	log.VPrintf(3, " val: %v", ToJSON(val))
+
+	if IsNil(val) {
+		return nil
+	}
 
 	valValue := reflect.ValueOf(val)
 	if valValue.Kind() != reflect.Map {
@@ -1561,7 +1742,7 @@ func ValidateMap(val any, item *Item, path *PropPath) error {
 		if IsNil(v) {
 			continue
 		}
-		if err := ValidateAttribute(v, attr, path.P(keyName)); err != nil {
+		if err := ValidateAttribute(e, v, attr, path.P(keyName)); err != nil {
 			return err
 		}
 	}
@@ -1569,9 +1750,16 @@ func ValidateMap(val any, item *Item, path *PropPath) error {
 	return nil
 }
 
-func ValidateArray(val any, item *Item, path *PropPath) error {
+func ValidateArray(e *Entity, val any, item *Item, path *PropPath) error {
 	log.VPrintf(3, ">Enter: ValidateArray(%s)", path.UI())
 	defer log.VPrintf(3, "<Exit: ValidateArray")
+
+	log.VPrintf(3, "item: %s", ToJSON(item))
+	log.VPrintf(3, "val: %s", ToJSON(val))
+
+	if IsNil(val) {
+		return nil
+	}
 
 	valValue := reflect.ValueOf(val)
 	if valValue.Kind() != reflect.Slice {
@@ -1581,12 +1769,12 @@ func ValidateArray(val any, item *Item, path *PropPath) error {
 	// All values in the array must be of the same type
 	attr := &Attribute{
 		Type: item.Type,
-		Item: item,
+		Item: item.Item,
 	}
 
 	for i := 0; i < valValue.Len(); i++ {
 		v := valValue.Index(i).Interface()
-		if err := ValidateAttribute(v, attr, path.I(i)); err != nil {
+		if err := ValidateAttribute(e, v, attr, path.I(i)); err != nil {
 			return err
 		}
 	}
@@ -1594,8 +1782,8 @@ func ValidateArray(val any, item *Item, path *PropPath) error {
 	return nil
 }
 
-func ValidateScalar(val any, attr *Attribute, path *PropPath) error {
-	log.VPrintf(3, ">Enter: ValidateScalar(%s:%v)", path, val)
+func ValidateScalar(e *Entity, val any, attr *Attribute, path *PropPath) error {
+	log.VPrintf(3, ">Enter: ValidateScalar(%s:%s)", path.UI(), ToJSON(val))
 	defer log.VPrintf(3, "<Exit: ValidateScalar")
 
 	valKind := reflect.ValueOf(val).Kind()

@@ -43,6 +43,27 @@ func main() {
 	}
 
 	registry.OpenDB(DBName)
+
+	// testing
+	if 0 == 1 {
+		reg, err := registry.NewRegistry("test")
+		ErrFatalf(err)
+		gm, err := reg.Model.AddGroupModel("dirs", "dir")
+		ErrFatalf(err)
+		_, err = gm.AddResourceModel("files", "file", 2, true, true, true)
+		ErrFatalf(err)
+
+		g, err := reg.AddGroup("dirs", "dir1")
+		r, err := g.AddResource("files", "f1", "v1")
+		v1, err := r.FindVersion("v1")
+		r.AddVersion("v2")
+		v1.Refresh()
+		v1.Set("name", "myname")
+		os.Exit(0)
+	}
+
+	// e-testing
+
 	reg, err := registry.FindRegistry("SampleRegistry")
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)

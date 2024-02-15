@@ -94,10 +94,10 @@ func TestResourceSet(t *testing.T) {
 
 	// /dirs/d1/f1/v1
 
-	f1.Set("name", "myName")
-	f1.Set("epoch", 68)
-	f1.Set("ext1", "someext")
-	f1.Set("ext2", 123)
+	xNoErr(t, f1.Set("name", "myName"))
+	xNoErr(t, f1.Set("epoch", 68))
+	xNoErr(t, f1.Set("ext1", "someext"))
+	xNoErr(t, f1.Set("ext2", 123))
 
 	// Make sure the props on the resource weren't set
 	xCheck(t, f1.Get(".name") == nil, ".name should be nil")
