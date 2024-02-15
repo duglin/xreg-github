@@ -152,6 +152,16 @@ func URLBuild(base string, paths ...string) string {
 	return url
 }
 
+func Keys(m interface{}) []string {
+	mk := reflect.ValueOf(m).MapKeys()
+
+	keys := make([]string, 0, len(mk))
+	for _, k := range mk {
+		keys = append(keys, k.String())
+	}
+	return keys
+}
+
 func SortedKeys(m interface{}) []string {
 	mk := reflect.ValueOf(m).MapKeys()
 

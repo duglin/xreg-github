@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"reflect"
 	"regexp"
 	"strings"
@@ -808,13 +809,13 @@ func (attrs *Attributes) SetRegistry(reg *Registry) {
 	}
 }
 
-func GetCollections(rSID, abstractEntity string) []string {
+func GetCollections(rSID, abstract string) []string {
 	reg, err := FindRegistryBySID(rSID)
 	if reg == nil {
 		log.Fatalf("Can't find registry(%s): %s", rSID, err)
 	}
 
-	paths := strings.Split(abstractEntity, string(DB_IN))
+	paths := strings.Split(abstract, string(DB_IN))
 	if len(paths) == 0 || paths[0] == "" {
 		return SortedKeys(reg.Model.Groups)
 	} else {
@@ -833,19 +834,20 @@ func GetCollections(rSID, abstractEntity string) []string {
 	return nil
 }
 
-func GetAttributes(rSID, abstractEntity string) Attributes {
+// Return the top-level attributes of an entity/obj
+func GetAttributes(rSID string, obj map[string]any, abstract string) Attributes {
 	reg, err := FindRegistryBySID(rSID)
 	if reg == nil {
 		log.Fatalf("Can't find registry(%s): %s", rSID, err)
 	}
 
-	var attrs Attributes
+	attrs := Attributes{}
 	level := '0'
 	singular := ""
 
-	paths := strings.Split(abstractEntity, string(DB_IN))
+	paths := strings.Split(abstract, string(DB_IN))
 	if len(paths) == 0 || paths[0] == "" {
-		attrs = reg.Model.Attributes
+		maps.Copy(attrs, reg.Model.Attributes)
 	} else {
 		level = rune('0' + len(paths))
 		gm := reg.Model.Groups[paths[0]]
@@ -854,31 +856,33 @@ func GetAttributes(rSID, abstractEntity string) Attributes {
 		}
 
 		if len(paths) == 1 {
-			attrs = gm.Attributes
+			maps.Copy(attrs, gm.Attributes)
 		} else {
 			rm := gm.Resources[paths[1]]
 			if rm == nil {
 				panic(fmt.Sprintf("Can't find Resource %q", paths[1]))
 			}
-			attrs = rm.Attributes
+			maps.Copy(attrs, rm.Attributes)
 			singular = rm.Singular
 		}
 	}
 
 	// Now copy and add the xReg defined attributes
-	res := Attributes{}
-	for key, value := range attrs {
-		res[key] = value
-	}
-
 	for _, specProp := range OrderedSpecProps {
 		if specProp.levels == "" || strings.ContainsRune(specProp.levels, level) {
 			if specProp.modelAttribute != nil {
-				res[specProp.name] = specProp.modelAttribute
+				attrs[specProp.name] = specProp.modelAttribute
 			}
 		}
 	}
 
+	// Add user defined attrs
+	// TODO check for conflicts with xReg defined ones
+	for key, value := range attrs {
+		attrs[key] = value
+	}
+
+	// Add the RESOURCE attrs (for resources and versions)
 	if singular != "" {
 		checkFn := func(newObj map[string]any, oldObj map[string]any) error {
 			list := []string{
@@ -901,7 +905,7 @@ func GetAttributes(rSID, abstractEntity string) Attributes {
 		}
 
 		// Add resource content attributes
-		res[singular] = &Attribute{
+		attrs[singular] = &Attribute{
 			Name:    singular,
 			Type:    ANY,
 			checkFn: checkFn,
@@ -915,7 +919,7 @@ func GetAttributes(rSID, abstractEntity string) Attributes {
 				return nil
 			},
 		}
-		res[singular+"url"] = &Attribute{
+		attrs[singular+"url"] = &Attribute{
 			Name:    singular + "url",
 			Type:    URL,
 			checkFn: checkFn,
@@ -930,7 +934,7 @@ func GetAttributes(rSID, abstractEntity string) Attributes {
 				return nil
 			},
 		}
-		res[singular+"proxyurl"] = &Attribute{
+		attrs[singular+"proxyurl"] = &Attribute{
 			Name:    singular + "proxyurl",
 			Type:    URL,
 			checkFn: checkFn,
@@ -945,7 +949,7 @@ func GetAttributes(rSID, abstractEntity string) Attributes {
 				return nil
 			},
 		}
-		res[singular+"base64"] = &Attribute{
+		attrs[singular+"base64"] = &Attribute{
 			Name:    singular + "base64",
 			Type:    STRING,
 			checkFn: checkFn,
@@ -971,7 +975,40 @@ func GetAttributes(rSID, abstractEntity string) Attributes {
 		}
 	}
 
-	return res
+	// Add in any IfValue attributes
+	if obj != nil {
+		attrNames := Keys(attrs)
+		for i := 0; i < len(attrNames); i++ { // since attrs changes
+			attr := attrs[attrNames[i]]
+			if len(attr.IfValue) == 0 || attr.Name == "*" {
+				continue
+			}
+
+			val, ok := obj[attr.Name]
+			if !ok {
+				continue
+			}
+
+			valStr := fmt.Sprintf("%v", val)
+			for ifValStr, ifValueData := range attr.IfValue {
+				if ifValStr != valStr {
+					continue
+				}
+
+				for _, newAttr := range ifValueData.SiblingAttributes {
+					if _, ok := attrs[newAttr.Name]; ok {
+						Panicf(`Attribute %q has an ifvalue(%s) that `+
+							`conflicts with an existing attribute`,
+							attr.Name, newAttr.Name)
+					}
+					attrs[newAttr.Name] = newAttr
+					attrNames = append(attrNames, newAttr.Name)
+				}
+			}
+		}
+	}
+
+	return attrs
 }
 
 func KindIsScalar(k reflect.Kind) bool {
@@ -1033,8 +1070,8 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 
 // Note this will also validate that the names used to build up the path
 // of the attribute are valid (e.g. wrt case and valid chars)
-func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error) {
-	log.VPrintf(3, ">Enter: GetAttributeType: %s / %s", abstractEntity, pp.UI())
+func GetAttributeType(rSID string, obj map[string]any, abstract string, pp *PropPath) (string, error) {
+	log.VPrintf(3, ">Enter: GetAttributeType: %s / %s", abstract, pp.UI())
 	defer log.VPrintf(3, "<Exit: GetAttributeType")
 
 	if pp.Len() == 0 {
@@ -1047,9 +1084,9 @@ func GetAttributeType(rSID, abstractEntity string, pp *PropPath) (string, error)
 
 	savePP := pp.Clone()
 
-	attrs := GetAttributes(rSID, abstractEntity)
+	attrs := GetAttributes(rSID, obj, abstract)
 	if attrs == nil {
-		panic("Attributes can't be nil for: %s" + abstractEntity)
+		panic("Attributes can't be nil for: %s" + abstract)
 	}
 
 	item := &Item{ // model definition of current thing we're processing

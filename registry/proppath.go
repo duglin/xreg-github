@@ -101,6 +101,12 @@ func (pp *PropPath) DB() string {
 	return res.String()
 }
 
+func MustPropPathFromDB(str string) *PropPath {
+	pp, err := PropPathFromDB(str)
+	PanicIf(err != nil, "Bad pp: %s", str)
+	return pp
+}
+
 func PropPathFromDB(str string) (*PropPath, error) {
 	res := &PropPath{}
 
@@ -171,11 +177,11 @@ func init() {
 }
 
 func PropPathFromUI(str string) (*PropPath, error) {
-	if len(str) == 0 {
-		return nil, fmt.Errorf("Attribute is empty")
-	}
-
 	res := &PropPath{}
+
+	if len(str) == 0 {
+		return res, nil
+	}
 
 	if str[0] == '#' {
 		res.Parts = append(res.Parts, PropPart{

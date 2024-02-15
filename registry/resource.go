@@ -18,7 +18,7 @@ func (r *Resource) Get(name string) any {
 		return r.Entity.GetPropFromUI(name[1:])
 	}
 
-	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
+	if name == "id" || name == "latestversionid" || name == "latestversionurl" || name == "#nextVersionID" {
 		return r.Entity.GetPropFromUI(name)
 	}
 
@@ -59,46 +59,17 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: FindVersion(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindVersion")
 
-	results, err := Query(`
-        SELECT v.SID, p.PropName, p.PropValue, p.PropType
-        FROM Versions as v LEFT JOIN Props AS p ON (p.EntitySID=v.SID)
-        WHERE v.UID=? AND v.ResourceSID=?`, id, r.DbSID)
-	defer results.Close()
-
+	ent, err := RawEntityFromPath(r.Group.Registry.DbSID,
+		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+id)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Version %q: %s", id, err)
 	}
-
-	v := (*Version)(nil)
-	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		if v == nil {
-			v = &Version{
-				Entity: Entity{
-					RegistrySID: r.RegistrySID,
-					DbSID:       NotNilString(row[0]),
-					UID:         id,
-
-					Level:    3,
-					Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
-					Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
-				},
-				Resource: r,
-			}
-			log.VPrintf(3, "Found one: %s", v.DbSID)
-		}
-		if *row[1] != nil { // We have Props
-			name := NotNilString(row[1])
-			val := NotNilString(row[2])
-			propType := NotNilString(row[3])
-			v.Entity.SetPropFromString(name, &val, propType)
-		}
-	}
-
-	if v == nil {
+	if ent == nil {
 		log.VPrintf(3, "None found")
+		return nil, nil
 	}
 
-	return v, nil
+	return &Version{Entity: *ent, Resource: r}, nil
 }
 
 // Maybe replace error with a panic?
@@ -135,7 +106,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 
 	if id == "" {
 		// No versionID provided so grab the next available one
-		tmp := r.Props[NewPPP("#nextVersionID").DB()]
+		tmp := r.Get("#nextVersionID")
 		nextID := NotNilInt(&tmp)
 		for {
 			id = strconv.Itoa(nextID)
@@ -167,6 +138,7 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		Entity: Entity{
 			RegistrySID: r.RegistrySID,
 			DbSID:       NewUUID(),
+			Plural:      "versions",
 			UID:         id,
 
 			Level:    3,
@@ -206,15 +178,4 @@ func (r *Resource) Delete() error {
 	defer log.VPrintf(3, "<Exit: Resource.Delete")
 
 	return DoOne(`DELETE FROM Resources WHERE SID=?`, r.DbSID)
-}
-
-// This neesd to match the merging algorithm in the 'LatestProps' view in SQL
-func (r *Resource) MergeProps(entity *Entity) {
-	for k, v := range entity.Props {
-		// Grab all of the Version's Props except 'id'
-		if k == "id" {
-			continue
-		}
-		r.Props[k] = v
-	}
 }

@@ -13,7 +13,7 @@ func TestParseUI(t *testing.T) {
 	}
 
 	tests := []Test{
-		{"", `Attribute is empty`},
+		{"", `{null}`},
 		{"prop", `{[{"prop",-1}]}`},
 		{"#prop", `{[{"#prop",-1}]}`},
 		{"_", `{[{"_",-1}]}`},

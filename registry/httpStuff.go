@@ -662,7 +662,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	// ////////////////////////////////////////////////////////////////
 	if len(info.Parts) == 0 {
 		// MUST be PUT / - do PUT
-		currObj := info.Registry.Entity.Materialize(nil)
+		// currObj := info.Registry.Entity.Materialize(nil)
+		currObj := info.Registry.Entity.Object
 
 		err = ValidateEntity(info.Registry, IncomingObj, currObj,
 			info.Registry.Entity.Abstract)

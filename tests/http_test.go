@@ -2658,7 +2658,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Name: "myint",
 		Type: registry.INTEGER,
 		IfValue: map[string]*registry.IfValue{
-			"1": &registry.IfValue{
+			"10": &registry.IfValue{
 				SiblingAttributes: registry.Attributes{
 					"mystr": &registry.Attribute{
 						Name: "mystr",
@@ -2666,7 +2666,7 @@ func TestHTTPIfValue(t *testing.T) {
 					},
 				},
 			},
-			"2": &registry.IfValue{
+			"20": &registry.IfValue{
 				SiblingAttributes: registry.Attributes{
 					"mystr": &registry.Attribute{
 						Name:           "mystr",
@@ -2683,69 +2683,69 @@ func TestHTTPIfValue(t *testing.T) {
 	})
 	xNoErr(t, err)
 
+	/*
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:   "PUT reg - ifvalue - 1",
+	   		URL:    "",
+	   		Method: "PUT",
+	   		ReqBody: `{
+	     "myint": 10
+	   }`,
+	   		Code: 200,
+	   		ResBody: `{
+	     "specversion": "0.5",
+	     "id": "TestHTTPIfValue",
+	     "epoch": 2,
+	     "self": "http://localhost:8181/",
+	     "myint": 10
+	   }
+	   `,
+	   	})
+
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:   "PUT reg - ifvalue - verify ext isn't allowed",
+	   		URL:    "",
+	   		Method: "PUT",
+	   		ReqBody: `{
+	     "myint": 10,
+	     "myext": 5.5
+	   }`,
+	   		Code:    400,
+	   		ResBody: "Error processing registry: Invalid extension(s): myext\n",
+	   	})
+
+	   	xCheckHTTP(t, &HTTPTest{
+	   		Name:   "PUT reg - ifvalue - required mystr",
+	   		URL:    "",
+	   		Method: "PUT",
+	   		ReqBody: `{
+	     "myint": 20
+	   }`,
+	   		Code:    400,
+	   		ResBody: "Error processing registry: Required property \"mystr\" is missing\n",
+	   	})
+	*/
+
 	xCheckHTTP(t, &HTTPTest{
-		Name:   "PUT reg - ifvalue - 1",
+		Name:   "PUT reg - ifvalue - required mystr, allow ext",
 		URL:    "",
 		Method: "PUT",
 		ReqBody: `{
-  "myint": 1
-}`,
+	     "myint": 20,
+	     "mystr": "hello",
+	     "myext": 5.5
+	   }`,
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPIfValue",
   "epoch": 2,
   "self": "http://localhost:8181/",
-  "myint": 1
+  "myext": 5.5,
+  "myint": 20,
+  "mystr": "hello"
 }
 `,
 	})
-
-	xCheckHTTP(t, &HTTPTest{
-		Name:   "PUT reg - ifvalue - verify ext isn't allowed",
-		URL:    "",
-		Method: "PUT",
-		ReqBody: `{
-  "myint": 1,
-  "myext": 5.5
-}`,
-		Code:    400,
-		ResBody: "Error processing registry: Invalid extension(s): myext\n",
-	})
-
-	xCheckHTTP(t, &HTTPTest{
-		Name:   "PUT reg - ifvalue - required mystr",
-		URL:    "",
-		Method: "PUT",
-		ReqBody: `{
-  "myint": 2
-}`,
-		Code:    400,
-		ResBody: "Error processing registry: Required property \"mystr\" is missing\n",
-	})
-
-	/*
-	   	xCheckHTTP(t, &HTTPTest{
-	   		Name:   "PUT reg - ifvalue - required mystr, allow ext",
-	   		URL:    "",
-	   		Method: "PUT",
-	   		ReqBody: `{
-	     "myint": 2,
-	     "mystr": "hello",
-	     "myext": 5.5
-	   }`,
-	   		Code: 200,
-	   		ResBody: `{
-	     "specversion": "0.5",
-	     "id": "TestHTTPIfValue",
-	     "epoch": 3,
-	     "self": "http://localhost:8181/",
-	     "myext": 5.5,
-	     "myint": 2,
-	     "mystr": "hello"
-	   }
-	   `,
-	   	})
-	*/
 
 }

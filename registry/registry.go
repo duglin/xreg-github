@@ -141,48 +141,33 @@ func FindRegistry(id string) (*Registry, error) {
 	}
 
 	results, err := Query(`
-		SELECT r.SID, p.PropName, p.PropValue, p.PropType
-		FROM Registries as r LEFT JOIN Props AS p ON (p.EntitySID=r.SID)
-		WHERE r.UID=?`, id)
+	   	SELECT SID
+	   	FROM Registries
+	   	WHERE UID=?`, id)
 	defer results.Close()
 
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Registry %q: %s", id, err)
 	}
 
-	reg := (*Registry)(nil)
-	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		if reg == nil {
-			reg = &Registry{
-				Entity: Entity{
-					RegistrySID: NotNilString(row[0]),
-					DbSID:       NotNilString(row[0]),
-					Plural:      "registries",
-					UID:         id,
-
-					Level:    0,
-					Path:     "",
-					Abstract: "",
-				},
-			}
-			log.VPrintf(3, "Found one: %s", reg.DbSID)
-		}
-		if *row[1] != nil { // We have Props
-			name := NotNilString(row[1])
-			val := NotNilString(row[2])
-			propType := NotNilString(row[3])
-			reg.Entity.SetPropFromString(name, &val, propType)
-		}
-	}
-
-	if reg == nil {
+	row := results.NextRow()
+	if row == nil {
 		log.VPrintf(3, "None found")
-	} else {
-		Registries[reg.UID] = reg
-		RegistriesBySID[reg.DbSID] = reg
-
-		reg.LoadModel()
+		return nil, nil
 	}
+	id = NotNilString(row[0])
+
+	ent, err := RawEntityFromPath(id, "")
+	if err != nil {
+		return nil, fmt.Errorf("Error finding Registry %q: %s", id, err)
+	}
+	PanicIf(ent == nil, "No entity but we found a reg")
+
+	reg := &Registry{Entity: *ent}
+	reg.LoadModel()
+
+	Registries[reg.UID] = reg
+	RegistriesBySID[reg.DbSID] = reg
 
 	return reg, nil
 }
@@ -195,50 +180,16 @@ func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
 	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gType, id)
 	defer log.VPrintf(3, "<Exit: FindGroup")
 
-	results, err := Query(`
-		SELECT g.SID, p.PropName, p.PropValue, p.PropType
-		FROM "Groups" AS g
-		JOIN ModelEntities AS m ON (m.SID=g.ModelSID)
-		LEFT JOIN Props AS p ON (p.EntitySID=g.SID)
-		WHERE g.RegistrySID=? AND g.UID=? AND m.Plural=?`,
-		reg.DbSID, id, gType)
-	defer results.Close()
-
+	ent, err := RawEntityFromPath(reg.DbSID, gType+"/"+id)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Group %q(%s): %s", id, gType, err)
 	}
-
-	g := (*Group)(nil)
-	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		if g == nil {
-			g = &Group{
-				Entity: Entity{
-					RegistrySID: reg.DbSID,
-					DbSID:       NotNilString(row[0]),
-					Plural:      gType,
-					UID:         id,
-
-					Level:    1,
-					Path:     gType + "/" + id,
-					Abstract: gType,
-				},
-				Registry: reg,
-			}
-			log.VPrintf(3, "Found one: %s", g.DbSID)
-		}
-		if *row[1] != nil { // We have Props
-			name := NotNilString(row[1])
-			val := NotNilString(row[2])
-			propType := NotNilString(row[3])
-			g.SetPropFromString(name, &val, propType)
-		}
-	}
-
-	if g == nil {
+	if ent == nil {
 		log.VPrintf(3, "None found")
+		return nil, nil
 	}
 
-	return g, nil
+	return &Group{Entity: *ent, Registry: reg}, nil
 }
 
 func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {

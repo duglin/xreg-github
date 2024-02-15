@@ -23,50 +23,18 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	log.VPrintf(3, ">Enter: FindResource(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: FindResource")
 
-	results, err := Query(`
-                SELECT r.SID, p.PropName, p.PropValue, p.PropType
-                FROM Resources as r
-                LEFT JOIN Props AS p ON (p.EntitySID=r.SID)
-                WHERE r.GroupSID=? AND r.UID=?
-                AND r.Abstract = CONCAT(?,'`+string(DB_IN)+`',?)`,
-		g.DbSID, id, g.Plural, rType)
-	defer results.Close()
-
+	ent, err := RawEntityFromPath(g.Registry.DbSID,
+		g.Plural+"/"+g.UID+"/"+rType+"/"+id)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Resource %q(%s): %s",
 			id, rType, err)
 	}
-
-	r := (*Resource)(nil)
-	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		if r == nil {
-			r = &Resource{
-				Entity: Entity{
-					RegistrySID: g.RegistrySID,
-					DbSID:       NotNilString(row[0]),
-					Plural:      rType,
-					UID:         id,
-
-					Level:    2,
-					Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
-					Abstract: g.Plural + string(DB_IN) + rType,
-				},
-				Group: g,
-			}
-			log.VPrintf(3, "Found one: %s", r.DbSID)
-		}
-		if *row[1] != nil { // We have Props
-			name := NotNilString(row[1])
-			val := NotNilString(row[2])
-			propType := NotNilString(row[3])
-			r.Entity.SetPropFromString(name, &val, propType)
-		}
-	}
-
-	if r == nil {
+	if ent == nil {
 		log.VPrintf(3, "None found")
+		return nil, nil
 	}
-	return r, nil
+
+	return &Resource{Entity: *ent, Group: g}, nil
 }
 
 func (g *Group) AddResource(rType string, id string, vID string) (*Resource, error) {

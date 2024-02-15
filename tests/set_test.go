@@ -163,6 +163,18 @@ func TestSetDots(t *testing.T) {
 	err = dir.Set("labels", nil)
 	xCheck(t, err.Error() == "Invalid property name: labels",
 		fmt.Sprintf("labels=nil should fail: %s", err))
+	/*
+			xJSONCheck(t, err, nil)
+			xCheckGet(t, reg, "/dirs/d1", `{
+		  "id": "d1",
+		  "epoch": 1,
+		  "self": "http://localhost:8181/dirs/d1",
+
+		  "filescount": 0,
+		  "filesurl": "http://localhost:8181/dirs/d1/files"
+		}
+		`)
+	*/
 
 	err = dir.Set(NewPP().P("labels").P("xxx/yyy").UI(), nil)
 	xCheck(t, err.Error() == `Unexpected / in "labels.xxx/yyy" at pos 11`,
