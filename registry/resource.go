@@ -85,20 +85,7 @@ func (r *Resource) GetLatest() (*Version, error) {
 }
 
 func (r *Resource) SetLatest(newLatest *Version) error {
-	oldLatest, err := r.GetLatest()
-	if err != nil {
-		panic("Error getting latest: " + err.Error())
-	}
-	if oldLatest != nil {
-		oldLatest.Set("latest", nil)
-	}
-
-	// TODO: do both of these in one transaction to make it atomic
-	r.Entity.Set("latestversionid", newLatest.UID)
-	newLatest.SkipEpoch = true
-	err = newLatest.Set("latest", true)
-	newLatest.SkipEpoch = false
-	return err
+	return r.Entity.Set("latestversionid", newLatest.UID)
 }
 
 func (r *Resource) AddVersion(id string) (*Version, error) {

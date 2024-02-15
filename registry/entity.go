@@ -83,12 +83,6 @@ func (e *Entity) GetPropFromUI(name string) any {
 	return e.GetPropPP(pp)
 }
 
-func (e *Entity) GetPropFromDB(name string) any {
-	pp, err := PropPathFromDB(name)
-	PanicIf(err != nil, fmt.Sprintf("%s", err))
-	return e.GetPropPP(pp)
-}
-
 func (e *Entity) GetPropPP(pp *PropPath) any {
 	name := pp.DB()
 	if pp.Len() == 1 && pp.Top() == "#resource" {
@@ -306,7 +300,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	}()
 
 	// Assume no other edits are pending
-	e.Refresh()
+	// e.Refresh() // trying not to have this here
 	if e.Object == nil {
 		e.Object = map[string]any{}
 	}
@@ -408,6 +402,11 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 
 	var err error
 	name := pp.DB()
+
+	// Any prop with "dontStore"=true we skip
+	if sp, ok := SpecProps[pp.Top()]; ok && sp.dontStore {
+		return nil
+	}
 
 	PanicIf(e.DbSID == "", "DbSID should not be empty")
 	PanicIf(e.RegistrySID == "", "RegistrySID should not be empty")
@@ -687,12 +686,13 @@ func readNextEntity(results *Result) *Entity {
 }
 
 type SpecProp struct {
-	name    string // prop name
-	daType  string
-	levels  string                          // only show for these levels
-	mutable bool                            // user editable
-	getFn   func(*Entity, *RequestInfo) any // return its value
-	checkFn func(e *Entity) error
+	name      string // prop name
+	daType    string
+	levels    string // only show for these levels
+	mutable   bool   // user editable
+	dontStore bool
+	getFn     func(*Entity, *RequestInfo) any // return its value
+	checkFn   func(e *Entity) error
 	// prep newObj for an update to the DB
 	updateFn       func(*Entity, bool) error
 	modelAttribute *Attribute
@@ -704,7 +704,7 @@ func (sp *SpecProp) InLevel(level int) bool {
 
 // This allows for us to choose the order and define custom logic per prop
 var OrderedSpecProps = []*SpecProp{
-	{"specversion", STRING, "0", false,
+	{"specversion", STRING, "0", false, false,
 		func(e *Entity, info *RequestInfo) any {
 			return SPECVERSION
 		},
@@ -722,7 +722,7 @@ var OrderedSpecProps = []*SpecProp{
 			ServerRequired: true,
 			ReadOnly:       true,
 		}},
-	{"id", STRING, "", false, nil,
+	{"id", STRING, "", false, false, nil,
 		func(e *Entity) error {
 			if e.Object != nil {
 				oldID := any(e.Object["id"])
@@ -763,11 +763,11 @@ var OrderedSpecProps = []*SpecProp{
 			Type:           STRING,
 			ServerRequired: true,
 		}},
-	{"name", STRING, "", true, nil, nil, nil, &Attribute{
+	{"name", STRING, "", true, false, nil, nil, nil, &Attribute{
 		Name: "name",
 		Type: STRING,
 	}},
-	{"epoch", UINTEGER, "", false, nil,
+	{"epoch", UINTEGER, "", false, false, nil,
 		func(e *Entity) error {
 			if e.SkipEpoch {
 				return nil
@@ -818,7 +818,7 @@ var OrderedSpecProps = []*SpecProp{
 			Type:     UINTEGER,
 			ReadOnly: true,
 		}},
-	{"self", STRING, "", false, func(e *Entity, info *RequestInfo) any {
+	{"self", STRING, "", false, false, func(e *Entity, info *RequestInfo) any {
 		base := ""
 		if info != nil {
 			base = info.BaseURL
@@ -837,91 +837,100 @@ var OrderedSpecProps = []*SpecProp{
 		ServerRequired: true,
 		ReadOnly:       true,
 	}},
-	{"latest", BOOLEAN, "3", false, nil, nil, nil, &Attribute{
-		Name: "latest",
-		Type: BOOLEAN,
-	}},
-	{"latestversionid", STRING, "2", false, nil, nil, nil, &Attribute{
+	{"latest", BOOLEAN, "3", false, false, nil, nil,
+		func(e *Entity, isNew bool) error {
+			// TODO is set, set latestvesionid in the resource to this
+			// guy's UID
+
+			return nil
+		},
+		&Attribute{
+			Name: "latest",
+			Type: BOOLEAN,
+		}},
+	{"latestversionid", STRING, "2", false, false, nil, nil, nil, &Attribute{
 		Name:           "latestversionid",
 		Type:           STRING,
 		ServerRequired: true,
 		ReadOnly:       true,
 	}},
-	{"latestversionurl", URL, "2", false, func(e *Entity, info *RequestInfo) any {
-		val := e.Object["latestversionid"]
-		if IsNil(val) {
-			return nil
-		}
-		base := ""
-		if info != nil {
-			base = info.BaseURL
-		}
+	{"latestversionurl", URL, "2", false, false,
+		func(e *Entity, info *RequestInfo) any {
+			val := e.Object["latestversionid"]
+			if IsNil(val) {
+				return nil
+			}
+			base := ""
+			if info != nil {
+				base = info.BaseURL
+			}
 
-		tmp := base + "/" + e.Path + "/versions/" + val.(string)
-		if info != nil && (info.ShowMeta || info.ResourceUID == "") {
-			tmp += "?meta"
-		}
-		return tmp
-	}, nil, nil, &Attribute{
-		Name:           "latestversionurl",
-		Type:           URL,
-		ServerRequired: true,
-		ReadOnly:       true,
-	}},
-	{"description", STRING, "", true, nil, nil, nil, &Attribute{
+			tmp := base + "/" + e.Path + "/versions/" + val.(string)
+			if info != nil && (info.ShowMeta || info.ResourceUID == "") {
+				tmp += "?meta"
+			}
+			return tmp
+		}, nil, nil, &Attribute{
+			Name:           "latestversionurl",
+			Type:           URL,
+			ServerRequired: true,
+			ReadOnly:       true,
+		}},
+	{"description", STRING, "", true, false, nil, nil, nil, &Attribute{
 		Name: "description",
 		Type: STRING,
 	}},
-	{"documentation", STRING, "", true, nil, nil, nil, &Attribute{
+	{"documentation", STRING, "", true, false, nil, nil, nil, &Attribute{
 		Name: "documentation",
 		Type: STRING,
 	}},
-	{"labels", MAP, "", true, nil, nil, nil, &Attribute{
+	{"labels", MAP, "", true, false, nil, nil, nil, &Attribute{
 		Name: "labels",
 		Type: MAP,
 		Item: &Item{
 			Type: STRING,
 		},
 	}},
-	{"origin", URI, "123", true, nil, nil, nil, &Attribute{
+	{"origin", URI, "123", true, false, nil, nil, nil, &Attribute{
 		Name: "origin",
 		Type: STRING,
 	}},
-	{"createdby", STRING, "", false, nil, nil, nil, &Attribute{
+	{"createdby", STRING, "", false, false, nil, nil, nil, &Attribute{
 		Name:     "createdby",
 		Type:     STRING,
 		ReadOnly: true,
 	}},
-	{"createdon", TIMESTAMP, "", false, nil, nil, nil, &Attribute{
+	{"createdon", TIMESTAMP, "", false, false, nil, nil, nil, &Attribute{
 		Name:     "createdon",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
 	}},
-	{"modifiedby", STRING, "", false, nil, nil, nil, &Attribute{
+	{"modifiedby", STRING, "", false, false, nil, nil, nil, &Attribute{
 		Name:     "modifiedby",
 		Type:     STRING,
 		ReadOnly: true,
 	}},
-	{"modifiedon", TIMESTAMP, "", false, nil, nil, nil, &Attribute{
+	{"modifiedon", TIMESTAMP, "", false, false, nil, nil, nil, &Attribute{
 		Name:     "modifiedon",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
 	}},
-	{"model", OBJECT, "0", false, func(e *Entity, info *RequestInfo) any {
-		if info != nil && info.ShowModel {
-			model := info.Registry.Model
-			if model == nil {
-				model = &Model{}
+	{"model", OBJECT, "0", false, false,
+		func(e *Entity, info *RequestInfo) any {
+			if info != nil && info.ShowModel {
+				model := info.Registry.Model
+				if model == nil {
+					model = &Model{}
+				}
+				httpModel := model // ModelToHTTPModel(model)
+				return httpModel
 			}
-			httpModel := model // ModelToHTTPModel(model)
-			return httpModel
-		}
-		return nil
-	}, nil, nil, &Attribute{
-		Name:     "model",
-		Type:     ANY,
-		ReadOnly: true,
-	}},
+			return nil
+		}, nil, nil, &Attribute{
+			Name:     "model",
+			Type:     ANY,
+			ReadOnly: true,
+		}},
 }
 
 var SpecProps = map[string]*SpecProp{}

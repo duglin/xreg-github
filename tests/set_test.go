@@ -244,6 +244,8 @@ func TestSetLabels(t *testing.T) {
 	file.Refresh()
 	xJSONCheck(t, file.Get(labels.P("f1").UI()), nil)
 
+	// Set before we refresh to see if creating v2 causes issues
+	// see comment below too
 	err = ver.Set(labels.P("v1").UI(), "foo")
 	xNoErr(t, err)
 	ver.Refresh()
@@ -255,11 +257,19 @@ func TestSetLabels(t *testing.T) {
 
 	dir.Set(labels.P("dd").UI(), "dd.foo")
 	file.Set(labels.P("ff").UI(), "ff.bar")
-	// ver.Set(labels.P("vv").UI(), 987.234)
+	ver2.Refresh() // very important since ver2 is now stale
+	err = ver.Set(labels.P("vv").UI(), 987.234)
+	if err == nil || err.Error() != "\"labels.vv\": \"987.234\" should be a string" {
+		t.Errorf("wrong err msg: %s", err)
+		t.FailNow()
+	}
+
+	// Important test
+	// We update v1(ver) after we created v2(ver2). At one point in time
+	// this could cause both versions to be tagged as "latest". Make sure
+	// we don't have that situation. See comment above too
 	ver.Set(labels.P("vv2").UI(), "v11")
 	ver2.Set(labels.P("2nd").UI(), "3rd")
-	// ver2.Set(labels.P("bool1").UI(), true)
-	// ver2.Set(labels.P("bool2").UI(), false)
 
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "0.5",
