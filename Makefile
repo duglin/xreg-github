@@ -9,9 +9,9 @@ test: .test
 	for s in $(TESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
 	# go test -failfast $(TESTDIRS)
 	@echo
-	@echo "# Run the tests again w/o deleting the Registry after each one"
+	@echo "# Run again w/o cache and deleting the Registry after each one"
 	@go clean -testcache
-	NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
+	NO_CACHE=true NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
 	@echo
 	@touch .test
 

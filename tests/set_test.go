@@ -138,7 +138,7 @@ func TestSetDots(t *testing.T) {
 
 	// Nesting under labels should fail
 	err = dir.Set(labels.P("xxx").P("yyy").UI(), "xy")
-	xJSONCheck(t, err, "Traversing into scalar \"xxx\": labels.xxx.yyy")
+	xJSONCheck(t, err, `Attribute "labels.xxx" must be a string`)
 
 	// dots are ok as tag names
 	err = dir.Set(labels.P("abc.def").UI(), "ABC")
@@ -183,7 +183,7 @@ func TestSetDots(t *testing.T) {
 	xJSONCheck(t, err, nil)
 
 	err = dir.Set(NewPP().P("xxx.yyy").UI(), nil)
-	xJSONCheck(t, err, `Can't find attribute "xxx.yyy"`)
+	xJSONCheck(t, err, `Invalid extension(s): xxx`)
 	xCheck(t, err != nil, "xxx.yyy=nil should fail")
 	err = dir.Set("xxx.", "xxx")
 	xCheck(t, err != nil, "xxx.=xxx should fail")
@@ -207,7 +207,7 @@ func TestSetLabels(t *testing.T) {
 
 	// /dirs/d1/f1/v1
 	labels := NewPP().P("labels")
-	err := reg.Set(labels.P("r2").UI(), "123.234") // OLD: notice it's not a string
+	err := reg.Set(labels.P("r2").UI(), "123.234")
 	xNoErr(t, err)
 	reg.Refresh()
 	// But it's a string here because labels is a map[string]string
@@ -259,16 +259,18 @@ func TestSetLabels(t *testing.T) {
 	file.Set(labels.P("ff").UI(), "ff.bar")
 	ver2.Refresh() // very important since ver2 is now stale
 	err = ver.Set(labels.P("vv").UI(), 987.234)
-	if err == nil || err.Error() != "\"labels.vv\": \"987.234\" should be a string" {
+	if err == nil || err.Error() != `Attribute "labels.vv" must be a string` {
 		t.Errorf("wrong err msg: %s", err)
 		t.FailNow()
 	}
+	// ver.Refresh() // undo the change, otherwise next Set() will fail
 
 	// Important test
 	// We update v1(ver) after we created v2(ver2). At one point in time
 	// this could cause both versions to be tagged as "latest". Make sure
 	// we don't have that situation. See comment above too
-	ver.Set(labels.P("vv2").UI(), "v11")
+	err = ver.Set(labels.P("vv2").UI(), "v11")
+	xNoErr(t, err)
 	ver2.Set(labels.P("2nd").UI(), "3rd")
 
 	xCheckGet(t, reg, "?inline", `{

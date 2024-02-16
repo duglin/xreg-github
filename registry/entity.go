@@ -17,8 +17,7 @@ type Entity struct {
 	RegistrySID string
 	DbSID       string // Entity's SID
 	Plural      string
-	UID         string // Entity's UID
-	Props       map[string]any
+	UID         string         // Entity's UID
 	Object      map[string]any `json:"-"`
 	NewObject   map[string]any `json:"-"` // updated version, save() will store
 
@@ -254,7 +253,6 @@ func (e *Entity) Refresh() error {
 	}
 
 	// Erase all old props first
-	e.Props = map[string]any{}
 	e.Object = map[string]any{}
 	e.NewObject = nil
 
@@ -318,10 +316,6 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	log.VPrintf(3, "e.Object:\n%s", ToJSON(e.Object))
 	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
 
-	if err := e.SetPPValidate(pp, val, true, nil); err != nil {
-		return err
-	}
-
 	return ObjectSetProp(e.NewObject, pp, val)
 }
 
@@ -360,43 +354,19 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	e.SkipEpoch = true
 	defer func() { e.SkipEpoch = save }()
 
-	return e.ValidateAndSave()
-}
-
-func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool, obj map[string]any) error {
-	log.VPrintf(3, ">Enter: SetPP(%s=%v)", pp.UI(), val)
-	defer log.VPrintf(3, "<Exit SetPP")
-
-	name := pp.DB()
-
-	// Make sure the attribute is defined in the model and has valid chars
-	attrType, err := GetAttributeType(e, e.RegistrySID, obj, e.Abstract, pp)
+	err := e.ValidateAndSave()
 	if err != nil {
-		return err
-	}
-	if attrType == "" {
-		return fmt.Errorf("Can't find attribute %q", pp.UI())
+		// If there's an error, and we're making the assumption that we're
+		// setting and saving all in one shot (and there are no other edits
+		// pending), go ahead and undo the changes since they're wrong.
+		// Otherwise the caller would need to call Refresh themselves.
+
+		// Not sure why setting it to nil isn't sufficient (todo)
+		// e.NewObject = nil
+		e.Refresh()
 	}
 
-	if !IsNil(val) && validate {
-		if err = ValidatePropValue(val, attrType); err != nil {
-			return fmt.Errorf("%q: %s", pp.UI(), err)
-		}
-	}
-
-	if val == nil {
-		delete(e.Props, name)
-	} else {
-		if name == "#resource," {
-			val = ""
-		}
-		if e.Props == nil {
-			e.Props = map[string]any{}
-		}
-		e.Props[name] = val
-	}
-
-	return nil
+	return err
 }
 
 func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
@@ -492,11 +462,7 @@ func (e *Entity) SetFromDBName(name string, val *string, propType string) error 
 	pp := MustPropPathFromDB(name)
 
 	if val == nil {
-		delete(e.Props, name)
 		return ObjectSetProp(e.Object, pp, val)
-	}
-	if e.Props == nil {
-		e.Props = map[string]any{}
 	}
 	if e.Object == nil {
 		e.Object = map[string]any{}
@@ -504,43 +470,36 @@ func (e *Entity) SetFromDBName(name string, val *string, propType string) error 
 
 	if propType == STRING || propType == URI || propType == URI_REFERENCE ||
 		propType == URI_TEMPLATE || propType == URL || propType == TIMESTAMP {
-		e.Props[name] = *val
 		return ObjectSetProp(e.Object, pp, *val)
 	} else if propType == BOOLEAN {
 		// Technically "1" check shouldn't be needed, but just in case
-		e.Props[name] = (*val == "1") || (*val == "true")
 		return ObjectSetProp(e.Object, pp, (*val == "1" || (*val == "true")))
 	} else if propType == INTEGER || propType == UINTEGER {
 		tmpInt, err := strconv.Atoi(*val)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing int: %s", *val))
 		}
-		e.Props[name] = tmpInt
 		return ObjectSetProp(e.Object, pp, tmpInt)
 	} else if propType == DECIMAL {
 		tmpFloat, err := strconv.ParseFloat(*val, 64)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing float: %s", *val))
 		}
-		e.Props[name] = tmpFloat
 		return ObjectSetProp(e.Object, pp, tmpFloat)
 	} else if propType == MAP {
 		if *val != "" {
 			panic(fmt.Sprintf("MAP value should be empty string"))
 		}
-		e.Props[name] = map[string]any{}
 		return ObjectSetProp(e.Object, pp, map[string]any{})
 	} else if propType == ARRAY {
 		if *val != "" {
 			panic(fmt.Sprintf("MAP value should be empty string"))
 		}
-		e.Props[name] = []any{}
 		return ObjectSetProp(e.Object, pp, []any{})
 	} else if propType == OBJECT {
 		if *val != "" {
 			panic(fmt.Sprintf("MAP value should be empty string"))
 		}
-		e.Props[name] = map[string]any{}
 		return ObjectSetProp(e.Object, pp, map[string]any{})
 	} else {
 		panic(fmt.Sprintf("bad type(%s): %v", propType, name))
@@ -662,7 +621,6 @@ func readNextEntity(results *Result) (*Entity, error) {
 				DbSID:       NotNilString(row[3]),
 				Plural:      plural,
 				UID:         uid,
-				Props:       map[string]any{},
 
 				Level:    level,
 				Path:     NotNilString(row[8]),
@@ -1321,14 +1279,14 @@ func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
 	}
 	PanicIf(pp.Len() == 0, "Can't be zero w/non-nil val")
 
-	_, err := MaterializeProp(obj, pp, val)
+	_, err := MaterializeProp(obj, pp, val, NewPP())
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
+func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, error) {
 	// current is existing value, used for adding to maps/arrays
 	if pp == nil {
 		return val, nil
@@ -1346,7 +1304,8 @@ func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
 		if current != nil {
 			daArray, ok = current.([]any)
 			if !ok {
-				return nil, fmt.Errorf("Current isn't an array: %T", current)
+				return nil, fmt.Errorf("Attribute %q isn't an array",
+					prev.Append(pp.First()).UI())
 			}
 		}
 
@@ -1356,7 +1315,8 @@ func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
 		}
 
 		// Trim the end of the array if there are nil's
-		daArray[index], err = MaterializeProp(daArray[index], pp.Next(), val)
+		daArray[index], err = MaterializeProp(daArray[index], pp.Next(), val,
+			prev.Append(pp.First()))
 		for len(daArray) > 0 && daArray[len(daArray)-1] == nil {
 			daArray = daArray[:len(daArray)-1]
 		}
@@ -1374,14 +1334,16 @@ func MaterializeProp(current any, pp *PropPath, val any) (any, error) {
 		}
 	}
 
-	res, err := MaterializeProp(daMap[pp.Top()], pp.Next(), val)
+	res, err := MaterializeProp(daMap[pp.Top()], pp.Next(), val,
+		prev.Append(pp.First()))
 	if err != nil {
 		return nil, err
 	}
 	if IsNil(res) {
 		delete(daMap, pp.Top())
 	} else {
-		daMap[pp.Top()], err = MaterializeProp(daMap[pp.Top()], pp.Next(), val)
+		daMap[pp.Top()], err = MaterializeProp(daMap[pp.Top()], pp.Next(), val,
+			prev.Append(pp.First()))
 	}
 
 	return daMap, err
@@ -1442,7 +1404,8 @@ func ValidateObject(e *Entity, val any, oldObj map[string]any,
 	if valValue.Kind() != reflect.Map ||
 		valValue.Type().Key().Kind() != reflect.String {
 
-		return fmt.Errorf("Attribute %q must be an object", path.UI())
+		return fmt.Errorf("Attribute %q must be a map[string] or object",
+			path.UI())
 	}
 	newObj := val.(map[string]any)
 

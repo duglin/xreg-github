@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -112,8 +113,10 @@ func FindRegistryBySID(sid string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistrySID(%s)", sid)
 	defer log.VPrintf(3, "<Exit: FindRegistrySID")
 
-	if reg, ok := RegistriesBySID[sid]; ok {
-		return reg, nil
+	if os.Getenv("NO_CACHE") == "" {
+		if reg, ok := RegistriesBySID[sid]; ok {
+			return reg, nil
+		}
 	}
 
 	results, err := Query(`SELECT UID FROM Registries WHERE SID=?`, sid)
@@ -136,8 +139,10 @@ func FindRegistry(id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistry(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindRegistry")
 
-	if reg, ok := Registries[id]; ok {
-		return reg, nil
+	if os.Getenv("NO_CACHE") == "" {
+		if reg, ok := Registries[id]; ok {
+			return reg, nil
+		}
 	}
 
 	results, err := Query(`

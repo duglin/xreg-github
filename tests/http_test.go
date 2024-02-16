@@ -552,7 +552,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody: `Error processing registry: Attribute "mymapobj.mapobj_int" must be an object
+		ResBody: `Error processing registry: Attribute "mymapobj.mapobj_int" must be a map[string] or object
 `,
 	})
 
@@ -653,9 +653,9 @@ func TestHTTPRegistry(t *testing.T) {
 		{request: `{"myurl": 123 }`,
 			response: `Attribute "myurl" must be a url`},
 		{request: `{"myobj1": 123 }`,
-			response: `Attribute "myobj1" must be an object`},
+			response: `Attribute "myobj1" must be a map[string] or object`},
 		{request: `{"myobj1": [ 123 ] }`,
-			response: `Attribute "myobj1" must be an object`},
+			response: `Attribute "myobj1" must be a map[string] or object`},
 		{request: `{"myobj1": { "mystr1": 123 } }`,
 			response: `Attribute "myobj1.mystr1" must be a string`},
 		{request: `{"myobj2": { "ext": 123 } }`,
@@ -679,7 +679,7 @@ func TestHTTPRegistry(t *testing.T) {
 		{request: `{"myarrayemptyobj": [ { "asd": true } ] }`,
 			response: `Invalid extension(s) in "myarrayemptyobj[0]": asd`},
 		{request: `{"myarrayemptyobj": [ [ true ] ] }`,
-			response: `Attribute "myarrayemptyobj[0]" must be an object`},
+			response: `Attribute "myarrayemptyobj[0]" must be a map[string] or object`},
 		{request: `{"mymapobj": { "asd" : { "mapobj_int" : true } } }`,
 			response: `Attribute "mymapobj.asd.mapobj_int" must be an integer`},
 		{request: `{"mymapobj": { "asd" : { "qwe" : true } } }`,

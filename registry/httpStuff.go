@@ -406,9 +406,9 @@ FROM FullTree WHERE RegSID=? AND `
 	entity, err := readNextEntity(results)
 	log.VPrintf(3, "Entity: %#v", entity)
 	if entity == nil {
-		log.Printf("Error loading entity: %s", err)
 		info.StatusCode = http.StatusNotFound
 		if err != nil {
+			log.Printf("Error loading entity: %s", err)
 			return fmt.Errorf("Error finding entity: %s", err)
 		} else {
 			return fmt.Errorf("Not found")

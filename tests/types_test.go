@@ -163,39 +163,39 @@ func TestBasicTypes(t *testing.T) {
 
 			// Type checking
 			{"epoch", -123, nil,
-				`"epoch": "-123" should be a uinteger`}, // bad uint
+				`Attribute "epoch" must be a uinteger`},
 			{"regobj[1]", "", nil,
-				`Attribute name "1" isn't valid`}, // Not an array
+				`Attribute "regobj[1]" isn't an array`}, // Not an array
 			{"regobj", []any{}, nil,
-				`"regobj": [] must be an empty object`}, // Not an array
+				`Attribute "regobj" must be a map[string] or object`}, // Not an array
 			{"reganyobj2.str", "substr", nil,
-				`Can't find attribute "reganyobj2.str"`}, // unknown attr
+				`Invalid extension(s): reganyobj2`}, // unknown attr
 			{"regarrayarrayint[0][0]", "abc", nil,
-				`"regarrayarrayint[0][0]": "abc" should be an integer`}, // bad type
+				`Attribute "regarrayarrayint[0][0]" must be an integer`}, // bad type
 			{"regarrayint[2]", "abc", nil,
-				`"regarrayint[2]": "abc" should be an integer`}, // bad type
+				`Attribute "regarrayint[2]" must be an integer`}, // bad type
 			{"regbool1", "123", nil,
-				`"regbool1": "123" should be a boolean`}, // bad type
+				`Attribute "regbool1" must be a boolean`}, // bad type
 			{"regdec1", "123", nil,
-				`"regdec1": "123" should be a decimal`}, // bad type
+				`Attribute "regdec1" must be a decimal`}, // bad type
 			{"regint1", "123", nil,
-				`"regint1": "123" should be an integer`}, // bad type
+				`Attribute "regint1" must be an integer`}, // bad type
 			{"regmapint", "123", nil,
-				`"regmapint": "123" must be an empty map`}, // must be empty
+				`Attribute "regmapint" must be a map`}, // must be empty
 			{"regmapint.k1", "123", nil,
-				`"regmapint.k1": "123" should be an integer`}, // bad type
+				`Attribute "regmapint.k1" must be an integer`}, // bad type
 			{"regmapstring.k1", 123, nil,
-				`"regmapstring.k1": "123" should be a string`}, // bad type
+				`Attribute "regmapstring.k1" must be a string`}, // bad type
 			{"regstring1", 123, nil,
-				`"regstring1": "123" should be a string`}, // bad type
+				`Attribute "regstring1" must be a string`}, // bad type
 			{"regtime1", "not a time", nil,
-				`"regtime1": Malformed timestamp "not a time": parsing time "not a time" as "2006-01-02T15:04:05Z07:00": cannot parse "not a time" as "2006"`}, // bad date format
+				`Attribute "regtime1" is a malformed timestamp`}, // bad format
 			{"reguint1", -1, nil,
-				`"reguint1": "-1" should be a uinteger`}, // bad uint
+				`Attribute "reguint1" must be a uinteger`}, // bad uint
 			{"unknown_int", 123, nil,
-				`Can't find attribute "unknown_int"`}, // unknown attr
+				`Invalid extension(s): unknown_int`}, // unknown attr
 			{"unknown_str", "error", nil,
-				`Can't find attribute "unknown_str"`}, // unknown attr
+				`Invalid extension(s): unknown_str`}, // unknown attr
 		}},
 		Test{dir, []Prop{
 			{"dirstring1", "str2", nil, ""},
@@ -268,6 +268,9 @@ func TestBasicTypes(t *testing.T) {
 				t.Errorf("Setting (%q=%v) was supposed to fail: %s",
 					prop.Name, prop.Value, prop.ErrMsg)
 				return // stop fast
+			}
+			if err != nil {
+				entity.Refresh()
 			}
 		}
 
@@ -448,7 +451,7 @@ func TestWildcardBoolTypes(t *testing.T) {
 	// reg.Model.Save()
 
 	err := reg.Set("bogus", "foo")
-	xCheck(t, err.Error() == `"bogus": "foo" should be a boolean`,
+	xCheck(t, err.Error() == `Attribute "bogus" must be a boolean`,
 		fmt.Sprintf("bogus=foo: %s", err))
 
 	err = reg.Set("ext1", true)
@@ -521,8 +524,9 @@ func TestWildcard2LayersTypes(t *testing.T) {
 	xCheck(t, val == 5, fmt.Sprintf("get foo.k1: %v", val))
 
 	err = reg.Set("obj.map.foo.k1.k2", 5)
-	xCheck(t, err.Error() == `Traversing into scalar "foo": obj.map.foo.k1.k2`,
+	xCheck(t, err.Error() == `Attribute "obj.map.foo" must be an integer`,
 		fmt.Sprintf("set obj.map.foo.k1.k2: %s", err))
+	// reg.Refresh() // clear bad data
 
 	err = reg.Set("obj.myany.foo.k1.k2", 5)
 	xCheck(t, err == nil, fmt.Sprintf("set obj.myany.foo.k1.k2: %s", err))
