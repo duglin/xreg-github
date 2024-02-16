@@ -20,14 +20,14 @@ type Entity struct {
 	UID         string // Entity's UID
 	Props       map[string]any
 	Object      map[string]any `json:"-"`
-	NewObject   map[string]any `json:"-"` // updated version, save() will update
+	NewObject   map[string]any `json:"-"` // updated version, save() will store
 
 	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
 	Level     int // 0=registry, 1=group, 2=resource, 3=version
 	Path      string
 	Abstract  string
-	SkipEpoch bool
+	SkipEpoch bool `json:"-"`
 }
 
 type EntitySetter interface {
@@ -283,6 +283,8 @@ func (e *Entity) Set(path string, val any) error {
 
 func (e *Entity) NewSetPP(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: NewSetPP(%s=%v)", pp.UI(), val)
+	defer log.VPrintf(3, "<Exit: NewSetPP")
+
 	defer log.VPrintf(3, "<Exit NewSetPP")
 
 	if e.Object == nil {
@@ -292,12 +294,9 @@ func (e *Entity) NewSetPP(pp *PropPath, val any) error {
 	return ObjectSetProp(e.Object, pp, val)
 }
 
-func (e *Entity) SetPP(pp *PropPath, val any) error {
-	log.VPrintf(3, ">Enter: SetPP(%s: %s=%v)", e.DbSID, pp.UI(), val)
-	defer log.VPrintf(3, "<Exit SetPP")
-	defer func() {
-		log.VPrintf(3, "SetPP exit: e.Object:\n%s", ToJSON(e.Object))
-	}()
+func (e *Entity) JustSet(pp *PropPath, val any) error {
+	log.VPrintf(3, ">Enter: JustSet(%s=%v)", pp.UI(), val)
+	defer log.VPrintf(3, "<Exit: JustSet")
 
 	// Assume no other edits are pending
 	// e.Refresh() // trying not to have this here
@@ -331,33 +330,49 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	log.VPrintf(3, "e.Object:\n%s", ToJSON(e.Object))
 	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
 
-	var err error
-
-	if err = e.SetPPValidate(pp, val, true, nil); err != nil {
+	if err := e.SetPPValidate(pp, val, true, nil); err != nil {
 		return err
 	}
 
-	if err = ObjectSetProp(e.NewObject, pp, val); err != nil {
+	return ObjectSetProp(e.NewObject, pp, val)
+}
+
+func (e *Entity) ValidateAndSave() error {
+	log.VPrintf(3, ">Enter: ValidateAndSave")
+	defer log.VPrintf(3, "<Exit: ValidateAndSave")
+
+	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
+
+	if err := e.Validate(true); err != nil {
 		return err
 	}
 
-	log.VPrintf(3, "POST SetPP and ObjSet")
-	log.VPrintf(3, "  e.Object:\n%s", ToJSON(e.Object))
-	log.VPrintf(3, "  e.NewObject:\n%s", ToJSON(e.NewObject))
-
-	if err = e.Validate(true); err != nil {
-		// log.Printf("Val Err: %s", err)
+	if err := PrepUpdateEntity(e, false); err != nil {
 		return err
 	}
-
-	save := e.SkipEpoch
-	e.SkipEpoch = true
-	if err = PrepUpdateEntity(e, false); err != nil {
-		return err
-	}
-	e.SkipEpoch = save
 
 	return e.Save()
+}
+
+func (e *Entity) SetPP(pp *PropPath, val any) error {
+	log.VPrintf(3, ">Enter: SetPP(%s: %s=%v)", e.DbSID, pp.UI(), val)
+	defer log.VPrintf(3, "<Exit SetPP")
+	defer func() {
+		log.VPrintf(3, "SetPP exit: e.Object:\n%s", ToJSON(e.Object))
+	}()
+
+	if err := e.JustSet(pp, val); err != nil {
+		return err
+	}
+
+	// Make the bold assumption that we we're setting and saving all in one
+	// that a user who is explicitly setting 'epoc' via an interenal
+	// set() knows what they're doing
+	save := e.SkipEpoch
+	e.SkipEpoch = true
+	defer func() { e.SkipEpoch = save }()
+
+	return e.ValidateAndSave()
 }
 
 func (e *Entity) SetPPValidate(pp *PropPath, val any, validate bool, obj map[string]any) error {
@@ -992,7 +1007,8 @@ func (e *Entity) Save() error {
 	log.VPrintf(3, ">Enter: Save(%s/%s)", e.Plural, e.UID)
 	defer log.VPrintf(3, "<Exit: Save")
 
-	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID, ToJSON(e.NewObject))
+	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID,
+		ToJSON(e.NewObject))
 
 	// make a dup so we can delete some attributes
 	newObj := maps.Clone(e.NewObject)

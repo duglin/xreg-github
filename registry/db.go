@@ -89,7 +89,9 @@ func (r *Result) PullNextRow() {
 	if log.GetVerbose() > 3 {
 		dd := []string{}
 		for _, d := range r.Data {
-			if reflect.ValueOf(*d).Type().String() == "[]uint8" {
+			dVal := reflect.ValueOf(*d)
+			if !IsNil(*d) && dVal.Type().String() == "[]uint8" {
+				// if reflect.ValueOf(*d).Type().String() == "[]uint8" {
 				dd = append(dd, string((*d).([]byte)))
 			} else {
 				dd = append(dd, fmt.Sprintf("%v", *d))

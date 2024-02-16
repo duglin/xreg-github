@@ -10,20 +10,20 @@ import (
 	"github.com/duglin/xreg-github/registry"
 )
 
-func init() {
-	log.SetVerbose(2)
-}
-
 var Port = 8080
 var DBName = "registry"
 var Verbose = 2
 
 func main() {
-	var err error
+	if tmp := os.Getenv("VERBOSE"); tmp != "" {
+		if tmpInt, err := strconv.Atoi(tmp); err == nil {
+			Verbose = tmpInt
+		}
+	}
 
 	doDelete := flag.Bool("delete", false, "Delete DB an exit")
 	doRecreate := flag.Bool("recreate", false, "Recreate DB, then run")
-	flag.IntVar(&Verbose, "v", 2, "Verbose level")
+	flag.IntVar(&Verbose, "v", Verbose, "Verbose level")
 	flag.Parse()
 
 	log.SetVerbose(Verbose)
