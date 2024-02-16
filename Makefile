@@ -11,7 +11,7 @@ test: .test
 	@echo
 	@echo "# Run again w/o cache and deleting the Registry after each one"
 	@go clean -testcache
-	NO_CACHE=true NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
+	NO_CACHE=1 NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
 	@echo
 	@touch .test
 

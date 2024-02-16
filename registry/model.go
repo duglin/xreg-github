@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"reflect"
 	"regexp"
 	"strings"
@@ -56,6 +57,8 @@ type Item struct {
 	Type       string     `json:"type,omitempty"`
 	Item       *Item      `json:"item,omitempty"`
 }
+
+type IfValues map[string]*IfValue
 
 type IfValue struct {
 	SiblingAttributes Attributes `json:"siblingAttributes,omitempty"`
@@ -140,7 +143,10 @@ func (m *Model) DelSchema(schema string) error {
 // cases so code above this shouldn't need to think about it
 func (m *Model) Save() error {
 	if err := m.Verify(); err != nil {
-		log.Printf("model error: %s", err)
+		// Kind of extreme, but if there's an error revert the entire
+		// model to the last known good state. So, all of the changes
+		// people made will be lost and any variables are bogus
+		*m = *LoadModel(m.Registry)
 		return err
 	}
 
@@ -210,27 +216,29 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 		m.Attributes = Attributes{}
 	}
 
-	m.Attributes[attr.Name] = attr
-
 	if attr.Registry == nil {
 		attr.Registry = m.Registry
 	}
 
+	m.Attributes[attr.Name] = attr
+
 	attr.Item.SetRegistry(m.Registry)
 
-	m.Save()
+	if err := m.Save(); err != nil {
+		return nil, err
+	}
 
 	return attr, nil
 }
 
-func (m *Model) DelAttribute(name string) {
+func (m *Model) DelAttribute(name string) error {
 	if m.Attributes == nil {
-		return
+		return nil
 	}
 
 	delete(m.Attributes, name)
 
-	m.Save()
+	return m.Save()
 }
 
 func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, error) {
@@ -354,22 +362,25 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 		attr.Registry = i.Registry
 	}
 	if i.Registry != nil {
-		i.Registry.Model.Save()
+		if err := i.Registry.Model.Save(); err != nil {
+			return nil, err
+		}
 	}
 
 	return attr, nil
 }
 
-func (i *Item) DelAttribute(name string) {
+func (i *Item) DelAttribute(name string) error {
 	if i.Attributes == nil {
-		return
+		return nil
 	}
 
 	delete(i.Attributes, name)
 
 	if i.Registry != nil {
-		i.Registry.Model.Save()
+		return i.Registry.Model.Save()
 	}
+	return nil
 }
 
 func LoadModel(reg *Registry) *Model {
@@ -593,7 +604,9 @@ func (gm *GroupModel) Save() error {
 	}
 
 	for _, rm := range gm.Resources {
-		rm.Save()
+		if err := rm.Save(); err != nil {
+			return err
+		}
 	}
 
 	return err
@@ -633,19 +646,21 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Registry == nil {
 		attr.Registry = gm.Registry
 	}
-	gm.Registry.Model.Save()
+	if err := gm.Registry.Model.Save(); err != nil {
+		return nil, err
+	}
 
 	return attr, nil
 }
 
-func (gm *GroupModel) DelAttribute(name string) {
+func (gm *GroupModel) DelAttribute(name string) error {
 	if gm.Attributes == nil {
-		return
+		return nil
 	}
 
 	delete(gm.Attributes, name)
 
-	gm.Registry.Model.Save()
+	return gm.Registry.Model.Save()
 }
 
 func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool, hasDocument bool) (*ResourceModel, error) {
@@ -790,19 +805,21 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Registry == nil {
 		attr.Registry = rm.GroupModel.Registry
 	}
-	rm.GroupModel.Registry.Model.Save()
+	if err := rm.GroupModel.Registry.Model.Save(); err != nil {
+		return nil, err
+	}
 
 	return attr, nil
 }
 
-func (rm *ResourceModel) DelAttribute(name string) {
+func (rm *ResourceModel) DelAttribute(name string) error {
 	if rm.Attributes == nil {
-		return
+		return nil
 	}
 
 	delete(rm.Attributes, name)
 
-	rm.GroupModel.Registry.Model.Save()
+	return rm.GroupModel.Registry.Model.Save()
 }
 
 func (attrs *Attributes) SetRegistry(reg *Registry) {
@@ -838,8 +855,8 @@ func (attrs Attributes) AddIfValueAttributes(obj map[string]any) {
 			for _, newAttr := range ifValueData.SiblingAttributes {
 				if _, ok := attrs[newAttr.Name]; ok {
 					Panicf(`Attribute %q has an ifvalue(%s) that `+
-						`conflicts with an existing attribute`,
-						attr.Name, newAttr.Name)
+						`defines a conflicting siblingattribute: %s`,
+						attr.Name, ifValStr, newAttr.Name)
 				}
 				attrs[newAttr.Name] = newAttr
 				attrNames = append(attrNames, newAttr.Name)
@@ -901,7 +918,9 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 
 	a.Item.Attributes[attr.Name] = attr
 	attr.Registry = a.Registry
-	a.Registry.Model.Save()
+	if err := a.Registry.Model.Save(); err != nil {
+		return nil, err
+	}
 	return attr, nil
 }
 
@@ -1012,6 +1031,9 @@ func GetAttributeType(e *Entity, rSID string, obj map[string]any, abstract strin
 
 func (m *Model) Verify() error {
 	// Check Registry attributes
+	if err := VerifyAttributesIfValues(m.Attributes, nil, "", ""); err != nil {
+		return err
+	}
 	for name, attr := range m.Attributes {
 		if err := attr.Verify(name); err != nil {
 			return err
@@ -1043,6 +1065,9 @@ func (gm *GroupModel) Verify(gmName string) error {
 			gm.Singular, RegexpPropName.String())
 	}
 
+	if err := VerifyAttributesIfValues(gm.Attributes, nil, "", ""); err != nil {
+		return err
+	}
 	for attrName, attr := range gm.Attributes {
 		if err := attr.Verify(attrName); err != nil {
 			return err
@@ -1074,10 +1099,54 @@ func (rm *ResourceModel) Verify(rmName string) error {
 			rmName)
 	}
 
+	if err := VerifyAttributesIfValues(rm.Attributes, nil, "", ""); err != nil {
+		return err
+	}
 	for attrName, attr := range rm.Attributes {
 		if err := attr.Verify(attrName); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func VerifyAttributesIfValues(attrs Attributes, existingNames map[string]bool, rootName string, valStr string) error {
+	// Make a copy so we don't impact the existing one
+	attrNames := (map[string]bool)(nil)
+	if existingNames != nil {
+		attrNames = maps.Clone(existingNames)
+	} else {
+		attrNames = map[string]bool{}
+	}
+
+	// First add all attributes before we dive into the IfValue
+	for _, attr := range attrs {
+		if attrNames[attr.Name] == true {
+			if rootName != "" {
+				return fmt.Errorf("Attribute %q has an ifvalue(%s) that "+
+					"defines a conflicting siblingattribute(%s)",
+					rootName, valStr, attr.Name)
+			}
+			return fmt.Errorf("Duplicate attribute defined: %s", attr.Name)
+		}
+		attrNames[attr.Name] = true
+	}
+
+	// Now go thru each attr's IfValue and make sure there will be no conflicts
+	saveRoot := rootName
+	for _, attr := range attrs {
+		if rootName == "" {
+			rootName = attr.Name
+		}
+		for ifValStr, ifValue := range attr.IfValue {
+			err := VerifyAttributesIfValues(ifValue.SiblingAttributes,
+				attrNames, rootName, ifValStr)
+			if err != nil {
+				return err
+			}
+		}
+		rootName = saveRoot
 	}
 
 	return nil

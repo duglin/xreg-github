@@ -2711,12 +2711,40 @@ func TestHTTPIfValue(t *testing.T) {
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myint",
 		Type: registry.INTEGER,
-		IfValue: map[string]*registry.IfValue{
+		IfValue: registry.IfValues{
 			"10": &registry.IfValue{
 				SiblingAttributes: registry.Attributes{
 					"mystr": &registry.Attribute{
 						Name: "mystr",
 						Type: registry.STRING,
+					},
+					"myobj": &registry.Attribute{
+						Name: "myobj",
+						Type: registry.OBJECT,
+						Item: &registry.Item{
+							Attributes: registry.Attributes{
+								"subint": &registry.Attribute{
+									Name: "subint",
+									Type: registry.INTEGER,
+								},
+								"subobj": &registry.Attribute{
+									Name: "subobj",
+									Type: registry.OBJECT,
+									Item: &registry.Item{
+										Attributes: registry.Attributes{
+											"subsubint": &registry.Attribute{
+												Name: "subsubint",
+												Type: registry.INTEGER,
+											},
+											"*": &registry.Attribute{
+												Name: "*",
+												Type: registry.ANY,
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -2735,50 +2763,79 @@ func TestHTTPIfValue(t *testing.T) {
 			},
 		},
 	})
-	xNoErr(t, err)
+	xCheckErr(t, err, "") // should work
 
-	/*
-	   	xCheckHTTP(t, &HTTPTest{
-	   		Name:   "PUT reg - ifvalue - 1",
-	   		URL:    "",
-	   		Method: "PUT",
-	   		ReqBody: `{
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name: "myobj",
+		Type: registry.OBJECT,
+		Item: &registry.Item{},
+	})
+	// Test empty obj and name conflict with IfValue above
+	xCheckErr(t, err, "Attribute \"myint\" has an ifvalue(10) that defines a conflicting siblingattribute(myobj)")
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name: "myobj2",
+		Type: registry.OBJECT,
+		Item: &registry.Item{
+			Attributes: registry.Attributes{
+				"subint1": &registry.Attribute{
+					Name: "subint1",
+					Type: registry.INTEGER,
+					IfValue: registry.IfValues{
+						"666": &registry.IfValue{
+							SiblingAttributes: registry.Attributes{
+								"reqint": &registry.Attribute{
+									Type: registry.INTEGER,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	xCheckErr(t, err, "")
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - 1",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
 	     "myint": 10
 	   }`,
-	   		Code: 200,
-	   		ResBody: `{
-	     "specversion": "0.5",
-	     "id": "TestHTTPIfValue",
-	     "epoch": 2,
-	     "self": "http://localhost:8181/",
-	     "myint": 10
-	   }
-	   `,
-	   	})
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 2,
+  "self": "http://localhost:8181/",
+  "myint": 10
+}
+`,
+	})
 
-	   	xCheckHTTP(t, &HTTPTest{
-	   		Name:   "PUT reg - ifvalue - verify ext isn't allowed",
-	   		URL:    "",
-	   		Method: "PUT",
-	   		ReqBody: `{
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - verify ext isn't allowed",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
 	     "myint": 10,
 	     "myext": 5.5
 	   }`,
-	   		Code:    400,
-	   		ResBody: "Error processing registry: Invalid extension(s): myext\n",
-	   	})
+		Code:    400,
+		ResBody: "Error processing registry: Invalid extension(s): myext\n",
+	})
 
-	   	xCheckHTTP(t, &HTTPTest{
-	   		Name:   "PUT reg - ifvalue - required mystr",
-	   		URL:    "",
-	   		Method: "PUT",
-	   		ReqBody: `{
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - required mystr",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
 	     "myint": 20
 	   }`,
-	   		Code:    400,
-	   		ResBody: "Error processing registry: Required property \"mystr\" is missing\n",
-	   	})
-	*/
+		Code:    400,
+		ResBody: "Error processing registry: Required property \"mystr\" is missing\n",
+	})
 
 	xCheckHTTP(t, &HTTPTest{
 		Name:   "PUT reg - ifvalue - required mystr, allow ext",
@@ -2793,10 +2850,120 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPIfValue",
-  "epoch": 2,
+  "epoch": 3,
   "self": "http://localhost:8181/",
   "myext": 5.5,
   "myint": 20,
+  "mystr": "hello"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - myext isn't allow any more",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint": 10,
+	     "mystr": "hello",
+	     "myext": 5.5
+	   }`,
+		Code:    400,
+		ResBody: "Error processing registry: Invalid extension(s): myext\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - 3 levels - valid",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint": 10,
+	     "mystr": "hello",
+		 "myobj": {
+		   "subint": 123,
+		   "subobj": {
+		     "subsubint": 432
+		   }
+		 }
+	   }`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 4,
+  "self": "http://localhost:8181/",
+  "myint": 10,
+  "myobj": {
+    "subint": 123,
+    "subobj": {
+      "subsubint": 432
+    }
+  },
+  "mystr": "hello"
+}
+`,
+	})
+
+	return
+	// DUG
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - 3 levels - valid, unknown 3 level",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint": 10,
+	     "mystr": "hello",
+		 "myobj": {
+		   "subint": 123,
+		   "subobj": {
+		     "subsubint": 432,
+			 "okext": "hello"
+		   }
+		 }
+	   }`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 5,
+  "self": "http://localhost:8181/",
+  "myint": 10,
+  "myobj": {
+    "subint": 123,
+    "subobj": {
+      "okext": "hello",
+      "subsubint": 432
+    }
+  },
+  "mystr": "hello"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - ifvalue - down a level - valid",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint": 10,
+	     "mystr": "hello",
+		 "myobj2": {
+		   "subint1": 666,
+		   "reqint": 777
+		 }
+	   }`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 5,
+  "self": "http://localhost:8181/",
+  "myint": 10,
+  "myobj2": {
+    "subint1": 666,
+    "reqint": 777
+  },
   "mystr": "hello"
 }
 `,

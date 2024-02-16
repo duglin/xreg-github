@@ -89,6 +89,31 @@ func Caller() string {
 	return "unknownFile"
 }
 
+func Fail(t *testing.T, str string, args ...any) {
+	text := strings.TrimSpace(fmt.Sprintf(str, args...))
+	fmt.Printf("\n%s\n%s\n\n", Caller(), text)
+	t.FailNow()
+}
+
+func xCheckErr(t *testing.T, err error, errStr string) bool {
+	if err == nil {
+		if errStr == "" {
+			return true
+		}
+		Fail(t, "Test was supposed to generate an error: %s", errStr)
+		return false
+	}
+	if errStr == "" {
+		Fail(t, "Test failed: %s", err)
+		return false
+	}
+	if err.Error() != errStr {
+		Fail(t, "Got: %s\nExp; %s", err.Error(), errStr)
+		return false
+	}
+	return true
+}
+
 func xCheck(t *testing.T, b bool, errStr string) bool {
 	if !b {
 		t.Errorf("%s: %s", Caller(), errStr)
