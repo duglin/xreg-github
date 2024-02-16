@@ -57,14 +57,15 @@ func (jw *JsonWriter) Outdent() {
 	}
 }
 
-func (jw *JsonWriter) NextEntity() *Entity {
-	jw.Entity = readNextEntity(jw.results)
+func (jw *JsonWriter) NextEntity() (*Entity, error) {
+	var err error
+	jw.Entity, err = readNextEntity(jw.results)
 	/*
 		pc, _, line, _ := runtime.Caller(1)
 		log.VPrintf(4, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
 		log.VPrintf(4, "  > Next: %v", jw.Entity)
 	*/
-	return jw.Entity
+	return jw.Entity, err
 }
 
 func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
@@ -114,7 +115,9 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 		}
 
 		if jw.Entity.Level > myLevel { // Process a child
-			jw.NextEntity()
+			if _, err := jw.NextEntity(); err != nil {
+				return count, err
+			}
 			continue
 		}
 
@@ -235,7 +238,9 @@ func (jw *JsonWriter) WriteEntity() error {
 	}
 
 	jw.LoadCollections(myLevel) // load the list of current collections
-	jw.NextEntity()
+	if _, err := jw.NextEntity(); err != nil {
+		return err
+	}
 
 	for jw.Entity != nil && jw.Entity.Level > myLevel {
 		extra = jw.WritePreCollections(extra, jw.Entity.Plural, myLevel)

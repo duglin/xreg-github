@@ -403,11 +403,16 @@ FROM FullTree WHERE RegSID=? AND `
 		return err
 	}
 
-	entity := readNextEntity(results)
+	entity, err := readNextEntity(results)
 	log.VPrintf(3, "Entity: %#v", entity)
 	if entity == nil {
+		log.Printf("Error loading entity: %s", err)
 		info.StatusCode = http.StatusNotFound
-		return fmt.Errorf("Not found")
+		if err != nil {
+			return fmt.Errorf("Error finding entity: %s", err)
+		} else {
+			return fmt.Errorf("Not found")
+		}
 	}
 
 	var version *Entity
@@ -416,10 +421,10 @@ FROM FullTree WHERE RegSID=? AND `
 		// We're on a Resource, so go find the right Version
 		vID := entity.GetPropFromUI("latestversionid").(string)
 		for {
-			v := readNextEntity(results)
+			v, err := readNextEntity(results)
 			if v == nil && version == nil {
 				info.StatusCode = http.StatusInternalServerError
-				return fmt.Errorf("Can't find version: %s", vID)
+				return fmt.Errorf("Can't find version: %s : %s", vID, err)
 			}
 			if v == nil {
 				break

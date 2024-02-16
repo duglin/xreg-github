@@ -238,15 +238,10 @@ JOIN Versions AS v ON (p.EntitySID=v.SID)
 JOIN Resources AS r ON (r.SID=v.ResourceSID)
 JOIN Props AS p1 ON (p1.EntitySID=r.SID)
 WHERE p1.PropName='latestVersionId,' AND v.UID=p1.PropValue AND
-      p.PropName<>'id,' AND p.PropName<>'latest,';     # Don't overwrite these
+      p.PropName<>'id,' ;     # Don't overwrite this
 # NOTE!!! if DB_IN changes then the above 2 lines MUST change
 # TODO move the creation of this into the code then we can dynamically
 # use DB_IN instead of hard-coding the "," in here
-
-CREATE VIEW AllProps AS
-SELECT * FROM Props
-UNION SELECT * FROM LatestProps ;
-
 
 CREATE VIEW Entities AS
 SELECT                          # Gather Registries
@@ -296,6 +291,22 @@ UNION SELECT                    # Add Versions
 FROM Versions AS v
 JOIN Resources AS r ON (r.SID=v.ResourceSID)
 JOIN ModelEntities AS rm ON (rm.SID=r.ModelSID) ;
+
+CREATE VIEW AllProps AS
+SELECT * FROM Props
+UNION SELECT * FROM LatestProps
+UNION SELECT                    # Add in "latest", which is calculated
+  v.RegSID,
+  v.eSID,
+  'latest,',
+  'true',
+  'boolean'
+FROM Entities AS v
+JOIN Props AS p ON (
+  p.EntitySID=v.ParentSID AND
+  p.PropName='latestversionid,'
+  AND p.PropValue=v.UID );
+
 
 CREATE VIEW FullTree AS
 SELECT

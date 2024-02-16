@@ -198,8 +198,7 @@ func RawEntityFromPath(regID string, path string) (*Entity, error) {
 		return nil, err
 	}
 
-	entity := readNextEntity(results)
-	return entity, nil
+	return readNextEntity(results)
 }
 
 func (e *Entity) Find() (bool, error) {
@@ -256,7 +255,7 @@ func (e *Entity) Refresh() error {
 
 	// Erase all old props first
 	e.Props = map[string]any{}
-	e.Object = nil
+	e.Object = map[string]any{}
 	e.NewObject = nil
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
@@ -264,7 +263,9 @@ func (e *Entity) Refresh() error {
 		val := NotNilString(row[1])
 		propType := NotNilString(row[2])
 
-		e.SetFromDBName(name, &val, propType)
+		if err = e.SetFromDBName(name, &val, propType); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -279,19 +280,6 @@ func (e *Entity) Set(path string, val any) error {
 	}
 
 	return err
-}
-
-func (e *Entity) NewSetPP(pp *PropPath, val any) error {
-	log.VPrintf(3, ">Enter: NewSetPP(%s=%v)", pp.UI(), val)
-	defer log.VPrintf(3, "<Exit: NewSetPP")
-
-	defer log.VPrintf(3, "<Exit NewSetPP")
-
-	if e.Object == nil {
-		e.Object = map[string]any{}
-	}
-
-	return ObjectSetProp(e.Object, pp, val)
 }
 
 func (e *Entity) JustSet(pp *PropPath, val any) error {
@@ -500,55 +488,60 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	return nil
 }
 
-func (e *Entity) SetFromDBName(name string, val *string, propType string) {
+func (e *Entity) SetFromDBName(name string, val *string, propType string) error {
+	pp := MustPropPathFromDB(name)
+
 	if val == nil {
 		delete(e.Props, name)
-		e.NewSetPP(MustPropPathFromDB(name), nil)
+		return ObjectSetProp(e.Object, pp, val)
 	}
 	if e.Props == nil {
 		e.Props = map[string]any{}
+	}
+	if e.Object == nil {
+		e.Object = map[string]any{}
 	}
 
 	if propType == STRING || propType == URI || propType == URI_REFERENCE ||
 		propType == URI_TEMPLATE || propType == URL || propType == TIMESTAMP {
 		e.Props[name] = *val
-		e.NewSetPP(MustPropPathFromDB(name), *val)
+		return ObjectSetProp(e.Object, pp, *val)
 	} else if propType == BOOLEAN {
 		// Technically "1" check shouldn't be needed, but just in case
 		e.Props[name] = (*val == "1") || (*val == "true")
-		e.NewSetPP(MustPropPathFromDB(name), (*val == "1") || (*val == "true"))
+		return ObjectSetProp(e.Object, pp, (*val == "1" || (*val == "true")))
 	} else if propType == INTEGER || propType == UINTEGER {
 		tmpInt, err := strconv.Atoi(*val)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing int: %s", *val))
 		}
 		e.Props[name] = tmpInt
-		e.NewSetPP(MustPropPathFromDB(name), tmpInt)
+		return ObjectSetProp(e.Object, pp, tmpInt)
 	} else if propType == DECIMAL {
 		tmpFloat, err := strconv.ParseFloat(*val, 64)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing float: %s", *val))
 		}
 		e.Props[name] = tmpFloat
-		e.NewSetPP(MustPropPathFromDB(name), tmpFloat)
+		return ObjectSetProp(e.Object, pp, tmpFloat)
 	} else if propType == MAP {
 		if *val != "" {
 			panic(fmt.Sprintf("MAP value should be empty string"))
 		}
 		e.Props[name] = map[string]any{}
-		e.NewSetPP(MustPropPathFromDB(name), map[string]any{})
+		return ObjectSetProp(e.Object, pp, map[string]any{})
 	} else if propType == ARRAY {
 		if *val != "" {
 			panic(fmt.Sprintf("MAP value should be empty string"))
 		}
 		e.Props[name] = []any{}
-		e.NewSetPP(MustPropPathFromDB(name), []any{})
+		return ObjectSetProp(e.Object, pp, []any{})
 	} else if propType == OBJECT {
 		if *val != "" {
 			panic(fmt.Sprintf("MAP value should be empty string"))
 		}
 		e.Props[name] = map[string]any{}
-		e.NewSetPP(MustPropPathFromDB(name), map[string]any{})
+		return ObjectSetProp(e.Object, pp, map[string]any{})
 	} else {
 		panic(fmt.Sprintf("bad type(%s): %v", propType, name))
 	}
@@ -652,7 +645,7 @@ func ValidatePropValue(val any, attrType string) error {
 	return nil
 }
 
-func readNextEntity(results *Result) *Entity {
+func readNextEntity(results *Result) (*Entity, error) {
 	entity := (*Entity)(nil)
 
 	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
@@ -694,10 +687,12 @@ func readNextEntity(results *Result) *Entity {
 			continue
 		}
 
-		entity.SetFromDBName(propName, &propVal, propType)
+		if err := entity.SetFromDBName(propName, &propVal, propType); err != nil {
+			return nil, err
+		}
 	}
 
-	return entity
+	return entity, nil
 }
 
 type SpecProp struct {
