@@ -68,12 +68,13 @@ func TestRefreshRegistry(t *testing.T) {
 	reg := NewRegistry("TestRefreshRegistry")
 	defer PassDeleteReg(t, reg)
 
-	reg.Props["xxx"] = "yyy"
+	reg.Entity.Object["xxx"] = "yyy"
+	xCheck(t, reg.Get("xxx") == "yyy", "xxx should be yyy")
 
 	err := reg.Refresh()
 	xNoErr(t, err)
 
-	xCheck(t, reg.Props["xxx"] == nil, "xxx should not be there")
+	xCheck(t, reg.Get("xxx") == nil, "xxx should not be there")
 }
 
 func TestFindRegistry(t *testing.T) {

@@ -271,8 +271,7 @@ func TestBasicTypes(t *testing.T) {
 			}
 		}
 
-		entity.Props = map[string]any{} // force delete everything
-		entity.Refresh()                // and then re-get props from DB
+		entity.Refresh() // and then re-get props from DB
 
 		for _, prop := range test.Props {
 			if prop.ErrMsg != "" {

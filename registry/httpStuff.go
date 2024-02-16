@@ -979,7 +979,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("Error processing resource: %s", err)
 	}
 
-	IncomingObj["id"] = version.Props["id,"]
+	IncomingObj["id"] = version.UID
 	delete(IncomingObj, "latestversionid")
 	delete(IncomingObj, "latestversionurl")
 

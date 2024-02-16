@@ -126,8 +126,7 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 			break
 		}
 
-		jw.Printf("%s\n%s%q: ", extra, jw.indent,
-			jw.Entity.Props[NewPPP("id").DB()])
+		jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Entity.UID)
 		if err := jw.WriteEntity(); err != nil {
 			return count, err
 		}
