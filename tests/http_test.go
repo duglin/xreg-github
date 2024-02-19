@@ -2798,7 +2798,7 @@ func TestHTTPIfValue(t *testing.T) {
 	})
 	// Test empty obj and name conflict with IfValue above
 	xCheckErr(t, err,
-		`Duplicate attribute name (myobj) at: model.myint.ifvalue(10)`)
+		`Duplicate attribute name (myobj) at: model.myint.ifvalue.10`)
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myobj2",

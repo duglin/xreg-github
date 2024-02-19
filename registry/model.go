@@ -1149,7 +1149,7 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 				return fmt.Errorf("%q has an empty ifvalue key", ld.Path.UI())
 			}
 			nextLD := &LevelData{ld.AttrNames,
-				ld.Path.P(attr.Name).P("ifvalue(" + valStr + ")")}
+				ld.Path.P(attr.Name).P("ifvalue").P(valStr)}
 			if err := ifValue.SiblingAttributes.Verify(nextLD); err != nil {
 				return err
 			}

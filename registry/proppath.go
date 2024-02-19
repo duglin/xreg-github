@@ -298,7 +298,7 @@ func (pp *PropPath) I(i int) *PropPath {
 
 func (pp *PropPath) Index(i int) *PropPath {
 	newPP := NewPP()
-	newPP.Parts = append(pp.Parts[:], PropPart{
+	newPP.Parts = append(pp.Parts, PropPart{
 		Text:  fmt.Sprintf("%d", i),
 		Index: i,
 	})
@@ -311,7 +311,7 @@ func (pp *PropPath) P(prop string) *PropPath {
 
 func (pp *PropPath) Prop(prop string) *PropPath {
 	newPP := NewPP()
-	newPP.Parts = append(pp.Parts[:], PropPart{
+	newPP.Parts = append(pp.Parts, PropPart{
 		Text:  prop,
 		Index: -1,
 	})
@@ -326,7 +326,7 @@ func (pp *PropPath) Clone() *PropPath {
 
 func (pp *PropPath) Append(addPP *PropPath) *PropPath {
 	newPP := NewPP()
-	newPP.Parts = append(pp.Parts[:], addPP.Parts[:]...)
+	newPP.Parts = append(pp.Parts, addPP.Parts...)
 	return newPP
 }
 
