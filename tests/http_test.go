@@ -2994,4 +2994,119 @@ func TestHTTPIfValue(t *testing.T) {
 `,
 	})
 
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name: "myint5",
+		Type: registry.INTEGER,
+		IfValue: registry.IfValues{
+			"1": &registry.IfValue{
+				SiblingAttributes: registry.Attributes{
+					"myint6": &registry.Attribute{
+						Name: "myint6",
+						Type: registry.INTEGER,
+						IfValue: registry.IfValues{
+							"2": &registry.IfValue{
+								SiblingAttributes: registry.Attributes{
+									"myint7": {
+										Name:           "myint7",
+										Type:           registry.INTEGER,
+										ClientRequired: true,
+										ServerRequired: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	xCheckErr(t, err, "")
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - nested ifValues - 1",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint5": 1
+	   }`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 7,
+  "self": "http://localhost:8181/",
+  "myint5": 1
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - nested ifValues - 2",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint5": 1,
+	     "myint6": 1
+	   }`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 8,
+  "self": "http://localhost:8181/",
+  "myint5": 1,
+  "myint6": 1
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - nested ifValues - 3",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint5": 1,
+	     "myint6": 2
+	   }`,
+		Code: 400,
+		ResBody: `Error processing registry: Required property "myint7" is missing
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - nested ifValues - 4",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint5": 1,
+	     "myint6": 1,
+		 "myint7": 5
+	   }`,
+		Code: 400,
+		ResBody: `Error processing registry: Invalid extension(s): myint7
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT reg - nested ifValues - 5",
+		URL:    "",
+		Method: "PUT",
+		ReqBody: `{
+	     "myint5": 1,
+	     "myint6": 2,
+		 "myint7": 5
+	   }`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "id": "TestHTTPIfValue",
+  "epoch": 9,
+  "self": "http://localhost:8181/",
+  "myint5": 1,
+  "myint6": 2,
+  "myint7": 5
+}
+`,
+	})
+
 }
