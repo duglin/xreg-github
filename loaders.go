@@ -219,26 +219,28 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(err)
 		_, err = reg.Model.AddAttr("str1", registry.STRING)
 		ErrFatalf(err)
-		_, err = reg.Model.AddAttrMap("map1", registry.NewItem(registry.STRING))
+		_, err = reg.Model.AddAttrMap("map1", registry.NewItemType(registry.STRING))
 		ErrFatalf(err)
-		_, err = reg.Model.AddAttrArray("arr1", registry.NewItem(registry.STRING))
+		_, err = reg.Model.AddAttrArray("arr1", registry.NewItemType(registry.STRING))
 		ErrFatalf(err)
 
-		_, err = reg.Model.AddAttrMap("emptymap", registry.NewItem(registry.STRING))
+		_, err = reg.Model.AddAttrMap("emptymap", registry.NewItemType(registry.STRING))
 		ErrFatalf(err)
-		_, err = reg.Model.AddAttrArray("emptyarr", registry.NewItem(registry.STRING))
+		_, err = reg.Model.AddAttrArray("emptyarr", registry.NewItemType(registry.STRING))
 		ErrFatalf(err)
 		_, err = reg.Model.AddAttrObj("emptyobj")
 		ErrFatalf(err)
 
 		item := registry.NewItemObject()
-		item.AddAttr("inint", registry.INTEGER)
+		item.SetItem(registry.NewItem())
+		_, err = item.Item.AddAttr("inint", registry.INTEGER)
+		ErrFatalf(err)
 		_, err = reg.Model.AddAttrMap("mapobj", item)
 		ErrFatalf(err)
 
 		_, err = reg.Model.AddAttrArray("arrmap",
 			registry.NewItemMap(
-				registry.NewItem(registry.STRING)))
+				registry.NewItemType(registry.STRING)))
 		ErrFatalf(err)
 
 		ErrFatalf(reg.Set("bool1", true))
@@ -322,7 +324,8 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	obj, err := config.AddAttrMap("endpoints", registry.NewItemObject())
 	ErrFatalf(err)
-	_, err = obj.Item.AddAttr("*", registry.ANY)
+	obj.Item.SetItem(registry.NewItem())
+	_, err = obj.Item.Item.AddAttr("*", registry.ANY)
 	ErrFatalf(err)
 
 	auth, err := config.AddAttrObj("authorization")
@@ -333,13 +336,13 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	attr, err = auth.AddAttr("authorityurl", registry.STRING)
 	ErrFatalf(err)
-	attr, err = auth.AddAttrArray("grant_types", registry.NewItem(registry.STRING))
+	attr, err = auth.AddAttrArray("grant_types", registry.NewItemType(registry.STRING))
 	ErrFatalf(err)
 
 	_, err = config.AddAttr("strict", registry.BOOLEAN)
 	ErrFatalf(err)
 
-	_, err = config.AddAttrMap("options", registry.NewItem(registry.ANY))
+	_, err = config.AddAttrMap("options", registry.NewItemType(registry.ANY))
 	ErrFatalf(err)
 
 	_, err = ep.AddResourceModel("definitions", "definition", 2, true, true, true)
@@ -428,7 +431,7 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 	obj.AddAttr("required", registry.BOOLEAN)
 
 	meta.AddAttr("binding", registry.STRING)
-	meta.AddAttrMap("message", registry.NewItem(registry.ANY))
+	meta.AddAttrMap("message", registry.NewItemType(registry.ANY))
 
 	meta.AddAttr("schemaformat", registry.STRING)
 	meta.AddAttr("schema", registry.ANY)

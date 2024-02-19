@@ -43,8 +43,8 @@ type Attribute struct {
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
 
-	Item    *Item               `json:"item,omitempty"`
-	IfValue map[string]*IfValue `json:"ifValue,omitempty"` // Value
+	Item    *Item    `json:"item,omitempty"`
+	IfValue IfValues `json:"ifValue,omitempty"` // Value
 
 	// Internal fields
 	checkFn  func(e *Entity) error
@@ -292,7 +292,10 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 	return gm, nil
 }
 
-func NewItem(daType string) *Item {
+func NewItem() *Item {
+	return &Item{}
+}
+func NewItemType(daType string) *Item {
 	return &Item{
 		Type: daType,
 	}
@@ -325,6 +328,16 @@ func (i *Item) SetRegistry(reg *Registry) {
 
 	i.Registry = reg
 	i.Attributes.SetRegistry(reg)
+}
+
+func (i *Item) SetItem(item *Item) error {
+	i.Item = item
+	item.SetRegistry(i.Registry)
+
+	if i.Registry != nil {
+		return i.Registry.Model.Save()
+	}
+	return nil
 }
 
 func (i *Item) AddAttr(name, daType string) (*Attribute, error) {
@@ -361,6 +374,8 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Registry == nil {
 		attr.Registry = i.Registry
 	}
+	attr.Item.SetRegistry(i.Registry)
+
 	if i.Registry != nil {
 		if err := i.Registry.Model.Save(); err != nil {
 			return nil, err
@@ -646,6 +661,8 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Registry == nil {
 		attr.Registry = gm.Registry
 	}
+	attr.Item.SetRegistry(gm.Registry)
+
 	if err := gm.Registry.Model.Save(); err != nil {
 		return nil, err
 	}
@@ -805,6 +822,8 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Registry == nil {
 		attr.Registry = rm.GroupModel.Registry
 	}
+	attr.Item.SetRegistry(rm.GroupModel.Registry)
+
 	if err := rm.GroupModel.Registry.Model.Save(); err != nil {
 		return nil, err
 	}
@@ -888,6 +907,15 @@ func (a *Attribute) IsScalar() bool {
 	return IsScalar(a.Type)
 }
 
+func (a *Attribute) SetRegistry(reg *Registry) {
+	if a == nil {
+		return
+	}
+
+	a.Registry = reg
+	a.Item.SetRegistry(reg)
+}
+
 func (a *Attribute) AddAttr(name, daType string) (*Attribute, error) {
 	return a.AddAttribute(&Attribute{
 		Registry: a.Registry,
@@ -918,126 +946,22 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 
 	a.Item.Attributes[attr.Name] = attr
 	attr.Registry = a.Registry
+	attr.Item.SetRegistry(a.Registry)
+
 	if err := a.Registry.Model.Save(); err != nil {
 		return nil, err
 	}
 	return attr, nil
 }
 
-// Note this will also validate that the names used to build up the path
-// of the attribute are valid (e.g. wrt case and valid chars)
-func GetAttributeType(e *Entity, rSID string, obj map[string]any, abstract string, pp *PropPath) (string, error) {
-	log.VPrintf(3, ">Enter: GetAttributeType: %s / %s", abstract, pp.UI())
-	defer log.VPrintf(3, "<Exit: GetAttributeType")
-
-	if pp.Len() == 0 {
-		panic("PropPath can't be empty for GetAttributeType")
-	}
-
-	if pp.Top()[0] == '#' {
-		return ANY, nil
-	}
-
-	savePP := pp.Clone()
-
-	attrs := e.GetAttributes(true)
-	if attrs == nil {
-		panic("Attributes can't be nil for: %s" + abstract)
-	}
-
-	item := &Item{ // model definition of current thing we're processing
-		Attributes: attrs,
-		Type:       OBJECT,
-		Item:       nil,
-	}
-	prevTop := ""
-	top := ""
-
-	for {
-		log.VPrintf(3, "PP: %q Item: %#q", pp.UI(), item)
-		// Nothing to do so just return current item
-		if pp.Len() == 0 {
-			return item.Type, nil
-		}
-
-		prevTop = top
-
-		top = pp.Top()
-
-		if IsScalar(item.Type) {
-			if pp.Len() != 0 {
-				sub := ""
-				if pp.Parts[0].Index >= 0 {
-					sub = fmt.Sprintf("[%d]", pp.Parts[0].Index)
-				}
-				return "", fmt.Errorf("Traversing into scalar "+
-					"\"%s%s\": %s", prevTop, sub, savePP.UI())
-			}
-			return item.Type, nil
-		}
-
-		if item.Type == ANY {
-			return ANY, nil
-		}
-
-		if item.Type == OBJECT {
-			// We're looking at the attribute name in the object
-			if !IsValidAttributeName(top) {
-				return "", fmt.Errorf("Attribute name %q isn't valid", top)
-			}
-
-			attr := item.Attributes[top]
-			if attr == nil {
-				attr = item.Attributes["*"]
-				if attr == nil {
-					return "", nil
-				}
-			}
-
-			if attr.Type == ANY {
-				return attr.Type, nil
-			}
-
-			item = &Item{
-				Attributes: nil,
-				Type:       attr.Type,
-				Item:       attr.Item,
-			}
-
-			if attr.Item != nil {
-				item.Attributes = attr.Item.Attributes
-			}
-		} else if item.Type == ARRAY {
-			// We're looking at the index of the array
-			if pp.Parts[0].Index < 0 {
-				return "", fmt.Errorf("Array index %q isn't an integer", top)
-			}
-
-			item = item.Item
-		} else if item.Type == MAP {
-			// We're looking at the map key name
-			if !IsValidMapKey(top) {
-				return "", fmt.Errorf("Map key %q isn't valid", top)
-			}
-			item = item.Item
-		} else {
-			panic(fmt.Sprintf("Can't deal with type: %s\npp:%v",
-				item.Type, savePP.UI()))
-		}
-
-		pp = pp.Next()
-	}
-}
-
 func (m *Model) Verify() error {
 	// Check Registry attributes
-	if err := VerifyAttributesIfValues(m.Attributes, nil, "", ""); err != nil {
-		return err
+	ld := &LevelData{
+		AttrNames: map[string]bool{},
+		Path:      NewPPP("model"),
 	}
-	for name, attr := range m.Attributes {
-		if err := attr.Verify(name); err != nil {
-			return err
-		}
+	if err := m.Attributes.Verify(ld); err != nil {
+		return err
 	}
 
 	for gmName, gm := range m.Groups {
@@ -1065,13 +989,12 @@ func (gm *GroupModel) Verify(gmName string) error {
 			gm.Singular, RegexpPropName.String())
 	}
 
-	if err := VerifyAttributesIfValues(gm.Attributes, nil, "", ""); err != nil {
-		return err
+	ld := &LevelData{
+		AttrNames: map[string]bool{},
+		Path:      NewPPP("groups").P(gm.Plural),
 	}
-	for attrName, attr := range gm.Attributes {
-		if err := attr.Verify(attrName); err != nil {
-			return err
-		}
+	if err := gm.Attributes.Verify(ld); err != nil {
+		return err
 	}
 
 	for rmName, rm := range gm.Resources {
@@ -1099,56 +1022,180 @@ func (rm *ResourceModel) Verify(rmName string) error {
 			rmName)
 	}
 
-	if err := VerifyAttributesIfValues(rm.Attributes, nil, "", ""); err != nil {
+	ld := &LevelData{
+		AttrNames: map[string]bool{},
+		Path:      NewPPP("resources").P(rm.Plural),
+	}
+	if err := rm.Attributes.Verify(ld); err != nil {
 		return err
 	}
-	for attrName, attr := range rm.Attributes {
-		if err := attr.Verify(attrName); err != nil {
-			return err
+
+	return nil
+}
+
+type LevelData struct {
+	AttrNames map[string]bool
+	Path      *PropPath
+}
+
+func (attrs Attributes) Verify(ld *LevelData) error {
+	ld = &LevelData{
+		AttrNames: maps.Clone(ld.AttrNames),
+		Path:      ld.Path.Clone(),
+	}
+	if ld.AttrNames == nil {
+		ld.AttrNames = map[string]bool{}
+	}
+
+	// First add the new attribute names, while checking the attr
+	for name, attr := range attrs {
+		if name == "" { // attribute key empty?
+			return fmt.Errorf("%q has an empty attribute key", ld.Path.UI())
+		}
+		if ld.AttrNames[name] == true { // Dup attr name?
+			return fmt.Errorf("Duplicate attribute name (%s) at: %s", name,
+				ld.Path.UI())
+		}
+		if name != "*" && !IsValidAttributeName(name) { // valid chars?
+			return fmt.Errorf("%q has an invalid attribute key %q - must "+
+				"match %q", ld.Path.UI(), name, RegexpPropName.String())
+		}
+		path := ld.Path.P(name)
+		if name != attr.Name { // missing Nmae: field?
+			return fmt.Errorf("%q must have a \"name\" set to %q", path.UI(),
+				name)
+		}
+		if attr.Type == "" {
+			return fmt.Errorf("%q is missing a \"type\"", path.UI())
+		}
+		if DefinedTypes[attr.Type] != true { // valie Type: field?
+			return fmt.Errorf("%q has an invalid type: %s", path.UI(),
+				attr.Type)
+		}
+
+		// Is it ok for strict=true and enum=[] ? Require no value???
+		// if attr.Strict == true && len(attr.Enum) == 0 {
+		// }
+
+		// check enum values
+		if attr.Enum != nil && len(attr.Enum) == 0 {
+			return fmt.Errorf("%q specifies an \"enum\" but it is empty",
+				path.UI())
+		}
+		if len(attr.Enum) > 0 {
+			if IsScalar(attr.Type) != true {
+				return fmt.Errorf("%q is not a scalar, so \"enum\" is not "+
+					"allowed", path.UI())
+			}
+
+			for _, val := range attr.Enum {
+				if !IsOfType(val, attr.Type) {
+					return fmt.Errorf("%q enum value \"%v\" must be of type %q",
+						path.UI(), val, attr.Type)
+				}
+			}
+		}
+
+		if attr.ClientRequired && !attr.ServerRequired {
+			return fmt.Errorf("%q must have \"serverrequired\" "+
+				"since \"clientrequired\" is \"true\"",
+				path.UI())
+		}
+
+		// Object doesn't need an Item, but maps and arrays do
+		if attr.Type == MAP || attr.Type == ARRAY {
+			if attr.Item == nil {
+				return fmt.Errorf("%q must have an \"item\" section", path.UI())
+			}
+			p := path.P("item")
+			if len(attr.Item.Attributes) > 0 {
+				return fmt.Errorf("%q must not have attributes", p.UI())
+			}
+			if attr.Item.Type == "" {
+				return fmt.Errorf("%q is missing a \"type\"", p.UI())
+			}
+			if DefinedTypes[attr.Item.Type] != true {
+				return fmt.Errorf("%q has an invalid \"type\": %s", p.UI(),
+					attr.Item.Type)
+			}
+		}
+
+		if attr.Type == OBJECT && attr.Item != nil {
+			p := path.P("item")
+			if attr.Item.Type != "" {
+				return fmt.Errorf("%q must not have a \"type\" defined", p.UI())
+			}
+			if attr.Item.Item != nil {
+				return fmt.Errorf("%q must not have an \"item\" section",
+					p.UI())
+			}
+		}
+
+		if attr.Item != nil {
+			if err := attr.Item.Verify(path, attr.Type); err != nil {
+				return err
+			}
+		}
+
+		ld.AttrNames[attr.Name] = true
+	}
+
+	// Now that we have all of the attribute names for this level, go ahead
+	// and check the IfValues, not just for validatity but to also make sure
+	// they don't define duplicate attribute names
+	for _, attr := range attrs {
+		for valStr, ifValue := range attr.IfValue {
+			if valStr == "" {
+				return fmt.Errorf("%q has an empty ifvalue key", ld.Path.UI())
+			}
+			nextLD := &LevelData{ld.AttrNames,
+				ld.Path.P(attr.Name).P("ifvalue(" + valStr + ")")}
+			if err := ifValue.SiblingAttributes.Verify(nextLD); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func VerifyAttributesIfValues(attrs Attributes, existingNames map[string]bool, rootName string, valStr string) error {
-	// Make a copy so we don't impact the existing one
-	attrNames := (map[string]bool)(nil)
-	if existingNames != nil {
-		attrNames = maps.Clone(existingNames)
-	} else {
-		attrNames = map[string]bool{}
+func (item *Item) Verify(path *PropPath, parentType string) error {
+	if IsScalar(parentType) || parentType == "ANY" {
+		return fmt.Errorf("%q must not have an \"item\" section", path.UI())
+	}
+	p := path.P("item")
+	if parentType == MAP || parentType == ARRAY {
+		if len(item.Attributes) > 0 {
+			return fmt.Errorf("%q must not have \"attributes\"", p.UI())
+		}
+		if item.Type == "" {
+			return fmt.Errorf("%q must have a \"type\" defined", p.UI())
+		}
+		if DefinedTypes[item.Type] != true {
+			return fmt.Errorf("%q has an invalid \"type\": %s", p.UI(),
+				item.Type)
+		}
+	}
+	if parentType == OBJECT {
+		if item.Type != "" {
+			return fmt.Errorf("%q must not have a \"type\" defined", p.UI())
+		}
+		if item.Item != nil {
+			return fmt.Errorf("%q must not have a \"item\" section", p.UI())
+		}
+		if err := item.Attributes.Verify(&LevelData{nil, p}); err != nil {
+			return err
+		}
 	}
 
-	// First add all attributes before we dive into the IfValue
-	for _, attr := range attrs {
-		if attrNames[attr.Name] == true {
-			if rootName != "" {
-				return fmt.Errorf("Attribute %q has an ifvalue(%s) that "+
-					"defines a conflicting siblingattribute(%s)",
-					rootName, valStr, attr.Name)
-			}
-			return fmt.Errorf("Duplicate attribute defined: %s", attr.Name)
-		}
-		attrNames[attr.Name] = true
+	if item.Attributes != nil && parentType != OBJECT {
+		return fmt.Errorf("%q must not have an \"attributes\" section, "+
+			"use a nested \"item\" instead", p.UI())
 	}
 
-	// Now go thru each attr's IfValue and make sure there will be no conflicts
-	saveRoot := rootName
-	for _, attr := range attrs {
-		if rootName == "" {
-			rootName = attr.Name
-		}
-		for ifValStr, ifValue := range attr.IfValue {
-			err := VerifyAttributesIfValues(ifValue.SiblingAttributes,
-				attrNames, rootName, ifValStr)
-			if err != nil {
-				return err
-			}
-		}
-		rootName = saveRoot
+	if item.Item != nil {
+		return item.Item.Verify(p, item.Type)
 	}
-
 	return nil
 }
 
@@ -1162,103 +1209,6 @@ var DefinedTypes = map[string]bool{
 	STRING:    true,
 	TIMESTAMP: true,
 	URI:       true, URI_REFERENCE: true, URI_TEMPLATE: true, URL: true}
-
-func (attr *Attribute) Verify(name string) error {
-	if name != "*" && !IsValidAttributeName(name) {
-		return fmt.Errorf("Invalid Attribute name/key '%s' - must match '%s'",
-			name, RegexpPropName.String())
-	}
-
-	if name != attr.Name {
-		return fmt.Errorf("Attribute '%s's 'name' property must be '%s' not "+
-			"'%s'", name, name, attr.Name)
-	}
-
-	if _, ok := DefinedTypes[attr.Type]; !ok {
-		return fmt.Errorf("Attribute '%s' has an invalid type: '%s'",
-			name, attr.Type)
-	}
-
-	// Is it ok for strict=true and enum=[] ? Require no value???
-	// if attr.Strict == true && len(attr.Enum) == 0 {
-	// }
-
-	// check enum values
-	if attr.Enum != nil && !IsScalar(attr.Type) {
-		return fmt.Errorf("Attribute '%s' must be a scalar, not: %s",
-			attr.Name, attr.Type)
-	}
-	if len(attr.Enum) > 0 {
-		for _, val := range attr.Enum {
-			if !IsOfType(val, attr.Type) {
-				return fmt.Errorf("Attribute '%s' enum value of '%v' must be "+
-					"of type: %s", attr.Name, val, attr.Type)
-			}
-		}
-	}
-
-	if attr.ClientRequired && !attr.ServerRequired {
-		return fmt.Errorf("Attribute '%s' is 'clientrequired' so "+
-			"'serverrequired' must be 'true' as well", attr.Name)
-	}
-
-	/* Not true since Item defaults to empty Object - odd but ok
-	if !IsScalar(attr.Type) && attr.Type != OBJECT && attr.Item == nil {
-		return fmt.Errorf("Attribute '%s' is non-scalar so it must have an "+
-			"item section", attr.Name)
-	}
-	*/
-
-	if attr.Item != nil {
-		if IsScalar(attr.Type) || attr.Type == "ANY" {
-			return fmt.Errorf("Attribute '%s' can't have an 'item' section "+
-				"because its of type '%s'", name, attr.Type)
-		}
-		if err := attr.Item.Verify(attr.Name, attr.Type); err != nil {
-			return err
-		}
-	}
-
-	// check ifvalues
-
-	return nil
-}
-
-func (i *Item) Verify(attrName string, attrType string) error {
-	iType := i.Type
-	if iType == "" {
-		iType = OBJECT
-	}
-
-	if _, ok := DefinedTypes[iType]; !ok {
-		return fmt.Errorf("Attribute '%s' has an invalid item.type: %s",
-			attrName, iType)
-	}
-
-	if attrType == OBJECT && iType != OBJECT {
-		return fmt.Errorf("Attribute '%s' must not have an item.type of: "+
-			"object", attrName)
-	}
-
-	if _, ok := DefinedTypes[iType]; !ok {
-		return fmt.Errorf("Attribute '%s's 'item.type' isn't a valid "+
-			"type: '%s'", attrName, iType)
-
-	}
-
-	if i.Item != nil {
-		if IsScalar(iType) || iType == "ANY" {
-			return fmt.Errorf("Attribute '%s' can't have an 'item' section "+
-				"because its parent type is '%s'",
-				attrName, iType)
-		}
-		if err := i.Item.Verify(attrName, iType); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 // attr.Type must be a scalar
 // Used to check JSON type vs our types

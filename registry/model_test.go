@@ -39,7 +39,7 @@ func TestModelVerifySimple(t *testing.T) {
 					Name:           "myint",
 					Type:           "integer",
 					Description:    "cool int",
-					Enum:           []any{},
+					Enum:           []any{1},
 					Strict:         true,
 					ReadOnly:       true,
 					ClientRequired: true,
@@ -79,14 +79,14 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"empty attrs", Model{Attributes: Attributes{}}, ""},
 		{"err - missing name", Model{
 			Attributes: Attributes{"myint": {}},
-		}, `Attribute 'myint's 'name' property must be 'myint' not ''`},
+		}, `"model.myint" must have a "name" set to "myint"`},
 		{
 			"err - wrong name", Model{
 				Attributes: Attributes{"myint": {Name: "bad"}},
-			}, `Attribute 'myint's 'name' property must be 'myint' not 'bad'`},
+			}, `"model.myint" must have a "name" set to "myint"`},
 		{"err - missing type", Model{
 			Attributes: Attributes{"myint": {Name: "myint"}},
-		}, `Attribute 'myint' has an invalid type: ''`},
+		}, `"model.myint" is missing a "type"`},
 		// Test all valid types
 		{"type - boolean", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: BOOLEAN}}}, ``},
@@ -115,32 +115,34 @@ func TestModelVerifyRegAttr(t *testing.T) {
 
 		{"type - array", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: ARRAY,
-				Item: &Item{}}}}, ``},
+				Item: &Item{Type: INTEGER}}}}, ``},
 		{"type - map", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: MAP,
-				Item: &Item{}}}}, ``},
+				Item: &Item{Type: STRING}}}}, ``},
 		{"type - object", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
 				Item: &Item{}}}}, ``},
 
 		{"type - any", Model{
 			Attributes: Attributes{".foo": {Name: ".foo", Type: ANY}}},
-			`Invalid Attribute name/key '.foo' - must match '^[a-z_][a-z0-9_./]{0,62}$'`},
+			`"model" has an invalid attribute key ".foo" - must match "^[a-z_][a-z0-9_./]{0,62}$"`},
 		{"type - array - missing item", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: ARRAY}}}, ""},
+			Attributes: Attributes{"x": {Name: "x", Type: ARRAY}}},
+			`"model.x" must have an "item" section`},
 		{"type - map - missing item", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: MAP}}}, ""},
+			Attributes: Attributes{"x": {Name: "x", Type: MAP}}},
+			`"model.x" must have an "item" section`},
 		{"type - object - missing item", Model{ // odd but allowable
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT}}}, ""},
 
 		{"type - bad urlx", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: "urlx"}}},
-			`Attribute 'x' has an invalid type: 'urlx'`},
+			`"model.x" has an invalid type: urlx`},
 
 		{"type - bad required", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: "url",
 				ClientRequired: true}}},
-			`Attribute 'x' is 'clientrequired' so 'serverrequired' must be 'true' as well`},
+			`"model.x" must have "serverrequired" since "clientrequired" is "true"`},
 
 		// Now some Item stuff
 		{"Item - missing", Model{
@@ -151,15 +153,37 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"Item - Type any - ", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
 				Item: &Item{Type: ANY}}}},
-			`Attribute 'x' must not have an item.type of: object`},
+			`"model.x.item" must not have a "type" defined`},
 		{"Item - Type scalar + item  - ", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
 				Item: &Item{Type: BOOLEAN, Item: &Item{}}}}},
-			`Attribute 'x' must not have an item.type of: object`},
+			`"model.x.item" must not have a "type" defined`},
 		{"Item - Type any + item  - ", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
 				Item: &Item{Type: ANY, Item: &Item{}}}}},
-			`Attribute 'x' must not have an item.type of: object`},
+			`"model.x.item" must not have a "type" defined`},
+
+		// Nested stuff
+		{"Nested - map - obj", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: OBJECT, Item: &Item{}}}}},
+			``},
+		{"Nested - map - obj - missing item - valid", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: OBJECT}}}},
+			``},
+		{"Nested - map - obj - misplaced attrs", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: OBJECT, Attributes: Attributes{}}}}},
+			`"model.m.item" must not have an "attributes" section, use a nested "item" instead`},
+		{"Nested - map - map - misplaced attrs", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: MAP, Attributes: Attributes{}}}}},
+			`"model.m.item" must not have an "attributes" section, use a nested "item" instead`},
+		{"Nested - map - array - misplaced attrs", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: ARRAY, Attributes: Attributes{}}}}},
+			`"model.m.item" must not have an "attributes" section, use a nested "item" instead`},
 	}
 
 	for _, test := range tests {
@@ -173,7 +197,7 @@ func TestModelVerifyRegAttr(t *testing.T) {
 				test.name, test.err)
 		}
 		if err != nil && test.err != err.Error() {
-			t.Fatalf("ModifyVerify: %s - expected %q got %q", test.name,
+			t.Fatalf("ModifyVerify: %s:\nExp: %q\nGot: %s", test.name,
 				test.err, err.Error())
 		}
 	}
@@ -188,19 +212,19 @@ func TestModelVerifyEnum(t *testing.T) {
 
 	tests := []Test{
 		{"empty enum - int", Model{Attributes: Attributes{
-			"x": {Name: "x", Type: INTEGER, Enum: []any{}}}}, ""},
+			"x": {Name: "x", Type: INTEGER, Enum: []any{1}}}}, ""},
 		{"empty enum - obj", Model{Attributes: Attributes{
-			"x": {Name: "x", Type: OBJECT, Enum: []any{}}}},
-			"Attribute 'x' must be a scalar, not: object"},
+			"x": {Name: "x", Type: OBJECT, Enum: []any{1}}}},
+			`"model.x" is not a scalar, so "enum" is not allowed`},
 		{"empty enum - array", Model{Attributes: Attributes{
-			"x": {Name: "x", Type: ARRAY, Enum: []any{}}}},
-			"Attribute 'x' must be a scalar, not: array"},
+			"x": {Name: "x", Type: ARRAY, Enum: []any{1}}}},
+			`"model.x" is not a scalar, so "enum" is not allowed`},
 		{"empty enum - map", Model{Attributes: Attributes{
-			"x": {Name: "x", Type: MAP, Enum: []any{}}}},
-			"Attribute 'x' must be a scalar, not: map"},
+			"x": {Name: "x", Type: MAP, Enum: []any{1}}}},
+			`"model.x" is not a scalar, so "enum" is not allowed`},
 		{"empty enum - any", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: ANY, Enum: []any{}}}},
-			"Attribute 'x' must be a scalar, not: any"},
+			`"model.x" specifies an "enum" but it is empty`},
 
 		{"enum - bool - true ", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: BOOLEAN, Enum: []any{true}}}}, ""},
@@ -208,13 +232,13 @@ func TestModelVerifyEnum(t *testing.T) {
 			"x": {Name: "x", Type: BOOLEAN, Enum: []any{true, false}}}}, ""},
 		{"enum - bool string", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: BOOLEAN, Enum: []any{true, ""}}}},
-			"Attribute 'x' enum value of '' must be of type: boolean"},
+			`"model.x" enum value "" must be of type "boolean"`},
 		{"enum - bool float", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: BOOLEAN, Enum: []any{5.5}}}},
-			"Attribute 'x' enum value of '5.5' must be of type: boolean"},
+			`"model.x" enum value "5.5" must be of type "boolean"`},
 		{"enum - bool map", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: BOOLEAN, Enum: []any{map[string]string{}}}}},
-			"Attribute 'x' enum value of 'map[]' must be of type: boolean"},
+			`"model.x" enum value "map[]" must be of type "boolean"`},
 
 		{"enum - decimal 1", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: DECIMAL, Enum: []any{5.5}}}}, ""},
@@ -222,7 +246,7 @@ func TestModelVerifyEnum(t *testing.T) {
 			"x": {Name: "x", Type: DECIMAL, Enum: []any{5.5, 2}}}}, ""},
 		{"enum - decimal bool", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: DECIMAL, Enum: []any{true, 5}}}},
-			"Attribute 'x' enum value of 'true' must be of type: decimal"},
+			`"model.x" enum value "true" must be of type "decimal"`},
 
 		{"enum - integer 1", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: INTEGER, Enum: []any{1}}}}, ""},
@@ -230,10 +254,10 @@ func TestModelVerifyEnum(t *testing.T) {
 			"x": {Name: "x", Type: INTEGER, Enum: []any{-1, 1}}}}, ""},
 		{"enum - integer float", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: INTEGER, Enum: []any{-1, 1, 3.1}}}},
-			"Attribute 'x' enum value of '3.1' must be of type: integer"},
+			`"model.x" enum value "3.1" must be of type "integer"`},
 		{"enum - integer float", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: INTEGER, Enum: []any{[]int{}}}}},
-			"Attribute 'x' enum value of '[]' must be of type: integer"},
+			`"model.x" enum value "[]" must be of type "integer"`},
 
 		{"enum - string 1", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: STRING, Enum: []any{"a"}}}}, ""},
@@ -241,10 +265,10 @@ func TestModelVerifyEnum(t *testing.T) {
 			"x": {Name: "x", Type: STRING, Enum: []any{"a", ""}}}}, ""},
 		{"enum - string int", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: STRING, Enum: []any{"a", 0}}}},
-			"Attribute 'x' enum value of '0' must be of type: string"},
+			`"model.x" enum value "0" must be of type "string"`},
 		{"enum - string struct", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: STRING, Enum: []any{"a", struct{}{}}}}},
-			"Attribute 'x' enum value of '{}' must be of type: string"},
+			`"model.x" enum value "{}" must be of type "string"`},
 
 		{"enum - timestamp 1", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: TIMESTAMP,
@@ -256,11 +280,11 @@ func TestModelVerifyEnum(t *testing.T) {
 		{"enum - timestamp bad", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: TIMESTAMP,
 				Enum: []any{"2024-01-02T12:01:02Z", "bad"}}}},
-			"Attribute 'x' enum value of 'bad' must be of type: timestamp"},
+			`"model.x" enum value "bad" must be of type "timestamp"`},
 		{"enum - timestamp type", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: TIMESTAMP,
 				Enum: []any{"2024-01-02T12:01:02Z", 5.5}}}},
-			"Attribute 'x' enum value of '5.5' must be of type: timestamp"},
+			`"model.x" enum value "5.5" must be of type "timestamp"`},
 
 		{"enum - uint 1", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: UINTEGER, Enum: []any{1}}}}, ""},
@@ -269,11 +293,11 @@ func TestModelVerifyEnum(t *testing.T) {
 			""},
 		{"enum - uint bad", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: UINTEGER, Enum: []any{2, -1}}}},
-			"Attribute 'x' enum value of '-1' must be of type: uinteger"},
+			`"model.x" enum value "-1" must be of type "uinteger"`},
 		{"enum - uint type", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: UINTEGER,
 				Enum: []any{5.5}}}},
-			"Attribute 'x' enum value of '5.5' must be of type: uinteger"},
+			`"model.x" enum value "5.5" must be of type "uinteger"`},
 
 		{"empty enum - int", Model{Attributes: Attributes{
 			"x": {Name: "x", Type: URI, Enum: []any{"..."}}}}, ""},
@@ -296,7 +320,7 @@ func TestModelVerifyEnum(t *testing.T) {
 				test.name, test.err)
 		}
 		if err != nil && test.err != err.Error() {
-			t.Fatalf("ModifyVerify: %s - expected %q got %q", test.name,
+			t.Fatalf("ModifyVerify: %s\nExp: %s\nGot: %s", test.name,
 				test.err, err.Error())
 		}
 	}

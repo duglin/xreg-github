@@ -327,42 +327,66 @@ func TestHTTPRegistry(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
-	reg.Model.AddAttr("myany", registry.ANY)
-	reg.Model.AddAttr("mybool", registry.BOOLEAN)
-	reg.Model.AddAttr("mydec", registry.DECIMAL)
-	reg.Model.AddAttr("myint", registry.INTEGER)
-	reg.Model.AddAttr("mystr", registry.STRING)
-	reg.Model.AddAttr("mytime", registry.TIMESTAMP)
-	reg.Model.AddAttr("myuint", registry.UINTEGER)
-	reg.Model.AddAttr("myuri", registry.URI)
-	reg.Model.AddAttr("myuriref", registry.URI_REFERENCE)
-	reg.Model.AddAttr("myuritemplate", registry.URI_TEMPLATE)
-	reg.Model.AddAttr("myurl", registry.URL)
+	_, err := reg.Model.AddAttr("myany", registry.ANY)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("mybool", registry.BOOLEAN)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("mydec", registry.DECIMAL)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("myint", registry.INTEGER)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("mystr", registry.STRING)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("mytime", registry.TIMESTAMP)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("myuint", registry.UINTEGER)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("myuri", registry.URI)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("myuriref", registry.URI_REFERENCE)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("myuritemplate", registry.URI_TEMPLATE)
+	xCheckErr(t, err, "")
+	_, err = reg.Model.AddAttr("myurl", registry.URL)
+	xCheckErr(t, err, "")
 
-	attr, _ := reg.Model.AddAttrObj("myobj1")
-	attr.Item.AddAttr("mystr1", registry.STRING)
-	attr.Item.AddAttr("myint1", registry.INTEGER)
-	attr.Item.AddAttr("*", registry.ANY)
+	attr, err := reg.Model.AddAttrObj("myobj1")
+	xCheckErr(t, err, "")
+	_, err = attr.Item.AddAttr("mystr1", registry.STRING)
+	xCheckErr(t, err, "")
+	_, err = attr.Item.AddAttr("myint1", registry.INTEGER)
+	xCheckErr(t, err, "")
+	_, err = attr.Item.AddAttr("*", registry.ANY)
+	xCheckErr(t, err, "")
 
 	attr, _ = reg.Model.AddAttrObj("myobj2")
 	attr.Item.AddAttr("mystr2", registry.STRING)
-	obj2, _ := attr.Item.AddAttrObj("myobj2_1")
-	obj2.AddAttr("*", registry.INTEGER)
+	obj2, err := attr.Item.AddAttrObj("myobj2_1")
+	xCheckErr(t, err, "")
+	_, err = obj2.AddAttr("*", registry.INTEGER)
+	xCheckErr(t, err, "")
 
-	item := registry.NewItem(registry.ANY)
-	attr, _ = reg.Model.AddAttrArray("myarrayany", item)
-	attr, _ = reg.Model.AddAttrMap("mymapany", item)
+	item := registry.NewItemType(registry.ANY)
+	attr, err = reg.Model.AddAttrArray("myarrayany", item)
+	xCheckErr(t, err, "")
+	attr, err = reg.Model.AddAttrMap("mymapany", item)
+	xCheckErr(t, err, "")
 
-	item = registry.NewItem(registry.UINTEGER)
-	attr, _ = reg.Model.AddAttrArray("myarrayuint", item)
-	attr, _ = reg.Model.AddAttrMap("mymapuint", item)
+	item = registry.NewItemType(registry.UINTEGER)
+	attr, err = reg.Model.AddAttrArray("myarrayuint", item)
+	xCheckErr(t, err, "")
+	attr, err = reg.Model.AddAttrMap("mymapuint", item)
+	xCheckErr(t, err, "")
 
 	item = registry.NewItemObject()
-	attr, _ = reg.Model.AddAttrArray("myarrayemptyobj", item)
+	attr, err = reg.Model.AddAttrArray("myarrayemptyobj", item)
+	xCheckErr(t, err, "")
 
 	item = registry.NewItemObject()
-	item.AddAttr("mapobj_int", registry.INTEGER)
-	attr, _ = reg.Model.AddAttrMap("mymapobj", item)
+	item.SetItem(registry.NewItem())
+	item.Item.AddAttr("mapobj_int", registry.INTEGER)
+	attr, err = reg.Model.AddAttrMap("mymapobj", item)
+	xCheckErr(t, err, "")
 
 	xCheckHTTP(t, &HTTPTest{
 		Name:       "POST reg",
@@ -441,6 +465,7 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody:    "Error processing registry: Attribute \"epoch\"(33) doesn't match existing value (4)\n",
 	})
 
+	t.Logf("MODEL:\n%s", ToJSON(reg.Model))
 	xCheckHTTP(t, &HTTPTest{
 		Name:       "PUT reg - full good",
 		URL:        "/",
@@ -848,7 +873,7 @@ func TestHTTPGroups(t *testing.T) {
 	attr.Item.AddAttr("foo", registry.STRING)
 	attr.Item.AddAttr("*", registry.ANY)
 
-	item := registry.NewItem(registry.ANY)
+	item := registry.NewItemType(registry.ANY)
 	attr, _ = gm.AddAttrArray("myarray", item)
 	attr, _ = gm.AddAttrMap("mymap", item)
 
@@ -2754,6 +2779,7 @@ func TestHTTPIfValue(t *testing.T) {
 						Name:           "mystr",
 						Type:           registry.STRING,
 						ClientRequired: true,
+						ServerRequired: true,
 					},
 					"*": &registry.Attribute{
 						Name: "*",
@@ -2763,7 +2789,7 @@ func TestHTTPIfValue(t *testing.T) {
 			},
 		},
 	})
-	xCheckErr(t, err, "") // should work
+	xCheckErr(t, err, "")
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myobj",
@@ -2771,7 +2797,8 @@ func TestHTTPIfValue(t *testing.T) {
 		Item: &registry.Item{},
 	})
 	// Test empty obj and name conflict with IfValue above
-	xCheckErr(t, err, "Attribute \"myint\" has an ifvalue(10) that defines a conflicting siblingattribute(myobj)")
+	xCheckErr(t, err,
+		`Duplicate attribute name (myobj) at: model.myint.ifvalue(10)`)
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myobj2",
@@ -2785,6 +2812,7 @@ func TestHTTPIfValue(t *testing.T) {
 						"666": &registry.IfValue{
 							SiblingAttributes: registry.Attributes{
 								"reqint": &registry.Attribute{
+									Name: "reqint",
 									Type: registry.INTEGER,
 								},
 							},
@@ -2904,9 +2932,6 @@ func TestHTTPIfValue(t *testing.T) {
 `,
 	})
 
-	return
-	// DUG
-
 	xCheckHTTP(t, &HTTPTest{
 		Name:   "PUT reg - ifvalue - 3 levels - valid, unknown 3 level",
 		URL:    "",
@@ -2957,12 +2982,12 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPIfValue",
-  "epoch": 5,
+  "epoch": 6,
   "self": "http://localhost:8181/",
   "myint": 10,
   "myobj2": {
-    "subint1": 666,
-    "reqint": 777
+    "reqint": 777,
+    "subint1": 666
   },
   "mystr": "hello"
 }

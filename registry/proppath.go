@@ -320,7 +320,7 @@ func (pp *PropPath) Prop(prop string) *PropPath {
 
 func (pp *PropPath) Clone() *PropPath {
 	newPP := NewPP()
-	newPP.Parts = pp.Parts[:]
+	newPP.Parts = append([]PropPart{}, pp.Parts...)
 	return newPP
 }
 

@@ -34,11 +34,11 @@ func TestBasicTypes(t *testing.T) {
 	reg.Model.AddAttr("reganyobj", registry.ANY)
 
 	reg.Model.AddAttrArray("regarrayarrayint",
-		registry.NewItemArray(registry.NewItem(registry.INTEGER)))
+		registry.NewItemArray(registry.NewItemType(registry.INTEGER)))
 
-	reg.Model.AddAttrArray("regarrayint", registry.NewItem(registry.INTEGER))
-	reg.Model.AddAttrMap("regmapint", registry.NewItem(registry.INTEGER))
-	reg.Model.AddAttrMap("regmapstring", registry.NewItem(registry.STRING))
+	reg.Model.AddAttrArray("regarrayint", registry.NewItemType(registry.INTEGER))
+	reg.Model.AddAttrMap("regmapint", registry.NewItemType(registry.INTEGER))
+	reg.Model.AddAttrMap("regmapstring", registry.NewItemType(registry.STRING))
 
 	attr, err := reg.Model.AddAttrObj("regobj")
 	xNoErr(t, err)
@@ -65,8 +65,8 @@ func TestBasicTypes(t *testing.T) {
 	gm.AddAttr("diranyarray", registry.ANY)
 	gm.AddAttr("diranymap", registry.ANY)
 	gm.AddAttr("diranyobj", registry.ANY)
-	gm.AddAttrArray("dirarrayint", registry.NewItem(registry.INTEGER))
-	gm.AddAttrMap("dirmapint", registry.NewItem(registry.INTEGER))
+	gm.AddAttrArray("dirarrayint", registry.NewItemType(registry.INTEGER))
+	gm.AddAttrMap("dirmapint", registry.NewItemType(registry.INTEGER))
 	attr, _ = gm.AddAttrObj("dirobj")
 	attr.Item.AddAttr("*", registry.ANY)
 

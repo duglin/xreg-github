@@ -1371,7 +1371,7 @@ func (e *Entity) Validate(useNew bool) error {
 	attrs := e.GetAttributes(true)
 	log.VPrintf(3, "========")
 	log.VPrintf(3, "Validating:\n%s", ToJSON(dupObj))
-	return ValidateObject(e, dupObj, e.Object, attrs, NewPP())
+	return e.ValidateObject(dupObj, attrs, NewPP())
 }
 
 func PrepUpdateEntity(e *Entity, isNew bool) error {
@@ -1391,14 +1391,13 @@ func PrepUpdateEntity(e *Entity, isNew bool) error {
 
 // This should be called after all level-specific calculated properties have
 // been removed - such as collections
-func ValidateObject(e *Entity, val any, oldObj map[string]any,
-	origAttrs Attributes, path *PropPath) error {
+func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) error {
 
-	log.VPrintf(3, ">Enter: ValidateObject(path: %s)", path)
+	log.VPrintf(3, ">Enter: ValidateObject(path: %s)", path.UI())
 	defer log.VPrintf(3, "<Exit: ValidateObject")
 
-	log.VPrintf(3, "NewObj:\n%s", ToJSON(val))
-	log.VPrintf(3, "OrigAttrs:\n%s", ToJSON(origAttrs))
+	log.VPrintf(3, "Check Obj:\n%s", ToJSON(val))
+	log.VPrintf(3, "OrigAttrs:\n%s", ToJSON(SortedKeys(origAttrs)))
 
 	valValue := reflect.ValueOf(val)
 	if valValue.Kind() != reflect.Map ||
@@ -1458,14 +1457,14 @@ func ValidateObject(e *Entity, val any, oldObj map[string]any,
 			// the next section (checkFn) will allow for more detailed
 			// checking, like for valid values
 			if !IsNil(val) {
-				err := ValidateAttribute(e, val, attr, path.P(key))
+				err := e.ValidateAttribute(val, attr, path.P(key))
 				if err != nil {
 					return err
 				}
 			}
 
 			// GetAttributes already added IfValue for top-level attributes
-			if path.Len() > 1 && len(attr.IfValue) > 0 {
+			if path.Len() >= 1 && len(attr.IfValue) > 0 {
 				valStr := fmt.Sprintf("%v", val)
 				for ifValStr, ifValueData := range attr.IfValue {
 					if valStr != ifValStr {
@@ -1475,8 +1474,9 @@ func ValidateObject(e *Entity, val any, oldObj map[string]any,
 					for _, newAttr := range ifValueData.SiblingAttributes {
 						if _, ok := allAttrNames[newAttr.Name]; ok {
 							return fmt.Errorf(`Attribute %q has an "ifvalue"`+
-								`(%s) that conflicts with an existing `+
-								`attribute`, path.P(key).UI(), newAttr.Name)
+								`(%s) that defines a conflictng `+
+								`siblingattribute: %s`, path.P(key).UI(),
+								valStr, newAttr.Name)
 						}
 						if newAttr.Name == "*" {
 							attrs = append([]*Attribute{newAttr}, attrs...)
@@ -1546,11 +1546,10 @@ func ValidateObject(e *Entity, val any, oldObj map[string]any,
 	return nil
 }
 
-func ValidateAttribute(e *Entity, val any, attr *Attribute, path *PropPath) error {
+func (e *Entity) ValidateAttribute(val any, attr *Attribute, path *PropPath) error {
 	log.VPrintf(3, ">Enter: ValidateAttribute(%s)", path.UI())
 	defer log.VPrintf(3, "<Exit: ValidateAttribute")
 
-	log.VPrintf(3, "ValidateAttribute:")
 	log.VPrintf(3, " val: %v", ToJSON(val))
 	log.VPrintf(3, " attr: %v", ToJSON(attr))
 
@@ -1558,24 +1557,33 @@ func ValidateAttribute(e *Entity, val any, attr *Attribute, path *PropPath) erro
 		// All good - let it thru
 		return nil
 	} else if IsScalar(attr.Type) {
-		return ValidateScalar(e, val, attr, path)
+		return e.ValidateScalar(val, attr, path)
 	} else if attr.Type == MAP {
-		return ValidateMap(e, val, attr.Item, path)
+		return e.ValidateMap(val, attr.Item, path)
 	} else if attr.Type == ARRAY {
-		return ValidateArray(e, val, attr.Item, path)
+		return e.ValidateArray(val, attr.Item, path)
 	} else if attr.Type == OBJECT {
 		attrs := Attributes(nil)
 		if attr.Item != nil {
 			attrs = attr.Item.Attributes
 		}
-		return ValidateObject(e, val, nil, attrs, path)
+		/*
+			attrs := e.GetBaseAttributes()
+			if useNew {
+				attrs.AddIfValueAttributes(e.NewObject)
+			} else {
+				attrs.AddIfValueAttributes(e.Object)
+			}
+		*/
+
+		return e.ValidateObject(val, attrs, path)
 	}
 
 	ShowStack()
 	panic(fmt.Sprintf("Unknown type(%s): %s", path.UI(), attr.Type))
 }
 
-func ValidateMap(e *Entity, val any, item *Item, path *PropPath) error {
+func (e *Entity) ValidateMap(val any, item *Item, path *PropPath) error {
 	log.VPrintf(3, ">Enter: ValidateMap(%s)", path.UI())
 	defer log.VPrintf(3, "<Exit: ValidateMap")
 
@@ -1594,7 +1602,7 @@ func ValidateMap(e *Entity, val any, item *Item, path *PropPath) error {
 	// All values in the map must be of the same type
 	attr := &Attribute{
 		Type: item.Type,
-		Item: item,
+		Item: item.Item,
 	}
 
 	for _, k := range valValue.MapKeys() {
@@ -1603,7 +1611,7 @@ func ValidateMap(e *Entity, val any, item *Item, path *PropPath) error {
 		if IsNil(v) {
 			continue
 		}
-		if err := ValidateAttribute(e, v, attr, path.P(keyName)); err != nil {
+		if err := e.ValidateAttribute(v, attr, path.P(keyName)); err != nil {
 			return err
 		}
 	}
@@ -1611,7 +1619,7 @@ func ValidateMap(e *Entity, val any, item *Item, path *PropPath) error {
 	return nil
 }
 
-func ValidateArray(e *Entity, val any, item *Item, path *PropPath) error {
+func (e *Entity) ValidateArray(val any, item *Item, path *PropPath) error {
 	log.VPrintf(3, ">Enter: ValidateArray(%s)", path.UI())
 	defer log.VPrintf(3, "<Exit: ValidateArray")
 
@@ -1635,7 +1643,7 @@ func ValidateArray(e *Entity, val any, item *Item, path *PropPath) error {
 
 	for i := 0; i < valValue.Len(); i++ {
 		v := valValue.Index(i).Interface()
-		if err := ValidateAttribute(e, v, attr, path.I(i)); err != nil {
+		if err := e.ValidateAttribute(v, attr, path.I(i)); err != nil {
 			return err
 		}
 	}
@@ -1643,7 +1651,7 @@ func ValidateArray(e *Entity, val any, item *Item, path *PropPath) error {
 	return nil
 }
 
-func ValidateScalar(e *Entity, val any, attr *Attribute, path *PropPath) error {
+func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error {
 	log.VPrintf(3, ">Enter: ValidateScalar(%s:%s)", path.UI(), ToJSON(val))
 	defer log.VPrintf(3, "<Exit: ValidateScalar")
 

@@ -15,6 +15,9 @@ test: .test
 	@echo
 	@touch .test
 
+unittest:
+	go test -failfast ./registry
+
 server: *.go registry/*
 	go build -o $@ .
 
