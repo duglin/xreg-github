@@ -90,7 +90,7 @@ func GetRegistryNames() []string {
 }
 
 func (reg *Registry) Get(name string) any {
-	return reg.Entity.GetPropFromUI(name)
+	return reg.Entity.Get(name)
 }
 
 func (reg *Registry) Set(name string, val any) error {

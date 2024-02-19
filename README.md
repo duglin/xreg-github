@@ -50,10 +50,8 @@ TODOs:
 - create a schema (xreg model) checker so we can remove all checks during
   the set() calls and just check the entire entity all at once before we
   call set()
-- support for IfValues
 - test/support changing the model
   - test for invalid changes
-- stop treating "labels" as special
 - see if we can move "#resource??" into the attributes struct
 - support overriding spec defined attributes - like "format"
 - write down the model for the spec defined attributes

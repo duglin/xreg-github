@@ -129,29 +129,6 @@ func ToJSON(obj interface{}) string {
 	return string(buf)
 }
 
-func ToJSONOneLine(obj interface{}) string {
-	buf, err := json.Marshal(obj)
-	if err != nil {
-		log.Fatalf("Error Marshaling: %s", err)
-	}
-	return string(buf)
-}
-
-func URLBuild(base string, paths ...string) string {
-	isFrag := strings.Index(base, "#") >= 0
-	url := base
-	url = strings.TrimRight(url, "/")
-
-	for _, path := range paths {
-		if isFrag {
-			url += "/" + path
-		} else {
-			url += "/" + strings.ToLower(path)
-		}
-	}
-	return url
-}
-
 func Keys(m interface{}) []string {
 	mk := reflect.ValueOf(m).MapKeys()
 
@@ -171,12 +148,6 @@ func SortedKeys(m interface{}) []string {
 	}
 	sort.Strings(keys)
 	return keys
-}
-
-type JSONData struct {
-	Prefix   string
-	Indent   string
-	Registry *Registry
 }
 
 func ShowStack() {
@@ -207,8 +178,8 @@ func RemoveProps(buf []byte) []byte {
 	re := regexp.MustCompile(`\n[^{}]*\n`)
 	buf = re.ReplaceAll(buf, []byte("\n"))
 
-	re = regexp.MustCompile(`\s"labels": {\s*},*`)
-	buf = re.ReplaceAll(buf, []byte(""))
+	// re = regexp.MustCompile(`\s"labels": {\s*},*`)
+	// buf = re.ReplaceAll(buf, []byte(""))
 
 	re = regexp.MustCompile(`\n *\n`)
 	buf = re.ReplaceAll(buf, []byte("\n"))

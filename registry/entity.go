@@ -26,7 +26,7 @@ type Entity struct {
 	Level     int // 0=registry, 1=group, 2=resource, 3=version
 	Path      string
 	Abstract  string
-	SkipEpoch bool `json:"-"`
+	SkipEpoch bool `json:"-"` // Should we skip epoch-specific processing?
 }
 
 type EntitySetter interface {
@@ -58,34 +58,15 @@ func GoToOurType(val any) string {
 	panic(fmt.Sprintf("Bad Kind: %v", reflect.ValueOf(val).Kind()))
 }
 
-func ToGoType(s string) reflect.Type {
-	switch s {
-	case ANY:
-		return reflect.TypeOf(any(true))
-	case BOOLEAN:
-		return reflect.TypeOf(true)
-	case DECIMAL:
-		return reflect.TypeOf(float64(1.1))
-	case INTEGER:
-		return reflect.TypeOf(int(1))
-	case STRING, TIMESTAMP, URI, URI_REFERENCE, URI_TEMPLATE, URL:
-		return reflect.TypeOf("")
-	case UINTEGER:
-		return reflect.TypeOf(uint(0))
-	}
-	panic("ToGoType - not supported: " + s)
-}
-
-func (e *Entity) GetPropFromUI(name string) any {
-	pp, err := PropPathFromUI(name)
+func (e *Entity) Get(path string) any {
+	pp, err := PropPathFromUI(path)
 	PanicIf(err != nil, fmt.Sprintf("%s", err))
-	return e.GetPropPP(pp)
+	return e.GetPP(pp)
 }
 
-func (e *Entity) GetPropPP(pp *PropPath) any {
+func (e *Entity) GetPP(pp *PropPath) any {
 	name := pp.DB()
 	if pp.Len() == 1 && pp.Top() == "#resource" {
-		// if name == "#resource" {
 		results, err := Query(`
             SELECT Content
             FROM ResourceContents
@@ -200,44 +181,8 @@ func RawEntityFromPath(regID string, path string) (*Entity, error) {
 	return readNextEntity(results)
 }
 
-func (e *Entity) Find() (bool, error) {
-	log.VPrintf(3, ">Enter: Find(%s)", e.UID)
-	defer log.VPrintf(3, "<Exit: Find")
-
-	// TODO NEED REGID
-
-	results, err := Query(`
-		SELECT
-			p.RegistrySID AS RegistrySID,
-			p.EntitySID AS DbSID,
-			e.Plural AS Plural,
-			e.UID AS UID,
-			p.PropName AS PropName,
-			p.PropValue AS PropValue,
-			p.PropType AS PropType
-		FROM Props AS p
-		LEFT JOIN Entities AS e ON (e.eSID=p.EntitySID)
-		WHERE e.UID=?`, e.UID)
-	defer results.Close()
-
-	if err != nil {
-		return false, err
-	}
-
-	first := true
-	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		if first {
-			e.RegistrySID = NotNilString(row[0])
-			e.DbSID = NotNilString(row[1])
-			e.Plural = NotNilString(row[2])
-			e.UID = NotNilString(row[3])
-			first = false
-		}
-	}
-
-	return !first, nil
-}
-
+// Update the entity's Object - not the other props in Entity. Similar to
+// RawEntityFromPath
 func (e *Entity) Refresh() error {
 	log.VPrintf(3, ">Enter: Refresh(%s)", e.DbSID)
 	defer log.VPrintf(3, "<Exit: Refresh")
@@ -274,6 +219,7 @@ func (e *Entity) Set(path string, val any) error {
 
 	pp, err := PropPathFromUI(path)
 	if err == nil {
+		// Set and save
 		err = e.SetPP(pp, val)
 	}
 
@@ -319,23 +265,25 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	return ObjectSetProp(e.NewObject, pp, val)
 }
 
-func (e *Entity) ValidateAndSave() error {
+func (e *Entity) ValidateAndSave(isNew bool) error {
 	log.VPrintf(3, ">Enter: ValidateAndSave")
 	defer log.VPrintf(3, "<Exit: ValidateAndSave")
 
 	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
 
-	if err := e.Validate(true); err != nil {
+	if err := e.Validate(); err != nil {
 		return err
 	}
 
-	if err := PrepUpdateEntity(e, false); err != nil {
+	if err := PrepUpdateEntity(e, isNew); err != nil {
 		return err
 	}
 
 	return e.Save()
 }
 
+// This is really just an interenal Setter used for testing.
+// It'sll set a property and then validate and save the entity in the DB
 func (e *Entity) SetPP(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: SetPP(%s: %s=%v)", e.DbSID, pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetPP")
@@ -354,7 +302,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	e.SkipEpoch = true
 	defer func() { e.SkipEpoch = save }()
 
-	err := e.ValidateAndSave()
+	err := e.ValidateAndSave(false)
 	if err != nil {
 		// If there's an error, and we're making the assumption that we're
 		// setting and saving all in one shot (and there are no other edits
@@ -369,6 +317,8 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	return err
 }
 
+// This will save a single property/value in the DB. This assumes
+// the caller is traversing the Object and splitting it into individual props
 func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: SetDBProperty(%s=%v)", pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetDBProperty")
@@ -458,6 +408,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	return nil
 }
 
+// This is used to take a DB entry and update the current Entity's Object
 func (e *Entity) SetFromDBName(name string, val *string, propType string) error {
 	pp := MustPropPathFromDB(name)
 
@@ -472,7 +423,7 @@ func (e *Entity) SetFromDBName(name string, val *string, propType string) error 
 		propType == URI_TEMPLATE || propType == URL || propType == TIMESTAMP {
 		return ObjectSetProp(e.Object, pp, *val)
 	} else if propType == BOOLEAN {
-		// Technically "1" check shouldn't be needed, but just in case
+		// Technically the "1" check shouldn't be needed, but just in case
 		return ObjectSetProp(e.Object, pp, (*val == "1" || (*val == "true")))
 	} else if propType == INTEGER || propType == UINTEGER {
 		tmpInt, err := strconv.Atoi(*val)
@@ -506,104 +457,7 @@ func (e *Entity) SetFromDBName(name string, val *string, propType string) error 
 	}
 }
 
-// This validates a single attribute (leaf) of the object.
-// That's why it only supports empty maps/arrays/objects as values.
-// It assumes the caller has walked down to a leaf/attribute.
-func ValidatePropValue(val any, attrType string) error {
-	vKind := reflect.ValueOf(val).Kind()
-
-	switch attrType {
-	case ANY:
-		return nil
-	case BOOLEAN:
-		if vKind != reflect.Bool {
-			return fmt.Errorf(`"%v" should be a boolean`, val)
-		}
-	case DECIMAL:
-		if vKind != reflect.Int && vKind != reflect.Float64 {
-			return fmt.Errorf(`"%v" should be a decimal`, val)
-		}
-	case INTEGER:
-		if vKind == reflect.Float64 {
-			f := val.(float64)
-			if f != float64(int(f)) {
-				return fmt.Errorf(`"%v" must be an integer`, val)
-			}
-			return nil
-		}
-		if vKind != reflect.Int {
-			return fmt.Errorf(`"%v" should be an integer`, val)
-		}
-	case UINTEGER:
-		i := 0
-		if vKind == reflect.Float64 {
-			f := val.(float64)
-			i = int(f)
-			if f != float64(i) {
-				return fmt.Errorf("%q must be a uinteger", val)
-			}
-		} else {
-			i = val.(int)
-			if vKind != reflect.Int {
-				return fmt.Errorf("%q must be a uinteger", val)
-			}
-		}
-		if i < 0 {
-			return fmt.Errorf(`"%v" should be a uinteger`, val)
-		}
-	case STRING, URI, URI_REFERENCE, URI_TEMPLATE, URL: // cheat
-		if vKind != reflect.String {
-			return fmt.Errorf(`"%v" should be a string`, val)
-		}
-	case TIMESTAMP:
-		if vKind != reflect.String {
-			return fmt.Errorf(`"%v" should be a timestamp`, val)
-		}
-		str := val.(string)
-		_, err := time.Parse(time.RFC3339, str)
-		if err != nil {
-			return fmt.Errorf("Malformed timestamp %q: %s", str, err)
-		}
-
-	// For the non-scalar types, these should only be used when someone
-	// passing in something like:
-	//    "foo": {}
-	// and we need to save an empty (non-scalar) value. Hence the "if" below.
-	case MAP:
-		// anything but an empty map means we did something wrong before this
-		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.Map || v.Len() > 0 {
-			return fmt.Errorf(`%q must be an empty map`, val)
-		}
-		val = ""
-
-	case ARRAY:
-		// anything but an empty array means we did something wrong before this
-		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.Slice || v.Len() > 0 {
-			return fmt.Errorf(`%q must be an empty array`, val)
-		}
-		val = ""
-
-	case OBJECT:
-		// Anything but an empty struct means we did something wrong before this
-		// Allow for a map since we can't tell sometimes
-		v := reflect.ValueOf(val)
-		if (v.Kind() != reflect.Struct || v.NumField() > 0) &&
-			(v.Kind() != reflect.Map || v.Len() > 0) {
-			// ShowStack()
-			return fmt.Errorf(`%q must be an empty object`, val)
-		}
-		val = ""
-
-	default:
-		ShowStack()
-		log.Printf("AttrType: %q  Val: %#q", attrType, val)
-		return fmt.Errorf("unsupported type: %s", attrType)
-	}
-	return nil
-}
-
+// Create a new Entity based on what's in the DB. Similar to Refresh()
 func readNextEntity(results *Result) (*Entity, error) {
 	entity := (*Entity)(nil)
 
@@ -653,45 +507,39 @@ func readNextEntity(results *Result) (*Entity, error) {
 	return entity, nil
 }
 
-type SpecProp struct {
-	name      string // prop name
-	daType    string
-	levels    string // only show for these levels
-	mutable   bool   // user editable
-	dontStore bool
-	getFn     func(*Entity, *RequestInfo) any // return its value
-	checkFn   func(e *Entity) error
-	// prep newObj for an update to the DB
-	updateFn       func(*Entity, bool) error
-	modelAttribute *Attribute
-}
-
-func (sp *SpecProp) InLevel(level int) bool {
-	return sp.levels == "" || strings.ContainsRune(sp.levels, rune('0'+level))
-}
-
 // This allows for us to choose the order and define custom logic per prop
-var OrderedSpecProps = []*SpecProp{
-	{"specversion", STRING, "0", false, false,
-		func(e *Entity, info *RequestInfo) any {
+var OrderedSpecProps = []*Attribute{
+	{
+		Name:           "specversion",
+		Type:           STRING,
+		ServerRequired: true,
+		ReadOnly:       true,
+
+		levels:    "0",
+		mutable:   false,
+		dontStore: false,
+		getFn: func(e *Entity, info *RequestInfo) any {
 			return SPECVERSION
 		},
-		func(e *Entity) error {
+		checkFn: func(e *Entity) error {
 			tmp := e.NewObject["specversion"]
 			if !IsNil(tmp) && tmp != "" && tmp != SPECVERSION {
 				return fmt.Errorf("Invalid 'specversion': %s", tmp)
 			}
 			return nil
 		},
-		nil,
-		&Attribute{
-			Name:           "specversion",
-			Type:           STRING,
-			ServerRequired: true,
-			ReadOnly:       true,
-		}},
-	{"id", STRING, "", false, false, nil,
-		func(e *Entity) error {
+		updateFn: nil,
+	},
+	{
+		Name:           "id",
+		Type:           STRING,
+		ServerRequired: true,
+
+		levels:    "",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn: func(e *Entity) error {
 			if e.Object != nil {
 				oldID := any(e.Object["id"])
 				newID := any(e.NewObject["id"])
@@ -717,7 +565,7 @@ var OrderedSpecProps = []*SpecProp{
 			}
 			return nil
 		},
-		func(e *Entity, isNew bool) error {
+		updateFn: func(e *Entity, isNew bool) error {
 			if e.Object != nil {
 				if IsNil(e.NewObject["id"]) && !IsNil(e.Object["id"]) {
 					e.NewObject["id"] = e.Object["id"]
@@ -726,17 +574,28 @@ var OrderedSpecProps = []*SpecProp{
 			}
 			return nil
 		},
-		&Attribute{
-			Name:           "id",
-			Type:           STRING,
-			ServerRequired: true,
-		}},
-	{"name", STRING, "", true, false, nil, nil, nil, &Attribute{
+	},
+	{
 		Name: "name",
 		Type: STRING,
-	}},
-	{"epoch", UINTEGER, "", false, false, nil,
-		func(e *Entity) error {
+
+		levels:    "",
+		mutable:   true,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
+		Name:     "epoch",
+		Type:     UINTEGER,
+		ReadOnly: true,
+
+		levels:    "",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn: func(e *Entity) error {
 			if e.SkipEpoch {
 				return nil
 			}
@@ -763,7 +622,7 @@ var OrderedSpecProps = []*SpecProp{
 			}
 			return nil
 		},
-		func(e *Entity, isNew bool) error {
+		updateFn: func(e *Entity, isNew bool) error {
 			if e.SkipEpoch {
 				return nil
 			}
@@ -781,49 +640,72 @@ var OrderedSpecProps = []*SpecProp{
 			e.NewObject["epoch"] = epoch + 1
 			return nil
 		},
-		&Attribute{
-			Name:     "epoch",
-			Type:     UINTEGER,
-			ReadOnly: true,
-		}},
-	{"self", STRING, "", false, false, func(e *Entity, info *RequestInfo) any {
-		base := ""
-		if info != nil {
-			base = info.BaseURL
-		}
-		if e.Level > 1 {
-			if info != nil && (info.ShowMeta || info.ResourceUID == "") {
-				return base + "/" + e.Path + "?meta"
-			} else {
-				return base + "/" + e.Path
-			}
-		}
-		return base + "/" + e.Path
-	}, nil, nil, &Attribute{
+	},
+	{
 		Name:           "self",
 		Type:           STRING,
 		ServerRequired: true,
 		ReadOnly:       true,
-	}},
-	{"latest", BOOLEAN, "3", false, false, nil, nil,
-		func(e *Entity, isNew bool) error {
+
+		levels:    "",
+		mutable:   false,
+		dontStore: false,
+		getFn: func(e *Entity, info *RequestInfo) any {
+			base := ""
+			if info != nil {
+				base = info.BaseURL
+			}
+			if e.Level > 1 {
+				if info != nil && (info.ShowMeta || info.ResourceUID == "") {
+					return base + "/" + e.Path + "?meta"
+				} else {
+					return base + "/" + e.Path
+				}
+			}
+			return base + "/" + e.Path
+		},
+		checkFn:  nil,
+		updateFn: nil,
+	},
+	{
+		Name: "latest",
+		Type: BOOLEAN,
+
+		levels:    "3",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn: func(e *Entity, isNew bool) error {
 			// TODO is set, set latestvesionid in the resource to this
 			// guy's UID
 
 			return nil
 		},
-		&Attribute{
-			Name: "latest",
-			Type: BOOLEAN,
-		}},
-	{"latestversionid", STRING, "2", false, false, nil, nil, nil, &Attribute{
+	},
+	{
 		Name:           "latestversionid",
 		Type:           STRING,
 		ServerRequired: true,
 		ReadOnly:       true,
-	}},
-	{"latestversionurl", URL, "2", false, false,
-		func(e *Entity, info *RequestInfo) any {
+
+		levels:    "2",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
+		Name:           "latestversionurl",
+		Type:           URL,
+		ServerRequired: true,
+		ReadOnly:       true,
+
+		levels:    "2",
+		mutable:   false,
+		dontStore: false,
+		getFn: func(e *Entity, info *RequestInfo) any {
 			val := e.Object["latestversionid"]
 			if IsNil(val) {
 				return nil
@@ -838,53 +720,114 @@ var OrderedSpecProps = []*SpecProp{
 				tmp += "?meta"
 			}
 			return tmp
-		}, nil, nil, &Attribute{
-			Name:           "latestversionurl",
-			Type:           URL,
-			ServerRequired: true,
-			ReadOnly:       true,
-		}},
-	{"description", STRING, "", true, false, nil, nil, nil, &Attribute{
+		},
+		checkFn:  nil,
+		updateFn: nil,
+	},
+	{
 		Name: "description",
 		Type: STRING,
-	}},
-	{"documentation", STRING, "", true, false, nil, nil, nil, &Attribute{
+
+		levels:    "",
+		mutable:   true,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
 		Name: "documentation",
 		Type: STRING,
-	}},
-	{"labels", MAP, "", true, false, nil, nil, nil, &Attribute{
+
+		levels:    "",
+		mutable:   true,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
 		Name: "labels",
 		Type: MAP,
 		Item: &Item{
 			Type: STRING,
 		},
-	}},
-	{"origin", URI, "123", true, false, nil, nil, nil, &Attribute{
+
+		levels:    "",
+		mutable:   true,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
 		Name: "origin",
-		Type: STRING,
-	}},
-	{"createdby", STRING, "", false, false, nil, nil, nil, &Attribute{
+		Type: URI,
+
+		levels:    "123",
+		mutable:   true,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
 		Name:     "createdby",
 		Type:     STRING,
 		ReadOnly: true,
-	}},
-	{"createdon", TIMESTAMP, "", false, false, nil, nil, nil, &Attribute{
+
+		levels:    "",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
 		Name:     "createdon",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
-	}},
-	{"modifiedby", STRING, "", false, false, nil, nil, nil, &Attribute{
+
+		levels:    "",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
 		Name:     "modifiedby",
 		Type:     STRING,
 		ReadOnly: true,
-	}},
-	{"modifiedon", TIMESTAMP, "", false, false, nil, nil, nil, &Attribute{
+
+		levels:    "",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
 		Name:     "modifiedon",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
-	}},
-	{"model", OBJECT, "0", false, false,
-		func(e *Entity, info *RequestInfo) any {
+
+		levels:    "",
+		mutable:   false,
+		dontStore: false,
+		getFn:     nil,
+		checkFn:   nil,
+		updateFn:  nil,
+	},
+	{
+		Name:     "model",
+		Type:     ANY, // OBJECT
+		ReadOnly: true,
+
+		levels:    "0",
+		mutable:   false,
+		dontStore: false,
+		getFn: func(e *Entity, info *RequestInfo) any {
 			if info != nil && info.ShowModel {
 				model := info.Registry.Model
 				if model == nil {
@@ -894,25 +837,18 @@ var OrderedSpecProps = []*SpecProp{
 				return httpModel
 			}
 			return nil
-		}, nil, nil, &Attribute{
-			Name:     "model",
-			Type:     ANY,
-			ReadOnly: true,
-		}},
+		},
+		checkFn:  nil,
+		updateFn: nil,
+	},
 }
 
-var SpecProps = map[string]*SpecProp{}
+var SpecProps = map[string]*Attribute{}
 
 func init() {
 	// Load map via lower-case version of prop name
 	for _, sp := range OrderedSpecProps {
-		SpecProps[strings.ToLower(sp.name)] = sp
-		PanicIf(sp.modelAttribute != nil && sp.name != sp.modelAttribute.Name,
-			"Key & name mismatch in OrderedSpecProps: %s", sp.name)
-		if sp.checkFn != nil && sp.modelAttribute != nil {
-			sp.modelAttribute.checkFn = sp.checkFn
-			sp.modelAttribute.updateFn = sp.updateFn
-		}
+		SpecProps[sp.Name] = sp
 	}
 }
 
@@ -925,17 +861,17 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
-		attr, ok := attrs[prop.name]
+		attr, ok := attrs[prop.Name]
 		if !ok {
-			delete(daObj, prop.name)
+			delete(daObj, prop.Name)
 			continue // not allowed at this level so skip it
 		}
 
-		if val, ok := daObj[prop.name]; ok {
-			if err := fn(e, info, prop.name, val, attr); err != nil {
+		if val, ok := daObj[prop.Name]; ok {
+			if err := fn(e, info, prop.Name, val, attr); err != nil {
 				return err
 			}
-			delete(daObj, prop.name)
+			delete(daObj, prop.Name)
 		}
 	}
 
@@ -1090,10 +1026,10 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 		}
 
 		// Only generate/set the value if it's not already set
-		if _, ok := mat[prop.name]; !ok {
+		if _, ok := mat[prop.Name]; !ok {
 			if val := prop.getFn(e, info); !IsNil(val) {
 				// Only write it if we have a value
-				mat[prop.name] = val
+				mat[prop.Name] = val
 			}
 		}
 	}
@@ -1166,9 +1102,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	// TODO Check for conflicts
 	for _, specProp := range OrderedSpecProps {
 		if specProp.InLevel(level) {
-			if specProp.modelAttribute != nil {
-				attrs[specProp.name] = specProp.modelAttribute
-			}
+			attrs[specProp.Name] = specProp
 		}
 	}
 
@@ -1352,14 +1286,9 @@ func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, e
 // Doesn't fully validate in the sense that it'll assume read-only fields
 // are not worth cheching since the server generated them.
 // This is mainly used for validating input from a client
-func (e *Entity) Validate(useNew bool) error {
+func (e *Entity) Validate() error {
 	// Don't touch what was passed in
-	dupObj := (map[string]any)(nil)
-	if useNew {
-		dupObj = maps.Clone(e.NewObject)
-	} else {
-		dupObj = maps.Clone(e.Object)
-	}
+	dupObj := maps.Clone(e.NewObject)
 
 	for _, coll := range e.GetCollections() {
 		log.VPrintf(3, "Deleting collection: %q", coll)

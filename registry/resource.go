@@ -14,19 +14,24 @@ type Resource struct {
 
 func (r *Resource) Get(name string) any {
 	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
-	if name[0] == '.' { // Force it to be on the Resource, not latest Version
-		return r.Entity.GetPropFromUI(name[1:])
+
+	// Names that starts with a dot(.) means it's a resource prop, not ver prop
+	if name[0] == '.' {
+		return r.Entity.Get(name[1:])
 	}
 
-	if name == "id" || name == "latestversionid" || name == "latestversionurl" || name == "#nextVersionID" {
-		return r.Entity.GetPropFromUI(name)
+	// These are also resource properties, not vesion properties
+	if name == "id" || name == "latestversionid" ||
+		name == "latestversionurl" || name == "#nextVersionID" {
+
+		return r.Entity.Get(name)
 	}
 
 	v, err := r.GetLatest()
 	if err != nil {
 		panic(err)
 	}
-	return v.Entity.GetPropFromUI(name)
+	return v.Entity.Get(name)
 }
 
 func (r *Resource) Set(name string, val any) error {
@@ -51,6 +56,7 @@ func (r *Resource) Set(name string, val any) error {
 	if err != nil {
 		panic(err)
 	}
+
 	v.SkipEpoch = r.SkipEpoch
 	return v.Set(name, val)
 }
@@ -75,7 +81,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 
 // Maybe replace error with a panic?
 func (r *Resource) GetLatest() (*Version, error) {
-	val := r.GetPropFromUI("latestversionid")
+	val := r.Get("latestversionid")
 	if val == nil {
 		return nil, nil
 		// panic("No latest is set")
@@ -103,7 +109,8 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 			id = strconv.Itoa(nextID)
 			v, err = r.FindVersion(id)
 			if err != nil {
-				return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)
+				return nil, fmt.Errorf("Error checking for Version %q: %s",
+					id, err)
 			}
 
 			// Increment no matter what since it's "next" not "latest"

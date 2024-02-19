@@ -12,7 +12,7 @@ type Group struct {
 }
 
 func (g *Group) Get(name string) any {
-	return g.Entity.GetPropFromUI(name)
+	return g.Entity.Get(name)
 }
 
 func (g *Group) Set(name string, val any) error {

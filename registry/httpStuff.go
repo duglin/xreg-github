@@ -419,7 +419,7 @@ FROM FullTree WHERE RegSID=? AND `
 	versionsCount := 0
 	if info.VersionUID == "" {
 		// We're on a Resource, so go find the right Version
-		vID := entity.GetPropFromUI("latestversionid").(string)
+		vID := entity.Get("latestversionid").(string)
 		for {
 			v, err := readNextEntity(results)
 			if v == nil && version == nil {
@@ -477,7 +477,7 @@ FROM FullTree WHERE RegSID=? AND `
 	info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
 
 	url := ""
-	if val := entity.GetPropFromUI("#resourceURL"); val != nil {
+	if val := entity.Get("#resourceURL"); val != nil {
 		gModel := info.Registry.Model.Groups[info.GroupType]
 		rModel := gModel.Resources[info.ResourceType]
 		singular := rModel.Singular
@@ -497,7 +497,7 @@ FROM FullTree WHERE RegSID=? AND `
 		return nil
 	}
 
-	if val := entity.GetPropFromUI("#resourceProxyURL"); val != nil {
+	if val := entity.Get("#resourceProxyURL"); val != nil {
 		url = val.(string)
 	}
 
@@ -528,7 +528,7 @@ FROM FullTree WHERE RegSID=? AND `
 		return nil
 	}
 
-	buf := version.GetPropFromUI("#resource")
+	buf := version.Get("#resource")
 	if buf == nil {
 		// No data so just return
 		/*
@@ -670,19 +670,8 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		info.Registry.Entity.NewObject = IncomingObj
 
-		err = info.Registry.Entity.Validate(true)
-		if err == nil {
-			err = PrepUpdateEntity(&info.Registry.Entity, false)
-		}
-
-		if err != nil {
+		if err = info.Registry.Entity.ValidateAndSave(false); err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Error processing registry: %s", err)
-		}
-
-		err = info.Registry.Entity.Save()
-		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error processing registry: %s", err)
 		}
 
@@ -725,18 +714,8 @@ func HTTPPutPost(info *RequestInfo) error {
 		// Either /GROUPs or /GROUPs/gID - do PUT
 		group.NewObject = IncomingObj
 
-		err = group.Entity.Validate(true)
-		if err == nil {
-			err = PrepUpdateEntity(&group.Entity, isNew)
-		}
-		if err != nil {
+		if err = group.Entity.ValidateAndSave(isNew); err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Error processing group: %s", err)
-		}
-
-		err = group.Save()
-		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error processing group: %s", err)
 		}
 
@@ -858,20 +837,18 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
 	}
-	versionUID = version.UID
 
+	isResource := false
+	versionUID = version.UID
 	currObj := (map[string]any)(nil)
-	entity := (*Entity)(nil)
 
 	if len(info.Parts) >= 5 || (len(info.Parts) == 4 && method == "POST") {
+		// entity is a version not a resource
 		currObj = version.Object // Materialize(info)
-		entity = &version.Entity
-		entity.Object = currObj // replace Object with full attrs
 	} else {
-		// URL points to resource, not version
+		// entity is a resource not a version
 		currObj = resource.Materialize(info)
-		entity = &resource.Entity
-		entity.Object = currObj // replace Object with full attrs
+		isResource = true
 	}
 
 	if !info.ShowMeta {
@@ -959,24 +936,13 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 		}
 	} else {
-		// Remove all collections from incoming body, if there
-		for _, coll := range entity.GetCollections() {
-			delete(IncomingObj, coll)
-			delete(IncomingObj, coll+"count")
-			delete(IncomingObj, coll+"url")
+		// if the incoming entity is a Resource (not Version) then delete the
+		// Versions collection stuff before continuing.
+		if isResource {
+			delete(IncomingObj, "versions")
+			delete(IncomingObj, "versionscount")
+			delete(IncomingObj, "versionsurl")
 		}
-	}
-
-	entity.NewObject = IncomingObj
-
-	err = entity.Validate(true)
-	if err == nil {
-		err = PrepUpdateEntity(entity, isNew)
-	}
-
-	if err != nil {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Error processing resource: %s", err)
 	}
 
 	IncomingObj["id"] = version.UID
@@ -985,9 +951,8 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	version.NewObject = IncomingObj
 
-	err = version.Save()
-	if err != nil {
-		info.StatusCode = http.StatusInternalServerError
+	if err = version.ValidateAndSave(isNew); err != nil {
+		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing resource: %s", err)
 	}
 

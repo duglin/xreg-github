@@ -47,8 +47,14 @@ type Attribute struct {
 	IfValue IfValues `json:"ifValue,omitempty"` // Value
 
 	// Internal fields
-	checkFn  func(e *Entity) error
-	updateFn func(*Entity, bool) error
+	// We have them here so we can have access to them in any func that
+	// gets passed the model attribute
+	levels    string // show only for these levels, ""==all
+	mutable   bool   // user editable?
+	dontStore bool
+	getFn     func(*Entity, *RequestInfo) any // return prop's value
+	checkFn   func(*Entity) error             // validate prop
+	updateFn  func(*Entity, bool) error       // prep prop for saving to DB
 }
 
 type Item struct {
@@ -901,6 +907,10 @@ func IsString(daType string) bool {
 	return daType == STRING || daType == TIMESTAMP ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
 		daType == URL
+}
+
+func (a *Attribute) InLevel(level int) bool {
+	return a.levels == "" || strings.ContainsRune(a.levels, rune('0'+level))
 }
 
 func (a *Attribute) IsScalar() bool {

@@ -184,7 +184,7 @@ func (jw *JsonWriter) WriteEntity() error {
 		rModel := gModel.Resources[absParts[1]]
 		singular := rModel.Singular
 
-		if val := jw.Entity.GetPropFromUI("#resourceURL"); val != nil {
+		if val := jw.Entity.Get("#resourceURL"); val != nil {
 			url := val.(string)
 			jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular+"url", url)
 			extra = ","
@@ -193,12 +193,12 @@ func (jw *JsonWriter) WriteEntity() error {
 			p := p2.P(singular).DB()
 			if jw.info.ShouldInline(p) {
 				data := []byte{}
-				if val := jw.Entity.GetPropFromUI("#resource"); val != nil {
+				if val := jw.Entity.Get("#resource"); val != nil {
 					var ok bool
 					data, ok = val.([]byte)
 					PanicIf(!ok, "Can't convert to []byte: %s", val)
 				}
-				if val := jw.Entity.GetPropFromUI("#resourceProxyURL"); val != nil {
+				if val := jw.Entity.Get("#resourceProxyURL"); val != nil {
 					url := val.(string)
 					resp, err := http.Get(url)
 					if err != nil {

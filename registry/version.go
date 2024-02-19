@@ -12,7 +12,7 @@ type Version struct {
 }
 
 func (v *Version) Get(name string) any {
-	return v.Entity.GetPropFromUI(name)
+	return v.Entity.Get(name)
 }
 
 func (v *Version) Set(name string, val any) error {
