@@ -1,4 +1,6 @@
-all: run
+all: mysql cmds test run
+
+cmds: server mchecker
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
@@ -18,8 +20,11 @@ test: .test
 unittest:
 	go test -failfast ./registry
 
-server: *.go registry/*
-	go build -o $@ .
+server: cmds/server.go cmds/loader.go registry/*
+	go build -o $@ cmds/server.go cmds/loader.go
+
+mchecker: cmds/mchecker.go registry/*
+	go build -o $@ cmds/mchecker.go
 
 image: .xreg-server
 .xreg-server: server Dockerfile
@@ -31,7 +36,7 @@ push: .push
 	docker push $(IMAGE)
 	@touch .push
 
-run: mysql server test
+run: mysql server
 	./server --recreate
 
 start: mysql server
@@ -68,7 +73,7 @@ k3dserver: k3d image
 	sleep 2 ; kubectl logs -f xreg-server
 
 clean:
-	rm -f server
+	rm -f server mchecker
 	rm -f .test .xreg-server .push
 	go clean -cache -testcache
 	-k3d cluster delete xreg

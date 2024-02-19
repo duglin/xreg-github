@@ -24,7 +24,6 @@ func init() {
 	if tmp := os.Getenv("DBPORT"); tmp != "" {
 		DBPORT = tmp
 	}
-	log.VPrintf(1, "DB: %s:%s", DBHOST, DBPORT)
 }
 
 type Result struct {
@@ -262,8 +261,14 @@ func DBExists(name string) bool {
 
 //go:embed init.sql
 var initDB string
+var firstTime = true
 
 func OpenDB(name string) {
+	if firstTime {
+		log.VPrintf(1, "DB: %s:%s", DBHOST, DBPORT)
+		firstTime = false
+	}
+
 	log.VPrintf(3, ">Enter: OpenDB %q", name)
 	defer log.VPrintf(3, "<Exit: OpenDB")
 
