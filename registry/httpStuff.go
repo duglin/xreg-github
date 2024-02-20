@@ -457,8 +457,15 @@ FROM FullTree WHERE RegSID=? AND `
 			return nil
 		}
 
+		var headerName string
+		if attr.httpHeader != "" {
+			headerName = attr.httpHeader
+		} else {
+			headerName = "xRegistry-" + key
+		}
+
 		str := fmt.Sprintf("%v", val)
-		info.AddHeader("xRegistry-"+key, str)
+		info.AddHeader(headerName, str)
 
 		return nil
 	}
@@ -591,6 +598,17 @@ func HTTPGet(info *RequestInfo) error {
 	}
 
 	return err
+}
+
+var attrHeaders = map[string]*Attribute{}
+
+func init() {
+	// Load-up the attributes that have custom http header names
+	for _, attr := range SpecProps {
+		if attr.httpHeader != "" {
+			attrHeaders[strings.ToLower(attr.httpHeader)] = attr
+		}
+	}
 }
 
 func HTTPPutPost(info *RequestInfo) error {
@@ -824,7 +842,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			if versionUID == "" && len(info.Parts) == 5 {
 				versionUID = propsID
 			}
-			if len(info.Parts) == 4 && versionUID == "" {
+			if len(info.Parts) == 4 && versionUID == "" && method == "PUT" {
 				version, err = resource.GetLatest()
 			} else {
 				isNew = true
@@ -860,11 +878,24 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		seenMaps := map[string]bool{}
 
+		for name, attr := range attrHeaders {
+			// TODO we may need some kind of "delete if missing" flag on
+			// each httpHeader attribute since some may want to have an
+			// explicit 'null' to be erased instead of just missing (eg patch)
+			if val := info.OriginalRequest.Header.Get(name); val != "" {
+				IncomingObj[attr.Name] = val
+			} else {
+				IncomingObj[attr.Name] = nil
+			}
+		}
+
 		for key, value := range info.OriginalRequest.Header {
 			key := strings.ToLower(key)
+
 			if !strings.HasPrefix(key, "xregistry-") {
 				continue
 			}
+
 			key = strings.TrimSpace(key[10:]) // remove xRegistry-
 			if key == "" {
 				continue
@@ -892,7 +923,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			// If there are -'s then it's a non-scalar, convert it
-			parts := strings.Split(key, "-")
+			parts := strings.SplitN(key, "-", 3)
 			if len(parts) > 1 {
 				obj := IncomingObj
 

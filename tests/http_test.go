@@ -1249,6 +1249,52 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT resources - w/doc - new content-type",
+		URL:    "/dirs/dir1/files/f1",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"Content-Type: my/format",
+		},
+		ReqBody: "My cool doc - new",
+		Code:    200,
+		ResHeaders: []string{
+			"Content-Type: my/format",
+			"xRegistry-id: f1",
+			"xRegistry-epoch: 2",
+			"xRegistry-latestversionid: 1",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
+			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Content-Length: 17",
+		},
+		ResBody: `My cool doc - new`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT resources - w/doc - revert content-type and body",
+		URL:        "/dirs/dir1/files/f1",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    "My cool doc - new x2",
+		Code:       200,
+		ResHeaders: []string{
+			"Content-Type: text/plain; charset=utf-8",
+			"xRegistry-id: f1",
+			"xRegistry-epoch: 3",
+			"xRegistry-latestversionid: 1",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
+			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Content-Length: 20",
+		},
+		ResBody: `My cool doc - new x2`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
 		Name:       "PUT resources - w/doc - bad id",
 		URL:        "/dirs/dir1/files/f1",
 		Method:     "PUT",
@@ -2626,6 +2672,144 @@ func TestHTTPVersions(t *testing.T) {
 		},
 		ResBody: "In resource ff3-resource",
 	})
+
+	// Test content-type
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "PUT files/f5/versions/v1 - content-type",
+		URL:    "/dirs/d1/files/f5/versions/v1",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"Content-Type: my/format",
+		},
+		ReqBody:     "Hello world - v1",
+		Code:        201,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Location:http://localhost:8181/dirs/d1/files/f5/versions/v1",
+			"Content-Length:16",
+			"Content-Type:my/format",
+			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/v1",
+			"xRegistry-id:v1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/v1",
+			"xRegistry-latest:true",
+		},
+		ResBody: "Hello world - v1",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "POST files/f5 - add version - content-type",
+		URL:    "/dirs/d1/files/f5",
+		Method: "POST",
+		ReqHeaders: []string{
+			// Notice no "ID" - so this is also testing "POST Resource w/o id"
+			"Content-Type: my/format2",
+		},
+		ReqBody:     "Hello world - v2",
+		Code:        201,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Location:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"Content-Length:16",
+			"Content-Type:my/format2",
+			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"xRegistry-latest:true",
+		},
+		ResBody: "Hello world - v2",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "GET files/f5?meta - content-type",
+		URL:         "/dirs/d1/files/f5?meta",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		ReqBody:     "",
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f5",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f5?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1?meta",
+  "contenttype": "my/format2",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f5/versions"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "GET files/f5 - content-type",
+		URL:         "/dirs/d1/files/f5",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		ReqBody:     "",
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Content-Length:16",
+			"Content-Type:my/format2",
+			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"xRegistry-id:f5",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5",
+			"xRegistry-latestversionid:1",
+			"xRegistry-latestversionurl:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"xRegistry-versionscount:2",
+			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f5/versions",
+		},
+		ResBody: "Hello world - v2",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT files/f5/v1?meta - revert content-type",
+		URL:        "/dirs/d1/files/f5/versions/v1?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f5/versions/xxx?meta"
+}`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "v1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1/files/f5/versions/v1?meta"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:        "GET files/f5?meta - content-type - again",
+		URL:         "/dirs/d1/files/f5?meta",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "id": "f5",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f5?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1?meta",
+  "contenttype": "my/format2",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f5/versions"
+}
+`,
+	})
+
 }
 
 func TestHTTPEnum(t *testing.T) {

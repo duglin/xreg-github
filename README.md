@@ -42,7 +42,6 @@ TODOs:
 - PUT/POST operations
 - DELETE operations
 - see if we can prepend Path with / or append it with /
-- Don't allow creation of Resource w/o version - for HTTP PUT
 - save latest highest "versionId" in Resource so we can assign a new value
   if not provided by the client
 - transactions
@@ -62,4 +61,3 @@ TODOs:
 - support multiple resources/versions in POSTs
 - support setting "latest" to false on a PUT/POST
 - add support for hasdocument
-- save content-type for resources, and return them on a GET

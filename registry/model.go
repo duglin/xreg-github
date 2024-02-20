@@ -49,12 +49,13 @@ type Attribute struct {
 	// Internal fields
 	// We have them here so we can have access to them in any func that
 	// gets passed the model attribute
-	levels    string // show only for these levels, ""==all
-	mutable   bool   // user editable?
-	dontStore bool
-	getFn     func(*Entity, *RequestInfo) any // return prop's value
-	checkFn   func(*Entity) error             // validate prop
-	updateFn  func(*Entity, bool) error       // prep prop for saving to DB
+	levels     string // show only for these levels, ""==all
+	mutable    bool   // user editable?
+	dontStore  bool
+	httpHeader string
+	getFn      func(*Entity, *RequestInfo) any // return prop's value
+	checkFn    func(*Entity) error             // validate prop
+	updateFn   func(*Entity, bool) error       // prep prop for saving to DB
 }
 
 type Item struct {

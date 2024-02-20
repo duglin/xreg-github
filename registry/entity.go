@@ -820,6 +820,18 @@ var OrderedSpecProps = []*Attribute{
 		updateFn:  nil,
 	},
 	{
+		Name: "contenttype",
+		Type: STRING,
+
+		levels:     "23",
+		mutable:    true,
+		dontStore:  false,
+		httpHeader: "Content-Type",
+		getFn:      nil,
+		checkFn:    nil,
+		updateFn:   nil,
+	},
+	{
 		Name:     "model",
 		Type:     ANY, // OBJECT
 		ReadOnly: true,
