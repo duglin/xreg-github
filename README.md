@@ -39,7 +39,6 @@ TODOs:
 - test for filtering with string being part of value
 - test for exact match of numerics, bools
 - pagination
-- PUT/POST operations
 - DELETE operations
 - see if we can prepend Path with / or append it with /
 - save latest highest "versionId" in Resource so we can assign a new value
@@ -61,3 +60,4 @@ TODOs:
 - support multiple resources/versions in POSTs
 - support setting "latest" to false on a PUT/POST
 - add support for hasdocument
+- add support for resource vs resourcebase64 - return what was on the PUT
