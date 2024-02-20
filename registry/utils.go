@@ -1,7 +1,9 @@
 package registry
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -232,4 +234,27 @@ func AnyToUInt(val any) (int, error) {
 	}
 
 	return resInt, err
+}
+
+func LineNum(buf []byte, pos int) int {
+	return bytes.Count(buf[:pos], []byte("\n")) + 1
+}
+
+func Unmarshal(buf []byte, v any) error {
+	dec := json.NewDecoder(bytes.NewReader(buf))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(v); err != nil {
+		msg := err.Error()
+
+		if jerr, ok := err.(*json.UnmarshalTypeError); ok {
+			msg = fmt.Sprintf("Can't parse %q into %s.%s(type:%s) at line %d ",
+				jerr.Value, jerr.Struct, jerr.Field, jerr.Type.String(),
+				LineNum(buf, int(jerr.Offset)))
+		} else if jerr, ok := err.(*json.SyntaxError); ok {
+			msg = fmt.Sprintf("Syntax error at line %d: %s",
+				LineNum(buf, int(jerr.Offset)), msg)
+		}
+		return errors.New(msg)
+	}
+	return nil
 }

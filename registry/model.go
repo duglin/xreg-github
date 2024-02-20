@@ -43,8 +43,9 @@ type Attribute struct {
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
 
-	Item    *Item    `json:"item,omitempty"`
-	IfValue IfValues `json:"ifValue,omitempty"` // Value
+	Attributes Attributes `json:"attributes,omitempty"` // for Objs
+	Item       *Item      `json:"item,omitempty"`       // for maps & arrays
+	IfValues   IfValues   `json:"ifValues,omitempty"`   // Value
 
 	// Internal fields
 	// We have them here so we can have access to them in any func that
@@ -58,11 +59,11 @@ type Attribute struct {
 	updateFn   func(*Entity, bool) error       // prep prop for saving to DB
 }
 
-type Item struct {
+type Item struct { // for maps and arrays
 	Registry   *Registry  `json:"-"`
-	Attributes Attributes `json:"attributes,omitempty"` //attrName
 	Type       string     `json:"type,omitempty"`
-	Item       *Item      `json:"item,omitempty"`
+	Attributes Attributes `json:"attributes,omitempty"` // when 'type'=obj
+	Item       *Item      `json:"item,omitempty"`       // when 'type'=map,array
 }
 
 type IfValues map[string]*IfValue
@@ -103,7 +104,8 @@ func (r *ResourceModel) UnmarshalJSON(data []byte) error {
 	r.HasDocument = HASDOCUMENT
 
 	type tmpResourceModel ResourceModel
-	return json.Unmarshal(data, (*tmpResourceModel)(r))
+	// return json.Unmarshal(data, (*tmpResourceModel)(r))
+	return Unmarshal(data, (*tmpResourceModel)(r))
 }
 
 func (m *Model) AddSchema(schema string) error {
@@ -203,7 +205,7 @@ func (m *Model) AddAttrMap(name string, item *Item) (*Attribute, error) {
 }
 
 func (m *Model) AddAttrObj(name string) (*Attribute, error) {
-	return m.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+	return m.AddAttribute(&Attribute{Name: name, Type: OBJECT})
 }
 
 func (m *Model) AddAttrArray(name string, item *Item) (*Attribute, error) {
@@ -356,7 +358,7 @@ func (i *Item) AddAttrMap(name string, item *Item) (*Attribute, error) {
 }
 
 func (i *Item) AddAttrObj(name string) (*Attribute, error) {
-	return i.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+	return i.AddAttribute(&Attribute{Name: name, Type: OBJECT})
 }
 
 func (i *Item) AddAttrArray(name string, item *Item) (*Attribute, error) {
@@ -428,7 +430,8 @@ func LoadModel(reg *Registry) *Model {
 	}
 
 	if row[0] != nil {
-		json.Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
+		// json.Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
+		Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
 	}
 
 	model.Attributes.SetRegistry(reg)
@@ -467,7 +470,8 @@ func LoadModel(reg *Registry) *Model {
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		attrs := (Attributes)(nil)
 		if row[5] != nil {
-			json.Unmarshal([]byte(NotNilString(row[5])), &attrs)
+			// json.Unmarshal([]byte(NotNilString(row[5])), &attrs)
+			Unmarshal([]byte(NotNilString(row[5])), &attrs)
 		}
 
 		if *row[2] == nil { // ParentSID nil -> new Group
@@ -643,7 +647,7 @@ func (gm *GroupModel) AddAttrMap(name string, item *Item) (*Attribute, error) {
 }
 
 func (gm *GroupModel) AddAttrObj(name string) (*Attribute, error) {
-	return gm.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+	return gm.AddAttribute(&Attribute{Name: name, Type: OBJECT})
 }
 
 func (gm *GroupModel) AddAttrArray(name string, item *Item) (*Attribute, error) {
@@ -804,7 +808,7 @@ func (rm *ResourceModel) AddAttrMap(name string, item *Item) (*Attribute, error)
 }
 
 func (rm *ResourceModel) AddAttrObj(name string) (*Attribute, error) {
-	return rm.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+	return rm.AddAttribute(&Attribute{Name: name, Type: OBJECT})
 }
 
 func (rm *ResourceModel) AddAttrArray(name string, item *Item) (*Attribute, error) {
@@ -859,11 +863,11 @@ func (attrs *Attributes) SetRegistry(reg *Registry) {
 	}
 }
 
-func (attrs Attributes) AddIfValueAttributes(obj map[string]any) {
+func (attrs Attributes) AddIfValuesAttributes(obj map[string]any) {
 	attrNames := Keys(attrs)
 	for i := 0; i < len(attrNames); i++ { // since attrs changes
 		attr := attrs[attrNames[i]]
-		if len(attr.IfValue) == 0 || attr.Name == "*" {
+		if len(attr.IfValues) == 0 || attr.Name == "*" {
 			continue
 		}
 
@@ -873,7 +877,7 @@ func (attrs Attributes) AddIfValueAttributes(obj map[string]any) {
 		}
 
 		valStr := fmt.Sprintf("%v", val)
-		for ifValStr, ifValueData := range attr.IfValue {
+		for ifValStr, ifValueData := range attr.IfValues {
 			if ifValStr != valStr {
 				continue
 			}
@@ -951,13 +955,12 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
-	if a.Item.Attributes == nil {
-		a.Item.Attributes = Attributes{}
+	if a.Attributes == nil {
+		a.Attributes = Attributes{}
 	}
 
-	a.Item.Attributes[attr.Name] = attr
-	attr.Registry = a.Registry
-	attr.Item.SetRegistry(a.Registry)
+	a.Attributes[attr.Name] = attr
+	attr.SetRegistry(a.Registry)
 
 	if err := a.Registry.Model.Save(); err != nil {
 		return nil, err
@@ -1023,6 +1026,9 @@ func (rm *ResourceModel) Verify(rmName string) error {
 			rmName, RegexpPropName.String())
 	}
 
+	if rm.Plural == "" {
+		return fmt.Errorf("Resource %q is missing a \"name\" value", rmName)
+	}
 	if rm.Plural != rmName {
 		return fmt.Errorf("Resource %q must have a 'plural' value of %q, "+
 			"not %q", rmName, rmName, rm.Plural)
@@ -1118,32 +1124,14 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			if attr.Item == nil {
 				return fmt.Errorf("%q must have an \"item\" section", path.UI())
 			}
-			p := path.P("item")
-			if len(attr.Item.Attributes) > 0 {
-				return fmt.Errorf("%q must not have attributes", p.UI())
-			}
-			if attr.Item.Type == "" {
-				return fmt.Errorf("%q is missing a \"type\"", p.UI())
-			}
-			if DefinedTypes[attr.Item.Type] != true {
-				return fmt.Errorf("%q has an invalid \"type\": %s", p.UI(),
-					attr.Item.Type)
-			}
 		}
 
 		if attr.Type == OBJECT && attr.Item != nil {
-			p := path.P("item")
-			if attr.Item.Type != "" {
-				return fmt.Errorf("%q must not have a \"type\" defined", p.UI())
-			}
-			if attr.Item.Item != nil {
-				return fmt.Errorf("%q must not have an \"item\" section",
-					p.UI())
-			}
+			return fmt.Errorf("%q must not have an \"item\" section", path.UI())
 		}
 
 		if attr.Item != nil {
-			if err := attr.Item.Verify(path, attr.Type); err != nil {
+			if err := attr.Item.Verify(path); err != nil {
 				return err
 			}
 		}
@@ -1155,12 +1143,12 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 	// and check the IfValues, not just for validatity but to also make sure
 	// they don't define duplicate attribute names
 	for _, attr := range attrs {
-		for valStr, ifValue := range attr.IfValue {
+		for valStr, ifValue := range attr.IfValues {
 			if valStr == "" {
-				return fmt.Errorf("%q has an empty ifvalue key", ld.Path.UI())
+				return fmt.Errorf("%q has an empty ifvalues key", ld.Path.UI())
 			}
 			nextLD := &LevelData{ld.AttrNames,
-				ld.Path.P(attr.Name).P("ifvalue").P(valStr)}
+				ld.Path.P(attr.Name).P("ifvalues").P(valStr)}
 			if err := ifValue.SiblingAttributes.Verify(nextLD); err != nil {
 				return err
 			}
@@ -1170,42 +1158,36 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 	return nil
 }
 
-func (item *Item) Verify(path *PropPath, parentType string) error {
-	if IsScalar(parentType) || parentType == "ANY" {
-		return fmt.Errorf("%q must not have an \"item\" section", path.UI())
-	}
+func (item *Item) Verify(path *PropPath) error {
 	p := path.P("item")
-	if parentType == MAP || parentType == ARRAY {
-		if len(item.Attributes) > 0 {
-			return fmt.Errorf("%q must not have \"attributes\"", p.UI())
-		}
-		if item.Type == "" {
-			return fmt.Errorf("%q must have a \"type\" defined", p.UI())
-		}
-		if DefinedTypes[item.Type] != true {
-			return fmt.Errorf("%q has an invalid \"type\": %s", p.UI(),
-				item.Type)
+
+	if item.Type == "" {
+		return fmt.Errorf("%q must have a \"type\" defined", p.UI())
+	}
+
+	if DefinedTypes[item.Type] != true {
+		return fmt.Errorf("%q has an invalid \"type\": %s", p.UI(),
+			item.Type)
+	}
+
+	if item.Type != OBJECT && item.Attributes != nil {
+		return fmt.Errorf("%q must not have \"attributes\"", p.UI())
+	}
+
+	if item.Type == MAP || item.Type == ARRAY {
+		if item.Item == nil {
+			return fmt.Errorf("%q must have an \"item\" section", p.UI())
 		}
 	}
-	if parentType == OBJECT {
-		if item.Type != "" {
-			return fmt.Errorf("%q must not have a \"type\" defined", p.UI())
-		}
-		if item.Item != nil {
-			return fmt.Errorf("%q must not have a \"item\" section", p.UI())
-		}
+
+	if item.Attributes != nil {
 		if err := item.Attributes.Verify(&LevelData{nil, p}); err != nil {
 			return err
 		}
 	}
 
-	if item.Attributes != nil && parentType != OBJECT {
-		return fmt.Errorf("%q must not have an \"attributes\" section, "+
-			"use a nested \"item\" instead", p.UI())
-	}
-
 	if item.Item != nil {
-		return item.Item.Verify(p, item.Type)
+		return item.Item.Verify(p)
 	}
 	return nil
 }

@@ -215,7 +215,8 @@ func (jw *JsonWriter) WriteEntity() error {
 
 				if len(data) > 0 {
 					tmp := map[string]any{}
-					err = json.Unmarshal(data, tmp)
+					// err = json.Unmarshal(data, tmp)
+					err = Unmarshal(data, tmp)
 
 					if err == nil {
 						jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular,

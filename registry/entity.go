@@ -1073,15 +1073,15 @@ func (e *Entity) GetCollections() []string {
 func (e *Entity) GetAttributes(useNew bool) Attributes {
 	attrs := e.GetBaseAttributes()
 	if useNew {
-		attrs.AddIfValueAttributes(e.NewObject)
+		attrs.AddIfValuesAttributes(e.NewObject)
 	} else {
-		attrs.AddIfValueAttributes(e.Object)
+		attrs.AddIfValuesAttributes(e.Object)
 	}
 	return attrs
 }
 
 // Returns the initial set of attributes defined for the entity. So
-// no IfValue attributes yet as we need the current set of properties
+// no IfValues attributes yet as we need the current set of properties
 // to calculate that
 func (e *Entity) GetBaseAttributes() Attributes {
 	reg, err := FindRegistryBySID(e.RegistrySID)
@@ -1404,17 +1404,17 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				}
 			}
 
-			// GetAttributes already added IfValue for top-level attributes
-			if path.Len() >= 1 && len(attr.IfValue) > 0 {
+			// GetAttributes already added IfValues for top-level attributes
+			if path.Len() >= 1 && len(attr.IfValues) > 0 {
 				valStr := fmt.Sprintf("%v", val)
-				for ifValStr, ifValueData := range attr.IfValue {
+				for ifValStr, ifValueData := range attr.IfValues {
 					if valStr != ifValStr {
 						continue
 					}
 
 					for _, newAttr := range ifValueData.SiblingAttributes {
 						if _, ok := allAttrNames[newAttr.Name]; ok {
-							return fmt.Errorf(`Attribute %q has an "ifvalue"`+
+							return fmt.Errorf(`Attribute %q has an "ifvalues"`+
 								`(%s) that defines a conflictng `+
 								`siblingattribute: %s`, path.P(key).UI(),
 								valStr, newAttr.Name)
@@ -1504,20 +1504,16 @@ func (e *Entity) ValidateAttribute(val any, attr *Attribute, path *PropPath) err
 	} else if attr.Type == ARRAY {
 		return e.ValidateArray(val, attr.Item, path)
 	} else if attr.Type == OBJECT {
-		attrs := Attributes(nil)
-		if attr.Item != nil {
-			attrs = attr.Item.Attributes
-		}
 		/*
 			attrs := e.GetBaseAttributes()
 			if useNew {
-				attrs.AddIfValueAttributes(e.NewObject)
+				attrs.AddIfValuesAttributes(e.NewObject)
 			} else {
-				attrs.AddIfValueAttributes(e.Object)
+				attrs.AddIfValuesAttributes(e.Object)
 			}
 		*/
 
-		return e.ValidateObject(val, attrs, path)
+		return e.ValidateObject(val, attr.Attributes, path)
 	}
 
 	ShowStack()
@@ -1542,8 +1538,9 @@ func (e *Entity) ValidateMap(val any, item *Item, path *PropPath) error {
 
 	// All values in the map must be of the same type
 	attr := &Attribute{
-		Type: item.Type,
-		Item: item.Item,
+		Type:       item.Type,
+		Item:       item.Item,
+		Attributes: item.Attributes,
 	}
 
 	for _, k := range valValue.MapKeys() {
@@ -1578,8 +1575,9 @@ func (e *Entity) ValidateArray(val any, item *Item, path *PropPath) error {
 
 	// All values in the array must be of the same type
 	attr := &Attribute{
-		Type: item.Type,
-		Item: item.Item,
+		Type:       item.Type,
+		Item:       item.Item,
+		Attributes: item.Attributes,
 	}
 
 	for i := 0; i < valValue.Len(); i++ {

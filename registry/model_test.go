@@ -45,7 +45,7 @@ func TestModelVerifySimple(t *testing.T) {
 					ClientRequired: true,
 					ServerRequired: true,
 
-					IfValue: map[string]*IfValue{},
+					IfValues: IfValues{},
 				},
 			},
 		}, ""},
@@ -119,9 +119,11 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"type - map", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: MAP,
 				Item: &Item{Type: STRING}}}}, ``},
-		{"type - object", Model{
+		{"type - object - 1", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: OBJECT}}}, ``},
+		{"type - object - 2", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
-				Item: &Item{}}}}, ``},
+				Attributes: Attributes{}}}}, ``},
 
 		{"type - any", Model{
 			Attributes: Attributes{".foo": {Name: ".foo", Type: ANY}}},
@@ -149,41 +151,39 @@ func TestModelVerifyRegAttr(t *testing.T) {
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT}}}, ""},
 		{"Item - empty - ", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
-				Item: &Item{}}}}, ""},
-		{"Item - Type any - ", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
-				Item: &Item{Type: ANY}}}},
-			`"model.x.item" must not have a "type" defined`},
-		{"Item - Type scalar + item  - ", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
-				Item: &Item{Type: BOOLEAN, Item: &Item{}}}}},
-			`"model.x.item" must not have a "type" defined`},
-		{"Item - Type any + item  - ", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
-				Item: &Item{Type: ANY, Item: &Item{}}}}},
-			`"model.x.item" must not have a "type" defined`},
+				Item: &Item{}}}},
+			`"model.x" must not have an "item" section`},
 
 		// Nested stuff
 		{"Nested - map - obj", Model{
 			Attributes: Attributes{"m": {Name: "m", Type: MAP,
-				Item: &Item{Type: OBJECT, Item: &Item{}}}}},
+				Item: &Item{Type: OBJECT}}}},
 			``},
 		{"Nested - map - obj - missing item - valid", Model{
 			Attributes: Attributes{"m": {Name: "m", Type: MAP,
-				Item: &Item{Type: OBJECT}}}},
-			``},
-		{"Nested - map - obj - misplaced attrs", Model{
-			Attributes: Attributes{"m": {Name: "m", Type: MAP,
 				Item: &Item{Type: OBJECT, Attributes: Attributes{}}}}},
-			`"model.m.item" must not have an "attributes" section, use a nested "item" instead`},
+			``},
 		{"Nested - map - map - misplaced attrs", Model{
 			Attributes: Attributes{"m": {Name: "m", Type: MAP,
 				Item: &Item{Type: MAP, Attributes: Attributes{}}}}},
-			`"model.m.item" must not have an "attributes" section, use a nested "item" instead`},
+			`"model.m.item" must not have "attributes"`},
 		{"Nested - map - array - misplaced attrs", Model{
 			Attributes: Attributes{"m": {Name: "m", Type: MAP,
 				Item: &Item{Type: ARRAY, Attributes: Attributes{}}}}},
-			`"model.m.item" must not have an "attributes" section, use a nested "item" instead`},
+			`"model.m.item" must not have "attributes"`},
+
+		{"Nested - map - obj + attr", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: OBJECT, Attributes: Attributes{
+					"i": {Name: "i", Type: INTEGER}}}}}},
+			``},
+		{"Nested - map - obj + obj + attr", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: OBJECT, Attributes: Attributes{
+					"i": {Name: "i", Type: OBJECT,
+						Attributes: Attributes{"s": {Name: "s",
+							Type: STRING}}}}}}}},
+			``},
 	}
 
 	for _, test := range tests {
@@ -197,7 +197,7 @@ func TestModelVerifyRegAttr(t *testing.T) {
 				test.name, test.err)
 		}
 		if err != nil && test.err != err.Error() {
-			t.Fatalf("ModifyVerify: %s:\nExp: %q\nGot: %s", test.name,
+			t.Fatalf("ModifyVerify: %s:\nExp: %s\nGot: %s", test.name,
 				test.err, err.Error())
 		}
 	}

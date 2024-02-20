@@ -232,8 +232,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(err)
 
 		item := registry.NewItemObject()
-		item.SetItem(registry.NewItem())
-		_, err = item.Item.AddAttr("inint", registry.INTEGER)
+		_, err = item.AddAttr("inint", registry.INTEGER)
 		ErrFatalf(err)
 		_, err = reg.Model.AddAttrMap("mapobj", item)
 		ErrFatalf(err)

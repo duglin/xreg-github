@@ -352,16 +352,16 @@ func TestHTTPRegistry(t *testing.T) {
 
 	attr, err := reg.Model.AddAttrObj("myobj1")
 	xCheckErr(t, err, "")
-	_, err = attr.Item.AddAttr("mystr1", registry.STRING)
+	_, err = attr.AddAttr("mystr1", registry.STRING)
 	xCheckErr(t, err, "")
-	_, err = attr.Item.AddAttr("myint1", registry.INTEGER)
+	_, err = attr.AddAttr("myint1", registry.INTEGER)
 	xCheckErr(t, err, "")
-	_, err = attr.Item.AddAttr("*", registry.ANY)
+	_, err = attr.AddAttr("*", registry.ANY)
 	xCheckErr(t, err, "")
 
 	attr, _ = reg.Model.AddAttrObj("myobj2")
-	attr.Item.AddAttr("mystr2", registry.STRING)
-	obj2, err := attr.Item.AddAttrObj("myobj2_1")
+	attr.AddAttr("mystr2", registry.STRING)
+	obj2, err := attr.AddAttrObj("myobj2_1")
 	xCheckErr(t, err, "")
 	_, err = obj2.AddAttr("*", registry.INTEGER)
 	xCheckErr(t, err, "")
@@ -383,8 +383,7 @@ func TestHTTPRegistry(t *testing.T) {
 	xCheckErr(t, err, "")
 
 	item = registry.NewItemObject()
-	item.SetItem(registry.NewItem())
-	item.Item.AddAttr("mapobj_int", registry.INTEGER)
+	item.AddAttr("mapobj_int", registry.INTEGER)
 	attr, err = reg.Model.AddAttrMap("mymapobj", item)
 	xCheckErr(t, err, "")
 
@@ -870,8 +869,8 @@ func TestHTTPGroups(t *testing.T) {
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	attr, _ := gm.AddAttrObj("myobj")
-	attr.Item.AddAttr("foo", registry.STRING)
-	attr.Item.AddAttr("*", registry.ANY)
+	attr.AddAttr("foo", registry.STRING)
+	attr.AddAttr("*", registry.ANY)
 
 	item := registry.NewItemType(registry.ANY)
 	attr, _ = gm.AddAttrArray("myarray", item)
@@ -2913,14 +2912,14 @@ func TestHTTPEnum(t *testing.T) {
 }
 
 func TestHTTPIfValue(t *testing.T) {
-	reg := NewRegistry("TestHTTPIfValue")
+	reg := NewRegistry("TestHTTPIfValues")
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myint",
 		Type: registry.INTEGER,
-		IfValue: registry.IfValues{
+		IfValues: registry.IfValues{
 			"10": &registry.IfValue{
 				SiblingAttributes: registry.Attributes{
 					"mystr": &registry.Attribute{
@@ -2930,26 +2929,22 @@ func TestHTTPIfValue(t *testing.T) {
 					"myobj": &registry.Attribute{
 						Name: "myobj",
 						Type: registry.OBJECT,
-						Item: &registry.Item{
-							Attributes: registry.Attributes{
-								"subint": &registry.Attribute{
-									Name: "subint",
-									Type: registry.INTEGER,
-								},
-								"subobj": &registry.Attribute{
-									Name: "subobj",
-									Type: registry.OBJECT,
-									Item: &registry.Item{
-										Attributes: registry.Attributes{
-											"subsubint": &registry.Attribute{
-												Name: "subsubint",
-												Type: registry.INTEGER,
-											},
-											"*": &registry.Attribute{
-												Name: "*",
-												Type: registry.ANY,
-											},
-										},
+						Attributes: registry.Attributes{
+							"subint": &registry.Attribute{
+								Name: "subint",
+								Type: registry.INTEGER,
+							},
+							"subobj": &registry.Attribute{
+								Name: "subobj",
+								Type: registry.OBJECT,
+								Attributes: registry.Attributes{
+									"subsubint": &registry.Attribute{
+										Name: "subsubint",
+										Type: registry.INTEGER,
+									},
+									"*": &registry.Attribute{
+										Name: "*",
+										Type: registry.ANY,
 									},
 								},
 							},
@@ -2978,27 +2973,24 @@ func TestHTTPIfValue(t *testing.T) {
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myobj",
 		Type: registry.OBJECT,
-		Item: &registry.Item{},
 	})
 	// Test empty obj and name conflict with IfValue above
 	xCheckErr(t, err,
-		`Duplicate attribute name (myobj) at: model.myint.ifvalue.10`)
+		`Duplicate attribute name (myobj) at: model.myint.ifvalues.10`)
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myobj2",
 		Type: registry.OBJECT,
-		Item: &registry.Item{
-			Attributes: registry.Attributes{
-				"subint1": &registry.Attribute{
-					Name: "subint1",
-					Type: registry.INTEGER,
-					IfValue: registry.IfValues{
-						"666": &registry.IfValue{
-							SiblingAttributes: registry.Attributes{
-								"reqint": &registry.Attribute{
-									Name: "reqint",
-									Type: registry.INTEGER,
-								},
+		Attributes: registry.Attributes{
+			"subint1": &registry.Attribute{
+				Name: "subint1",
+				Type: registry.INTEGER,
+				IfValues: registry.IfValues{
+					"666": &registry.IfValue{
+						SiblingAttributes: registry.Attributes{
+							"reqint": &registry.Attribute{
+								Name: "reqint",
+								Type: registry.INTEGER,
 							},
 						},
 					},
@@ -3018,7 +3010,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 2,
   "self": "http://localhost:8181/",
   "myint": 10
@@ -3061,7 +3053,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 3,
   "self": "http://localhost:8181/",
   "myext": 5.5,
@@ -3101,7 +3093,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 4,
   "self": "http://localhost:8181/",
   "myint": 10,
@@ -3134,7 +3126,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 5,
   "self": "http://localhost:8181/",
   "myint": 10,
@@ -3165,7 +3157,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 6,
   "self": "http://localhost:8181/",
   "myint": 10,
@@ -3181,13 +3173,13 @@ func TestHTTPIfValue(t *testing.T) {
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myint5",
 		Type: registry.INTEGER,
-		IfValue: registry.IfValues{
+		IfValues: registry.IfValues{
 			"1": &registry.IfValue{
 				SiblingAttributes: registry.Attributes{
 					"myint6": &registry.Attribute{
 						Name: "myint6",
 						Type: registry.INTEGER,
-						IfValue: registry.IfValues{
+						IfValues: registry.IfValues{
 							"2": &registry.IfValue{
 								SiblingAttributes: registry.Attributes{
 									"myint7": {
@@ -3216,7 +3208,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 7,
   "self": "http://localhost:8181/",
   "myint5": 1
@@ -3235,7 +3227,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 8,
   "self": "http://localhost:8181/",
   "myint5": 1,
@@ -3283,7 +3275,7 @@ func TestHTTPIfValue(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "specversion": "0.5",
-  "id": "TestHTTPIfValue",
+  "id": "TestHTTPIfValues",
   "epoch": 9,
   "self": "http://localhost:8181/",
   "myint5": 1,

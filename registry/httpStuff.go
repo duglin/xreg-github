@@ -666,7 +666,8 @@ func HTTPPutPost(info *RequestInfo) error {
 			body = []byte("{}") // Be forgiving
 		}
 
-		err = json.Unmarshal(body, &IncomingObj)
+		// err = json.Unmarshal(body, &IncomingObj)
+		err = Unmarshal(body, &IncomingObj)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Error parsing body: %s", err)
@@ -1029,7 +1030,8 @@ func HTTPPUTModel(info *RequestInfo) error {
 	}
 
 	model := Model{}
-	err = json.Unmarshal(reqBody, &model)
+	// err = json.Unmarshal(reqBody, &model)
+	err = Unmarshal(reqBody, &model)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return err

@@ -42,12 +42,11 @@ func TestBasicTypes(t *testing.T) {
 
 	attr, err := reg.Model.AddAttrObj("regobj")
 	xNoErr(t, err)
-	item := attr.Item
-	item.AddAttr("objbool", registry.BOOLEAN)
-	item.AddAttr("objint", registry.INTEGER)
-	attr, _ = item.AddAttrObj("objobj")
-	attr.Item.AddAttr("ooint", registry.INTEGER)
-	item.AddAttr("objstr", registry.STRING)
+	attr.AddAttr("objbool", registry.BOOLEAN)
+	attr.AddAttr("objint", registry.INTEGER)
+	attr2, _ := attr.AddAttrObj("objobj")
+	attr2.AddAttr("ooint", registry.INTEGER)
+	attr.AddAttr("objstr", registry.STRING)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddAttr("dirbool1", registry.BOOLEAN)
@@ -68,7 +67,7 @@ func TestBasicTypes(t *testing.T) {
 	gm.AddAttrArray("dirarrayint", registry.NewItemType(registry.INTEGER))
 	gm.AddAttrMap("dirmapint", registry.NewItemType(registry.INTEGER))
 	attr, _ = gm.AddAttrObj("dirobj")
-	attr.Item.AddAttr("*", registry.ANY)
+	attr.AddAttr("*", registry.ANY)
 
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
 	rm.AddAttr("filebool1", registry.BOOLEAN)
@@ -498,26 +497,25 @@ func TestWildcard2LayersTypes(t *testing.T) {
 	reg := NewRegistry("TestWildcardAnyTypes")
 	defer PassDeleteReg(t, reg)
 
-	reg.Model.AddAttribute(&registry.Attribute{
+	_, err := reg.Model.AddAttribute(&registry.Attribute{
 		Name: "obj",
 		Type: registry.OBJECT,
-		Item: &registry.Item{
-			Attributes: map[string]*registry.Attribute{
-				"map": {
-					Name: "map",
-					Type: registry.MAP,
-					Item: &registry.Item{Type: registry.INTEGER},
-				},
-				"*": {
-					Name: "*",
-					Type: registry.ANY,
-				},
+		Attributes: map[string]*registry.Attribute{
+			"map": {
+				Name: "map",
+				Type: registry.MAP,
+				Item: &registry.Item{Type: registry.INTEGER},
+			},
+			"*": {
+				Name: "*",
+				Type: registry.ANY,
 			},
 		},
 	})
+	xCheck(t, err == nil, "")
 	// reg.Model.Save()
 
-	err := reg.Set("obj.map.k1", 5)
+	err = reg.Set("obj.map.k1", 5)
 	xCheck(t, err == nil, fmt.Sprintf("set foo.k1: %s", err))
 	reg.Refresh()
 	val := reg.Get("obj.map.k1")
