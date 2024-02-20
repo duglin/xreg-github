@@ -671,13 +671,13 @@ var OrderedSpecProps = []*Attribute{
 		Name: "latest",
 		Type: BOOLEAN,
 
-		levels:    "3",
+		levels:    "23",
 		mutable:   false,
-		dontStore: false,
+		dontStore: true,
 		getFn:     nil,
 		checkFn:   nil,
 		updateFn: func(e *Entity, isNew bool) error {
-			// TODO is set, set latestvesionid in the resource to this
+			// TODO if set, set latestvesionid in the resource to this
 			// guy's UID
 
 			return nil

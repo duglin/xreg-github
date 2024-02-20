@@ -54,7 +54,7 @@ type Attribute struct {
 	dontStore  bool
 	httpHeader string
 	getFn      func(*Entity, *RequestInfo) any // return prop's value
-	checkFn    func(*Entity) error             // validate prop
+	checkFn    func(*Entity) error             // validate incoming prop
 	updateFn   func(*Entity, bool) error       // prep prop for saving to DB
 }
 
