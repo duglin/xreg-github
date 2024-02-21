@@ -399,6 +399,17 @@ func TestHTTPRegistry(t *testing.T) {
 	})
 
 	xCheckHTTP(t, &HTTPTest{
+		Name:       "PUT reg - empty string id",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    "{ \"id\": \"\" }",
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody:    "Error processing registry: ID can't be an empty string\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
 		Name:       "PUT reg - empty",
 		URL:        "/",
 		Method:     "PUT",

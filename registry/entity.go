@@ -547,6 +547,9 @@ var OrderedSpecProps = []*Attribute{
 				if IsNil(oldID) {
 					oldID = ""
 				}
+				if !IsNil(newID) && newID == "" {
+					return fmt.Errorf("ID can't be an empty string")
+				}
 				if IsNil(newID) {
 					newID = ""
 				}

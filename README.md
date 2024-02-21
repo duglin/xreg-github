@@ -69,3 +69,4 @@ TODOs:
   - DELETE latest should choose the last one created based on timestamp
 - add support for hasdocument
 - add support for resource vs resourcebase64 - return what was on the PUT
+- add support for "default" in the model
