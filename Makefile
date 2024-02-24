@@ -21,10 +21,10 @@ unittest:
 	go test -failfast ./registry
 
 server: cmds/server.go cmds/loader.go registry/*
-	go build -o $@ cmds/server.go cmds/loader.go
+	go build $(BUILDFLAGS) -o $@ cmds/server.go cmds/loader.go
 
 mchecker: cmds/mchecker.go registry/*
-	go build -o $@ cmds/mchecker.go
+	go build $(BUILDFLAGS) -o $@ cmds/mchecker.go
 
 image: .xreg-server
 .xreg-server: server Dockerfile

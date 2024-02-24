@@ -1,18 +1,29 @@
 FROM golang:alpine
-# RUN apk add git
+RUN apk add make
+
 WORKDIR /go/src/
 COPY . /go/src/
+
+# Erase executables that were copied from the COPY cmd above
+RUN find . -maxdepth 1 -type f -executable -exec rm {} \;
+
+# Force static builds
+ENV GO_EXTLINK_ENABLED=0
+ENV CGO_ENABLED=0
+ENV BUILDFLAGS -ldflags \"-w -extldflags -static\" \
+	-tags netgo -installsuffix netgo
+
 RUN go get -d github.com/duglin/xreg-github
-RUN GO_EXTLINK_ENABLED=0 CGO_ENABLED=0 go build \
-    -ldflags "-w -extldflags -static" \
-	-tags netgo -installsuffix netgo \
-	-o /server github.com/duglin/xreg-github
+RUN make cmds
 
 FROM scratch
 # FROM mysql
 # ENV MYSQL_ROOT_PASSWORD=password
-COPY --from=0 /server /server
+
+COPY --from=0 /go/src/server /server
+COPY --from=0 /go/src/mchecker /mchecker
 COPY repo.tar /
+
 CMD [ "/server" ]
 # ENTRYPOINT [ "/usr/bin/sh" ]
 # CMD [ "-c", "docker-entrypoint.sh mysqld & sleep 30 && /server" ]
