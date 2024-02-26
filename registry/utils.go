@@ -5,12 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	// "net/url"
+	"io"
+	"maps"
 	"net/http"
+	"os"
 	"path"
 	"reflect"
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -241,6 +246,13 @@ func LineNum(buf []byte, pos int) int {
 }
 
 func Unmarshal(buf []byte, v any) error {
+	/*
+		buf, err := ProcessImports(buf)
+		if err != nil {
+			return err
+		}
+	*/
+
 	dec := json.NewDecoder(bytes.NewReader(buf))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
@@ -254,7 +266,288 @@ func Unmarshal(buf []byte, v any) error {
 			msg = fmt.Sprintf("Syntax error at line %d: %s",
 				LineNum(buf, int(jerr.Offset)), msg)
 		}
+		msg, _ = strings.CutPrefix(msg, "json: ")
 		return errors.New(msg)
 	}
 	return nil
+}
+
+// var re = regexp.MustCompile(`(?m:([^#]*)#[^"]*$)`)
+var removeCommentsRE = regexp.MustCompile(`(gm:^(([^"#]|"[^"]*")*)#.*$)`)
+
+func RemoveComments(buf []byte) []byte {
+	return removeCommentsRE.ReplaceAll(buf, []byte("${1}"))
+}
+
+type ImportArgs struct {
+	// Cache path/name of "" means stdin
+	Cache      map[string]map[string]any // Path#.. -> json
+	History    []string                  // Just names, no frag, [0]=latest
+	LocalFiles bool                      // ok to access local FS files?
+}
+
+func ProcessImports(file string, buf []byte, localFiles bool) ([]byte, error) {
+	data := map[string]any{}
+
+	buf = RemoveComments(buf)
+
+	if err := Unmarshal(buf, &data); err != nil {
+		return nil, err
+	}
+
+	importArgs := ImportArgs{
+		Cache: map[string]map[string]any{
+			file: data,
+		},
+		History:    []string{file}, // stack of base names
+		LocalFiles: localFiles,
+	}
+
+	if err := ImportTraverse(importArgs, data); err != nil {
+		return nil, err
+	}
+
+	// Convert back to byte
+	buf, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+// data is the current map to check for $import statements
+func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
+	var err error
+	currFile, _ := SplitFragement(importArgs.History[0]) // Grab just base name
+
+	// log.Printf("ImportTraverse:")
+	// log.Printf("  Cache: %v", SortedKeys(importArgs.Cache))
+	// log.Printf("  History: %v", importArgs.History)
+	// log.Printf("  Recurse:")
+	// log.Printf("    Data keys: %v", SortedKeys(data))
+
+	dataKeys := Keys(data) // so we can add/delete keys
+	for _, key := range dataKeys {
+		val := data[key]
+		if key == "$import" {
+			impStr, ok := val.(string)
+			if !ok {
+				return fmt.Errorf("In %q, $import isn't a string", currFile)
+			}
+			delete(data, "$import")
+
+			for _, name := range importArgs.History {
+				if name == impStr {
+					return fmt.Errorf("Recursive on %q", name)
+				}
+			}
+
+			if len(impStr) == 0 {
+				return fmt.Errorf("In %q, $import can't be an empty string",
+					currFile)
+			}
+
+			nextFile := ResolvePath(currFile, impStr)
+			importData := importArgs.Cache[nextFile]
+			base, fragment := SplitFragement(nextFile)
+
+			if importData == nil {
+				importData = importArgs.Cache[base]
+				if importData == nil {
+					data := []byte(nil)
+					if strings.HasPrefix(base, "http") {
+						res, err := http.Get(base)
+						if err != nil {
+							return err
+						}
+						if data, err = io.ReadAll(res.Body); err != nil {
+							return err
+						}
+					} else {
+						if importArgs.LocalFiles {
+							if data, err = os.ReadFile(base); err != nil {
+								return fmt.Errorf("Error reading file %q: %s",
+									base, err)
+							}
+						} else {
+							return fmt.Errorf("Not allowed to access file: %s",
+								base)
+						}
+					}
+					data = RemoveComments(data)
+
+					if err := Unmarshal(data, &importData); err != nil {
+						return err
+					}
+					importArgs.Cache[base] = importData
+				}
+
+				// Now, traverse down to the specific field - if needed
+				if fragment != "" {
+					nextTop := importArgs.Cache[base]
+					impData, err := GetJSONPointer(nextTop, fragment)
+					if err != nil {
+						return err
+					}
+
+					if reflect.ValueOf(impData).Kind() != reflect.Map {
+						return fmt.Errorf("In %q, $import(%s) is not a map: %s",
+							currFile, impStr, reflect.ValueOf(importData).Kind())
+					}
+
+					importData = impData.(map[string]any)
+					importArgs.Cache[nextFile] = importData
+				}
+			}
+
+			// Go deep! (recurse) before we add it to current map
+			importArgs.History = append([]string{""}, importArgs.History...)
+			importArgs.History[0] = nextFile
+			// files = append(files, nextFile)
+			if err = ImportTraverse(importArgs, importData); err != nil {
+				return err
+			}
+			importArgs.History = importArgs.History[1:]
+			// files = files[:len(files)-1]
+
+			maps.Copy(data, importData) // .(map[string]any))
+		} else {
+			if reflect.ValueOf(val).Kind() == reflect.Map {
+				nextLevel := val.(map[string]any)
+				if err = ImportTraverse(importArgs, nextLevel); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func SplitFragement(str string) (string, string) {
+	parts := strings.SplitN(str, "#", 2)
+
+	if len(parts) != 2 {
+		return parts[0], ""
+	} else {
+		return parts[0], parts[1]
+	}
+}
+
+var dotdotRE = regexp.MustCompile(`(^|/)[^/]*/\.\.(/|$)`) // removes /../
+var slashesRE = regexp.MustCompile(`(?:[^:])//+`)         // : is for URL's ://
+var urlPrefixRE = regexp.MustCompile(`^https?://`)
+var justHostRE = regexp.MustCompile(`^https?://[^/]*$`) // no path?
+var endingDots = regexp.MustCompile(`(/\.\.?)$`)        // ends with . or ..
+
+func ResolvePath(baseFile string, next string) string {
+	baseFile, _ = SplitFragement(baseFile)
+	baseFile = endingDots.ReplaceAllString(baseFile, "$1/")
+
+	if next == "" {
+		return baseFile
+	}
+	if next[0] == '#' {
+		return baseFile + next
+	}
+
+	// Abs URLs
+	if strings.HasPrefix(next, "http:") || strings.HasPrefix(next, "https:") {
+		return next
+	}
+
+	// baseFile is a URL
+	if urlPrefixRE.MatchString(baseFile) {
+		if justHostRE.MatchString(baseFile) {
+			baseFile += "/"
+		}
+		if baseFile[len(baseFile)-1] == '/' { // ends with /
+			next = baseFile + next
+		} else {
+			i := strings.LastIndex(baseFile, "/") // remove last word
+			if i >= 0 {
+				baseFile = baseFile[:i+1] // keep last /
+			}
+			next = baseFile + next
+		}
+	} else {
+		// Look for abs path for files
+		if len(next) > 0 && next[0] == '/' {
+			return next
+		}
+
+		if len(next) > 2 && next[1] == ':' {
+			// Windows abs path ?
+			ch := next[0]
+			if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') {
+				return next
+			}
+		}
+
+		baseFile = path.Dir(baseFile) // remove file name
+		next = path.Join(baseFile, next)
+	}
+
+	// log.Printf("Before clean: %q", next)
+	next, _ = strings.CutPrefix(next, "./")      // remove leading ./
+	next = slashesRE.ReplaceAllString(next, "/") // squash //'s
+	next = strings.ReplaceAll(next, "/./", "/")  // remove pointless /./
+	next = dotdotRE.ReplaceAllString(next, "/")  // remove ../'s
+	return next
+}
+
+var JPtrEsc0 = regexp.MustCompile(`~0`)
+var JPtrEsc1 = regexp.MustCompile(`~1`)
+
+func GetJSONPointer(data any, path string) (any, error) {
+	// log.Printf("GPtr: path: %q\nData: %s", path, ToJSON(data))
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return data, nil
+	}
+
+	if IsNil(data) {
+		return nil, nil
+	}
+
+	path, _ = strings.CutPrefix(path, "/")
+	parts := strings.Split(path, "/")
+	// log.Printf("Parts: %q", strings.Join(parts, "|"))
+
+	for i, part := range parts {
+		part = JPtrEsc1.ReplaceAllString(part, `/`)
+		part = JPtrEsc0.ReplaceAllString(part, `~`)
+		// log.Printf("  Part: %s", part)
+
+		dataVal := reflect.ValueOf(data)
+		kind := dataVal.Kind()
+		if kind == reflect.Map {
+			dataVal = dataVal.MapIndex(reflect.ValueOf(part))
+			// log.Printf("dataVal: %#v", dataVal)
+			if !dataVal.IsValid() {
+				return nil, fmt.Errorf("Attribute %q not found",
+					strings.Join(parts[:i+1], "/"))
+			}
+			data = dataVal.Interface()
+			continue
+		} else if kind == reflect.Slice {
+			j, err := strconv.Atoi(part)
+			if err != nil {
+				return nil, fmt.Errorf("Index %q must be an integer",
+					"/"+strings.Join(parts[:i+1], "/"))
+			}
+			if j < 0 || j >= dataVal.Len() { // len(daSlice) {
+				return nil, fmt.Errorf("Index %q is out of bounds(0-%d)",
+					"/"+strings.Join(parts[:i+1], "/"), dataVal.Len()-1)
+			}
+			data = dataVal.Index(j).Interface()
+			continue
+		} else {
+			return nil, fmt.Errorf("Can't step into a type of %q, at: %s",
+				kind, "/"+strings.Join(parts[:i+1], "/"))
+		}
+	}
+
+	return data, nil
 }

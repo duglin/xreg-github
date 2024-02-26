@@ -13,7 +13,6 @@ ENV CGO_ENABLED=0
 ENV BUILDFLAGS -ldflags \"-w -extldflags -static\" \
 	-tags netgo -installsuffix netgo
 
-RUN go get -d github.com/duglin/xreg-github
 RUN make cmds
 
 FROM scratch
@@ -21,9 +20,9 @@ FROM scratch
 # ENV MYSQL_ROOT_PASSWORD=password
 
 COPY --from=0 /go/src/server /server
-COPY --from=0 /go/src/mchecker /mchecker
+COPY --from=0 /go/src/xr /xr
 COPY repo.tar /
 
 CMD [ "/server" ]
 # ENTRYPOINT [ "/usr/bin/sh" ]
-# CMD [ "-c", "docker-entrypoint.sh mysqld & sleep 30 && /server" ]
+# CMD [ "-c", "docker-entrypoint.sh mysqld & sleep 10 && /server" ]
