@@ -246,13 +246,6 @@ func LineNum(buf []byte, pos int) int {
 }
 
 func Unmarshal(buf []byte, v any) error {
-	/*
-		buf, err := ProcessImports(buf)
-		if err != nil {
-			return err
-		}
-	*/
-
 	dec := json.NewDecoder(bytes.NewReader(buf))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
@@ -292,7 +285,7 @@ func ProcessImports(file string, buf []byte, localFiles bool) ([]byte, error) {
 	buf = RemoveComments(buf)
 
 	if err := Unmarshal(buf, &data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error parsing JSON: %s", err)
 	}
 
 	importArgs := ImportArgs{
@@ -310,7 +303,7 @@ func ProcessImports(file string, buf []byte, localFiles bool) ([]byte, error) {
 	// Convert back to byte
 	buf, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error generating JSON: %s", err)
 	}
 
 	return buf, nil
@@ -361,7 +354,9 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 						if err != nil {
 							return err
 						}
-						if data, err = io.ReadAll(res.Body); err != nil {
+						data, err = io.ReadAll(res.Body)
+						res.Body.Close()
+						if err != nil {
 							return err
 						}
 					} else {
@@ -402,14 +397,12 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 			}
 
 			// Go deep! (recurse) before we add it to current map
-			importArgs.History = append([]string{""}, importArgs.History...)
-			importArgs.History[0] = nextFile
-			// files = append(files, nextFile)
+			importArgs.History = append([]string{nextFile},
+				importArgs.History...)
 			if err = ImportTraverse(importArgs, importData); err != nil {
 				return err
 			}
 			importArgs.History = importArgs.History[1:]
-			// files = files[:len(files)-1]
 
 			maps.Copy(data, importData) // .(map[string]any))
 		} else {

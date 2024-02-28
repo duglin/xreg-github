@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -46,8 +47,11 @@ func VerifyModel(fileName string, buf []byte) {
 }
 
 func modelVerifyFunc(cmd *cobra.Command, args []string) {
+	var buf []byte
+	var err error
+
 	if len(args) == 0 {
-		buf, err := io.ReadAll(os.Stdin)
+		buf, err = io.ReadAll(os.Stdin)
 		if err != nil {
 			Error("Error reading from stdin: %s", err)
 		}
@@ -55,12 +59,21 @@ func modelVerifyFunc(cmd *cobra.Command, args []string) {
 	}
 
 	for _, fileName := range args {
-		buf, err := os.ReadFile(fileName)
+		if strings.HasPrefix(fileName, "http") {
+			res, err := http.Get(fileName)
+			if err == nil {
+				buf, err = io.ReadAll(res.Body)
+				res.Body.Close()
+			}
+		} else {
+			buf, err = os.ReadFile(fileName)
+		}
 		if err != nil {
-			Error("Error reading file %q: %s", fileName, err)
+			Error("Error reading %q: %s", fileName, err)
 		}
 		VerifyModel(fileName, buf)
 	}
+
 }
 
 func modelNormalizeFunc(cmd *cobra.Command, args []string) {
