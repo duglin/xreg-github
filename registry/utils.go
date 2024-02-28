@@ -7,7 +7,7 @@ import (
 	"fmt"
 	// "net/url"
 	"io"
-	"maps"
+	// "maps"
 	"net/http"
 	"os"
 	"path"
@@ -341,7 +341,9 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 					currFile)
 			}
 
+			// log.Printf("CurrFile: %s\nImpStr: %s", currFile, impStr)
 			nextFile := ResolvePath(currFile, impStr)
+			// log.Printf("NextFile: %s", nextFile)
 			importData := importArgs.Cache[nextFile]
 			base, fragment := SplitFragement(nextFile)
 
@@ -353,6 +355,10 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 						res, err := http.Get(base)
 						if err != nil {
 							return err
+						}
+						if res.StatusCode != 200 {
+							return fmt.Errorf("Error getting %q: %s",
+								base, res.Status)
 						}
 						data, err = io.ReadAll(res.Body)
 						res.Body.Close()
@@ -404,7 +410,12 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 			}
 			importArgs.History = importArgs.History[1:]
 
-			maps.Copy(data, importData) // .(map[string]any))
+			// Only copy if we don't already have one by this name
+			for k, v := range importData {
+				if _, ok := data[k]; !ok {
+					data[k] = v
+				}
+			}
 		} else {
 			if reflect.ValueOf(val).Kind() == reflect.Map {
 				nextLevel := val.(map[string]any)
@@ -429,10 +440,11 @@ func SplitFragement(str string) (string, string) {
 }
 
 var dotdotRE = regexp.MustCompile(`(^|/)[^/]*/\.\.(/|$)`) // removes /../
-var slashesRE = regexp.MustCompile(`(?:[^:])//+`)         // : is for URL's ://
+var slashesRE = regexp.MustCompile(`([^:])//+`)           // : is for URL's ://
 var urlPrefixRE = regexp.MustCompile(`^https?://`)
 var justHostRE = regexp.MustCompile(`^https?://[^/]*$`) // no path?
-var endingDots = regexp.MustCompile(`(/\.\.?)$`)        // ends with . or ..
+var extractHostRE = regexp.MustCompile(`^(https?://[^/]*/).*`)
+var endingDots = regexp.MustCompile(`(/\.\.?)$`) // ends with . or ..
 
 func ResolvePath(baseFile string, next string) string {
 	baseFile, _ = SplitFragement(baseFile)
@@ -455,6 +467,11 @@ func ResolvePath(baseFile string, next string) string {
 		if justHostRE.MatchString(baseFile) {
 			baseFile += "/"
 		}
+
+		if next != "" && next[0] == '/' {
+			baseFile = extractHostRE.ReplaceAllString(baseFile, "$1")
+		}
+
 		if baseFile[len(baseFile)-1] == '/' { // ends with /
 			next = baseFile + next
 		} else {
@@ -483,10 +500,10 @@ func ResolvePath(baseFile string, next string) string {
 	}
 
 	// log.Printf("Before clean: %q", next)
-	next, _ = strings.CutPrefix(next, "./")      // remove leading ./
-	next = slashesRE.ReplaceAllString(next, "/") // squash //'s
-	next = strings.ReplaceAll(next, "/./", "/")  // remove pointless /./
-	next = dotdotRE.ReplaceAllString(next, "/")  // remove ../'s
+	next, _ = strings.CutPrefix(next, "./")        // remove leading ./
+	next = slashesRE.ReplaceAllString(next, "$1/") // squash //'s
+	next = strings.ReplaceAll(next, "/./", "/")    // remove pointless /./
+	next = dotdotRE.ReplaceAllString(next, "/")    // remove ../'s
 	return next
 }
 

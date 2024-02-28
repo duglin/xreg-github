@@ -70,3 +70,4 @@ TODOs:
 - add support for hasdocument
 - add support for resource vs resourcebase64 - return what was on the PUT
 - add support for "default" in the model
+- add support for $imports

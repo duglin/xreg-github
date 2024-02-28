@@ -1,6 +1,12 @@
 package registry
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path"
+	"strings"
 	"testing"
 )
 
@@ -69,6 +75,10 @@ func TestResolvePath(t *testing.T) {
 		{"http://s1.com/dir1/file",
 			"",
 			"http://s1.com/dir1/file"},
+		{"http://s1.com/dir1/file",
+			"/file2",
+			"http://s1.com/file2"},
+
 		{"http://s1.com/dir1/file",
 			"#abc",
 			"http://s1.com/dir1/file#abc"},
@@ -180,4 +190,145 @@ func TestJSONPointer(t *testing.T) {
 				ToJSON(test.Result), ToJSON(res))
 		}
 	}
+}
+
+type FSHandler struct {
+	Files map[string]string
+}
+
+func (h *FSHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	// path, _ := strings.CutPrefix(req.URL.Path, "/")
+	if file, ok := h.Files[req.URL.Path]; !ok {
+		res.WriteHeader(404)
+	} else {
+		res.Write([]byte(file))
+	}
+}
+
+// Test ProcessImports
+func TestProcessImports(t *testing.T) {
+	// Setup HTTP server
+	httpPaths := map[string]string{
+		"/empty":        "",
+		"/notjson":      "hello there",
+		"/emptyjson":    "{}",
+		"/onelevel":     `{"foo":"bar","foo6":666}`,
+		"/twolevel":     `{"foo":"bar","foo6":{"bar":666}}`,
+		"/twoarray":     `{"foo":"bar","foo6":[{"x":"y"},{"bar":667}]}`,
+		"/nest1":        `{"foo":"bar1","$import":"onelevel"}`,
+		"/nest2":        `{"foo":"bar1","$import":"twoarray#/foo6/1"}`,
+		"/nest3":        `{"$import": "twoarray#/foo6/1","f3":"bar"}`,
+		"/nest3.1":      `{"$import": "/onelevel"}`,
+		"/nest3.1.f":    `{"$import": "./onelevel"}`,
+		"/nest3.1.f2":   `{"$import": "onelevel"}`,
+		"/nest/nest4":   `{"foo":"bar1","$import":"/onelevel"}`,
+		"/nest/nest4.f": `{"foo":"bar1","$import":"../onelevel"}`,
+		"/nest/nest5":   `{"foo":"bar2","$import":"/nest/nest4"}`,
+		"/nest/nest5.f": `{"foo":"bar2","$import":"../nest/nest4.f"}`,
+		"/nest/nest6":   `{"foo":"bar2","$import":"http://localhost:9999/nest/nest4"}`,
+
+		"/err1": `{"$import": "empty"}`,
+		"/err2": `{"$import": "notjson"}`,
+		"/err3": `{"$import": "/err3"}`,
+		"/err4": `{"$import": "twolevel/bar"}`,
+	}
+	server := &http.Server{Addr: ":9999", Handler: &FSHandler{httpPaths}}
+	go server.ListenAndServe()
+
+	// Setup our local dir structure
+	/*
+		files := map[string]string{
+			"empty":     "",
+			"emptyjson": "{}",
+			"simple": `{"foo":"bar"}`,
+		}
+	*/
+	dir, _ := os.MkdirTemp("", "xreg")
+	defer func() {
+		os.RemoveAll(dir)
+	}()
+	for file, data := range httpPaths {
+		os.MkdirAll(dir+"/"+path.Dir(file), 0777)
+		os.WriteFile(dir+"/"+file, []byte(data), 0666)
+	}
+
+	// Wait for server
+	for {
+		if _, err := http.Get("http://localhost:9999/"); err == nil {
+			break
+		}
+	}
+
+	type Test struct {
+		Path   string // filename or http url to json file
+		Result string // json or error msg
+	}
+
+	tests := []Test{
+		{"empty", "Error parsing JSON: EOF"},
+		{"emptyjson", "{}"},
+
+		{"onelevel", httpPaths["/onelevel"]},
+		{"http:/onelevel", httpPaths["/onelevel"]},
+
+		{"nest1", `{"foo":"bar1","foo6":666}`},
+		{"http:/nest1", `{"foo":"bar1","foo6":666}`},
+
+		{"nest2", `{"bar":667,"foo":"bar1"}`},
+		{"http:/nest2", `{"bar":667,"foo":"bar1"}`},
+
+		{"nest3", `{"bar":667,"f3":"bar"}`},
+		{"http:/nest3", `{"bar":667,"f3":"bar"}`},
+
+		{"nest3.1.f", `{"foo":"bar","foo6":666}`},
+		{"http:/nest3.1", `{"foo":"bar","foo6":666}`},
+		{"http:/nest3.1.f2", `{"foo":"bar","foo6":666}`},
+
+		{"nest/nest4.f", `{"foo":"bar1","foo6":666}`},
+		{"http:/nest/nest4", `{"foo":"bar1","foo6":666}`},
+		{"http:/nest/nest4.f", `{"foo":"bar1","foo6":666}`},
+
+		{"nest/nest5.f", `{"foo":"bar2","foo6":666}`},
+		{"http:/nest/nest5", `{"foo":"bar2","foo6":666}`},
+
+		{"nest/nest6", `{"foo":"bar2","foo6":666}`},
+		{"http:/nest/nest6", `{"foo":"bar2","foo6":666}`},
+
+		// TODO add tests for $imports, not just $import
+	}
+
+	for i, test := range tests {
+		t.Logf("Test #: %d", i)
+		t.Logf("  Path: %s", test.Path)
+		var buf []byte
+		var err error
+		if strings.HasPrefix(test.Path, "http:") {
+			test.Path = "http://localhost:9999" + test.Path[5:]
+			var res *http.Response
+			if res, err = http.Get(test.Path); err == nil {
+				if res.StatusCode != 200 {
+					err = fmt.Errorf("Err %q: %s", test.Path, res.Status)
+				} else {
+					buf, err = io.ReadAll(res.Body)
+					res.Body.Close()
+				}
+			}
+		} else {
+			test.Path = dir + "/" + test.Path
+			buf, err = os.ReadFile(test.Path)
+		}
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+		buf, err = ProcessImports(test.Path, buf,
+			!strings.HasPrefix(test.Path, "http"))
+		if err != nil {
+			buf = []byte(err.Error())
+		}
+		if string(buf) != test.Result {
+			t.Fatalf("\nExp: %s\nGot: %s", test.Result, string(buf))
+		}
+	}
+
+	server.Shutdown(nil)
 }
