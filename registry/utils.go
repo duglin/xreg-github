@@ -320,100 +320,129 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 	// log.Printf("  Recurse:")
 	// log.Printf("    Data keys: %v", SortedKeys(data))
 
+	_, ok1 := data["$import"]
+	_, ok2 := data["$imports"]
+	if ok1 && ok2 {
+		return fmt.Errorf("In %q, both $import and $imports is not allowed",
+			currFile)
+	}
+
 	dataKeys := Keys(data) // so we can add/delete keys
 	for _, key := range dataKeys {
 		val := data[key]
-		if key == "$import" {
-			impStr, ok := val.(string)
-			if !ok {
-				return fmt.Errorf("In %q, $import isn't a string", currFile)
-			}
-			delete(data, "$import")
+		if key == "$import" || key == "$imports" {
+			delete(data, key)
+			list := []string{}
 
-			for _, name := range importArgs.History {
-				if name == impStr {
-					return fmt.Errorf("Recursive on %q", name)
+			valValue := reflect.ValueOf(val)
+			if key == "$import" {
+				if valValue.Kind() != reflect.String {
+					return fmt.Errorf("In %q, $import isn't a string", currFile)
+				}
+				list = []string{val.(string)}
+			} else {
+				if valValue.Kind() != reflect.Slice {
+					return fmt.Errorf("In %q, $imports isn't an array",
+						currFile)
+				}
+
+				for i := 0; i < valValue.Len(); i++ {
+					impInt := valValue.Index(i).Interface()
+					imp, ok := impInt.(string)
+					if !ok {
+						return fmt.Errorf("In %q, $imports contains a "+
+							"non-string value (%v)", currFile, impInt)
+					}
+					list = append(list, imp)
 				}
 			}
 
-			if len(impStr) == 0 {
-				return fmt.Errorf("In %q, $import can't be an empty string",
-					currFile)
-			}
+			for _, impStr := range list {
+				for _, name := range importArgs.History {
+					if name == impStr {
+						return fmt.Errorf("Recursive on %q", name)
+					}
+				}
 
-			// log.Printf("CurrFile: %s\nImpStr: %s", currFile, impStr)
-			nextFile := ResolvePath(currFile, impStr)
-			// log.Printf("NextFile: %s", nextFile)
-			importData := importArgs.Cache[nextFile]
-			base, fragment := SplitFragement(nextFile)
+				if len(impStr) == 0 {
+					return fmt.Errorf("In %q, $import can't be an empty string",
+						currFile)
+				}
 
-			if importData == nil {
-				importData = importArgs.Cache[base]
+				// log.Printf("CurrFile: %s\nImpStr: %s", currFile, impStr)
+				nextFile := ResolvePath(currFile, impStr)
+				// log.Printf("NextFile: %s", nextFile)
+				importData := importArgs.Cache[nextFile]
+				base, fragment := SplitFragement(nextFile)
+
 				if importData == nil {
-					data := []byte(nil)
-					if strings.HasPrefix(base, "http") {
-						res, err := http.Get(base)
-						if err != nil {
-							return err
-						}
-						if res.StatusCode != 200 {
-							return fmt.Errorf("Error getting %q: %s",
-								base, res.Status)
-						}
-						data, err = io.ReadAll(res.Body)
-						res.Body.Close()
-						if err != nil {
-							return err
-						}
-					} else {
-						if importArgs.LocalFiles {
-							if data, err = os.ReadFile(base); err != nil {
-								return fmt.Errorf("Error reading file %q: %s",
-									base, err)
+					importData = importArgs.Cache[base]
+					if importData == nil {
+						data := []byte(nil)
+						if strings.HasPrefix(base, "http") {
+							res, err := http.Get(base)
+							if err != nil {
+								return err
+							}
+							if res.StatusCode != 200 {
+								return fmt.Errorf("Error getting %q: %s",
+									base, res.Status)
+							}
+							data, err = io.ReadAll(res.Body)
+							res.Body.Close()
+							if err != nil {
+								return err
 							}
 						} else {
-							return fmt.Errorf("Not allowed to access file: %s",
-								base)
+							if importArgs.LocalFiles {
+								if data, err = os.ReadFile(base); err != nil {
+									return fmt.Errorf("Error reading file %q: %s",
+										base, err)
+								}
+							} else {
+								return fmt.Errorf("Not allowed to access file: %s",
+									base)
+							}
 						}
-					}
-					data = RemoveComments(data)
+						data = RemoveComments(data)
 
-					if err := Unmarshal(data, &importData); err != nil {
-						return err
+						if err := Unmarshal(data, &importData); err != nil {
+							return err
+						}
+						importArgs.Cache[base] = importData
 					}
-					importArgs.Cache[base] = importData
+
+					// Now, traverse down to the specific field - if needed
+					if fragment != "" {
+						nextTop := importArgs.Cache[base]
+						impData, err := GetJSONPointer(nextTop, fragment)
+						if err != nil {
+							return err
+						}
+
+						if reflect.ValueOf(impData).Kind() != reflect.Map {
+							return fmt.Errorf("In %q, $import(%s) is not a map: %s",
+								currFile, impStr, reflect.ValueOf(importData).Kind())
+						}
+
+						importData = impData.(map[string]any)
+						importArgs.Cache[nextFile] = importData
+					}
 				}
 
-				// Now, traverse down to the specific field - if needed
-				if fragment != "" {
-					nextTop := importArgs.Cache[base]
-					impData, err := GetJSONPointer(nextTop, fragment)
-					if err != nil {
-						return err
-					}
-
-					if reflect.ValueOf(impData).Kind() != reflect.Map {
-						return fmt.Errorf("In %q, $import(%s) is not a map: %s",
-							currFile, impStr, reflect.ValueOf(importData).Kind())
-					}
-
-					importData = impData.(map[string]any)
-					importArgs.Cache[nextFile] = importData
+				// Go deep! (recurse) before we add it to current map
+				importArgs.History = append([]string{nextFile},
+					importArgs.History...)
+				if err = ImportTraverse(importArgs, importData); err != nil {
+					return err
 				}
-			}
+				importArgs.History = importArgs.History[1:]
 
-			// Go deep! (recurse) before we add it to current map
-			importArgs.History = append([]string{nextFile},
-				importArgs.History...)
-			if err = ImportTraverse(importArgs, importData); err != nil {
-				return err
-			}
-			importArgs.History = importArgs.History[1:]
-
-			// Only copy if we don't already have one by this name
-			for k, v := range importData {
-				if _, ok := data[k]; !ok {
-					data[k] = v
+				// Only copy if we don't already have one by this name
+				for k, v := range importData {
+					if _, ok := data[k]; !ok {
+						data[k] = v
+					}
 				}
 			}
 		} else {

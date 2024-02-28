@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -213,8 +214,9 @@ func TestProcessImports(t *testing.T) {
 		"/notjson":      "hello there",
 		"/emptyjson":    "{}",
 		"/onelevel":     `{"foo":"bar","foo6":666}`,
-		"/twolevel":     `{"foo":"bar","foo6":{"bar":666}}`,
+		"/twolevel":     `{"foo":"bar3","foo6":{"bar":666}}`,
 		"/twoarray":     `{"foo":"bar","foo6":[{"x":"y"},{"bar":667}]}`,
+		"/nonfoo":       `{"bar":"zzz","foo":"qqq"}`,
 		"/nest1":        `{"foo":"bar1","$import":"onelevel"}`,
 		"/nest2":        `{"foo":"bar1","$import":"twoarray#/foo6/1"}`,
 		"/nest3":        `{"$import": "twoarray#/foo6/1","f3":"bar"}`,
@@ -231,6 +233,15 @@ func TestProcessImports(t *testing.T) {
 		"/err2": `{"$import": "notjson"}`,
 		"/err3": `{"$import": "/err3"}`,
 		"/err4": `{"$import": "twolevel/bar"}`,
+
+		"/nest7":      `{"$imports": []}`,
+		"/nest7.err1": `{"$import": []}`,
+		"/nest7.err2": `{"$imports": [1,2,3]}`,
+		"/nest7.err3": `{"$import": "foo", "$imports": []}`,
+
+		"/nest8":  `{"$imports": [ "onelevel", "twolevel" ]}`,
+		"/nest9":  `{"$imports": [ "onelevel", "twolevel" ], "foo":"xxx"}`,
+		"/nest10": `{"$imports": [ "nonfoo", "onelevel" ], "foo":"xxx"}`,
 	}
 	server := &http.Server{Addr: ":9999", Handler: &FSHandler{httpPaths}}
 	go server.ListenAndServe()
@@ -294,8 +305,19 @@ func TestProcessImports(t *testing.T) {
 		{"nest/nest6", `{"foo":"bar2","foo6":666}`},
 		{"http:/nest/nest6", `{"foo":"bar2","foo6":666}`},
 
-		// TODO add tests for $imports, not just $import
+		{"nest7", `{}`},
+
+		{"nest7.err1", `In "tmp/nest7.err1", $import isn't a string`},
+		{"nest7.err2", `In "tmp/nest7.err2", $imports contains a non-string value (1)`},
+		{"nest7.err3", `In "tmp/nest7.err3", both $import and $imports is not allowed`},
+		{"http:/nest7.err1", `In "http://localhost:9999/nest7.err1", $import isn't a string`},
+
+		{"nest8", `{"foo":"bar","foo6":666}`},
+		{"nest9", `{"foo":"xxx","foo6":666}`},
+		{"nest10", `{"bar":"zzz","foo":"xxx","foo6":666}`},
 	}
+
+	mask := regexp.MustCompile("/tmp/xreg[^/]*")
 
 	for i, test := range tests {
 		t.Logf("Test #: %d", i)
@@ -325,6 +347,7 @@ func TestProcessImports(t *testing.T) {
 		if err != nil {
 			buf = []byte(err.Error())
 		}
+		buf = mask.ReplaceAll(buf, []byte("tmp"))
 		if string(buf) != test.Result {
 			t.Fatalf("\nExp: %s\nGot: %s", test.Result, string(buf))
 		}
