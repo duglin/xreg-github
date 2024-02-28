@@ -13,6 +13,7 @@ import (
 )
 
 var worked = true
+var Verbose = false
 
 func Error(str string, args ...any) {
 	str = strings.TrimSpace(str) + "\n"
@@ -59,6 +60,9 @@ func modelVerifyFunc(cmd *cobra.Command, args []string) {
 	}
 
 	for _, fileName := range args {
+		if Verbose {
+			fmt.Printf("%s:\n", fileName)
+		}
 		if strings.HasPrefix(fileName, "http") {
 			res, err := http.Get(fileName)
 			if err == nil {
@@ -114,6 +118,7 @@ func main() {
 		Short: "xRegistry CLI",
 	}
 	xrCmd.CompletionOptions.HiddenDefaultCmd = true
+	xrCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Chatty?")
 
 	modelCmd := &cobra.Command{
 		Use:   "model",
