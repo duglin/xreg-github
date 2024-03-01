@@ -628,6 +628,13 @@ func HTTPPutPost(info *RequestInfo) error {
 		return HTTPPUTModel(info)
 	}
 
+	// POST /groups/gID/resources/rID?setlatestversiond is special
+	if len(info.Parts) == 4 && method == "POST" {
+		if _, ok := info.OriginalRequest.URL.Query()["setlatestversionid"]; ok {
+			return HTTPSetLatestVersionID(info)
+		}
+	}
+
 	// Check for some obvious high-level bad states up-front
 	// //////////////////////////////////////////////////////
 	if len(info.Parts) == 0 && method == "POST" {
@@ -1116,4 +1123,59 @@ func HTTPPUTModel(info *RequestInfo) error {
 	}
 
 	return HTTPGETModel(info)
+}
+
+func HTTPSetLatestVersionID(info *RequestInfo) error {
+	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error finding group(%s): %s", info.GroupUID, err)
+	}
+	if group == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Group %q not found", info.GroupUID)
+	}
+
+	resource, err := group.FindResource(info.ResourceType, info.ResourceUID)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error finding resource(%s): %s",
+			info.ResourceUID, err)
+	}
+	if resource == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Resource %q not found", info.ResourceUID)
+	}
+
+	groupModel := info.Registry.Model.Groups[info.GroupType]
+	resourceModel := groupModel.Resources[info.ResourceType]
+	if resourceModel.Latest == false {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf(`Resource %q doesn't allow setting of `+
+			`"latestversionid"`, resourceModel.Plural)
+	}
+
+	vID := info.OriginalRequest.URL.Query().Get("setlatestversionid")
+	if vID == "" {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf(`"setlatestversionid" must not be empty`)
+	}
+
+	version, err := resource.FindVersion(vID)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error finding version(%s): %s", vID, err)
+	}
+	if version == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Version %q not found", vID)
+	}
+
+	err = resource.SetLatest(version)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error setting latest version: %s", err)
+	}
+
+	return HTTPGet(info)
 }

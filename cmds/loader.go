@@ -267,8 +267,10 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	ErrFatalf(g.Set("labels.private", "true"))
 	r, err := g.AddResource("files", "f1", "v1")
+	ErrFatalf(err)
 	ErrFatalf(g.Set("labels.private", "true"))
 	_, err = r.AddVersion("v2", true)
+	ErrFatalf(err)
 	ErrFatalf(r.Set("labels.stage", "dev"))
 	ErrFatalf(r.Set("labels.none", ""))
 

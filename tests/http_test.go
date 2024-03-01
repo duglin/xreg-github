@@ -3480,7 +3480,7 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	// TODO
-	// Delete these when we support transactions
+	// Delete these once we support transactions
 	g, _ := reg.FindGroup("dirs", "d1")
 	r, _ := g.FindResource("files", "f1")
 	r.Delete()
@@ -3564,6 +3564,7 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	rm.Latest = false
+	rm.Save()
 
 	xCheckHTTP(t, &HTTPTest{
 		Name:   "PUT file f1/2 - latest = true - diff server",
@@ -3633,6 +3634,214 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
 		},
 		ResBody: `hello`,
+	})
+
+	// Now test ?setlatestversid stuff
+	///////////////////////////////
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "POST file f1?setlatest= not allowed",
+		URL:     "/dirs/d1/files/f1?setlatestversionid",
+		Method:  "POST",
+		Code:    400,
+		ResBody: `Resource "files" doesn't allow setting of "latestversionid"` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "POST file f1?meta&setlatest= not allowed",
+		URL:     "/dirs/d1/files/f1?&meta&setlatestversionid",
+		Method:  "POST",
+		Code:    400,
+		ResBody: `Resource "files" doesn't allow setting of "latestversionid"` + "\n",
+	})
+
+	// Enable client-side setting
+	rm.Latest = true
+	rm.Save()
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "POST file f1?setlatest - empty",
+		URL:     "/dirs/d1/files/f1?setlatestversionid",
+		Method:  "POST",
+		Code:    400,
+		ResBody: `"setlatestversionid" must not be empty` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "POST file f1?setlatest= - empty",
+		URL:     "/dirs/d1/files/f1?setlatestversionid=",
+		Method:  "POST",
+		Code:    400,
+		ResBody: `"setlatestversionid" must not be empty` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "POST file f1?meta&setlatest - empty",
+		URL:     "/dirs/d1/files/f1?meta&setlatestversionid",
+		Method:  "POST",
+		Code:    400,
+		ResBody: `"setlatestversionid" must not be empty` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "POST file f1?meta&setlatest= - empty",
+		URL:     "/dirs/d1/files/f1?meta&setlatestversionid=",
+		Method:  "POST",
+		Code:    400,
+		ResBody: `"setlatestversionid" must not be empty` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "POST file f1?setlatest=1 - no change",
+		URL:    "/dirs/d1/files/f1?setlatestversionid=1",
+		Method: "POST",
+		ReqHeaders: []string{
+			`xRegistry-id: bogus`,
+		},
+		ReqBody:     `ignore me`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Content-Type: text/plain; charset=utf-8",
+			"xRegistry-id: f1",
+			"xRegistry-epoch: 4",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
+			"xRegistry-latestversionid: 1",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
+			"xRegistry-versionscount: 2",
+			"Content-Length: 5",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "POST file f1?meta&setlatest=1 - no change",
+		URL:    "/dirs/d1/files/f1?meta&setlatestversionid=1",
+		Method: "POST",
+		ReqHeaders: []string{
+			`xRegistry-id: bogus`,
+		},
+		ReqBody:     `ignore me`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Content-Type: application/json",
+		},
+		ResBody: `{
+  "id": "f1",
+  "epoch": 4,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "POST file f1?setlatest=1 - set to 2",
+		URL:    "/dirs/d1/files/f1?setlatestversionid=2",
+		Method: "POST",
+		ReqHeaders: []string{
+			`xRegistry-id: bogus`,
+		},
+		ReqBody:     `ignore me`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Content-Type: text/plain; charset=utf-8",
+			"xRegistry-id: f1",
+			"xRegistry-epoch: 2",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
+			"xRegistry-latestversionid: 2",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
+			"xRegistry-versionscount: 2",
+			"Content-Length: 5",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "POST file f1?setlatest=1 - set back to 1",
+		URL:    "/dirs/d1/files/f1?meta&setlatestversionid=1",
+		Method: "POST",
+		ReqHeaders: []string{
+			`xRegistry-id: bogus`,
+		},
+		ReqBody:     `ignore me`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Content-Type: application/json",
+		},
+		ResBody: `{
+  "id": "f1",
+  "epoch": 4,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`,
+	})
+
+	// errors
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST setlatest bad group type",
+		URL:        "/badgroup/d1/files/f1?meta&setlatestversionid=1",
+		Method:     "POST",
+		ReqHeaders: []string{`xRegistry-id: bogus`},
+		Code:       400,
+		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
+		ResBody:    `Unknown Group type: "badgroup"` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST setlatest bad group",
+		URL:        "/dirs/dx/files/f1?meta&setlatestversionid=1",
+		Method:     "POST",
+		ReqHeaders: []string{`xRegistry-id: bogus`},
+		Code:       404,
+		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
+		ResBody:    `Group "dx" not found` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST setlatest bad resource type",
+		URL:        "/dirs/d1/badfiles/f1?meta&setlatestversionid=1",
+		Method:     "POST",
+		ReqHeaders: []string{`xRegistry-id: bogus`},
+		Code:       400,
+		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
+		ResBody:    `Unknown Resource type: "badfiles"` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST setlatest bad resource",
+		URL:        "/dirs/d1/files/xxf1?meta&setlatestversionid=1",
+		Method:     "POST",
+		ReqHeaders: []string{`xRegistry-id: bogus`},
+		Code:       404,
+		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
+		ResBody:    `Resource "xxf1" not found` + "\n",
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:       "POST setlatest bad version",
+		URL:        "/dirs/d1/files/f1?meta&setlatestversionid=3",
+		Method:     "POST",
+		ReqHeaders: []string{`xRegistry-id: bogus`},
+		Code:       404,
+		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
+		ResBody:    `Version "3" not found` + "\n",
 	})
 
 }
