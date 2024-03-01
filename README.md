@@ -40,6 +40,9 @@ TODOs:
 - test for exact match of numerics, bools
 - pagination
 - DELETE operations
+  - DELETE on version can include ?setlatestversionid=vID, delete of any
+    version not just the latest version
+  - DELETE latest should choose the last one created based on timestamp
 - see if we can prepend Path with / or append it with /
 - save latest highest "versionId" in Resource so we can assign a new value
   if not provided by the client
@@ -58,12 +61,6 @@ TODOs:
 - copy all of the types tests in http from Reg to groups, resources and vers
 - test to make sure an ID in the body == ID in URL for reg and group
 - support multiple resources/versions in POSTs
-- support setting "latest" to false on a PUT/POST
-  "latest" on version create (or on resource) needs to be adhered to
-  - POST to resource with ?setlatestversionid=vID
-  - DELETE on version can include ?setlatestversionid=vID, delete of any
-    version not just the latest version
-  - DELETE latest should choose the last one created based on timestamp
 - add support for hasdocument
 - add support for resource vs resourcebase64 - return what was on the PUT
 - add support for "default" in the model
