@@ -17,11 +17,11 @@ func TestCreateVersion(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, f1 != nil, "Creating f1 failed")
 
-	v2, err := f1.AddVersion("v2")
+	v2, err := f1.AddVersion("v2", true)
 	xNoErr(t, err)
 	xCheck(t, v2 != nil, "Creating v2 failed")
 
-	vt, err := f1.AddVersion("v2")
+	vt, err := f1.AddVersion("v2", true)
 	xCheck(t, vt == nil && err != nil, "Dup v2 should have faile")
 
 	l, err := f1.GetLatest()
@@ -35,7 +35,7 @@ func TestCreateVersion(t *testing.T) {
 	f2, err := d2.AddResource("files", "f1", "v1")
 	xNoErr(t, err)
 	xCheck(t, f2 != nil, "Creating d2/f1/v1 failed")
-	_, err = f2.AddVersion("v1.1")
+	_, err = f2.AddVersion("v1.1", true)
 	xNoErr(t, err)
 
 	// /dirs/d1/f1/v1
@@ -83,10 +83,10 @@ func TestCreateVersion(t *testing.T) {
 
 	xJSONCheck(t, f1.Get("latestversionid"), "v1")
 
-	vt, err = f1.AddVersion("v2")
+	vt, err = f1.AddVersion("v2", true)
 	xCheck(t, vt != nil && err == nil, "Adding v2 again")
 
-	vt, err = f1.AddVersion("v3")
+	vt, err = f1.AddVersion("v3", true)
 	xCheck(t, vt != nil && err == nil, "Added v3")
 	xJSONCheck(t, f1.Get("latestversionid"), "v3")
 

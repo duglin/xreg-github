@@ -56,7 +56,7 @@ func main() {
 		g, err := reg.AddGroup("dirs", "dir1")
 		r, err := g.AddResource("files", "f1", "v1")
 		v1, err := r.FindVersion("v1")
-		r.AddVersion("v2")
+		r.AddVersion("v2", true)
 		v1.Set("name", "myname")
 		os.Exit(0)
 	}

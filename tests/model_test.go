@@ -600,10 +600,10 @@ func TestMultModel2Create(t *testing.T) {
 
 	d, _ := reg.AddGroup("dirs1", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
-	f.AddVersion("v2")
+	f.AddVersion("v2", true)
 	d, _ = reg.AddGroup("dirs1", "d2")
 	f, _ = d.AddResource("files", "f2", "v1")
-	f.AddVersion("v1.1")
+	f.AddVersion("v1.1", true)
 
 	gm2, _ := reg.Model.AddGroupModel("dirs2", "dir2")
 	gm2.AddResourceModel("files", "file", 0, false, true, true)

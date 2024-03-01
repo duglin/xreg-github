@@ -418,7 +418,8 @@ FROM FullTree WHERE RegSID=? AND `
 	var version *Entity
 	versionsCount := 0
 	if info.VersionUID == "" {
-		// We're on a Resource, so go find the right Version
+		// We're on a Resource, so go find the latest Version and count
+		// how many versions there are for the VersionsCount attribute
 		vID := entity.Get("latestversionid").(string)
 		for {
 			v, err := readNextEntity(results)
@@ -616,6 +617,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	IncomingObj := map[string]any{}
 	propsID := "" // ID from body or http header
 	isNew := false
+	isResourceNew := false
 
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
@@ -779,6 +781,8 @@ func HTTPPutPost(info *RequestInfo) error {
 			resourceUID = NewUUID()
 		}
 		isNew = true
+		isResourceNew = true
+		// Create a new Resource and it's first/only/latest Version
 		resource, err = group.AddResource(info.ResourceType, resourceUID,
 			versionUID) // vID should be ""
 		if err == nil {
@@ -814,6 +818,8 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			isNew = true
+			isResourceNew = true
+			// Create a new Resource and it's first/only/latest Version
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID)
 			if err == nil {
@@ -829,25 +835,37 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	// No version means the resource already existed, find/create version
 	if version == nil {
-		if versionUID == "" && len(info.Parts) == 4 && method == "POST" {
+		if versionUID == "" && len(info.Parts) >= 4 && method == "POST" {
+			// must be: POST /groups/gID/resources/rID
+			//      or: POST /groups/gID/resources/rID/versions
+			// so any ID provided is for the Version.
+			// The len part of the "if" is probably not necessary
 			versionUID = propsID
 		}
 
 		if versionUID != "" {
+			// must be: XXX /groups/gID/resources/rID/versions/vID
 			version, err = resource.FindVersion(versionUID)
 		}
 
 		if err == nil && version == nil {
+			/* Commented out and made the "== 4" into a ">= 4" above
 			// Use the ID from the entity only if the URL pointed to a
 			// version and not the resource
 			if versionUID == "" && len(info.Parts) == 5 {
 				versionUID = propsID
 			}
+			*/
 			if len(info.Parts) == 4 && versionUID == "" && method == "PUT" {
+				// must be: PUT /groups/gID/resources/rID
+				// which means we're updating the latest Version, so get it.
+				// the versionUID == "" is probably not necessary
 				version, err = resource.GetLatest()
 			} else {
+				// else, we were asked to create a new Version.
+				// Don't set "latest" on the resource yet, we'll do that later
 				isNew = true
-				version, err = resource.AddVersion(versionUID)
+				version, err = resource.AddVersion(versionUID, false)
 			}
 		}
 	}
@@ -923,8 +941,10 @@ func HTTPPutPost(info *RequestInfo) error {
 				val = nil
 			}
 
-			// If there are -'s then it's a non-scalar, convert it
-			parts := strings.SplitN(key, "-", 3)
+			// If there are -'s then it's a non-scalar, convert it.
+			// Note that any "-" after the 1st is part of the key name
+			// labels-keyName && labels-"key-name"
+			parts := strings.SplitN(key, "-", 2)
 			if len(parts) > 1 {
 				obj := IncomingObj
 
@@ -949,7 +969,11 @@ func HTTPPutPost(info *RequestInfo) error {
 						obj[part] = tmpO
 						obj = map[string]any(tmpO)
 					} else {
-						obj = prop.(map[string]any)
+						obj, ok = prop.(map[string]any)
+						if !ok {
+							return fmt.Errorf("HTTP header %q should "+
+								"reference a map", key)
+						}
 					}
 				}
 			} else {
@@ -982,6 +1006,49 @@ func HTTPPutPost(info *RequestInfo) error {
 	delete(IncomingObj, "latestversionurl")
 
 	version.NewObject = IncomingObj
+	version.ConvertStrings()
+
+	// If "latest" is in the incoming msg then see if we can do what they ask.
+	// Else set current version to the latest if it's new
+	setLatest := isNew
+	if latestVal, ok := IncomingObj["latest"]; ok {
+		latest, ok := latestVal.(bool)
+		if !ok {
+			return fmt.Errorf(`"latest" must be a boolean`)
+		}
+		if isResourceNew {
+			if latest == false {
+				return fmt.Errorf(`"latest" can not be "false" since ` +
+					`there is only one version, so it must be the latest`)
+			}
+		} else {
+			latestVID := resource.Get("latestversionid").(string)
+			if err != nil {
+				return err
+			}
+			if latest == false {
+				if version.UID == latestVID {
+					return fmt.Errorf(`"latest" can not be "false" since ` +
+						`doing so would result in no latest version`)
+				}
+			}
+
+			// If the user can't control "latest", but they passed in
+			// what we were going to do anyway, let it pass
+			if resourceModel.Latest == false {
+				if latest != (latestVID == version.UID) {
+					return fmt.Errorf(`"latest" can not be "%v", it is `+
+						`controlled by the server`, latest)
+				}
+			} else {
+				// Ok, let them control it
+				setLatest = latest
+			}
+		}
+	}
+	if setLatest {
+		resource.SetLatest(version)
+	}
 
 	if err = version.ValidateAndSave(isNew); err != nil {
 		info.StatusCode = http.StatusBadRequest

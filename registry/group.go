@@ -92,10 +92,17 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 		log.Print(err)
 		return nil, err
 	}
-	r.Set(".id", r.UID)
-	r.Set(".#nextVersionID", 1)
 
-	_, err = r.AddVersion(vID)
+	err = r.Set(".id", r.UID)
+	if err != nil {
+		return nil, err
+	}
+	err = r.Set(".#nextVersionID", 1)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.AddVersion(vID, true)
 	if err != nil {
 		return nil, err
 	}

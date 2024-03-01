@@ -22,11 +22,11 @@ func TestCreateResource(t *testing.T) {
 	ft, err := d1.AddResource("files", "f1", "v1")
 	xCheck(t, ft == nil && err != nil, "Dup f1 should have failed")
 
-	v2, err := f1.AddVersion("v2")
+	v2, err := f1.AddVersion("v2", true)
 	xNoErr(t, err)
 	xCheck(t, v2 != nil && err == nil, "Creating v2 failed")
 
-	vt, err := f1.AddVersion("v2")
+	vt, err := f1.AddVersion("v2", true)
 	xCheck(t, vt == nil && err != nil, "Dup v2 should have faile")
 
 	d2, err := reg.AddGroup("dirs", "d2")
@@ -34,7 +34,7 @@ func TestCreateResource(t *testing.T) {
 	xCheck(t, d2 != nil && err == nil, "Creating d2 failed")
 
 	f2, _ := d2.AddResource("files", "f2", "v1")
-	f2.AddVersion("v1.1")
+	f2.AddVersion("v1.1", true)
 
 	// /dirs/d1/f1/v1
 	//            /v2

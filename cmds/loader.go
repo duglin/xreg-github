@@ -164,7 +164,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 		buf := &bytes.Buffer{}
 		io.Copy(buf, reader)
-		version, err = res.AddVersion(parts[verIndex])
+		version, err = res.AddVersion(parts[verIndex], true)
 		ErrFatalf(err)
 		ErrFatalf(version.Set("name", parts[verIndex+1]))
 		ErrFatalf(version.Set("format", "openapi/3.0.6"))
@@ -268,7 +268,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(g.Set("labels.private", "true"))
 	r, err := g.AddResource("files", "f1", "v1")
 	ErrFatalf(g.Set("labels.private", "true"))
-	_, err = r.AddVersion("v2")
+	_, err = r.AddVersion("v2", true)
 	ErrFatalf(r.Set("labels.stage", "dev"))
 	ErrFatalf(r.Set("labels.none", ""))
 
@@ -363,7 +363,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(v.Set("name", "blobCreated"))
 	ErrFatalf(v.Set("epoch", 2))
 
-	v, err = r.AddVersion("v2")
+	v, err = r.AddVersion("v2", true)
 	ErrFatalf(err)
 	ErrFatalf(v.Set("name", "blobCreated"))
 	ErrFatalf(v.Set("epoch", 4))

@@ -94,7 +94,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	return r.Entity.Set("latestversionid", newLatest.UID)
 }
 
-func (r *Resource) AddVersion(id string) (*Version, error) {
+func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
 	log.VPrintf(3, ">Enter: AddVersion%s)", id)
 	defer log.VPrintf(3, "<Exit: AddVersion")
 
@@ -157,16 +157,24 @@ func (r *Resource) AddVersion(id string) (*Version, error) {
 		log.Print(err)
 		return nil, err
 	}
+
 	v.SkipEpoch = true
-	v.Set("id", id)
-	v.Set("epoch", 1)
+	if err = v.Set("id", id); err != nil {
+		return nil, err
+	}
+
+	if err = v.Set("epoch", 1); err != nil {
+		return nil, err
+	}
+
 	v.SkipEpoch = false
 
-	err = r.SetLatest(v)
-	if err != nil {
-		// v.Delete()
-		err = fmt.Errorf("Error setting latestVersionId: %s", err)
-		return v, err
+	if latest {
+		err = r.SetLatest(v)
+		if err != nil {
+			err = fmt.Errorf("Error setting latestVersionId: %s", err)
+			return v, err
+		}
 	}
 
 	log.VPrintf(3, "Created new one - dbSID: %s", v.DbSID)

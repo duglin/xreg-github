@@ -17,10 +17,10 @@ func TestBasicInline(t *testing.T) {
 
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
-	f.AddVersion("v2")
+	f.AddVersion("v2", true)
 	d, _ = reg.AddGroup("dirs", "d2")
 	f, _ = d.AddResource("files", "f2", "v1")
-	f.AddVersion("v1.1")
+	f.AddVersion("v1.1", true)
 
 	gm2, _ := reg.Model.AddGroupModel("dirs2", "dir2")
 	gm2.AddResourceModel("files", "file", 0, true, true, true)
@@ -308,30 +308,30 @@ func TestResourceInline(t *testing.T) {
 	f, _ := d.AddResource("files", "f1-proxy", "v1")
 	f.Set(NewPP().P("#resource").UI(), "Hello world! v1")
 
-	v, _ := f.AddVersion("v2")
+	v, _ := f.AddVersion("v2", true)
 	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
-	v, _ = f.AddVersion("v3")
+	v, _ = f.AddVersion("v3", true)
 	v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	// URL
 	f, _ = d.AddResource("files", "f2-url", "v1")
 	f.Set(NewPP().P("#resource").UI(), "Hello world! v1")
 
-	v, _ = f.AddVersion("v2")
+	v, _ = f.AddVersion("v2", true)
 	v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
-	v, _ = f.AddVersion("v3")
+	v, _ = f.AddVersion("v3", true)
 	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
 	// Resource
 	f, _ = d.AddResource("files", "f3-resource", "v1")
 	f.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
-	v, _ = f.AddVersion("v2")
+	v, _ = f.AddVersion("v2", true)
 	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
-	v, _ = f.AddVersion("v3")
+	v, _ = f.AddVersion("v3", true)
 	v.Set(NewPP().P("#resource").UI(), "Hello world! v3")
 
 	// /dirs/d1/files/f1-proxy/v1 - resource

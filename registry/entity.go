@@ -1083,6 +1083,76 @@ func (e *Entity) GetAttributes(useNew bool) Attributes {
 	return attrs
 }
 
+// Used to convert top level (or one level maps) from strings to the right
+// scalar types. Used in cases like values coming in a HTTP headers and
+// we're assuming they're all strings, at first.
+// Assume that if anything is wrong that it'll be flagged later by the
+// verfication checks
+func (e *Entity) ConvertStrings() {
+	attrs := e.GetAttributes(true) // Use e.NewObject
+
+	for key, val := range e.NewObject {
+		attr := attrs[key]
+		if attr == nil {
+			attr = attrs["*"]
+			if attr == nil {
+				// Can't find it, so it must be an error.
+				// Assume we'll catch it during the normal verification checks
+				continue
+			}
+		}
+
+		// We'll only try to convert strings and one-level-scalar maps
+		valValue := reflect.ValueOf(val)
+		if valValue.Kind() != reflect.String && valValue.Kind() != reflect.Map {
+			continue
+		}
+		valStr := fmt.Sprintf("%v", val)
+
+		// If not one of these, just skip it
+		switch attr.Type {
+		case BOOLEAN, DECIMAL, INTEGER, UINTEGER:
+			if newVal, ok := ConvertString(valStr, attr.Type); ok {
+				// Replace the string with the non-string value
+				e.NewObject[key] = newVal
+			}
+		case MAP:
+			if valValue.Kind() == reflect.Map {
+				valMap := val.(map[string]any)
+				for k, v := range valMap {
+					vStr := fmt.Sprintf("%v", v)
+					// Only saved the converted string if we did a conversion
+					if nV, ok := ConvertString(vStr, attr.Item.Type); ok {
+						valMap[k] = nV
+					}
+				}
+			}
+		}
+	}
+}
+
+func ConvertString(val string, toType string) (any, bool) {
+	switch toType {
+	case BOOLEAN:
+		if val == "true" {
+			return true, true
+		} else if val == "false" {
+			return false, true
+		}
+	case DECIMAL:
+		tmpFloat, err := strconv.ParseFloat(val, 64)
+		if err == nil {
+			return tmpFloat, true
+		}
+	case INTEGER, UINTEGER:
+		tmpInt, err := strconv.Atoi(val)
+		if err == nil {
+			return tmpInt, true
+		}
+	}
+	return nil, false
+}
+
 // Returns the initial set of attributes defined for the entity. So
 // no IfValues attributes yet as we need the current set of properties
 // to calculate that
@@ -1394,6 +1464,10 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 
 		// For each attribute (key) in newObj, check its type
 		for _, key = range keys {
+			if key[0] == '#' {
+				continue
+			}
+
 			val, ok := newObj[key]
 
 			// Based on the attribute's type check the incoming 'val'.

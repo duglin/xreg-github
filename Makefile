@@ -1,17 +1,19 @@
 all: mysql cmds test image run
 
-cmds: server xr
-
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
 
+cmds: server xr
+
 test: .test
 .test: server */*test.go
+	@echo
+	@echo "# Testing"
 	@go clean -testcache
 	for s in $(TESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
-	# go test -failfast $(TESTDIRS)
+	@# go test -failfast $(TESTDIRS)
 	@echo
-	@echo "# Run again w/o cache and deleting the Registry after each one"
+	@echo "# Run again w/o cache and w/o deleting the Registry after each one"
 	@go clean -testcache
 	NO_CACHE=1 NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
 	@echo
@@ -21,14 +23,20 @@ unittest:
 	go test -failfast ./registry
 
 server: cmds/server.go cmds/loader.go registry/*
+	@echo
+	@echo "# Building server"
 	go build $(BUILDFLAGS) -o $@ cmds/server.go cmds/loader.go
 
 xr: cmds/xr.go registry/*
+	@echo "# Building CLI"
 	go build $(BUILDFLAGS) -o $@ cmds/xr.go
 
 image: .image
 .image: server Dockerfile
-	docker build -f Dockerfile -t $(IMAGE) . --network host --no-cache
+	@echo docker build -f Dockerfile -t $(IMAGE) . --network host --no-cache
+	@docker build -f Dockerfile -t $(IMAGE) . --network host --no-cache \
+		> .dockerout 2>&1 || { cat .dockerout ; rm .dockerout ; exit 1 ; }
+	@rm .dockerout
 	@touch .image
 
 push: .push
@@ -37,6 +45,7 @@ push: .push
 	@touch .push
 
 run: mysql server
+	@echo
 	./server --recreate
 
 start: mysql server
@@ -47,9 +56,9 @@ notest: mysql server
 
 mysql:
 	@docker container inspect mysql > /dev/null 2>&1 || \
-	(echo "Starting mysql..." && \
+	(echo "# Starting mysql" && \
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password --network host \
-		--name mysql mysql )
+		--name mysql mysql > /dev/null )
 
 mysql-client: mysql
 	docker run -ti --rm --network host mysql \
@@ -57,7 +66,7 @@ mysql-client: mysql
 
 k3d:
 	@k3d cluster list | grep xreg > /dev/null || \
-		(creating k3d cluster... || \
+		(creating k3d cluster || \
 		k3d cluster create xreg --wait \
 			-p 3306:32002@loadbalancer  \
 			-p 8080:32000@loadbalancer ; \
@@ -73,8 +82,10 @@ k3dserver: k3d image
 	sleep 2 ; kubectl logs -f xreg-server
 
 clean:
-	rm -f server xr
-	rm -f .test .image .push
-	go clean -cache -testcache
-	-k3d cluster delete xreg
-	-docker rm -f mysql
+	@echo "# Cleaning"
+	@rm -f server xr
+	@rm -f .test .image .push
+	@go clean -cache -testcache
+	@-k3d cluster delete xreg > /dev/null 2>&1
+	@-docker rm -f mysql > /dev/null 2>&1
+	@docker system prune -f > /dev/null

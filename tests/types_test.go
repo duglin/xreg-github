@@ -449,7 +449,16 @@ func TestWildcardBoolTypes(t *testing.T) {
 	reg.Model.AddAttr("*", registry.BOOLEAN)
 	// reg.Model.Save()
 
-	err := reg.Set("bogus", "foo")
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	xNoErr(t, err)
+	_, err = gm.AddResourceModel("files", "file", 0, true, true, true)
+	xNoErr(t, err)
+	dir, err := reg.AddGroup("dirs", "d1")
+	xNoErr(t, err)
+	_, err = dir.AddResource("files", "f1", "v1")
+	xNoErr(t, err)
+
+	err = reg.Set("bogus", "foo")
 	xCheck(t, err.Error() == `Attribute "bogus" must be a boolean`,
 		fmt.Sprintf("bogus=foo: %s", err))
 

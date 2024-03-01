@@ -64,9 +64,16 @@ func NewRegistry(id string) (*Registry, error) {
 		return nil, err
 	}
 
-	reg.Set("specversion", SPECVERSION)
-	reg.Set("id", reg.UID)
-	reg.Set("epoch", 1)
+	if err = reg.Set("specversion", SPECVERSION); err != nil {
+		return nil, err
+	}
+	if err = reg.Set("id", reg.UID); err != nil {
+		return nil, err
+	}
+	if err = reg.Set("epoch", 1); err != nil {
+		return nil, err
+	}
+
 	Registries[id] = reg
 	RegistriesBySID[reg.DbSID] = reg
 
@@ -244,8 +251,13 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 		log.Print(err)
 		return nil, err
 	}
-	g.Set("id", g.UID)
-	g.Set("epoch", 1)
+
+	if err = g.Set("id", g.UID); err != nil {
+		return nil, err
+	}
+	if err = g.Set("epoch", 1); err != nil {
+		return nil, err
+	}
 
 	log.VPrintf(3, "Created new one - DbSID: %s", g.DbSID)
 	return g, nil

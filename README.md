@@ -60,9 +60,6 @@ TODOs:
 - support multiple resources/versions in POSTs
 - support setting "latest" to false on a PUT/POST
   "latest" on version create (or on resource) needs to be adhered to
-  - true and false
-  - take into account the model.Resource.Latest flag
-    - Does this flag block latest:false too? or just latest;true ?
   - POST to resource with ?setlatestversionid=vID
   - DELETE on version can include ?setlatestversionid=vID, delete of any
     version not just the latest version

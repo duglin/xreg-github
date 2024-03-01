@@ -203,7 +203,7 @@ func TestSetLabels(t *testing.T) {
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
 	ver, _ := file.FindVersion("v1")
-	ver2, _ := file.AddVersion("v2")
+	ver2, _ := file.AddVersion("v2", true)
 
 	// /dirs/d1/f1/v1
 	labels := NewPP().P("labels")
@@ -257,6 +257,12 @@ func TestSetLabels(t *testing.T) {
 
 	dir.Set(labels.P("dd").UI(), "dd.foo")
 	file.Set(labels.P("ff").UI(), "ff.bar")
+
+	file.Set(labels.P("dd-ff").UI(), "dash")
+	file.Set(labels.P("dd-ff-ff").UI(), "dashes")
+	file.Set(labels.P("dd_ff").UI(), "under")
+	file.Set(labels.P("dd.ff").UI(), "dot")
+
 	ver2.Refresh() // very important since ver2 is now stale
 	err = ver.Set(labels.P("vv").UI(), 987.234)
 	if err == nil || err.Error() != `Attribute "labels.vv" must be a string` {
@@ -300,6 +306,10 @@ func TestSetLabels(t *testing.T) {
           "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
           "labels": {
             "2nd": "3rd",
+            "dd-ff": "dash",
+            "dd-ff-ff": "dashes",
+            "dd.ff": "dot",
+            "dd_ff": "under",
             "ff": "ff.bar"
           },
 
@@ -319,6 +329,10 @@ func TestSetLabels(t *testing.T) {
               "latest": true,
               "labels": {
                 "2nd": "3rd",
+                "dd-ff": "dash",
+                "dd-ff-ff": "dashes",
+                "dd.ff": "dot",
+                "dd_ff": "under",
                 "ff": "ff.bar"
               }
             }
@@ -382,6 +396,10 @@ func TestSetLabels(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
               "labels": {
                 "2nd": "3rd",
+                "dd-ff": "dash",
+                "dd-ff-ff": "dashes",
+                "dd.ff": "dot",
+                "dd_ff": "under",
                 "ff": "ff.bar"
               }
             }
