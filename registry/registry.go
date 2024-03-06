@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -186,6 +187,56 @@ func FindRegistry(id string) (*Registry, error) {
 
 func (reg *Registry) LoadModel() *Model {
 	return LoadModel(reg)
+}
+
+func (reg *Registry) LoadModelFromFile(file string) error {
+	log.VPrintf(3, ">Enter: LoadModelFromFile: %s", file)
+	defer log.VPrintf(3, "<Exit:FindGroup")
+
+	var err error
+	buf := []byte{}
+	if strings.HasPrefix(file, "http") {
+		res, err := http.Get(file)
+		if err == nil {
+			buf, err = io.ReadAll(res.Body)
+			res.Body.Close()
+
+			if res.StatusCode/100 != 2 {
+				err = fmt.Errorf("Error getting model: %s\n%s",
+					res.Status, string(buf))
+			}
+		}
+	} else {
+		buf, err = os.ReadFile(file)
+	}
+	if err != nil {
+		return err
+	}
+
+	buf, err = ProcessImports(file, buf, true)
+	if err != nil {
+		return err
+	}
+
+	model := &Model{
+		Registry: reg,
+	}
+
+	if err := Unmarshal(buf, model); err != nil {
+		return err
+	}
+
+	model.SetPointers()
+
+	if err := model.Verify(); err != nil {
+		return err
+	}
+
+	reg.Model.ApplyNewModel(model)
+
+	// reg.Model = model
+	// reg.Model.Save()
+	return nil
 }
 
 func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {

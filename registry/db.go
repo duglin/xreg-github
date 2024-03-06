@@ -185,7 +185,7 @@ func DoZeroOne(cmd string, args ...interface{}) error {
 
 	if count != 0 && count != 1 {
 		query := SubQuery(cmd, args)
-		log.Printf("DoOne:Error DB(%s) didn't change exactly 0/1 rows(%d)",
+		log.Printf("DoZeroOne:Error DB(%s) didn't change exactly 0/1 rows(%d)",
 			query, count)
 	}
 
@@ -200,7 +200,7 @@ func DoOneTwo(cmd string, args ...interface{}) error {
 
 	if count != 1 && count != 2 {
 		query := SubQuery(cmd, args)
-		log.Printf("DoOne:Error DB(%s) didn't change exactly 1/2 rows(%d)",
+		log.Printf("DoOneTwo:Error DB(%s) didn't change exactly 1/2 rows(%d)",
 			query, count)
 	}
 
@@ -215,8 +215,9 @@ func DoZeroTwo(cmd string, args ...interface{}) error {
 
 	if count != 0 && count != 2 {
 		query := SubQuery(cmd, args)
-		log.Printf("DoOne:Error DB(%s) didn't change exactly 1/2 rows(%d)",
+		log.Printf("DoZeroTwo:Error DB(%s) didn't change exactly 0/2 rows(%d)",
 			query, count)
+		ShowStack()
 	}
 
 	return nil
@@ -231,7 +232,7 @@ func DoCount(num int, cmd string, args ...interface{}) error {
 
 	if count != num {
 		query := SubQuery(cmd, args)
-		log.Printf("DoOne:Error DB(%s) didn't change exactly %d rows(%d)",
+		log.Printf("DoCount:Error DB(%s) didn't change exactly %d rows(%d)",
 			query, num, count)
 	}
 

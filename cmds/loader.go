@@ -406,39 +406,44 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 		reg.Set("documentation", "https://github.com/duglin/xreg-github")
 	}
 
-	msgs, _ := reg.Model.AddGroupModel("messagegroups", "messagegroup")
-	msgs.AddAttr("binding", registry.STRING)
+	err = reg.LoadModelFromFile("https://raw.githubusercontent.com/xregistry/spec/main/message/model.json")
+	ErrFatalf(err)
 
-	msg, _ := msgs.AddResourceModel("messages", "message", 1, true, true, false)
+	/*
+		msgs, _ := reg.Model.AddGroupModel("messagegroups", "messagegroup")
+		msgs.AddAttr("binding", registry.STRING)
 
-	// Modify core attribute
-	attr, _ := msg.AddAttr("format", registry.STRING)
-	attr.ClientRequired = true
-	attr.ServerRequired = true
+		msg, _ := msgs.AddResourceModel("messages", "message", 1, true, true, false)
 
-	msg.AddAttr("basedefinitionurl", registry.URL)
+		// Modify core attribute
+		attr, _ := msg.AddAttr("format", registry.STRING)
+		attr.ClientRequired = true
+		attr.ServerRequired = true
 
-	meta, _ := msg.AddAttrObj("metadata")
-	meta.AddAttr("required", registry.BOOLEAN)
-	meta.AddAttr("description", registry.STRING)
-	meta.AddAttr("value", registry.ANY)
-	meta.AddAttr("type", registry.STRING)
-	meta.AddAttr("specurl", registry.URL)
+		msg.AddAttr("basedefinitionurl", registry.URL)
 
-	obj := registry.NewItemObject()
-	meta.AddAttrMap("attributes", obj)
-	obj.AddAttr("type", registry.STRING)
-	obj.AddAttr("value", registry.ANY)
-	obj.AddAttr("required", registry.BOOLEAN)
+		meta, _ := msg.AddAttrObj("metadata")
+		meta.AddAttr("required", registry.BOOLEAN)
+		meta.AddAttr("description", registry.STRING)
+		meta.AddAttr("value", registry.ANY)
+		meta.AddAttr("type", registry.STRING)
+		meta.AddAttr("specurl", registry.URL)
 
-	meta.AddAttr("binding", registry.STRING)
-	meta.AddAttrMap("message", registry.NewItemType(registry.ANY))
+		obj := registry.NewItemObject()
+		meta.AddAttrMap("attributes", obj)
+		obj.AddAttr("type", registry.STRING)
+		obj.AddAttr("value", registry.ANY)
+		obj.AddAttr("required", registry.BOOLEAN)
 
-	meta.AddAttr("schemaformat", registry.STRING)
-	meta.AddAttr("schema", registry.ANY)
-	meta.AddAttr("schemaurl", registry.URL)
+		meta.AddAttr("binding", registry.STRING)
+		meta.AddAttrMap("message", registry.NewItemType(registry.ANY))
 
-	// End of model
+		meta.AddAttr("schemaformat", registry.STRING)
+		meta.AddAttr("schema", registry.ANY)
+		meta.AddAttr("schemaurl", registry.URL)
+
+		// End of model
+	*/
 
 	ErrFatalf(reg.Model.Verify())
 	return reg

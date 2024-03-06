@@ -68,6 +68,11 @@ func modelVerifyFunc(cmd *cobra.Command, args []string) {
 			if err == nil {
 				buf, err = io.ReadAll(res.Body)
 				res.Body.Close()
+
+				if res.StatusCode/100 != 2 {
+					err = fmt.Errorf("Error getting model: %s\n%s",
+						res.Status, string(buf))
+				}
 			}
 		} else {
 			buf, err = os.ReadFile(fileName)

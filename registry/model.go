@@ -146,6 +146,18 @@ func (m *Model) DelSchema(schema string) error {
 	return nil
 }
 
+func (m *Model) SetPointers() {
+	PanicIf(m.Registry == nil, "Model.Registry can't be nil")
+
+	for _, attr := range m.Attributes {
+		attr.SetRegistry(m.Registry)
+	}
+
+	for _, gm := range m.Groups {
+		gm.SetRegistry(m.Registry)
+	}
+}
+
 // Save() should be called by these funcs automatically but there may be
 // cases where someone would need to call it manually (e.g. setting an
 // attribute's property - we should technically find a way to catch those
@@ -563,10 +575,13 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 			}
 		} else {
 			oldGM.Singular = newGM.Singular
-			if err = oldGM.Save(); err != nil {
-				return err
-			}
+			/*
+				if err = oldGM.Save(); err != nil {
+					return err
+				}
+			*/
 		}
+		oldGM.Attributes = newGM.Attributes
 
 		for _, newRM := range newGM.Resources {
 			oldRM := oldGM.Resources[newRM.Plural]
@@ -580,10 +595,17 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 				oldRM.VersionId = newRM.VersionId
 				oldRM.Latest = newRM.Latest
 				oldRM.HasDocument = newRM.HasDocument
-				if err = oldRM.Save(); err != nil {
-					return err
-				}
+				/*
+					if err = oldRM.Save(); err != nil {
+						return err
+					}
+				*/
 			}
+			oldRM.Attributes = newRM.Attributes
+		}
+
+		if err := oldGM.Save(); err != nil { // Recursive into RMs
+			return err
 		}
 	}
 
@@ -860,6 +882,7 @@ func (attrs *Attributes) SetRegistry(reg *Registry) {
 	for _, attr := range *attrs {
 		attr.Registry = reg
 		attr.Item.SetRegistry(reg)
+		attr.IfValues.SetRegistry(reg)
 	}
 }
 
@@ -929,6 +952,7 @@ func (a *Attribute) SetRegistry(reg *Registry) {
 
 	a.Registry = reg
 	a.Item.SetRegistry(reg)
+	a.IfValues.SetRegistry(reg)
 }
 
 func (a *Attribute) AddAttr(name, daType string) (*Attribute, error) {
@@ -1020,6 +1044,20 @@ func (gm *GroupModel) Verify(gmName string) error {
 	return nil
 }
 
+func (gm *GroupModel) SetRegistry(reg *Registry) {
+	if gm == nil {
+		return
+	}
+
+	gm.Registry = reg
+	gm.Attributes.SetRegistry(reg)
+
+	for _, rm := range gm.Resources {
+		rm.GroupModel = gm
+		rm.SetRegistry(reg)
+	}
+}
+
 func (rm *ResourceModel) Verify(rmName string) error {
 	if !IsValidAttributeName(rmName) {
 		return fmt.Errorf("Invalid Resource name/key %q - must match %q",
@@ -1048,6 +1086,14 @@ func (rm *ResourceModel) Verify(rmName string) error {
 	}
 
 	return nil
+}
+
+func (rm *ResourceModel) SetRegistry(reg *Registry) {
+	if rm == nil {
+		return
+	}
+
+	rm.Attributes.SetRegistry(reg)
 }
 
 type LevelData struct {
@@ -1156,6 +1202,16 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 	}
 
 	return nil
+}
+
+func (ifvalues IfValues) SetRegistry(reg *Registry) {
+	if ifvalues == nil {
+		return
+	}
+
+	for _, ifvalue := range ifvalues {
+		ifvalue.SiblingAttributes.SetRegistry(reg)
+	}
 }
 
 func (item *Item) Verify(path *PropPath) error {
