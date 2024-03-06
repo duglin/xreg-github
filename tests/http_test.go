@@ -27,8 +27,21 @@ type HTTPTest struct {
 	ResBody     string
 }
 
+func xHTTP(t *testing.T, verb, url, reqBody string, code int, resBody string) {
+	t.Helper()
+	xCheckHTTP(t, &HTTPTest{
+		URL:     url,
+		Method:  verb,
+		ReqBody: reqBody,
+		Code:    code,
+		ResBody: resBody,
+	})
+}
+
 func xCheckHTTP(t *testing.T, test *HTTPTest) {
-	t.Logf("Test: %s", test.Name)
+	t.Helper()
+	// t.Logf("Test: %s", test.Name)
+	// t.Logf(">> %s %s  (%s)", test.Method, test.URL, registry.GetStack()[1])
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -3799,9 +3812,9 @@ func TestHTTPLatest(t *testing.T) {
 		URL:        "/badgroup/d1/files/f1?meta&setlatestversionid=1",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
-		Code:       400,
+		Code:       404,
 		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
-		ResBody:    `Unknown Group type: "badgroup"` + "\n",
+		ResBody:    `Unknown Group type: badgroup` + "\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -3819,9 +3832,9 @@ func TestHTTPLatest(t *testing.T) {
 		URL:        "/dirs/d1/badfiles/f1?meta&setlatestversionid=1",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
-		Code:       400,
+		Code:       404,
 		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
-		ResBody:    `Unknown Resource type: "badfiles"` + "\n",
+		ResBody:    `Unknown Resource type: badfiles` + "\n",
 	})
 
 	xCheckHTTP(t, &HTTPTest{
@@ -3843,5 +3856,301 @@ func TestHTTPLatest(t *testing.T) {
 		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
 		ResBody:    `Version "3" not found` + "\n",
 	})
+
+}
+
+func TestHTTPDelete(t *testing.T) {
+	reg := NewRegistry("TestHTTPDelete")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	reg.AddGroup("dirs", "d1")
+	reg.AddGroup("dirs", "d2")
+	reg.AddGroup("dirs", "d3")
+	reg.AddGroup("dirs", "d4")
+
+	// group.AddResource("files", "f1", "v1")
+	// group.AddResource("files", "f2", "v1")
+	// group.AddResource("files", "f3", "v1")
+	// group.AddResource("files", "f4", "v1")
+	// f1.AddVersion("v2", true)
+	// f1.AddVersion("v3", false)
+
+	// DELETE /GROUPs
+	xHTTP(t, "DELETE", "/", "", 405, "Can't delete an entire registry\n")
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "DELETE /dirs - d2",
+		URL:     "/dirs",
+		Method:  "DELETE",
+		ReqBody: `[{"id":"d2"}]`,
+		Code:    204,
+		ResBody: ``,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "GET /dirs - 1",
+		URL:    "/dirs",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "d1": {
+    "id": "d1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d1/files"
+  },
+  "d3": {
+    "id": "d3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d3",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d3/files"
+  },
+  "d4": {
+    "id": "d4",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d4",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d4/files"
+  }
+}
+`,
+	})
+
+	xHTTP(t, "DELETE", "/dirs/d3?epoch=2x", "", 400,
+		"Epoch value \"2x\" must be an UINTEGER\n")
+	xHTTP(t, "DELETE", "/dirs/d3?epoch=2", "", 400,
+		"Epoch value for \"dirs/d3\" doesn't match\n")
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "DELETE /dirs - d3 err",
+		URL:     "/dirs",
+		Method:  "DELETE",
+		ReqBody: `[{"id":"d3","epoch":2}]`,
+		Code:    400,
+		ResBody: `Epoch value for "dirs/d3" doesn't match
+`,
+	})
+
+	// TODO add a delete of 2 with bad epoch in 2nd one and verify that
+	// the first one isn't deleted due to the transaction rollback
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "DELETE /dirs - d3",
+		URL:     "/dirs",
+		Method:  "DELETE",
+		ReqBody: `[{"id":"d3","epoch":1}]`,
+		Code:    204,
+		ResBody: ``,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "DELETE /dirs - d3",
+		URL:     "/dirs",
+		Method:  "DELETE",
+		ReqBody: `[{"id":"d3","epoch":"1x"}]`,
+		Code:    400,
+		ResBody: `Can't parse "string" as a(n) "int" at line 1
+`,
+	})
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "DELETE /dirs - dx",
+		URL:     "/dirs",
+		Method:  "DELETE",
+		ReqBody: `[{"id":"dx","epoch":1}]`,
+		Code:    204,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "DELETE /dirs - d3",
+		URL:     "/dirs",
+		Method:  "DELETE",
+		ReqBody: `[{"id":"d3","epoch":1}]`,
+		Code:    204,
+		ResBody: ``,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "GET /dirs - 2",
+		URL:    "/dirs",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "d1": {
+    "id": "d1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d1/files"
+  },
+  "d4": {
+    "id": "d4",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d4",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d4/files"
+  }
+}
+`,
+	})
+
+	xHTTP(t, "DELETE", "/dirs/d4?epoch=1", "", 204, "")
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "GET /dirs - 2",
+		URL:    "/dirs",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "d1": {
+    "id": "d1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d1/files"
+  }
+}
+`,
+	})
+
+	xHTTP(t, "DELETE", "/dirs", "", 204, "")
+	xHTTP(t, "DELETE", "/dirs", "", 204, "")
+	xHTTP(t, "DELETE", "/dirsx", "", 404, "Unknown Group type: dirsx\n")
+	xHTTP(t, "GET", "/dirs", "", 200, "{}\n")
+
+	// Reset
+	reg.AddGroup("dirs", "d1")
+	reg.AddGroup("dirs", "d2")
+	reg.AddGroup("dirs", "d3")
+	reg.AddGroup("dirs", "d4")
+
+	// DELETE /GROUPs/gID
+	xHTTP(t, "DELETE", "/dirs/d1", "", 204, ``)
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "GET /dirs - 4",
+		URL:    "/dirs",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "d2": {
+    "id": "d2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d2",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d2/files"
+  },
+  "d3": {
+    "id": "d3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d3",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d3/files"
+  },
+  "d4": {
+    "id": "d4",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d4",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d4/files"
+  }
+}
+`,
+	})
+
+	xHTTP(t, "DELETE", "/dirs/d3", "", 204, ``)
+	xHTTP(t, "DELETE", "/dirs/dx", "", 404, `Group "dirs/dx" not found`+"\n")
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "GET /dirs - 5",
+		URL:    "/dirs",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "d2": {
+    "id": "d2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d2",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d2/files"
+  },
+  "d4": {
+    "id": "d4",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d4",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/d4/files"
+  }
+}
+`,
+	})
+
+	xHTTP(t, "DELETE", "/dirs", "", 204, "")
+	xHTTP(t, "GET", "/dirs", "", 200, "{}\n")
+
+	// Reset
+	d1, _ := reg.AddGroup("dirs", "d1")
+	d1.AddResource("files", "f1", "v1.1")
+	d1.AddResource("files", "f2", "v2.1")
+	d1.AddResource("files", "f3", "v3.1")
+	d1.AddResource("files", "f4", "v4.1")
+	d1.AddResource("files", "f5", "v5.1")
+
+	// DELETE Resources
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "GET /dirs/d1 - 7",
+		URL:    "/dirs/d1",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "id": "d1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1",
+
+  "filescount": 5,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
+}
+`,
+	})
+
+	// DELETE /dirs/d1/f1
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1", "", 204, "")
+
+	// DELETE /dirs/d1/files/f1?epoch=...
+	xHTTP(t, "DELETE", "/dirs/d1/files/f3?epoch=2x", "", 400,
+		"Epoch value \"2x\" must be an UINTEGER\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f3?epoch=2", "", 400,
+		"Epoch value for \"dirs/d1/files/f3\" doesn't match\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f3?epoch=1", "", 204, "")
+
+	// DELETE /dirs/d1/files/f3 - bad epoch in body
+	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f2","epoch":"1x"}]`, 400,
+		"Can't parse \"string\" as a(n) \"int\" at line 1\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f2","epoch":2}]`, 400,
+		"Epoch value for \"dirs/d1/files/f2\" doesn't match\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f2","epoch":1}]`, 204, "")
+	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"fx","epoch":1}]`, 204, "")
+
+	// DUG CONTINUE
+
+	// DELETE /dirs/d1/files [ f2,f4 ] - good epoch and no epoch
+	// DELETE /dirs/d1/files
+	// TODO
+	// DEL /dirs/d1/files [ f2,f4 ] - bad epoch on 2nd,verify f2 is still there
 
 }

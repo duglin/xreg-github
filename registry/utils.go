@@ -157,11 +157,27 @@ func SortedKeys(m interface{}) []string {
 	return keys
 }
 
+func GetStack() []string {
+	stack := []string{}
+
+	for i := 1; i < 20; i++ {
+		pc, file, line, _ := runtime.Caller(i)
+		stack = append(stack,
+			fmt.Sprintf("%s %s:%d",
+				path.Base(runtime.FuncForPC(pc).Name()), path.Base(file), line))
+		if strings.Contains(file, "main") || strings.Contains(file, "testing") {
+			break
+		}
+	}
+	return stack
+}
+
 func ShowStack() {
 	log.VPrintf(0, "-----")
 	for i := 1; i < 20; i++ {
 		pc, file, line, _ := runtime.Caller(i)
-		log.VPrintf(0, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
+		log.VPrintf(0, "Caller: %s:%d",
+			path.Base(runtime.FuncForPC(pc).Name()), line)
 		if strings.Contains(file, "main") || strings.Contains(file, "testing") {
 			break
 		}
@@ -252,8 +268,8 @@ func Unmarshal(buf []byte, v any) error {
 		msg := err.Error()
 
 		if jerr, ok := err.(*json.UnmarshalTypeError); ok {
-			msg = fmt.Sprintf("Can't parse %q into %s.%s(type:%s) at line %d ",
-				jerr.Value, jerr.Struct, jerr.Field, jerr.Type.String(),
+			msg = fmt.Sprintf("Can't parse %q as a(n) %q at line %d",
+				jerr.Value, jerr.Type.String(),
 				LineNum(buf, int(jerr.Offset)))
 		} else if jerr, ok := err.(*json.SyntaxError); ok {
 			msg = fmt.Sprintf("Syntax error at line %d: %s",

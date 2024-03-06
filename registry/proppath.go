@@ -110,6 +110,22 @@ func (pp *PropPath) DB() string {
 	return res.String()
 }
 
+func (pp *PropPath) Abstract() string {
+	if pp == nil {
+		return ""
+	}
+	res := strings.Builder{}
+	for _, part := range pp.Parts {
+		if part.Index >= 0 {
+			res.WriteRune(DB_INDEX)
+		} else if res.Len() != 0 {
+			res.WriteRune(DB_IN)
+		}
+		res.WriteString(part.Text)
+	}
+	return res.String()
+}
+
 func MustPropPathFromDB(str string) *PropPath {
 	pp, err := PropPathFromDB(str)
 	PanicIf(err != nil, "Bad pp: %s", str)

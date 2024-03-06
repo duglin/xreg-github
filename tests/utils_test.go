@@ -90,12 +90,13 @@ func Caller() string {
 }
 
 func Fail(t *testing.T, str string, args ...any) {
+	t.Helper()
 	text := strings.TrimSpace(fmt.Sprintf(str, args...))
-	fmt.Printf("\n%s\n%s\n\n", Caller(), text)
-	t.FailNow()
+	t.Fatalf("%s\n\n", text)
 }
 
 func xCheckErr(t *testing.T, err error, errStr string) bool {
+	t.Helper()
 	if err == nil {
 		if errStr == "" {
 			return true
@@ -115,10 +116,9 @@ func xCheckErr(t *testing.T, err error, errStr string) bool {
 }
 
 func xCheck(t *testing.T, b bool, errStr string) bool {
+	t.Helper()
 	if !b {
-		t.Errorf("%s: %s", Caller(), errStr)
-		ShowStack()
-		t.FailNow()
+		t.Fatalf("%s", errStr)
 	}
 	return b
 }
@@ -135,15 +135,16 @@ func ToJSON(obj interface{}) string {
 }
 
 func xNoErr(t *testing.T, err error) bool {
+	t.Helper()
 	if err != nil {
-		t.Errorf("%s: Unexpected error: %s", Caller(), err)
-		t.FailNow()
+		t.Fatalf("Unexpected error: %s", err)
 		return false
 	}
 	return true
 }
 
 func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) bool {
+	t.Helper()
 	res, err := http.Get("http://localhost:8181/" + url)
 	if !xNoErr(t, err) {
 		return false
@@ -166,6 +167,7 @@ func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string
 }
 
 func xCheckEqual(t *testing.T, extra string, got string, exp string) bool {
+	t.Helper()
 	pos := 0
 	for pos < len(got) && pos < len(exp) && got[pos] == exp[pos] {
 		pos++
@@ -175,14 +177,14 @@ func xCheckEqual(t *testing.T, extra string, got string, exp string) bool {
 	}
 
 	if pos == len(got) {
-		t.Errorf(Caller()+"\n%s"+
+		t.Errorf("%s"+
 			"Expected:\n%s\nGot:\n%s\nGot ended early at(%d)[%02X]:\n%q",
 			extra, exp, got, pos, exp[pos], got[pos:])
 		return false
 	}
 
 	if pos == len(exp) {
-		t.Errorf(Caller()+"\n%s"+
+		t.Errorf("%s"+
 			"Expected:\n%s\nGot:\n%s\nExp ended early at(%d)[%02X]:\n%q",
 			extra, exp, got, pos, got[pos], got[pos:])
 		return false
@@ -192,11 +194,12 @@ func xCheckEqual(t *testing.T, extra string, got string, exp string) bool {
 	if expMax > len(exp) {
 		expMax = len(exp)
 	}
-	t.Errorf(Caller()+"\n%s"+
-		"Expected:\n%s\nGot:\n%s\nDiff at(%d)[%x/%x]:\nExp subset:\n%s\nGot:\n%s",
-		extra, exp, got, pos, exp[pos], got[pos],
+	t.Fatalf( /* Caller()+"\n%s"+ */
+		"\nExpected:\n%s\nGot:\n%s\n"+
+			"Diff at(%d)[%x/%x]:\n"+
+			"Exp subset:\n%s\nGot:\n%s",
+		/*extra, */ exp, got, pos, exp[pos], got[pos],
 		exp[pos:expMax], got[pos:])
-	t.FailNow()
 	return false
 }
 

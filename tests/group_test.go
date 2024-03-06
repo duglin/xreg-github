@@ -50,8 +50,8 @@ func TestCreateGroup(t *testing.T) {
 `)
 	xCheckGet(t, reg, "/dirs/xxx", "Not found\n")
 	xCheckGet(t, reg, "dirs/xxx", "Not found\n")
-	xCheckGet(t, reg, "/dirs/xxx/yyy", "Unknown Resource type: \"yyy\"\n")
-	xCheckGet(t, reg, "dirs/xxx/yyy", "Unknown Resource type: \"yyy\"\n")
+	xCheckGet(t, reg, "/dirs/xxx/yyy", "Unknown Resource type: yyy\n")
+	xCheckGet(t, reg, "dirs/xxx/yyy", "Unknown Resource type: yyy\n")
 
 	g, err := reg.FindGroup("dirs", "d1")
 	xNoErr(t, err)

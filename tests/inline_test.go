@@ -191,22 +191,22 @@ func TestBasicInline(t *testing.T) {
 		{
 			Name: "inline one level - invalid",
 			URL:  "?inline=xxx&oneline",
-			Exp:  `Invalid 'inline' value: "xxx"`,
+			Exp:  `Invalid 'inline' value: xxx`,
 		},
 		{
 			Name: "inline one level - invalid - bad case",
 			URL:  "?inline=Dirs&oneline",
-			Exp:  `Invalid 'inline' value: "Dirs"`,
+			Exp:  `Invalid 'inline' value: Dirs`,
 		},
 		{
 			Name: "inline two levels - invalid first",
 			URL:  "?inline=xxx.files&oneline",
-			Exp:  `Invalid 'inline' value: "xxx.files"`,
+			Exp:  `Invalid 'inline' value: xxx.files`,
 		},
 		{
 			Name: "inline two levels - invalid second",
 			URL:  "?inline=dirs.xxx&oneline",
-			Exp:  `Invalid 'inline' value: "dirs.xxx"`,
+			Exp:  `Invalid 'inline' value: dirs.xxx`,
 		},
 		{
 			Name: "inline two levels",
@@ -221,7 +221,7 @@ func TestBasicInline(t *testing.T) {
 		{
 			Name: "get one level, inline one level - invalid",
 			URL:  "dirs?inline=dirs&oneline",
-			Exp:  `Invalid 'inline' value: "dirs"`,
+			Exp:  `Invalid 'inline' value: dirs`,
 		},
 		{
 			Name: "get one level, inline one level",
@@ -236,7 +236,7 @@ func TestBasicInline(t *testing.T) {
 		{
 			Name: "get one level, inline three levels",
 			URL:  "dirs?inline=files.versions.xxx&oneline",
-			Exp:  `Invalid 'inline' value: "files.versions.xxx"`,
+			Exp:  `Invalid 'inline' value: files.versions.xxx`,
 		},
 		{
 			Name: "get one level, inline one level",
@@ -267,7 +267,7 @@ func TestBasicInline(t *testing.T) {
 		{
 			Name: "inline 2 top, 1 and 2 levels - one err",
 			URL:  "?inline=dirs,dirs2.files.xxx&oneline",
-			Exp:  `Invalid 'inline' value: "dirs2.files.xxx"`,
+			Exp:  `Invalid 'inline' value: dirs2.files.xxx`,
 		},
 		{
 			Name: "get one level, inline 2, 1 and 2 levels same top",
@@ -521,17 +521,17 @@ func TestResourceInline(t *testing.T) {
 		{
 			Name: "Bad inline xx",
 			URL:  "/dirs/d1/files/f1-proxy?meta&inline=XXversions.file",
-			Exp:  "Invalid 'inline' value: \"dirs.files.XXversions.file\"\n",
+			Exp:  "Invalid 'inline' value: dirs.files.XXversions.file\n",
 		},
 		{
 			Name: "Bad inline yy",
 			URL:  "/?inline=dirs.files.yy",
-			Exp:  "Invalid 'inline' value: \"dirs.files.yy\"\n",
+			Exp:  "Invalid 'inline' value: dirs.files.yy\n",
 		},
 		{
 			Name: "Bad inline vers.yy",
 			URL:  "/?inline=dirs.files.version.yy",
-			Exp:  "Invalid 'inline' value: \"dirs.files.version.yy\"\n",
+			Exp:  "Invalid 'inline' value: dirs.files.version.yy\n",
 		},
 	}
 

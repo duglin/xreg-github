@@ -77,3 +77,24 @@ func TestParseUI(t *testing.T) {
 		}
 	}
 }
+
+func TestAbstract(t *testing.T) {
+	type Test struct {
+		P   *PropPath
+		Exp string
+	}
+
+	tests := []Test{
+		{NewPPP("one"), "one"},
+		{NewPPP("one").P("two"), "one,two"},
+		{NewPPP("one").I(2), "one#2"},
+		{NewPPP("one").I(2).P("two"), "one#2,two"},
+	}
+
+	for _, test := range tests {
+		res := test.P.Abstract()
+		if res != test.Exp {
+			t.Fatalf("Test: %s\nExp: %s\nGot: %s", test.P.UI(), test.Exp, res)
+		}
+	}
+}

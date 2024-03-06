@@ -20,10 +20,10 @@ func TestCreateRegistry(t *testing.T) {
   "self": "http://localhost:8181/"
 }
 `)
-	xCheckGet(t, reg, "/xxx", "Unknown Group type: \"xxx\"\n")
-	xCheckGet(t, reg, "xxx", "Unknown Group type: \"xxx\"\n")
-	xCheckGet(t, reg, "/xxx/yyy", "Unknown Group type: \"xxx\"\n")
-	xCheckGet(t, reg, "xxx/yyy", "Unknown Group type: \"xxx\"\n")
+	xCheckGet(t, reg, "/xxx", "Unknown Group type: xxx\n")
+	xCheckGet(t, reg, "xxx", "Unknown Group type: xxx\n")
+	xCheckGet(t, reg, "/xxx/yyy", "Unknown Group type: xxx\n")
+	xCheckGet(t, reg, "xxx/yyy", "Unknown Group type: xxx\n")
 
 	// make sure dups generate an error
 	reg2, err := registry.NewRegistry("TestCreateRegistry")

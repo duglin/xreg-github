@@ -55,8 +55,8 @@ func TestCreateResource(t *testing.T) {
 `)
 	xCheckGet(t, reg, "/dirs/d1/files/xxx", "Not found\n")
 	xCheckGet(t, reg, "dirs/d1/files/xxx", "Not found\n")
-	xCheckGet(t, reg, "/dirs/d1/files/xxx/yyy", "Expected \"versions\", got: \"yyy\"\n")
-	xCheckGet(t, reg, "dirs/d1/files/xxx/yyy", "Expected \"versions\", got: \"yyy\"\n")
+	xCheckGet(t, reg, "/dirs/d1/files/xxx/yyy", "Expected \"versions\", got: yyy\n")
+	xCheckGet(t, reg, "dirs/d1/files/xxx/yyy", "Expected \"versions\", got: yyy\n")
 
 	ft, err = d1.FindResource("files", "f1")
 	xNoErr(t, err)

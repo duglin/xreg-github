@@ -19,6 +19,7 @@ type JsonWriter struct {
 
 	results *Result // results of DB query
 	Entity  *Entity // Current row in the DB results
+	hasData bool
 }
 
 func NewJsonWriter(info *RequestInfo, results *Result) *JsonWriter {
@@ -28,15 +29,18 @@ func NewJsonWriter(info *RequestInfo, results *Result) *JsonWriter {
 		collPaths:   make([]string, 4),
 		unusedColls: make([][]string, 4),
 		results:     results,
+		hasData:     false,
 	}
 }
 
 func (jw *JsonWriter) Print(str string) {
 	fmt.Fprint(jw.info, str)
+	jw.hasData = true
 }
 
 func (jw *JsonWriter) Printf(format string, args ...any) {
 	fmt.Fprintf(jw.info, format, args...)
+	jw.hasData = true
 }
 
 func (jw *JsonWriter) OptPrintf(format string, args ...any) {

@@ -109,6 +109,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = HTTPPutPost(info)
 	case "POST":
 		err = HTTPPutPost(info)
+	case "DELETE":
+		err = HTTPDelete(info)
 	default:
 		info.StatusCode = http.StatusMethodNotAllowed
 		err = fmt.Errorf("HTTP method %q not supported", r.Method)
@@ -593,7 +595,10 @@ func HTTPGet(info *RequestInfo) error {
 	}
 
 	if err == nil {
-		jw.Print("\n")
+		if jw.hasData {
+			// Add a tailing \n if there's any data, else skip it
+			jw.Print("\n")
+		}
 	} else {
 		info.StatusCode = http.StatusInternalServerError
 	}
@@ -679,7 +684,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		err = Unmarshal(body, &IncomingObj)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Error parsing body: %s", err)
+			return fmt.Errorf("%s", err)
 		}
 
 		// ID should be in the body so grab it for later use
@@ -1178,4 +1183,296 @@ func HTTPSetLatestVersionID(info *RequestInfo) error {
 	}
 
 	return HTTPGet(info)
+}
+
+func HTTPDelete(info *RequestInfo) error {
+	// DELETE /...
+	if len(info.Parts) == 0 {
+		// DELETE /
+		info.StatusCode = http.StatusMethodNotAllowed
+		return fmt.Errorf("Can't delete an entire registry")
+	}
+
+	// DELETE /GROUPs...
+	gm := info.Registry.Model.Groups[info.GroupType]
+	if gm == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Group type %q not found", info.GroupType)
+	}
+
+	if len(info.Parts) == 1 {
+		// DELETE /GROUPs
+		return HTTPDeleteGroups(info)
+	}
+
+	// DELETE /GROUPs/gID...
+	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf(`Error finding Group "%s/%s": %s`, info.GroupType,
+			info.GroupUID, err)
+	}
+	if group == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf(`Group "%s/%s" not found`, info.GroupType,
+			info.GroupUID)
+	}
+
+	if len(info.Parts) == 2 {
+		// DELETE /GROUPs/gID
+		epoch := info.OriginalRequest.URL.Query().Get("epoch")
+		if epoch != "" {
+			tmpInt, err := strconv.Atoi(epoch)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("Epoch value %q must be an UINTEGER", epoch)
+
+			}
+			if tmpInt != group.Get("epoch") {
+				return fmt.Errorf(`Epoch value for "%s/%s" doesn't match`,
+					info.GroupType, info.GroupUID)
+			}
+		}
+		err = group.Delete()
+
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf(`Error deleting Group "%s/%s": %s`,
+				info.GroupType, info.GroupUID, err)
+		}
+
+		info.StatusCode = http.StatusNoContent
+		return nil
+	}
+
+	// DELETE /GROUPs/gID/RESOURCEs...
+	rm := gm.Resources[info.ResourceType]
+	if rm == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf(`Resource type "%s/%s" not found`, info.GroupType,
+			info.ResourceType)
+	}
+
+	if len(info.Parts) == 3 {
+		// DELETE /GROUPs/gID/RESOURCEs
+		return HTTPDeleteResources(info)
+	}
+
+	// DELETE /GROUPs/gID/RESOURCEs/rID...
+	resource, err := group.FindResource(info.ResourceType, info.ResourceUID)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf(`Error finding resource "%s/%s/%s/%s"`,
+			info.GroupType, info.GroupUID, info.ResourceType, info.ResourceUID)
+	}
+	if resource == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf(`Resource "%s/%s/%s/%s" not found`,
+			info.GroupType, info.GroupUID, info.ResourceType, info.ResourceUID)
+	}
+
+	if len(info.Parts) == 4 {
+		// DELETE /GROUPs/gID/RESOURCEs/rID
+		epoch := info.OriginalRequest.URL.Query().Get("epoch")
+		if epoch != "" {
+			tmpInt, err := strconv.Atoi(epoch)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("Epoch value %q must be an UINTEGER", epoch)
+
+			}
+			if tmpInt != resource.Get("epoch") {
+				return fmt.Errorf(`Epoch value for "%s/%s/%s/%s" doesn't match`,
+					info.GroupType, info.GroupUID,
+					info.ResourceType, info.ResourceUID)
+			}
+		}
+		err = resource.Delete()
+
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf(`Error deleting Resource "%s/%s/%s/%s": %s`,
+				info.GroupType, info.GroupUID,
+				info.ResourceType, info.ResourceUID,
+				err)
+		}
+
+		info.StatusCode = http.StatusNoContent
+		return nil
+	}
+
+	if len(info.Parts) == 5 {
+		// DELETE /GROUPs/gID/RESOURCEs/rID/versions
+		return HTTPDeleteVersion(info)
+	}
+
+	if len(info.Parts) == 6 {
+		// DELETE /GROUPs/gID/RESOURCEs/rID/versions/vID
+		info.StatusCode = http.StatusNoContent
+		return nil
+	}
+
+	return fmt.Errorf("Bad API: %s", info.BaseURL)
+}
+
+type IDEntry struct {
+	ID    string
+	Epoch *int
+}
+
+type IDArray []IDEntry
+
+func LoadIDList(info *RequestInfo) (IDArray, error) {
+	list := IDArray{}
+
+	body, err := io.ReadAll(info.OriginalRequest.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading body: %s", err)
+	}
+
+	if len(body) > 0 {
+		err = Unmarshal(body, &list)
+		if err != nil {
+			return nil, fmt.Errorf("%s", err)
+		}
+	}
+
+	return list, nil
+}
+
+func HTTPDeleteGroups(info *RequestInfo) error {
+	list, err := LoadIDList(info)
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return err
+	}
+
+	// No list provided so get list of Groups so we can delete them all
+	if len(list) == 0 {
+		results, err := Query(`
+			SELECT UID
+			FROM Entities
+			WHERE RegSID=? AND Abstract=?`,
+			info.Registry.RegistrySID, info.GroupType)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error getting the list: %s", err)
+		}
+		for row := results.NextRow(); row != nil; row = results.NextRow() {
+			list = append(list, IDEntry{NotNilString(row[0]), nil})
+		}
+		defer results.Close()
+	}
+
+	// Delete each Group, checking epoch first if provided
+	for _, entry := range list {
+		group, err := info.Registry.FindGroup(info.GroupType, entry.ID)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf(`Error getting Group "%s/%s"`,
+				info.GroupType, entry.ID)
+		}
+		if group == nil {
+			// Silently ignore the 404
+			continue
+			/*
+				info.StatusCode = http.StatusNotFound
+				return fmt.Errorf(`Group "%s/%s" not found`, info.GroupType,
+					entry.ID)
+			*/
+		}
+
+		if entry.Epoch != nil {
+			if group.Get("epoch") != *(entry.Epoch) {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf(`Epoch value for "%s/%s" doesn't match`,
+					info.GroupType, entry.ID)
+			}
+		}
+
+		err = group.Delete()
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf(`Error deleting "%s/%s": %s`,
+				info.GroupType, entry.ID, err)
+		}
+	}
+
+	info.StatusCode = http.StatusNoContent
+	return nil
+}
+
+func HTTPDeleteResources(info *RequestInfo) error {
+	list, err := LoadIDList(info)
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return err
+	}
+
+	// No list provided so get list of Resources so we can delete them all
+	if len(list) == 0 {
+		results, err := Query(`
+			SELECT UID
+			FROM Entities
+			WHERE RegSID=? AND Abstract=?`,
+			info.Registry.RegistrySID,
+			NewPPP(info.GroupType).P(info.ResourceType).Abstract())
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error getting the list: %s", err)
+		}
+		for row := results.NextRow(); row != nil; row = results.NextRow() {
+			log.Printf("Adding: %q", NotNilString(row[0]))
+			list = append(list, IDEntry{NotNilString(row[0]), nil})
+		}
+		defer results.Close()
+	}
+
+	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf(`Error getting Group "%s/%s"`, info.GroupType,
+			info.GroupUID)
+	}
+
+	// Delete each Resource, checking epoch first if provided
+	for _, entry := range list {
+		resource, err := group.FindResource(info.ResourceType, entry.ID)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf(`Error getting Resource "%s/%s/%s/%s"`,
+				info.GroupType, info.GroupUID, info.ResourceType, entry.ID)
+		}
+		if resource == nil {
+			// Silently ignore the 404
+			continue
+			/*
+				info.StatusCode = http.StatusNotFound
+				return fmt.Errorf(`Resource "%s/%s/%s/%s" not found`,
+					info.GroupType,info.GroupUID, info.ResourceType, entry.ID)
+			*/
+		}
+
+		if entry.Epoch != nil {
+			if resource.Get("epoch") != *(entry.Epoch) {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf(`Epoch value for "%s/%s/%s/%s" doesn't match`,
+					info.GroupType, info.GroupUID, info.ResourceType, entry.ID)
+			}
+		}
+
+		err = resource.Delete()
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf(`Error deleting "%s/%s/%s/%s": %s`,
+				info.GroupType, info.GroupUID, info.ResourceType, entry.ID, err)
+		}
+	}
+
+	info.StatusCode = http.StatusNoContent
+	return nil
+}
+
+func HTTPDeleteVersion(info *RequestInfo) error {
+	return nil
 }

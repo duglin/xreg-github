@@ -297,7 +297,7 @@ func (info *RequestInfo) AddInline(path string) error {
 		path = path[len(info.Abstract)+1:]
 	}
 
-	return fmt.Errorf("Invalid 'inline' value: %q", path)
+	return fmt.Errorf("Invalid 'inline' value: %s", path)
 }
 
 func (info *RequestInfo) ShouldInline(entityPath string) bool {
@@ -369,7 +369,9 @@ func ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) 
 
 	err := info.ParseRequestURL()
 	if err != nil {
-		info.StatusCode = http.StatusBadRequest
+		if info.StatusCode == 0 {
+			info.StatusCode = http.StatusBadRequest
+		}
 		return info, err
 	}
 
@@ -513,7 +515,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 	if gModel == nil && (info.Parts[0] != "model" || len(info.Parts) > 1) {
 		info.StatusCode = http.StatusNotFound
-		return fmt.Errorf("Unknown Group type: %q", info.Parts[0])
+		return fmt.Errorf("Unknown Group type: %s", info.Parts[0])
 	}
 	info.GroupType = info.Parts[0]
 	info.Root += info.Parts[0]
@@ -537,7 +539,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 	if rModel == nil {
 		info.StatusCode = http.StatusNotFound
-		return fmt.Errorf("Unknown Resource type: %q", info.Parts[2])
+		return fmt.Errorf("Unknown Resource type: %s", info.Parts[2])
 	}
 	info.ResourceType = info.Parts[2]
 	info.Root += "/" + info.Parts[2]
@@ -557,7 +559,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	if info.Parts[4] != "versions" {
 		info.StatusCode = http.StatusNotFound
-		return fmt.Errorf("Expected \"versions\", got: %q", info.Parts[4])
+		return fmt.Errorf("Expected \"versions\", got: %s", info.Parts[4])
 	}
 	info.Root += "/versions"
 	info.Abstract += "/versions"
