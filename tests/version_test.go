@@ -68,7 +68,7 @@ func TestCreateVersion(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, vt == nil, "Find version xxx should have failed")
 
-	err = v2.Delete()
+	err = v2.Delete("")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
@@ -105,20 +105,138 @@ func TestCreateVersion(t *testing.T) {
 `)
 	vt, err = f1.FindVersion("v2")
 	xNoErr(t, err)
-	err = vt.Delete()
+	err = vt.Delete("")
 	xNoErr(t, err)
 	xJSONCheck(t, f1.Get("latestversionid"), "v3")
 
 	vt, err = f1.FindVersion("v3")
 	xNoErr(t, err)
-	err = vt.Delete()
+	xCheck(t, vt != nil, "Can't be nil")
+	err = vt.Delete("")
 	xNoErr(t, err)
 	xJSONCheck(t, f1.Get("latestversionid"), "v1")
 
+	f1, err = d2.FindResource("files", "f1")
+	xNoErr(t, err)
+	_, err = f1.AddVersion("v3", false)
+	xNoErr(t, err)
 	vt, err = f1.FindVersion("v1")
 	xNoErr(t, err)
-	err = vt.Delete()
+	xCheck(t, vt != nil, "should not be nil")
+	err = vt.Delete("")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "?inline&oneline",
-		`{"dirs":{"d1":{"files":{}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
+		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f1":{"versions":{"v1.1":{},"v3":{}}}}}}}`)
+
+	err = vt.Delete("v2")
+	xCheckErr(t, err, `Can't find next latest Version "v2"`)
+
+	vt, err = f1.FindVersion("v1.1")
+	xNoErr(t, err)
+	xCheck(t, vt != nil, "should not be nil")
+
+	err = vt.Delete("v1.1")
+	xCheckErr(t, err, `Can't set latestversionid to Version being deleted`)
+
+	vt, err = f1.AddVersion("v4", true)
+	xNoErr(t, err)
+
+	err = vt.Delete("v3")
+	xNoErr(t, err)
+
+	xCheckGet(t, reg, "dirs/d2/files",
+		`{
+  "f1": {
+    "id": "f1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d2/files/f1?meta",
+    "latestversionid": "v3",
+    "latestversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/v3?meta",
+
+    "versionscount": 2,
+    "versionsurl": "http://localhost:8181/dirs/d2/files/f1/versions"
+  }
+}
+`)
+}
+
+func TestLatestVersion(t *testing.T) {
+	reg := NewRegistry("TestLatestVersion")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	d1, _ := reg.AddGroup("dirs", "d1")
+	f1, _ := d1.AddResource("files", "f1", "v1")
+	v1, _ := f1.FindVersion("v1")
+	v2, _ := f1.AddVersion("v2", true)
+	v3, _ := f1.AddVersion("v3", false)
+	v4, _ := f1.AddVersion("v4", true)
+	v5, _ := f1.AddVersion("v5", false)
+
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v4",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
+
+  "versionscount": 5,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	err := v1.Delete("")
+	xNoErr(t, err)
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v4",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
+
+  "versionscount": 4,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	err = v3.Delete("v1")
+	xCheckErr(t, err, "Can't find next latest Version \"v1\"")
+	err = v3.Delete("v2")
+	xNoErr(t, err)
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v2",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	err = v2.Delete("")
+	xNoErr(t, err)
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v5",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xNoErr(t, v4.Delete(""))
+	xNoErr(t, v5.Delete(""))
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta", "Not found\n")
 }

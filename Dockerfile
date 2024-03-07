@@ -19,6 +19,9 @@ FROM scratch
 # FROM mysql
 # ENV MYSQL_ROOT_PASSWORD=password
 
+COPY --from=0 /etc/ssl/certs/ca-certificates.crt \
+	/etc/ssl/certs/ca-certificates.crt
+
 COPY --from=0 /go/src/server /server
 COPY --from=0 /go/src/xr /xr
 COPY repo.tar /

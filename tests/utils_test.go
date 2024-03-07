@@ -109,7 +109,7 @@ func xCheckErr(t *testing.T, err error, errStr string) bool {
 		return false
 	}
 	if err.Error() != errStr {
-		Fail(t, "Got: %s\nExp; %s", err.Error(), errStr)
+		Fail(t, "\nGot: %s\nExp; %s", err.Error(), errStr)
 		return false
 	}
 	return true

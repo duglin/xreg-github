@@ -39,10 +39,6 @@ TODOs:
 - test for filtering with string being part of value
 - test for exact match of numerics, bools
 - pagination
-- DELETE operations
-  - DELETE on version can include ?setlatestversionid=vID, delete of any
-    version not just the latest version
-  - DELETE latest should choose the last one created based on timestamp
 - see if we can prepend Path with / or append it with /
 - save latest highest "versionId" in Resource so we can assign a new value
   if not provided by the client
@@ -65,7 +61,6 @@ TODOs:
 - add support for resource vs resourcebase64 - return what was on the PUT
 - add support for "default" in the model
 
-- Finish delete http
 - test for required fields (singular/complex) at all level
   - esp during creation time
 - transactions

@@ -3872,13 +3872,6 @@ func TestHTTPDelete(t *testing.T) {
 	reg.AddGroup("dirs", "d3")
 	reg.AddGroup("dirs", "d4")
 
-	// group.AddResource("files", "f1", "v1")
-	// group.AddResource("files", "f2", "v1")
-	// group.AddResource("files", "f3", "v1")
-	// group.AddResource("files", "f4", "v1")
-	// f1.AddVersion("v2", true)
-	// f1.AddVersion("v3", false)
-
 	// DELETE /GROUPs
 	xHTTP(t, "DELETE", "/", "", 405, "Can't delete an entire registry\n")
 
@@ -3887,6 +3880,15 @@ func TestHTTPDelete(t *testing.T) {
 		URL:     "/dirs",
 		Method:  "DELETE",
 		ReqBody: `[{"id":"d2"}]`,
+		Code:    204,
+		ResBody: ``,
+	})
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "DELETE /dirs - d2",
+		URL:     "/dirs",
+		Method:  "DELETE",
+		ReqBody: `[]`, // should be a no-op, not delete everything
 		Code:    204,
 		ResBody: ``,
 	})
@@ -3928,7 +3930,7 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, "DELETE", "/dirs/d3?epoch=2x", "", 400,
 		"Epoch value \"2x\" must be an UINTEGER\n")
 	xHTTP(t, "DELETE", "/dirs/d3?epoch=2", "", 400,
-		"Epoch value for \"dirs/d3\" doesn't match\n")
+		"Epoch value for \"d3\" must be 1\n")
 
 	xCheckHTTP(t, &HTTPTest{
 		Name:    "DELETE /dirs - d3 err",
@@ -3936,7 +3938,7 @@ func TestHTTPDelete(t *testing.T) {
 		Method:  "DELETE",
 		ReqBody: `[{"id":"d3","epoch":2}]`,
 		Code:    400,
-		ResBody: `Epoch value for "dirs/d3" doesn't match
+		ResBody: `Epoch value for "d3" must be 1
 `,
 	})
 
@@ -4072,7 +4074,7 @@ func TestHTTPDelete(t *testing.T) {
 	})
 
 	xHTTP(t, "DELETE", "/dirs/d3", "", 204, ``)
-	xHTTP(t, "DELETE", "/dirs/dx", "", 404, `Group "dirs/dx" not found`+"\n")
+	xHTTP(t, "DELETE", "/dirs/dx", "", 404, `Group "dx" not found`+"\n")
 
 	xCheckHTTP(t, &HTTPTest{
 		Name:   "GET /dirs - 5",
@@ -4110,6 +4112,7 @@ func TestHTTPDelete(t *testing.T) {
 	d1.AddResource("files", "f3", "v3.1")
 	d1.AddResource("files", "f4", "v4.1")
 	d1.AddResource("files", "f5", "v5.1")
+	d1.AddResource("files", "f6", "v6.1")
 
 	// DELETE Resources
 	xCheckHTTP(t, &HTTPTest{
@@ -4122,35 +4125,300 @@ func TestHTTPDelete(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
 
-  "filescount": 5,
+  "filescount": 6,
   "filesurl": "http://localhost:8181/dirs/d1/files"
 }
 `,
 	})
 
-	// DELETE /dirs/d1/f1
+	// DELETE /dirs/d1/files/f1
 	xHTTP(t, "DELETE", "/dirs/d1/files/f1", "", 204, "")
+	xHTTP(t, "DELETE", "/dirs/d1/files/fx", "", 404,
+		"Resource \"fx\" not found\n")
 
 	// DELETE /dirs/d1/files/f1?epoch=...
 	xHTTP(t, "DELETE", "/dirs/d1/files/f3?epoch=2x", "", 400,
 		"Epoch value \"2x\" must be an UINTEGER\n")
 	xHTTP(t, "DELETE", "/dirs/d1/files/f3?epoch=2", "", 400,
-		"Epoch value for \"dirs/d1/files/f3\" doesn't match\n")
+		"Epoch value for \"f3\" must be 1\n")
 	xHTTP(t, "DELETE", "/dirs/d1/files/f3?epoch=1", "", 204, "")
 
 	// DELETE /dirs/d1/files/f3 - bad epoch in body
 	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f2","epoch":"1x"}]`, 400,
 		"Can't parse \"string\" as a(n) \"int\" at line 1\n")
 	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f2","epoch":2}]`, 400,
-		"Epoch value for \"dirs/d1/files/f2\" doesn't match\n")
+		"Epoch value for \"f2\" must be 1\n")
 	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f2","epoch":1}]`, 204, "")
 	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"fx","epoch":1}]`, 204, "")
 
-	// DUG CONTINUE
+	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f2"},{"id":"f4","epoch":3}]`,
+		400, "Epoch value for \"f4\" must be 1\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files", `[{"id":"f4"},{"id":"f5","epoch":1}]`,
+		204, "")
 
-	// DELETE /dirs/d1/files [ f2,f4 ] - good epoch and no epoch
-	// DELETE /dirs/d1/files
+	xHTTP(t, "DELETE", "/dirs/d1/files", `[]`, 204, "") // no-op
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:   "GET /dirs/d1 - 7",
+		URL:    "/dirs/d1/files",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "f6": {
+    "id": "f6",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/f6?meta",
+    "latestversionid": "v6.1",
+    "latestversionurl": "http://localhost:8181/dirs/d1/files/f6/versions/v6.1?meta",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f6/versions"
+  }
+}
+`,
+	})
+
+	xHTTP(t, "DELETE", "/dirs/d1/files", ``, 204, "")
+
+	xCheckHTTP(t, &HTTPTest{
+		Name:    "GET /dirs/d1 - 7",
+		URL:     "/dirs/d1/files",
+		Method:  "GET",
+		Code:    200,
+		ResBody: "{}\n",
+	})
+
 	// TODO
 	// DEL /dirs/d1/files [ f2,f4 ] - bad epoch on 2nd,verify f2 is still there
 
+	// DELETE Versions
+	f1, err := d1.AddResource("files", "f1", "v1")
+	xNoErr(t, err)
+	f1.AddVersion("v2", true)
+	f1.AddVersion("v3", true)
+	f1.AddVersion("v4", true)
+	f1.AddVersion("v5", true)
+	f1.AddVersion("v6", false)
+	f1.AddVersion("v7", false)
+	f1.AddVersion("v8", false)
+	f1.AddVersion("v9", false)
+	f1.AddVersion("v10", false)
+
+	xHTTP(t, "GET", "/dirs/d1/files/f1?meta", ``, 200,
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v5",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+
+  "versionscount": 10,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	// DELETE v1
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/vx", "", 404,
+		"Version \"vx\" not found\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v1", "", 204, "")
+
+	// DELETE /dirs/d1/files/f1?epoch=...
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v2?epoch=2x", "", 400,
+		"Epoch value \"2x\" must be an UINTEGER\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v2?epoch=2", "", 400,
+		"Epoch value for Version \"v2\" must be 1\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v2?epoch=1", "", 204, "")
+
+	// DELETE /dirs/d1/files/f1/versions/v4 - bad epoch in body
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions",
+		`[{"id":"v4","epoch":"1x"}]`, 400,
+		"Can't parse \"string\" as a(n) \"int\" at line 1\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions",
+		`[{"id":"v4","epoch":2}]`, 400,
+		"Epoch value for \"v4\" must be 1\n")
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions", `[{"id":"v4","epoch":1}]`, 204, "")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions", `[{"id":"v4","epoch":1}]`, 204, "")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions", `[{"id":"vx","epoch":1}]`, 204, "")
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions",
+		`[{"id":"v6"},{"id":"v7","epoch":3}]`,
+		400, "Epoch value for \"v7\" must be 1\n")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions",
+		`[{"id":"v7"},{"id":"v8","epoch":1}]`,
+		204, "")
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions", `[]`, 204, "") // No-op
+
+	// Make sure we have some left, and latest is still v5
+	xHTTP(t, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v5",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+
+  "versions": {
+    "v10": {
+      "id": "v10",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta"
+    },
+    "v3": {
+      "id": "v3",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta"
+    },
+    "v5": {
+      "id": "v5",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+      "latest": true
+    },
+    "v9": {
+      "id": "v9",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v9?meta"
+    }
+  },
+  "versionscount": 4,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v5?setlatestversionid=v3",
+		``, 204, "")
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=v9",
+		``, 400, "Can't set latestversionid to Version being deleted\n")
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=vx",
+		``, 400, "Can't find next latest Version \"vx\"\n")
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=v3",
+		``, 204, "")
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=vx",
+		``, 404, "Version \"v9\" not found\n")
+
+	xHTTP(t, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v3",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
+
+  "versions": {
+    "v10": {
+      "id": "v10",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta"
+    },
+    "v3": {
+      "id": "v3",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
+      "latest": true
+    }
+  },
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	f1.AddVersion("v1", false)
+	f1.AddVersion("v5", false)
+	// bad next
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=vx", `[{"id":"v5"}]`, 400, "Can't find next latest Version \"vx\"\n")
+	// next = being deleted
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=v5", `[{"id":"v5"}]`, 400, "Can't set latestversionid to Version being deleted\n")
+
+	// delete non-latest, change latest
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=v10", `[{"id":"v5"}]`, 204, "")
+	xHTTP(t, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v10",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
+
+  "versions": {
+    "v1": {
+      "id": "v1",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta"
+    },
+    "v10": {
+      "id": "v10",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
+      "latest": true
+    },
+    "v3": {
+      "id": "v3",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta"
+    }
+  },
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	// delete non-latest, latest not move
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions", `[{"id":"v3"}]`, 204, "")
+	xHTTP(t, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v10",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
+
+  "versions": {
+    "v1": {
+      "id": "v1",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta"
+    },
+    "v10": {
+      "id": "v10",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
+      "latest": true
+    }
+  },
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=v1", `[]`, 204, "")
+	xHTTP(t, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "v1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+
+  "versions": {
+    "v1": {
+      "id": "v1",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+      "latest": true
+    },
+    "v10": {
+      "id": "v10",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta"
+    }
+  },
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, "DELETE", "/dirs/d1/files/f1/versions", ``, 204, "")
+	xHTTP(t, "GET", "/dirs/d1/files/f1/versions", "", 200, "{}\n")
+
+	// TODO
+	// DEL /..versions/ [ v2,v4 ] - bad epoch on 2nd,verify v2 is still there
 }

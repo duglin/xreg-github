@@ -91,6 +91,10 @@ func (r *Resource) GetLatest() (*Version, error) {
 }
 
 func (r *Resource) SetLatest(newLatest *Version) error {
+	// already set
+	if r.Get("latestversionid") == newLatest.UID {
+		return nil
+	}
 	return r.Entity.Set("latestversionid", newLatest.UID)
 }
 
