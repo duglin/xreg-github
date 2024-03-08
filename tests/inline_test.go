@@ -289,9 +289,7 @@ func TestBasicInline(t *testing.T) {
 
 	for _, test := range tests {
 		t.Logf("Testing: %s", test.Name)
-		if !xCheckGet(t, reg, test.URL, test.Exp) {
-			break
-		}
+		xCheckGet(t, reg, test.URL, test.Exp)
 	}
 }
 
@@ -561,8 +559,6 @@ func TestResourceInline(t *testing.T) {
 		}
 		body = regexp.MustCompile(`(?m)^ *$\n`).ReplaceAll(body, []byte{})
 
-		if !xCheckEqual(t, "Test: "+test.Name+"\n", string(body), test.Exp) {
-			break
-		}
+		xCheckEqual(t, "Test: "+test.Name+"\n", string(body), test.Exp)
 	}
 }

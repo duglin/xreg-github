@@ -61,6 +61,33 @@ func (r *Resource) Set(name string, val any) error {
 	return v.Set(name, val)
 }
 
+func (r *Resource) JustSet(name string, val any) error {
+	log.VPrintf(4, "JustSet: r(%s).Set(%s,%v)", r.UID, name, val)
+	if name[0] == '.' { // Force it to be on the Resource, not latest Version
+		if name == ".latestVersionId" {
+			log.Printf("Shouldn't be setting .latestVersionId directly-1")
+			panic("can't set .latestversionid directly")
+		}
+		return r.Entity.JustSet(NewPPP(name[1:]), val)
+	}
+
+	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
+		if name == "latestversionid" {
+			log.Printf("Shouldn't be setting .latestVersionId directly-2")
+			panic("can't set .latestversionid directly")
+		}
+		return r.Entity.JustSet(NewPPP(name), val)
+	}
+
+	v, err := r.GetLatest()
+	if err != nil {
+		panic(err)
+	}
+
+	v.SkipEpoch = r.SkipEpoch
+	return v.JustSet(name, val)
+}
+
 // Maybe replace error with a panic? same for other finds??
 func (r *Resource) FindVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: FindVersion(%s)", id)

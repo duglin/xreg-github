@@ -19,6 +19,10 @@ func (v *Version) Set(name string, val any) error {
 	return v.Entity.Set(name, val)
 }
 
+func (v *Version) JustSet(name string, val any) error {
+	return v.Entity.JustSet(NewPPP(name), val)
+}
+
 func (v *Version) Delete(nextVersionID string) error {
 	log.VPrintf(3, ">Enter: Version.Delete(%s, %s)", v.UID, nextVersionID)
 	defer log.VPrintf(3, "<Exit: Version.Delete")

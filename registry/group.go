@@ -19,6 +19,10 @@ func (g *Group) Set(name string, val any) error {
 	return g.Entity.Set(name, val)
 }
 
+func (g *Group) JustSet(name string, val any) error {
+	return g.Entity.JustSet(NewPPP(name), val)
+}
+
 func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	log.VPrintf(3, ">Enter: FindResource(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: FindResource")

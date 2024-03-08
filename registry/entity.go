@@ -13,6 +13,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type Object map[string]any
+
+// type Map map[string]any
+// type Array []any
+
 type Entity struct {
 	RegistrySID string
 	DbSID       string // Entity's SID
@@ -235,9 +240,15 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	if e.Object == nil {
 		e.Object = map[string]any{}
 	}
-	e.NewObject = maps.Clone(e.Object)
 
-	// Cheat a little just to make caller's life easier
+	if e.NewObject == nil {
+		// If we don't have a NewObject yet then this is our first update
+		// so clone the current values before adding the new prop/val
+		e.NewObject = maps.Clone(e.Object)
+	}
+
+	// Cheat a little just to make caller's life easier by converting
+	// empty structs and maps to be of the type we like (meaning 'any's)
 	if val == struct{}{} {
 		val = map[string]any{}
 	}

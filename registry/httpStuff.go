@@ -735,22 +735,28 @@ func HTTPPutPost(info *RequestInfo) error {
 	if group == nil {
 		// Group doesn't exist so create it
 		isNew = true
+		// if len(info.Parts) > 2 {
 		group, err = info.Registry.AddGroup(info.GroupType, groupUID)
+		// } else {
+		// group, err = info.Registry.AddGroup(info.GroupType, groupUID, IncomingObj)
+		// }
 
 		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
+			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
 		}
 	}
 
 	if len(info.Parts) < 3 {
 		// Either /GROUPs or /GROUPs/gID - do PUT
+		// if !isNew {
 		group.NewObject = IncomingObj
 
 		if err = group.Entity.ValidateAndSave(isNew); err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Error processing group: %s", err)
 		}
+		// }
 
 		info.Parts = []string{info.Parts[0], groupUID}
 		info.What = "Entity"
@@ -841,7 +847,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if err != nil || resource == nil {
-		info.StatusCode = http.StatusInternalServerError
+		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing resource(%s): %s", resourceUID, err)
 	}
 
@@ -883,7 +889,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if err != nil || version == nil {
-		info.StatusCode = http.StatusInternalServerError
+		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
 	}
 

@@ -4422,3 +4422,33 @@ func TestHTTPDelete(t *testing.T) {
 	// TODO
 	// DEL /..versions/ [ v2,v4 ] - bad epoch on 2nd,verify v2 is still there
 }
+
+func TestHTTPRequiredFields(t *testing.T) {
+	reg := NewRegistry("TestHTTPRequiredFields")
+	defer PassDeleteReg(t, reg)
+
+	_, err := reg.Model.AddAttribute(&registry.Attribute{
+		Name:           "clireq",
+		Type:           registry.STRING,
+		ClientRequired: true,
+		ServerRequired: true,
+	})
+	xNoErr(t, err)
+
+	err = reg.Set("description", "testing")
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+
+	xNoErr(t, reg.JustSet("clireq", "testing"))
+	xNoErr(t, reg.Set("description", "testing"))
+
+	xHTTP(t, "GET", "/", "", 200, `{
+  "specversion": "0.5",
+  "id": "TestHTTPRequiredFields",
+  "epoch": 1,
+  "self": "http://localhost:8181/",
+  "description": "testing",
+  "clireq": "testing"
+}
+`)
+
+}

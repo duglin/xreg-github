@@ -2,7 +2,9 @@ package tests
 
 import (
 	"testing"
+
 	// log "github.com/duglin/dlog"
+	"github.com/duglin/xreg-github/registry"
 )
 
 func TestCreateGroup(t *testing.T) {
@@ -78,4 +80,39 @@ func TestCreateGroup(t *testing.T) {
 
 	g, err = reg.FindGroup("dirs", "d1")
 	xCheck(t, err == nil && g == nil, "Finding delete group failed")
+}
+
+func TestGroupRequiredFields(t *testing.T) {
+	// TODO DUG required
+	return
+
+	reg := NewRegistry("TestGroupRequiredFields")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+
+	_, err := gm.AddAttribute(&registry.Attribute{
+		Name:           "clireq",
+		Type:           registry.STRING,
+		ClientRequired: true,
+		ServerRequired: true,
+	})
+	xNoErr(t, err)
+
+	xHTTP(t, "PUT", "/dirs/d1", `{"description": "testing"}`, 400,
+		`Error processing group(d1): `+
+			`Required property "clireq" is missing`+"\n")
+
+	xHTTP(t, "PUT", "/dirs/d1", `{
+  "description": "testing",
+  "clireq": "testing2"
+}`, 201, `{
+  "id": "d1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1",
+  "description": "testing",
+  "clireq": "testing2"
+}
+`)
+
 }

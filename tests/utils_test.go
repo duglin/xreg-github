@@ -95,32 +95,29 @@ func Fail(t *testing.T, str string, args ...any) {
 	t.Fatalf("%s\n\n", text)
 }
 
-func xCheckErr(t *testing.T, err error, errStr string) bool {
+func xCheckErr(t *testing.T, err error, errStr string) {
 	t.Helper()
 	if err == nil {
 		if errStr == "" {
-			return true
+			return
 		}
-		Fail(t, "Test was supposed to generate an error: %s", errStr)
-		return false
+		t.Fatalf("\nGot:<no err>\nExp: %s", errStr)
 	}
+
 	if errStr == "" {
-		Fail(t, "Test failed: %s", err)
-		return false
+		t.Fatalf("Test failed: %s", err)
 	}
+
 	if err.Error() != errStr {
-		Fail(t, "\nGot: %s\nExp; %s", err.Error(), errStr)
-		return false
+		t.Fatalf("\nGot: %s\nExp: %s", err.Error(), errStr)
 	}
-	return true
 }
 
-func xCheck(t *testing.T, b bool, errStr string) bool {
+func xCheck(t *testing.T, b bool, errStr string) {
 	t.Helper()
 	if !b {
 		t.Fatalf("%s", errStr)
 	}
-	return b
 }
 
 func ToJSON(obj interface{}) string {
@@ -134,21 +131,17 @@ func ToJSON(obj interface{}) string {
 	return string(buf)
 }
 
-func xNoErr(t *testing.T, err error) bool {
+func xNoErr(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
-		return false
 	}
-	return true
 }
 
-func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) bool {
+func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) {
 	t.Helper()
 	res, err := http.Get("http://localhost:8181/" + url)
-	if !xNoErr(t, err) {
-		return false
-	}
+	xNoErr(t, err)
 
 	body, err := io.ReadAll(res.Body)
 	buf := bytes.NewBuffer(body)
@@ -163,31 +156,29 @@ func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string
 		expected = string(OneLine([]byte(expected)))
 	}
 
-	return xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
+	xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
 }
 
-func xCheckEqual(t *testing.T, extra string, got string, exp string) bool {
+func xCheckEqual(t *testing.T, extra string, got string, exp string) {
 	t.Helper()
 	pos := 0
 	for pos < len(got) && pos < len(exp) && got[pos] == exp[pos] {
 		pos++
 	}
 	if pos == len(got) && pos == len(exp) {
-		return true
+		return
 	}
 
 	if pos == len(got) {
-		t.Errorf("%s"+
+		t.Fatalf("%s"+
 			"Expected:\n%s\nGot:\n%s\nGot ended early at(%d)[%02X]:\n%q",
 			extra, exp, got, pos, exp[pos], got[pos:])
-		return false
 	}
 
 	if pos == len(exp) {
-		t.Errorf("%s"+
+		t.Fatalf("%s"+
 			"Expected:\n%s\nGot:\n%s\nExp ended early at(%d)[%02X]:\n%q",
 			extra, exp, got, pos, got[pos], got[pos:])
-		return false
 	}
 
 	expMax := pos + 90
@@ -200,13 +191,12 @@ func xCheckEqual(t *testing.T, extra string, got string, exp string) bool {
 			"Exp subset:\n%s\nGot:\n%s",
 		/*extra, */ exp, got, pos, exp[pos], got[pos],
 		exp[pos:expMax], got[pos:])
-	return false
 }
 
-func xJSONCheck(t *testing.T, gotObj any, expObj any) bool {
+func xJSONCheck(t *testing.T, gotObj any, expObj any) {
 	got := ToJSON(gotObj)
 	exp := ToJSON(expObj)
-	return xCheckEqual(t, "", got, exp)
+	xCheckEqual(t, "", got, exp)
 }
 
 func OneLine(buf []byte) []byte {

@@ -336,10 +336,8 @@ func TestBasicFilters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		pass := xCheckGet(t, reg, test.URL, test.Exp)
-		if !pass {
-			t.Logf("Test name: %s", test.Name)
-		}
+		t.Logf("Test name: %s", test.Name)
+		xCheckGet(t, reg, test.URL, test.Exp)
 	}
 }
 
@@ -450,9 +448,7 @@ func TestANDORFilters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		pass := xCheckGet(t, reg, test.URL, test.Exp)
-		if !pass {
-			t.Logf("Test name: %s", test.Name)
-		}
+		t.Logf("Test name: %s", test.Name)
+		xCheckGet(t, reg, test.URL, test.Exp)
 	}
 }

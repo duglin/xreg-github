@@ -215,17 +215,11 @@ func CompareContentMeta(t *testing.T, test *Test) {
 			str := ""
 			str = fmt.Sprintf("%v", propValue)
 			if name == "self" || name == "latestversionurl" {
-				if !xCheckEqual(t, "", value[0]+"?meta", str) {
-					t.Logf("Checked %q: (body) %q vs (hdr) \"%s?meta\"", name, str, value[0])
-					t.FailNow()
-				}
+				xCheckEqual(t, "", value[0]+"?meta", str)
 				break
 			}
 
-			if !xCheckEqual(t, "", value[0], str) {
-				t.Logf("Checked %q: (body) %q vs (hdr) %q", name, str, value[0])
-				t.FailNow()
-			}
+			xCheckEqual(t, "", value[0], str)
 			break
 		}
 		if !foundIt {

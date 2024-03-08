@@ -119,3 +119,33 @@ func TestRegistryProps(t *testing.T) {
 }
 `)
 }
+
+func TestRegistryRequiredFields(t *testing.T) {
+	reg := NewRegistry("TestRegistryRequiredFields")
+	defer PassDeleteReg(t, reg)
+
+	_, err := reg.Model.AddAttribute(&registry.Attribute{
+		Name:           "clireq",
+		Type:           registry.STRING,
+		ClientRequired: true,
+		ServerRequired: true,
+	})
+	xNoErr(t, err)
+
+	err = reg.Set("description", "testing")
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+
+	xNoErr(t, reg.JustSet("clireq", "testing2"))
+	xNoErr(t, reg.Set("description", "testing"))
+
+	xHTTP(t, "GET", "/", "", 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryRequiredFields",
+  "epoch": 1,
+  "self": "http://localhost:8181/",
+  "description": "testing",
+  "clireq": "testing2"
+}
+`)
+
+}

@@ -101,8 +101,13 @@ func (reg *Registry) Get(name string) any {
 	return reg.Entity.Get(name)
 }
 
+// Technically this should be called SetValidateSave
 func (reg *Registry) Set(name string, val any) error {
 	return reg.Entity.Set(name, val)
+}
+
+func (reg *Registry) JustSet(name string, val any) error {
+	return reg.Entity.JustSet(NewPPP(name), val)
 }
 
 func (reg *Registry) Delete() error {
@@ -255,7 +260,7 @@ func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
 	return &Group{Entity: *ent, Registry: reg}, nil
 }
 
-func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
+func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, error) {
 	log.VPrintf(3, ">Enter AddGroup(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit AddGroup")
 
@@ -295,7 +300,8 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 			SELECT ?,?,?,SID,?,?
 			FROM ModelEntities
 			WHERE RegistrySID=? AND Plural=? AND ParentSID IS NULL`,
-		g.DbSID, reg.DbSID, g.UID, gType+"/"+g.UID, gType, reg.DbSID, gType)
+		g.DbSID, g.RegistrySID, g.UID, g.Path, g.Abstract,
+		g.RegistrySID, g.Plural)
 
 	if err != nil {
 		err = fmt.Errorf("Error adding Group: %s", err)
@@ -303,9 +309,18 @@ func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
 		return nil, err
 	}
 
-	if err = g.Set("id", g.UID); err != nil {
+	if err = g.JustSet("id", g.UID); err != nil {
 		return nil, err
 	}
+
+	for _, obj := range objs {
+		for k, v := range obj {
+			if err = g.JustSet(k, v); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if err = g.Set("epoch", 1); err != nil {
 		return nil, err
 	}
