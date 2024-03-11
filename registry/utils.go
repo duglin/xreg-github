@@ -162,6 +162,9 @@ func GetStack() []string {
 
 	for i := 1; i < 20; i++ {
 		pc, file, line, _ := runtime.Caller(i)
+		if line == 0 {
+			break
+		}
 		stack = append(stack,
 			fmt.Sprintf("%s %s:%d",
 				path.Base(runtime.FuncForPC(pc).Name()), path.Base(file), line))
@@ -176,6 +179,9 @@ func ShowStack() {
 	log.VPrintf(0, "-----")
 	for i := 1; i < 20; i++ {
 		pc, file, line, _ := runtime.Caller(i)
+		if line == 0 {
+			break
+		}
 		log.VPrintf(0, "Caller: %s:%d",
 			path.Base(runtime.FuncForPC(pc).Name()), line)
 		if strings.Contains(file, "main") || strings.Contains(file, "testing") {

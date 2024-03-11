@@ -109,7 +109,8 @@ func (r *ResourceModel) UnmarshalJSON(data []byte) error {
 }
 
 func (m *Model) AddSchema(schema string) error {
-	err := Do(`INSERT INTO "Schemas" (RegistrySID, "Schema") VALUES(?,?)`,
+	err := Do(m.Registry.tx,
+		`INSERT INTO "Schemas" (RegistrySID, "Schema") VALUES(?,?)`,
 		m.Registry.DbSID, schema)
 	if err != nil {
 		err = fmt.Errorf("Error inserting schema(%s): %s", schema, err)
@@ -129,7 +130,8 @@ func (m *Model) AddSchema(schema string) error {
 }
 
 func (m *Model) DelSchema(schema string) error {
-	err := Do(`DELETE FROM "Schemas" WHERE RegistrySID=? AND "Schema"=?`,
+	err := Do(m.Registry.tx,
+		`DELETE FROM "Schemas" WHERE RegistrySID=? AND "Schema"=?`,
 		m.Registry.DbSID, schema)
 	if err != nil {
 		err = fmt.Errorf("Error deleting schema(%s): %s", schema, err)
@@ -174,7 +176,8 @@ func (m *Model) Save() error {
 	buf, _ := json.Marshal(m.Attributes)
 	attrs := string(buf)
 
-	err := DoZeroOne(`UPDATE Registries SET Attributes=? WHERE SID=?`,
+	err := DoZeroOne(m.Registry.tx,
+		`UPDATE Registries SET Attributes=? WHERE SID=?`,
 		attrs, m.Registry.DbSID)
 	if err != nil {
 		log.Printf("Error updating model: %s", err)
@@ -191,7 +194,8 @@ func (m *Model) Save() error {
 }
 
 func (m *Model) SetSchemas(schemas []string) error {
-	err := Do(`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
+	err := Do(m.Registry.tx,
+		`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
 	if err != nil {
 		err = fmt.Errorf("Error deleting schemas: %s", err)
 		log.Print(err)
@@ -290,7 +294,7 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 	}
 
 	mSID := NewUUID()
-	err := DoOne(`
+	err := DoOne(m.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID, ParentSID, Plural, Singular, Versions)
         VALUES(?,?,?,?,?,?) `,
@@ -420,6 +424,10 @@ func (i *Item) DelAttribute(name string) error {
 }
 
 func LoadModel(reg *Registry) *Model {
+	log.VPrintf(3, ">Enter: LoadModel")
+	defer log.VPrintf(3, "<Exit: LoadModel")
+
+	PanicIf(reg == nil, "nil")
 	groups := map[string]*GroupModel{} // Model SID -> *GroupModel
 
 	model := &Model{
@@ -428,7 +436,8 @@ func LoadModel(reg *Registry) *Model {
 	}
 
 	// Load Registry Attributes
-	results, err := Query(`SELECT Attributes FROM Registries WHERE SID=?`,
+	results, err := Query(reg.tx,
+		`SELECT Attributes FROM Registries WHERE SID=?`,
 		reg.DbSID)
 	defer results.Close()
 	if err != nil {
@@ -445,11 +454,12 @@ func LoadModel(reg *Registry) *Model {
 		// json.Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
 		Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
 	}
+	results.Close()
 
 	model.Attributes.SetRegistry(reg)
 
 	// Load Schemas
-	results, err = Query(`
+	results, err = Query(reg.tx, `
         SELECT RegistrySID, "Schema" FROM "Schemas"
         WHERE RegistrySID=?
         ORDER BY "Schema" ASC`, reg.DbSID)
@@ -463,9 +473,10 @@ func LoadModel(reg *Registry) *Model {
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		model.Schemas = append(model.Schemas, NotNilString(row[1]))
 	}
+	results.Close()
 
 	// Load Groups & Resources
-	results, err = Query(`
+	results, err = Query(reg.tx, `
         SELECT
             SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
 			Versions, VersionId, Latest, HasDocument
@@ -520,6 +531,7 @@ func LoadModel(reg *Registry) *Model {
 			}
 		}
 	}
+	results.Close()
 
 	reg.Model = model
 	return model
@@ -536,7 +548,8 @@ func (m *Model) FindGroupModel(gTypePlural string) *GroupModel {
 
 func (m *Model) ApplyNewModel(newM *Model) error {
 	// Delete old Schemas, then add new ones
-	err := Do(`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
+	err := Do(m.Registry.tx,
+		`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
 	if err != nil {
 		return err
 	}
@@ -615,7 +628,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 func (gm *GroupModel) Delete() error {
 	log.VPrintf(3, ">Enter: Delete.GroupModel: %s", gm.Plural)
 	defer log.VPrintf(3, "<Exit: Delete.GroupModel")
-	err := DoOne(`
+	err := DoOne(gm.Registry.tx, `
         DELETE FROM ModelEntities
 		WHERE RegistrySID=? AND SID=?`, // SID should be enough, but ok
 		gm.Registry.DbSID, gm.SID)
@@ -636,7 +649,7 @@ func (gm *GroupModel) Save() error {
 	buf, _ := json.Marshal(gm.Attributes)
 	attrs := string(buf)
 
-	err := DoZeroTwo(`
+	err := DoZeroTwo(gm.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, Attributes)
@@ -744,7 +757,7 @@ func (gm *GroupModel) AddResourceModel(plural string, singular string, versions 
 
 	mSID := NewUUID()
 
-	err := DoOne(`
+	err := DoOne(gm.Registry.tx, `
 		INSERT INTO ModelEntities(
 			SID, RegistrySID, ParentSID, Plural, Singular, Versions,
 			VersionId, Latest, HasDocument)
@@ -774,7 +787,7 @@ func (gm *GroupModel) AddResourceModel(plural string, singular string, versions 
 func (rm *ResourceModel) Delete() error {
 	log.VPrintf(3, ">Enter: Delete.ResourceModel: %s", rm.Plural)
 	defer log.VPrintf(3, "<Exit: Delete.ResourceModel")
-	err := DoOne(`
+	err := DoOne(rm.GroupModel.Registry.tx, `
         DELETE FROM ModelEntities
 		WHERE RegistrySID=? AND SID=?`, // SID should be enough, but ok
 		rm.GroupModel.Registry.DbSID, rm.SID)
@@ -795,7 +808,7 @@ func (rm *ResourceModel) Save() error {
 	buf, _ := json.Marshal(rm.Attributes)
 	attrs := string(buf)
 
-	err := DoZeroTwo(`
+	err := DoZeroTwo(rm.GroupModel.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, Versions,

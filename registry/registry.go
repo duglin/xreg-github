@@ -15,26 +15,53 @@ type Registry struct {
 	Model *Model
 }
 
-var Registries = map[string]*Registry{}      // User UID->Reg
-var RegistriesBySID = map[string]*Registry{} // SID->Reg
+func (r *Registry) Rollback() error {
+	if r != nil {
+		return r.tx.Rollback()
+	}
+	return nil
+}
 
-func NewRegistry(id string) (*Registry, error) {
+func (r *Registry) Commit() error {
+	if r != nil {
+		return r.tx.Commit()
+	}
+	return nil
+}
+
+func NewRegistry(tx *Tx, id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: NewRegistry %q", id)
 	defer log.VPrintf(3, "<Exit: NewRegistry")
+
+	var err error // must be used for all error checking due to defer
+	newTx := false
+
+	defer func() {
+		if newTx {
+			// If created just for us, close it
+			tx.Conditional(err)
+		}
+	}()
+
+	if tx == nil {
+		tx = NewTx()
+		newTx = true
+	}
 
 	if id == "" {
 		id = NewUUID()
 	}
 
-	if r, err := FindRegistry(id); r != nil {
-		if err != nil {
-			return nil, err
-		}
+	r, err := FindRegistry(tx, id)
+	if err != nil {
+		return nil, err
+	}
+	if r != nil {
 		return nil, fmt.Errorf("A registry with ID %q already exists", id)
 	}
 
 	dbSID := NewUUID()
-	err := DoOne(`
+	err = DoOne(tx, `
 		INSERT INTO Registries(SID, UID)
 		VALUES(?,?)`, dbSID, id)
 	if err != nil {
@@ -43,46 +70,58 @@ func NewRegistry(id string) (*Registry, error) {
 
 	reg := &Registry{
 		Entity: Entity{
-			RegistrySID: dbSID,
-			DbSID:       dbSID,
-			Plural:      "registries",
-			UID:         id,
+			tx: tx,
+
+			DbSID:  dbSID,
+			Plural: "registries",
+			UID:    id,
 
 			Level:    0,
 			Path:     "",
 			Abstract: "",
 		},
 	}
+	reg.Entity.Registry = reg
 	reg.Model = &Model{
 		Registry: reg,
 		Groups:   map[string]*GroupModel{},
 	}
 
-	err = DoOne(`
+	tx.Registry = reg
+
+	err = DoOne(tx, `
 		INSERT INTO Models(RegistrySID)
 		VALUES(?)`, dbSID)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = reg.Set("specversion", SPECVERSION); err != nil {
+	if err = reg.JustSet("specversion", SPECVERSION); err != nil {
 		return nil, err
 	}
-	if err = reg.Set("id", reg.UID); err != nil {
+	if err = reg.JustSet("id", reg.UID); err != nil {
 		return nil, err
 	}
-	if err = reg.Set("epoch", 1); err != nil {
+	if err = reg.SetSave("epoch", 1); err != nil {
 		return nil, err
 	}
 
-	Registries[id] = reg
-	RegistriesBySID[reg.DbSID] = reg
+	if tx.RegistriesByUID == nil {
+		tx.RegistriesByUID = map[string]*Registry{}
+		tx.RegistriesBySID = map[string]*Registry{}
+	}
+
+	tx.RegistriesByUID[id] = reg
+	tx.RegistriesBySID[reg.DbSID] = reg
 
 	return reg, nil
 }
 
 func GetRegistryNames() []string {
-	results, err := Query(` SELECT UID FROM Registries`)
+	tx := NewTx()
+	defer tx.Rollback()
+
+	results, err := Query(tx, ` SELECT UID FROM Registries`)
 	defer results.Close()
 
 	if err != nil {
@@ -110,29 +149,35 @@ func (reg *Registry) JustSet(name string, val any) error {
 	return reg.Entity.JustSet(NewPPP(name), val)
 }
 
+func (reg *Registry) SetSave(name string, val any) error {
+	return reg.Entity.SetSave(name, val)
+}
+
 func (reg *Registry) Delete() error {
 	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.UID)
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
 
-	err := DoOne(`DELETE FROM Registries WHERE SID=?`, reg.DbSID)
+	err := DoOne(reg.tx, `DELETE FROM Registries WHERE SID=?`, reg.DbSID)
 	if err == nil {
-		delete(Registries, reg.UID)
-		delete(RegistriesBySID, reg.DbSID)
+		delete(reg.tx.RegistriesByUID, reg.UID)
+		delete(reg.tx.RegistriesBySID, reg.DbSID)
 	}
 	return err
 }
 
-func FindRegistryBySID(sid string) (*Registry, error) {
+func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistrySID(%s)", sid)
 	defer log.VPrintf(3, "<Exit: FindRegistrySID")
 
-	if os.Getenv("NO_CACHE") == "" {
-		if reg, ok := RegistriesBySID[sid]; ok {
-			return reg, nil
+	/*
+		if os.Getenv("NO_CACHE") == "" {
+			if reg, ok := tx.RegistriesBySID[sid]; ok {
+				return reg, nil
+			}
 		}
-	}
+	*/
 
-	results, err := Query(`SELECT UID FROM Registries WHERE SID=?`, sid)
+	results, err := Query(tx, `SELECT UID FROM Registries WHERE SID=?`, sid)
 	defer results.Close()
 
 	if err != nil {
@@ -143,28 +188,51 @@ func FindRegistryBySID(sid string) (*Registry, error) {
 	if row == nil {
 		return nil, fmt.Errorf("Error finding Registry %q: no match", sid)
 	}
+	results.Close()
 
 	uid := NotNilString(row[0])
-	return FindRegistry(uid)
+	return FindRegistry(tx, uid)
 }
 
-func FindRegistry(id string) (*Registry, error) {
+// BY UID
+func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistry(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindRegistry")
 
-	if os.Getenv("NO_CACHE") == "" {
-		if reg, ok := Registries[id]; ok {
-			return reg, nil
-		}
+	newTx := false
+	if tx == nil {
+		tx = NewTx()
+		newTx = true
+
+		defer func() {
+			// If we created a new Tx then assume someone is just looking
+			// for the Registry and may not actually want to edit stuff, so
+			// go ahead and close the Tx. It'll be reopened later if needed.
+			// If a Tx was passed in then don't close it, the caller will
+			if newTx { // not needed?
+				tx.Rollback()
+			}
+		}()
 	}
 
-	results, err := Query(`
+	/*
+		if os.Getenv("NO_CACHE") == "" {
+			if reg, ok := tx.RegistriesByUID[id]; ok {
+				return reg, nil
+			}
+		}
+	*/
+
+	results, err := Query(tx, `
 	   	SELECT SID
 	   	FROM Registries
 	   	WHERE UID=?`, id)
 	defer results.Close()
 
 	if err != nil {
+		if newTx {
+			tx.Rollback()
+		}
 		return nil, fmt.Errorf("Error finding Registry %q: %s", id, err)
 	}
 
@@ -174,18 +242,32 @@ func FindRegistry(id string) (*Registry, error) {
 		return nil, nil
 	}
 	id = NotNilString(row[0])
+	results.Close()
 
-	ent, err := RawEntityFromPath(id, "")
+	ent, err := RawEntityFromPath(tx, id, "")
 	if err != nil {
+		if newTx {
+			tx.Rollback()
+		}
 		return nil, fmt.Errorf("Error finding Registry %q: %s", id, err)
 	}
 	PanicIf(ent == nil, "No entity but we found a reg")
 
 	reg := &Registry{Entity: *ent}
+	if tx.Registry == nil {
+		tx.Registry = reg
+	}
+	reg.Entity.Registry = reg
+
 	reg.LoadModel()
 
-	Registries[reg.UID] = reg
-	RegistriesBySID[reg.DbSID] = reg
+	if tx.RegistriesByUID == nil {
+		tx.RegistriesByUID = map[string]*Registry{}
+		tx.RegistriesBySID = map[string]*Registry{}
+	}
+
+	tx.RegistriesByUID[reg.UID] = reg
+	tx.RegistriesBySID[reg.DbSID] = reg
 
 	return reg, nil
 }
@@ -248,7 +330,7 @@ func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
 	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gType, id)
 	defer log.VPrintf(3, "<Exit: FindGroup")
 
-	ent, err := RawEntityFromPath(reg.DbSID, gType+"/"+id)
+	ent, err := RawEntityFromPath(reg.tx, reg.DbSID, gType+"/"+id)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Group %q(%s): %s", id, gType, err)
 	}
@@ -283,10 +365,12 @@ func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, 
 
 	g = &Group{
 		Entity: Entity{
-			RegistrySID: reg.DbSID,
-			DbSID:       NewUUID(),
-			Plural:      gType,
-			UID:         id,
+			tx: reg.tx,
+
+			Registry: reg,
+			DbSID:    NewUUID(),
+			Plural:   gType,
+			UID:      id,
 
 			Level:    1,
 			Path:     gType + "/" + id,
@@ -295,13 +379,13 @@ func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, 
 		Registry: reg,
 	}
 
-	err = DoOne(`
+	err = DoOne(reg.tx, `
 			INSERT INTO "Groups"(SID,RegistrySID,UID,ModelSID,Path,Abstract)
 			SELECT ?,?,?,SID,?,?
 			FROM ModelEntities
 			WHERE RegistrySID=? AND Plural=? AND ParentSID IS NULL`,
-		g.DbSID, g.RegistrySID, g.UID, g.Path, g.Abstract,
-		g.RegistrySID, g.Plural)
+		g.DbSID, g.Registry.DbSID, g.UID, g.Path, g.Abstract,
+		g.Registry.DbSID, g.Plural)
 
 	if err != nil {
 		err = fmt.Errorf("Error adding Group: %s", err)
@@ -321,7 +405,7 @@ func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, 
 		}
 	}
 
-	if err = g.Set("epoch", 1); err != nil {
+	if err = g.SetSave("epoch", 1); err != nil {
 		return nil, err
 	}
 
@@ -379,6 +463,7 @@ func (info *RequestInfo) ShouldInline(entityPath string) bool {
 }
 
 type RequestInfo struct {
+	tx               *Tx
 	Registry         *Registry
 	BaseURL          string
 	OriginalPath     string
@@ -417,16 +502,22 @@ type FilterExpr struct {
 	HasEqual bool
 }
 
-func ParseRequest(w http.ResponseWriter, r *http.Request) (*RequestInfo, error) {
+func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo, error) {
 	path := strings.Trim(r.URL.Path, " /")
 	info := &RequestInfo{
+		tx: tx,
+
 		OriginalPath:     path,
 		OriginalRequest:  r,
 		OriginalResponse: w,
-		Registry:         DefaultReg,
+		Registry:         GetDefaultReg(tx),
 		BaseURL:          "http://" + r.Host,
 		ShowModel:        r.URL.Query().Has("model"),
 		ShowMeta:         r.URL.Query().Has("meta"),
+	}
+
+	if info.Registry != nil && tx.Registry == nil {
+		tx.Registry = info.Registry
 	}
 
 	info.HTTPWriter = DefaultHTTPWriter(info)
@@ -554,7 +645,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		name := info.Parts[0][4:]
 		info.Parts = info.Parts[1:] // shift
 
-		reg, err := FindRegistry(name)
+		reg, err := FindRegistry(info.tx, name)
 		if reg == nil {
 			extra := ""
 			if err != nil {

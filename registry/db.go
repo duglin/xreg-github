@@ -1,11 +1,15 @@
 package registry
 
 import (
+	"bytes"
+	"context"
 	"database/sql"
 	_ "embed"
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
+	"runtime/pprof"
 	"strings"
 
 	log "github.com/duglin/dlog"
@@ -26,21 +30,220 @@ func init() {
 	}
 }
 
+// Active transaction - mainly for debugging and testing
+var TXs = map[string]*Tx{}
+
+func DumpTXs() {
+	// Only show info if there are active Txs
+	if len(TXs) == 0 {
+		return
+	}
+
+	count := 1
+	for _, t := range TXs {
+		log.Printf("NewTx Stack %d:", count)
+		for _, s := range t.stack {
+			log.Printf("  %s", s)
+		}
+		count++
+	}
+
+	// Show threads/processes
+	pprof.Lookup("goroutine").WriteTo(PProfFilter, 1)
+
+	log.Printf("==========================")
+	log.Printf("")
+	PProfFilter.count = 0
+	PProfFilter.inSection = false
+	PProfFilter.buffer.Reset()
+}
+
+var PProfFilter = &FilterPProf{}
+
+type FilterPProf struct {
+	buffer    bytes.Buffer
+	count     int
+	inSection bool
+}
+
+// Extract func name and files info
+var fpRE = regexp.MustCompile(`^#\s+[^\s]+\s+[^.]*.[^.]*\.([^+]*)\+[^/]*.*/(.*)$`)
+
+// When dumping all processes, filter out the ones that aren't running our
+// code and only show lines of interest to keep it small
+func (fp *FilterPProf) Write(p []byte) (n int, err error) {
+	for _, b := range p {
+		if b == '\n' {
+			line := fp.buffer.String()
+			fp.buffer.Reset()
+
+			if strings.Contains(line, "xreg-github") &&
+				!strings.Contains(line, "(*Server).Serve+") &&
+				!strings.Contains(line, "(*Server).Serve.") &&
+				!strings.Contains(line, "TestMain") {
+
+				if !fp.inSection {
+					fp.inSection = true
+					fp.count++
+					log.Printf("Thread %d:", fp.count)
+				}
+
+				line = fpRE.ReplaceAllString(line, `  $1   $2`)
+				log.Printf(line)
+			} else {
+				fp.inSection = false
+			}
+		} else {
+			fp.buffer.WriteByte(b)
+		}
+	}
+	return len(p), nil
+}
+
+type Tx struct {
+	tx       *sql.Tx
+	Registry *Registry
+
+	// For debugging
+	uuid  string   // just a unique ID for the TXs map key
+	stack []string // Stack at time NewTX
+
+	RegistriesByUID map[string]*Registry // UID -> *Registry
+	RegistriesBySID map[string]*Registry // DbSID -> *Registry
+}
+
+func (tx *Tx) String() string {
+	regStr := "<none>"
+	if tx.Registry != nil {
+		regStr = tx.Registry.DbSID
+	}
+
+	txStr := "<none>"
+	if tx.tx != nil {
+		txStr = "<set>"
+	}
+	return fmt.Sprintf("Tx: sql.tx: %s, Registry: %s", txStr, regStr)
+}
+
+func NewTxWithRegistry(reg *Registry) *Tx {
+	tx := NewTx()
+	tx.Registry = reg
+	return tx
+}
+
+func NewTx() *Tx {
+	log.VPrintf(4, ">Enter: NewTx")
+	defer log.VPrintf(4, "<exit: NewTx")
+
+	tx := &Tx{}
+	tx.NewTx()
+	return tx
+}
+
+// It's ok for this to be called multiple times for the same Tx just to
+// make sure we have an active transaction - it's a no-op at that point
+func (tx *Tx) NewTx() {
+	log.VPrintf(4, ">Enter: tx.NewTx")
+	defer log.VPrintf(4, "<Exit: tx.NewTx")
+
+	if tx.tx != nil {
+		return
+	}
+
+	t, err := DB.BeginTx(context.Background(),
+		&sql.TxOptions{sql.LevelReadCommitted, false})
+	Must(err)
+
+	tx.tx = t
+	tx.uuid = NewUUID()
+	tx.stack = GetStack()
+	TXs[tx.uuid] = tx
+}
+
+func (tx *Tx) Commit() error {
+	if tx.tx == nil {
+		return nil
+	}
+	err := tx.tx.Commit()
+	Must(err)
+	if err != nil {
+		return err
+	}
+
+	delete(TXs, tx.uuid)
+	tx.tx = nil
+	tx.uuid = ""
+
+	return nil
+}
+
+func (tx *Tx) Rollback() error {
+	if tx.tx == nil {
+		return nil
+	}
+	err := tx.tx.Rollback()
+	Must(err)
+	if err != nil {
+		return err
+	}
+
+	delete(TXs, tx.uuid)
+	tx.tx = nil
+	tx.uuid = ""
+
+	return nil
+}
+
+func (tx *Tx) Conditional(err error) error {
+	if err == nil {
+		return tx.Commit()
+	}
+	return tx.Rollback()
+}
+
+func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
+	// If the current Tx is closed, create a new one
+	if tx.tx == nil {
+		tx.NewTx()
+	}
+	ps, err := tx.tx.Prepare(query)
+
+	return ps, err
+}
+
 type Result struct {
+	tx       *Tx
 	sqlRows  *sql.Rows
 	colTypes []reflect.Type
-	Data     []*any
+	Data     []*any // One row
 	TempData []any
 	Reuse    bool
+
+	AllRows [][]*any
 }
 
 func (r *Result) Close() {
+	if r == nil {
+		return
+	}
+
+	if r.Data == nil {
+		// Already done
+		return
+	}
+
+	if r.tx != nil {
+		r.tx = nil
+	}
+
 	if r.sqlRows != nil {
 		r.sqlRows.Close()
 		r.sqlRows = nil
 	}
+
 	r.Data = nil
 	r.TempData = nil
+	r.AllRows = nil
 }
 
 func (r *Result) Push() {
@@ -66,31 +269,20 @@ func (r *Result) NextRow() []*any {
 }
 
 func (r *Result) PullNextRow() {
-	if r.sqlRows == nil {
-		panic("sqlRows is nil")
-	}
-	if r.sqlRows.Next() == false {
+	if r.AllRows == nil || len(r.AllRows) == 0 {
 		r.Close()
 		return
 	}
 
-	err := r.sqlRows.Scan(r.TempData...) // Can't pass r.Data directly
-	if err != nil {
-		panic(fmt.Sprintf("Error scanning DB row: %s", err))
-		// should return err.  r.Data = nil ; return err..
-	}
-
-	// Move data from TempData to Data
-	for i, _ := range r.Data {
-		r.Data[i] = r.TempData[i].(*any)
-	}
+	r.Data = r.AllRows[0]
+	r.AllRows = r.AllRows[1:]
 
 	if log.GetVerbose() > 3 {
 		dd := []string{}
 		for _, d := range r.Data {
 			dVal := reflect.ValueOf(*d)
 			if !IsNil(*d) && dVal.Type().String() == "[]uint8" {
-				// if reflect.ValueOf(*d).Type().String() == "[]uint8" {
+				// if reflect.ValueOf(*d).Type().String() == "[]uint8"
 				dd = append(dd, string((*d).([]byte)))
 			} else {
 				dd = append(dd, fmt.Sprintf("%v", *d))
@@ -100,12 +292,69 @@ func (r *Result) PullNextRow() {
 	}
 }
 
-func Query(cmd string, args ...interface{}) (*Result, error) {
+func (r *Result) RetrieveAllRowsFromDB() {
+	for {
+		if r.RetrieveNextRowFromDB() == false {
+			break
+		}
+		r.AllRows = append(r.AllRows, r.Data)
+	}
+	// When done, technically r.Data contains the last item from the query
+	// but it'll be overwritten on the first call to PullNextRow
+
+	// Close the MYSQL query and prepare stmt
+	if r.sqlRows != nil {
+		r.sqlRows.Close()
+		r.sqlRows = nil
+	}
+}
+
+func (r *Result) RetrieveNextRowFromDB() bool {
+	if r.sqlRows == nil {
+		panic("sqlRows is nil")
+	}
+	if r.sqlRows.Next() == false {
+		// r.Close()
+		return false
+	}
+
+	r.TempData = make([]any, len(r.TempData))
+	r.Data = make([]*any, len(r.Data))
+	for i, _ := range r.TempData {
+		r.TempData[i] = new(any)
+		r.Data[i] = r.TempData[i].(*any)
+	}
+
+	err := r.sqlRows.Scan(r.TempData...) // Can't pass r.Data directly
+	if err != nil {
+		panic(fmt.Sprintf("Error scanning DB row: %s", err))
+		// should return err.  r.Data = nil ; return err..
+	}
+
+	// Move data from TempData to Data
+
+	if log.GetVerbose() > 3 {
+		dd := []string{}
+		for _, d := range r.Data {
+			dVal := reflect.ValueOf(*d)
+			if !IsNil(*d) && dVal.Type().String() == "[]uint8" {
+				// if reflect.ValueOf(*d).Type().String() == "[]uint8"
+				dd = append(dd, string((*d).([]byte)))
+			} else {
+				dd = append(dd, fmt.Sprintf("%v", *d))
+			}
+		}
+		log.VPrintf(4, "row: %v", dd)
+	}
+	return true
+}
+
+func Query(tx *Tx, cmd string, args ...interface{}) (*Result, error) {
 	if log.GetVerbose() > 2 {
 		log.VPrintf(3, "Query: %s", SubQuery(cmd, args))
 	}
 
-	ps, err := DB.Prepare(cmd)
+	ps, err := tx.Prepare(cmd)
 	if err != nil {
 		log.Printf("Error Prepping query (%s)->%s\n", cmd, err)
 		return nil, fmt.Errorf("Error Prepping query (%s)->%s\n", cmd, err)
@@ -125,6 +374,7 @@ func Query(cmd string, args ...interface{}) (*Result, error) {
 	}
 
 	result := &Result{
+		tx:       tx,
 		sqlRows:  rows,
 		colTypes: []reflect.Type{},
 	}
@@ -135,12 +385,16 @@ func Query(cmd string, args ...interface{}) (*Result, error) {
 		result.TempData = append(result.TempData, new(any))
 	}
 
+	// Download all data. We used to pull from DB on each PullNextRow
+	// but mysql doesn't support multiple queries being active in the same Tx
+	result.RetrieveAllRowsFromDB()
+
 	return result, nil
 }
 
-func doCount(cmd string, args ...interface{}) (int, error) {
+func doCount(tx *Tx, cmd string, args ...interface{}) (int, error) {
 	log.VPrintf(4, "doCount: %q arg: %v", cmd, args)
-	ps, err := DB.Prepare(cmd)
+	ps, err := tx.Prepare(cmd)
 	if err != nil {
 		return 0, err
 	}
@@ -157,13 +411,13 @@ func doCount(cmd string, args ...interface{}) (int, error) {
 	return int(count), err
 }
 
-func Do(cmd string, args ...interface{}) error {
-	_, err := doCount(cmd, args...)
+func Do(tx *Tx, cmd string, args ...interface{}) error {
+	_, err := doCount(tx, cmd, args...)
 	return err
 }
 
-func DoOne(cmd string, args ...interface{}) error {
-	count, err := doCount(cmd, args...)
+func DoOne(tx *Tx, cmd string, args ...interface{}) error {
+	count, err := doCount(tx, cmd, args...)
 	if err != nil {
 		return err
 	}
@@ -177,8 +431,8 @@ func DoOne(cmd string, args ...interface{}) error {
 	return nil
 }
 
-func DoZeroOne(cmd string, args ...interface{}) error {
-	count, err := doCount(cmd, args...)
+func DoZeroOne(tx *Tx, cmd string, args ...interface{}) error {
+	count, err := doCount(tx, cmd, args...)
 	if err != nil {
 		return err
 	}
@@ -192,8 +446,8 @@ func DoZeroOne(cmd string, args ...interface{}) error {
 	return nil
 }
 
-func DoOneTwo(cmd string, args ...interface{}) error {
-	count, err := doCount(cmd, args...)
+func DoOneTwo(tx *Tx, cmd string, args ...interface{}) error {
+	count, err := doCount(tx, cmd, args...)
 	if err != nil {
 		return err
 	}
@@ -207,8 +461,8 @@ func DoOneTwo(cmd string, args ...interface{}) error {
 	return nil
 }
 
-func DoZeroTwo(cmd string, args ...interface{}) error {
-	count, err := doCount(cmd, args...)
+func DoZeroTwo(tx *Tx, cmd string, args ...interface{}) error {
+	count, err := doCount(tx, cmd, args...)
 	if err != nil {
 		return err
 	}
@@ -223,9 +477,9 @@ func DoZeroTwo(cmd string, args ...interface{}) error {
 	return nil
 }
 
-func DoCount(num int, cmd string, args ...interface{}) error {
+func DoCount(tx *Tx, num int, cmd string, args ...interface{}) error {
 	log.VPrintf(4, "DoCount: %s", cmd)
-	count, err := doCount(cmd, args...)
+	count, err := doCount(tx, cmd, args...)
 	if err != nil {
 		return err
 	}

@@ -133,6 +133,8 @@ func TestSetDots(t *testing.T) {
 	dir, _ := reg.AddGroup("dirs", "d1")
 	labels := NewPP().P("labels")
 
+	xNoErr(t, reg.Commit())
+
 	err := dir.Set(labels.UI(), "xxx")
 	xCheck(t, err != nil, "labels=xxx should fail")
 

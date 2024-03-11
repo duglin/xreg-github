@@ -8,6 +8,7 @@ import (
 	"io"
 	"maps"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -20,7 +21,22 @@ type Server struct {
 	HTTPServer *http.Server
 }
 
-var DefaultReg *Registry
+var DefaultRegDbSID string
+
+func GetDefaultReg(tx *Tx) *Registry {
+	if tx == nil {
+		tx = NewTx()
+	}
+
+	reg, err := FindRegistryBySID(tx, DefaultRegDbSID)
+	Must(err)
+
+	if reg != nil {
+		tx.Registry = reg
+	}
+
+	return reg
+}
 
 func NewServer(port int) *Server {
 	server := &Server{
@@ -59,13 +75,40 @@ func (s *Server) Serve() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var info *RequestInfo
+	var err error
+
+	// Don't bother with a Tx for this test flow
 	if strings.HasPrefix(r.URL.Path, "/EMPTY") {
 		tmp := fmt.Sprintf("hello%s", r.URL.Path[6:])
 		w.Write([]byte(tmp))
 		return
 	}
 
-	if DefaultReg == nil {
+	tx := NewTx()
+
+	defer func() {
+		// As of now we should never have more than one active Tx during
+		// testing
+		if os.Getenv("TESTING") != "" {
+			l := len(TXs)
+			if (tx.tx == nil && l > 0) || (tx.tx != nil && l > 1) {
+				log.Printf(">End of HTTP Request")
+				DumpTXs()
+
+				// Info can be nil in the /EMPTY cases
+				log.Printf("Info: %s", ToJSON(info))
+				log.Printf("<Exit http req")
+
+				panic("nested Txs")
+			}
+		}
+
+		// Explicit Commit() is required, else we'll always rollback
+		tx.Rollback()
+	}()
+
+	if DefaultRegDbSID == "" {
 		panic("No registry specified")
 	}
 
@@ -79,7 +122,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	log.VPrintf(2, "%s %s", r.Method, r.URL)
 
-	info, err := ParseRequest(w, r)
+	info, err = ParseRequest(tx, w, r)
+
 	if err != nil {
 		w.WriteHeader(info.StatusCode)
 		w.Write([]byte(fmt.Sprintf("%s\n", err.Error())))
@@ -116,6 +160,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("HTTP method %q not supported", r.Method)
 	}
 
+	Must(tx.Conditional(err))
+
 	if err != nil {
 		if info.StatusCode == 0 {
 			// Only default to BadRequest if not set by someone else
@@ -123,7 +169,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		info.Write([]byte(err.Error() + "\n"))
 	}
-
 }
 
 type HTTPWriter interface {
@@ -378,6 +423,7 @@ func HTTPGETModel(info *RequestInfo) error {
 func HTTPGETContent(info *RequestInfo) error {
 	log.VPrintf(3, ">Enter: HTTPGetContent")
 	defer log.VPrintf(3, "<Exit: HTTPGetContent")
+
 	query := `
 SELECT
   RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
@@ -397,7 +443,7 @@ FROM FullTree WHERE RegSID=? AND `
 
 	log.VPrintf(3, "Query:\n%s", SubQuery(query, args))
 
-	results, err := Query(query, args...)
+	results, err := Query(info.tx, query, args...)
 	defer results.Close()
 
 	if err != nil {
@@ -405,7 +451,7 @@ FROM FullTree WHERE RegSID=? AND `
 		return err
 	}
 
-	entity, err := readNextEntity(results)
+	entity, err := readNextEntity(info.tx, results)
 	log.VPrintf(3, "Entity: %#v", entity)
 	if entity == nil {
 		info.StatusCode = http.StatusNotFound
@@ -424,7 +470,7 @@ FROM FullTree WHERE RegSID=? AND `
 		// how many versions there are for the VersionsCount attribute
 		vID := entity.Get("latestversionid").(string)
 		for {
-			v, err := readNextEntity(results)
+			v, err := readNextEntity(info.tx, results)
 			if v == nil && version == nil {
 				info.StatusCode = http.StatusInternalServerError
 				return fmt.Errorf("Can't find version: %s : %s", vID, err)
@@ -568,7 +614,7 @@ func HTTPGet(info *RequestInfo) error {
 	}
 
 	query, args, err := GenerateQuery(info)
-	results, err := Query(query, args...)
+	results, err := Query(info.tx, query, args...)
 	defer results.Close()
 
 	if err != nil {
@@ -735,11 +781,12 @@ func HTTPPutPost(info *RequestInfo) error {
 	if group == nil {
 		// Group doesn't exist so create it
 		isNew = true
-		// if len(info.Parts) > 2 {
-		group, err = info.Registry.AddGroup(info.GroupType, groupUID)
-		// } else {
-		// group, err = info.Registry.AddGroup(info.GroupType, groupUID, IncomingObj)
-		// }
+		if len(info.Parts) > 2 {
+			group, err = info.Registry.AddGroup(info.GroupType, groupUID)
+		} else {
+			group, err = info.Registry.AddGroup(info.GroupType, groupUID,
+				IncomingObj)
+		}
 
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
@@ -1370,11 +1417,11 @@ func HTTPDeleteGroups(info *RequestInfo) error {
 
 	// No list provided so get list of Groups so we can delete them all
 	if list == nil {
-		results, err := Query(`
+		results, err := Query(info.tx, `
 			SELECT UID
 			FROM Entities
 			WHERE RegSID=? AND Abstract=?`,
-			info.Registry.RegistrySID, info.GroupType)
+			info.Registry.DbSID, info.GroupType)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error getting the list: %s", err)
@@ -1429,11 +1476,11 @@ func HTTPDeleteResources(info *RequestInfo) error {
 
 	// No list provided so get list of Resources so we can delete them all
 	if list == nil {
-		results, err := Query(`
+		results, err := Query(info.tx, `
 			SELECT UID
 			FROM Entities
 			WHERE RegSID=? AND Abstract=?`,
-			info.Registry.RegistrySID,
+			info.Registry.DbSID,
 			NewPPP(info.GroupType).P(info.ResourceType).Abstract())
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
@@ -1497,11 +1544,11 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 
 	// No list provided so get list of Versions so we can delete them all
 	if list == nil {
-		results, err := Query(`
+		results, err := Query(info.tx, `
 			SELECT UID
 			FROM Entities
 			WHERE RegSID=? AND Abstract=?`,
-			info.Registry.RegistrySID,
+			info.Registry.DbSID,
 			NewPPP(info.GroupType).P(info.ResourceType).P("versions").Abstract())
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError

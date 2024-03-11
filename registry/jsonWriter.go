@@ -63,7 +63,7 @@ func (jw *JsonWriter) Outdent() {
 
 func (jw *JsonWriter) NextEntity() (*Entity, error) {
 	var err error
-	jw.Entity, err = readNextEntity(jw.results)
+	jw.Entity, err = readNextEntity(jw.info.tx, jw.results)
 	/*
 		pc, _, line, _ := runtime.Caller(1)
 		log.VPrintf(4, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)

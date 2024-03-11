@@ -83,9 +83,6 @@ func TestCreateGroup(t *testing.T) {
 }
 
 func TestGroupRequiredFields(t *testing.T) {
-	// TODO DUG required
-	return
-
 	reg := NewRegistry("TestGroupRequiredFields")
 	defer PassDeleteReg(t, reg)
 
@@ -99,11 +96,11 @@ func TestGroupRequiredFields(t *testing.T) {
 	})
 	xNoErr(t, err)
 
-	xHTTP(t, "PUT", "/dirs/d1", `{"description": "testing"}`, 400,
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{"description": "testing"}`, 400,
 		`Error processing group(d1): `+
 			`Required property "clireq" is missing`+"\n")
 
-	xHTTP(t, "PUT", "/dirs/d1", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{
   "description": "testing",
   "clireq": "testing2"
 }`, 201, `{

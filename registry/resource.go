@@ -62,7 +62,7 @@ func (r *Resource) Set(name string, val any) error {
 }
 
 func (r *Resource) JustSet(name string, val any) error {
-	log.VPrintf(4, "JustSet: r(%s).Set(%s,%v)", r.UID, name, val)
+	log.VPrintf(4, "JustSet: r(%s).JustSet(%s,%v)", r.UID, name, val)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
 		if name == ".latestVersionId" {
 			log.Printf("Shouldn't be setting .latestVersionId directly-1")
@@ -88,12 +88,39 @@ func (r *Resource) JustSet(name string, val any) error {
 	return v.JustSet(name, val)
 }
 
+func (r *Resource) SetSave(name string, val any) error {
+	log.VPrintf(4, "SetSave: r(%s).SetSave(%s,%v)", r.UID, name, val)
+	if name[0] == '.' { // Force it to be on the Resource, not latest Version
+		if name == ".latestVersionId" {
+			log.Printf("Shouldn't be setting .latestVersionId directly-1")
+			panic("can't set .latestversionid directly")
+		}
+		return r.Entity.SetSave(name[1:], val)
+	}
+
+	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
+		if name == "latestversionid" {
+			log.Printf("Shouldn't be setting .latestVersionId directly-2")
+			panic("can't set .latestversionid directly")
+		}
+		return r.Entity.SetSave(name, val)
+	}
+
+	v, err := r.GetLatest()
+	if err != nil {
+		panic(err)
+	}
+
+	v.SkipEpoch = r.SkipEpoch
+	return v.SetSave(name, val)
+}
+
 // Maybe replace error with a panic? same for other finds??
 func (r *Resource) FindVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: FindVersion(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindVersion")
 
-	ent, err := RawEntityFromPath(r.Group.Registry.DbSID,
+	ent, err := RawEntityFromPath(r.tx, r.Group.Registry.DbSID,
 		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+id)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Version %q: %s", id, err)
@@ -122,7 +149,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	if r.Get("latestversionid") == newLatest.UID {
 		return nil
 	}
-	return r.Entity.Set("latestversionid", newLatest.UID)
+	return r.Entity.SetSave("latestversionid", newLatest.UID)
 }
 
 func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
@@ -148,7 +175,7 @@ func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
 			nextID++
 
 			if v == nil {
-				r.Set(".#nextVersionID", nextID)
+				r.SetSave(".#nextVersionID", nextID)
 				break
 			}
 		}
@@ -165,10 +192,12 @@ func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
 
 	v = &Version{
 		Entity: Entity{
-			RegistrySID: r.RegistrySID,
-			DbSID:       NewUUID(),
-			Plural:      "versions",
-			UID:         id,
+			tx: r.tx,
+
+			Registry: r.Registry,
+			DbSID:    NewUUID(),
+			Plural:   "versions",
+			UID:      id,
 
 			Level:    3,
 			Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
@@ -177,7 +206,7 @@ func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
 		Resource: r,
 	}
 
-	err = DoOne(`
+	err = DoOne(r.tx, `
         INSERT INTO Versions(SID, UID, ResourceSID, Path, Abstract)
         VALUES(?,?,?,?,?)`,
 		v.DbSID, id, r.DbSID,
@@ -190,11 +219,11 @@ func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
 	}
 
 	v.SkipEpoch = true
-	if err = v.Set("id", id); err != nil {
+	if err = v.SetSave("id", id); err != nil {
 		return nil, err
 	}
 
-	if err = v.Set("epoch", 1); err != nil {
+	if err = v.SetSave("epoch", 1); err != nil {
 		return nil, err
 	}
 
@@ -216,5 +245,5 @@ func (r *Resource) Delete() error {
 	log.VPrintf(3, ">Enter: Resource.Delete(%s)", r.UID)
 	defer log.VPrintf(3, "<Exit: Resource.Delete")
 
-	return DoOne(`DELETE FROM Resources WHERE SID=?`, r.DbSID)
+	return DoOne(r.tx, `DELETE FROM Resources WHERE SID=?`, r.DbSID)
 }

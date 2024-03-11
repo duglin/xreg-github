@@ -91,6 +91,8 @@ func TestBasicTypes(t *testing.T) {
 
 	dir2, _ := reg.AddGroup("dirs", "dir2")
 
+	reg.Commit()
+
 	// /dirs/d1/f1/v1
 
 	type Prop struct {

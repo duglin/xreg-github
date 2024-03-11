@@ -46,7 +46,7 @@ func main() {
 
 	// testing
 	if 0 == 1 {
-		reg, err := registry.NewRegistry("test")
+		reg, err := registry.NewRegistry(nil, "test")
 		ErrFatalf(err)
 		gm, err := reg.Model.AddGroupModel("dirs", "dir")
 		ErrFatalf(err)
@@ -63,7 +63,7 @@ func main() {
 
 	// e-testing
 
-	reg, err := registry.FindRegistry("SampleRegistry")
+	reg, err := registry.FindRegistry(nil, "SampleRegistry")
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
@@ -89,6 +89,6 @@ func main() {
 		}
 	}
 
-	registry.DefaultReg = reg
+	registry.DefaultRegDbSID = reg.DbSID
 	registry.NewServer(Port).Serve()
 }

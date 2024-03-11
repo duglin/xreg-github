@@ -29,8 +29,10 @@ func TestResourceContents(t *testing.T) {
 	rm.AddAttr("dec2", registry.DECIMAL)
 	rm.AddAttr("dec3", registry.DECIMAL)
 
-	d1, _ := reg.AddGroup("dirs", "d1")
-	f1, _ := d1.AddResource("files", "f1", "v1")
+	d1, err := reg.AddGroup("dirs", "d1")
+	xNoErr(t, err)
+	f1, err := d1.AddResource("files", "f1", "v1")
+	xNoErr(t, err)
 
 	f1.Set("name", "file1")
 	f1.Set("labels.str1", "foo")
@@ -54,14 +56,14 @@ func TestResourceContents(t *testing.T) {
 	f1.Refresh()
 	xCheckEqual(t, "", NotNilString(f1.Get("#resource")), "Hello there")
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code:    200,
 		URL:     "dirs/d1/files/f1",
 		Body:    "Hello there",
 		Headers: nil,
 	})
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code:    200,
 		URL:     "dirs/d1/files/f1/versions/v1",
 		Body:    "Hello there",
@@ -71,14 +73,14 @@ func TestResourceContents(t *testing.T) {
 	v2, _ := f1.AddVersion("v2", true)
 	v2.Set("#resource", "This is version 2")
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code:    200,
 		URL:     "dirs/d1/files/f1",
 		Body:    "This is version 2",
 		Headers: nil,
 	})
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code:    200,
 		URL:     "dirs/d1/files/f1/versions/v2",
 		Body:    "This is version 2",
@@ -88,14 +90,14 @@ func TestResourceContents(t *testing.T) {
 	v3, _ := f1.AddVersion("v3", true)
 	v3.Set("#resourceProxyURL", "http://example.com")
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code:    200,
 		URL:     "dirs/d1/files/f1",
 		Body:    "*Example Domain", // contains
 		Headers: []string{"Content-Type: text/html"},
 	})
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code:    200,
 		URL:     "dirs/d1/files/f1/versions/v3",
 		Body:    "*Example Domain", // contains
@@ -105,7 +107,7 @@ func TestResourceContents(t *testing.T) {
 	v4, _ := f1.AddVersion("v4", true)
 	v4.Set("#resourceURL", "http://example.com")
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code: 303,
 		URL:  "dirs/d1/files/f1",
 		Body: "",
@@ -115,7 +117,7 @@ func TestResourceContents(t *testing.T) {
 		},
 	})
 
-	CompareContentMeta(t, &Test{
+	CompareContentMeta(t, reg, &Test{
 		Code: 303,
 		URL:  "dirs/d1/files/f1/versions/v4",
 		Body: "",
@@ -134,22 +136,27 @@ type Test struct {
 	Headers []string
 }
 
-func CompareContentMeta(t *testing.T, test *Test) {
+func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
+	t.Helper()
+	xNoErr(t, reg.Commit())
+
 	u := test.URL
 
 	t.Logf("Testing: URL: %s", test.URL)
 	metaResp, err := http.Get("http://localhost:8181/" + u + "?meta")
 	xNoErr(t, err)
 	if metaResp == nil {
-		return
+		t.Fatalf("metaResp is nil")
 	}
 	metaBody, err := io.ReadAll(metaResp.Body)
 	xNoErr(t, err)
+	if metaResp.StatusCode/100 != 2 {
+		t.Fatalf("Bad response: %s\n%s", metaResp.Status, metaBody)
+	}
 	metaProps := map[string]any{}
 	err = json.Unmarshal(metaBody, &metaProps)
-	xNoErr(t, err)
 	if err != nil {
-		t.Logf("JSON: %s", string(metaBody))
+		t.Fatalf("Err: %s\n Body:\n%s", err, string(metaBody))
 	}
 
 	client := &http.Client{

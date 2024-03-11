@@ -26,17 +26,19 @@ func TestCreateRegistry(t *testing.T) {
 	xCheckGet(t, reg, "xxx/yyy", "Unknown Group type: xxx\n")
 
 	// make sure dups generate an error
-	reg2, err := registry.NewRegistry("TestCreateRegistry")
+	reg2, err := registry.NewRegistry(nil, "TestCreateRegistry")
+	defer reg2.Rollback()
 	if err == nil || reg2 != nil {
 		t.Errorf("Creating same named registry worked!")
 	}
 
 	// make sure it was really created
-	reg3, err := registry.FindRegistry("TestCreateRegistry")
+	reg3, err := registry.FindRegistry(nil, "TestCreateRegistry")
+	defer reg3.Rollback()
 	xCheck(t, err == nil && reg3 != nil,
 		"Finding TestCreateRegistry should have worked")
 
-	reg3, err = registry.NewRegistry("")
+	reg3, err = registry.NewRegistry(nil, "")
 	defer PassDeleteReg(t, reg3)
 	xNoErr(t, err)
 	xCheck(t, reg3 != nil, "reg3 shouldn't be nil")
@@ -52,14 +54,17 @@ func TestCreateRegistry(t *testing.T) {
 }
 
 func TestDeleteRegistry(t *testing.T) {
-	reg, err := registry.NewRegistry("TestDeleteRegistry")
+	reg, err := registry.NewRegistry(nil, "TestDeleteRegistry")
+	defer reg.Rollback()
 	xNoErr(t, err)
 	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	err = reg.Delete()
 	xNoErr(t, err)
+	reg.Commit()
 
-	reg, err = registry.FindRegistry("TestDeleteRegistry")
+	reg, err = registry.FindRegistry(nil, "TestDeleteRegistry")
+	defer reg.Rollback()
 	xCheck(t, reg == nil && err == nil,
 		"Finding TestCreateRegistry found one but shouldn't")
 }
@@ -78,15 +83,18 @@ func TestRefreshRegistry(t *testing.T) {
 }
 
 func TestFindRegistry(t *testing.T) {
-	reg, err := registry.FindRegistry("TestFindRegistry")
+	reg, err := registry.FindRegistry(nil, "TestFindRegistry")
+	defer reg.Rollback()
 	xCheck(t, reg == nil && err == nil,
 		"Shouldn't have found TestFindRegistry")
 
-	reg, err = registry.NewRegistry("TestFindRegistry")
+	reg, err = registry.NewRegistry(nil, "TestFindRegistry")
+	defer reg.Commit()
 	defer reg.Delete() // PassDeleteReg(t, reg)
 	xNoErr(t, err)
 
-	reg2, err := registry.FindRegistry(reg.UID)
+	reg2, err := registry.FindRegistry(nil, reg.UID)
+	defer reg2.Rollback()
 	xNoErr(t, err)
 	xJSONCheck(t, reg2, reg)
 }
@@ -132,13 +140,16 @@ func TestRegistryRequiredFields(t *testing.T) {
 	})
 	xNoErr(t, err)
 
+	// Commit before we call Set below otherwise the Tx will be rolled back
+	reg.Commit()
+
 	err = reg.Set("description", "testing")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 
 	xNoErr(t, reg.JustSet("clireq", "testing2"))
 	xNoErr(t, reg.Set("description", "testing"))
 
-	xHTTP(t, "GET", "/", "", 200, `{
+	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "0.5",
   "id": "TestRegistryRequiredFields",
   "epoch": 1,

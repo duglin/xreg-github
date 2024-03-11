@@ -60,7 +60,11 @@ TODOs:
 - add support for hasdocument
 - add support for resource vs resourcebase64 - return what was on the PUT
 - add support for "default" in the model
+- see if we can get rid of/clean-up the FindRegistry stuff
+- need to decide on the best tx isolation level
+- test to ensure we can do 2 tx at the same time
 
 - test for required fields (singular/complex) at all level
   - esp during creation time
-- transactions
+  - did group, continue with res, ver
+- move ParseRequest to http_stuff.go

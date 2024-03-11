@@ -12,13 +12,21 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
+	log "github.com/duglin/dlog"
 	"github.com/duglin/xreg-github/registry"
 )
 
 func TestMain(m *testing.M) {
+	if tmp := os.Getenv("VERBOSE"); tmp != "" {
+		if tmpInt, err := strconv.Atoi(tmp); err == nil {
+			log.SetVerbose(tmpInt)
+		}
+	}
+
 	// call flag.Parse() here if TestMain uses flags
 	registry.DeleteDB("testreg")
 	registry.CreateDB("testreg")
@@ -49,17 +57,33 @@ func TestMain(m *testing.M) {
 func NewRegistry(name string) *registry.Registry {
 	var err error
 
-	reg, _ := registry.FindRegistry(name)
+	reg, _ := registry.FindRegistry(nil, name)
 	if reg != nil {
 		reg.Delete()
+		reg.Commit()
 	}
 
-	registry.DefaultReg, err = registry.NewRegistry(name)
+	reg, err = registry.NewRegistry(nil, name)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating registry %q: %s", name, err)
 		os.Exit(1)
 	}
-	return registry.DefaultReg
+	reg.Commit()
+
+	registry.DefaultRegDbSID = reg.DbSID
+
+	/*
+		// Now find it again and start a new Tx
+		reg, err = registry.FindRegistry(nil, name)
+		if err != nil {
+			panic(err.Error())
+		}
+		if reg == nil {
+			panic("nil")
+		}
+	*/
+
+	return reg
 }
 
 func PassDeleteReg(t *testing.T, reg *registry.Registry) {
@@ -69,8 +93,9 @@ func PassDeleteReg(t *testing.T, reg *registry.Registry) {
 			// one registry in the DB at a time
 			reg.Delete()
 		}
-		registry.DefaultReg = nil
+		registry.DefaultRegDbSID = ""
 	}
+	reg.Commit() // should this be Rollback() ?
 }
 
 func Caller() string {
@@ -140,6 +165,8 @@ func xNoErr(t *testing.T, err error) {
 
 func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) {
 	t.Helper()
+	xNoErr(t, reg.Commit())
+
 	res, err := http.Get("http://localhost:8181/" + url)
 	xNoErr(t, err)
 
@@ -185,11 +212,11 @@ func xCheckEqual(t *testing.T, extra string, got string, exp string) {
 	if expMax > len(exp) {
 		expMax = len(exp)
 	}
-	t.Fatalf( /* Caller()+"\n%s"+ */
+	t.Fatalf( /* Caller()+"\n*/ "%s"+
 		"\nExpected:\n%s\nGot:\n%s\n"+
-			"Diff at(%d)[%x/%x]:\n"+
-			"Exp subset:\n%s\nGot:\n%s",
-		/*extra, */ exp, got, pos, exp[pos], got[pos],
+		"Diff at(%d)[%x/%x]:\n"+
+		"Exp subset:\n%s\nGot:\n%s",
+		extra, exp, got, pos, exp[pos], got[pos],
 		exp[pos:expMax], got[pos:])
 }
 

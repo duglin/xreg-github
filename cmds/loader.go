@@ -70,15 +70,17 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 	reader := tar.NewReader(gzf)
 
 	if reg == nil {
-		reg, err = registry.FindRegistry("API-Guru")
+		reg, err = registry.FindRegistry(nil, "API-Guru")
 		ErrFatalf(err)
 		if reg != nil {
+			reg.Rollback()
 			return reg
 		}
 
-		reg, err = registry.NewRegistry("API-Guru")
+		reg, err = registry.NewRegistry(nil, "API-Guru")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		// log.VPrintf(3, "New registry:\n%#v", reg)
+		defer reg.Rollback()
 
 		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
 		ErrFatalf(reg.Set("name", "APIs-guru Registry"))
@@ -188,6 +190,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 	}
 
 	ErrFatalf(reg.Model.Verify())
+	reg.Commit()
 	return reg
 }
 
@@ -195,14 +198,16 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	var err error
 	log.VPrintf(1, "Loading registry '%s'", "TestRegistry")
 	if reg == nil {
-		reg, err = registry.FindRegistry("TestRegistry")
+		reg, err = registry.FindRegistry(nil, "TestRegistry")
 		ErrFatalf(err)
 		if reg != nil {
+			reg.Rollback()
 			return reg
 		}
 
-		reg, err = registry.NewRegistry("TestRegistry")
+		reg, err = registry.NewRegistry(nil, "TestRegistry")
 		ErrFatalf(err, "Error creating new registry: %s", err)
+		defer reg.Rollback()
 
 		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
 		ErrFatalf(reg.Set("name", "Test Registry"))
@@ -275,6 +280,8 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(r.Set("labels.none", ""))
 
 	ErrFatalf(reg.Model.Verify())
+
+	reg.Commit()
 	return reg
 }
 
@@ -282,14 +289,16 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	var err error
 	log.VPrintf(1, "Loading registry '%s'", "Endpoints")
 	if reg == nil {
-		reg, err = registry.FindRegistry("Endpoints")
+		reg, err = registry.FindRegistry(nil, "Endpoints")
 		ErrFatalf(err)
 		if reg != nil {
+			reg.Rollback()
 			return reg
 		}
 
-		reg, err = registry.NewRegistry("Endpoints")
+		reg, err = registry.NewRegistry(nil, "Endpoints")
 		ErrFatalf(err, "Error creating new registry: %s", err)
+		defer reg.Rollback()
 
 		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
 		ErrFatalf(reg.Set("name", "Endpoints Registry"))
@@ -384,6 +393,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(g.Set("epoch", 1))
 
 	ErrFatalf(reg.Model.Verify())
+	reg.Commit()
 	return reg
 }
 
@@ -391,14 +401,16 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 	var err error
 	log.VPrintf(1, "Loading registry '%s'", "Messages")
 	if reg == nil {
-		reg, err = registry.FindRegistry("Messages")
+		reg, err = registry.FindRegistry(nil, "Messages")
 		ErrFatalf(err)
 		if reg != nil {
+			reg.Rollback()
 			return reg
 		}
 
-		reg, err = registry.NewRegistry("Messages")
+		reg, err = registry.NewRegistry(nil, "Messages")
 		ErrFatalf(err, "Error creating new registry: %s", err)
+		defer reg.Rollback()
 
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Messages Registry")
@@ -446,6 +458,7 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 	*/
 
 	ErrFatalf(reg.Model.Verify())
+	reg.Commit()
 	return reg
 }
 
@@ -453,14 +466,16 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 	var err error
 	log.VPrintf(1, "Loading registry '%s'", "Schemas")
 	if reg == nil {
-		reg, err = registry.FindRegistry("Schemas")
+		reg, err = registry.FindRegistry(nil, "Schemas")
 		ErrFatalf(err)
 		if reg != nil {
+			reg.Rollback()
 			return reg
 		}
 
-		reg, err = registry.NewRegistry("Schemas")
+		reg, err = registry.NewRegistry(nil, "Schemas")
 		ErrFatalf(err, "Error creating new registry: %s", err)
+		defer reg.Rollback()
 
 		reg.Set("#baseURL", "http://soaphub.org:8585/")
 		reg.Set("name", "Schemas Registry")
@@ -474,5 +489,6 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 	// End of model
 
 	ErrFatalf(reg.Model.Verify())
+	reg.Commit()
 	return reg
 }

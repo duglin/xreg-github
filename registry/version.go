@@ -23,6 +23,10 @@ func (v *Version) JustSet(name string, val any) error {
 	return v.Entity.JustSet(NewPPP(name), val)
 }
 
+func (v *Version) SetSave(name string, val any) error {
+	return v.Entity.SetSave(name, val)
+}
+
 func (v *Version) Delete(nextVersionID string) error {
 	log.VPrintf(3, ">Enter: Version.Delete(%s, %s)", v.UID, nextVersionID)
 	defer log.VPrintf(3, "<Exit: Version.Delete")
@@ -37,7 +41,7 @@ func (v *Version) Delete(nextVersionID string) error {
 	mustChange := (v.UID == currentLatest)
 
 	if nextVersionID == "" && mustChange {
-		results, err := Query(`
+		results, err := Query(v.tx, `
         SELECT UID FROM Versions
         WHERE ResourceSID=? AND UID<>?
         ORDER BY Counter DESC LIMIT 1`,
@@ -70,7 +74,7 @@ func (v *Version) Delete(nextVersionID string) error {
 		}
 	}
 
-	err = DoOne(`DELETE FROM Versions WHERE SID=?`, v.DbSID)
+	err = DoOne(v.tx, `DELETE FROM Versions WHERE SID=?`, v.DbSID)
 	if err != nil {
 		return fmt.Errorf("Error deleting Version %q: %s", v.UID, err)
 	}

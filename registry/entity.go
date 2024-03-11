@@ -19,12 +19,14 @@ type Object map[string]any
 // type Array []any
 
 type Entity struct {
-	RegistrySID string
-	DbSID       string // Entity's SID
-	Plural      string
-	UID         string         // Entity's UID
-	Object      map[string]any `json:"-"`
-	NewObject   map[string]any `json:"-"` // updated version, save() will store
+	tx *Tx
+
+	Registry  *Registry `json:"-"`
+	DbSID     string    // Entity's SID
+	Plural    string
+	UID       string         // Entity's UID
+	Object    map[string]any `json:"-"`
+	NewObject map[string]any `json:"-"` // updated version, save() will store
 
 	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
@@ -72,7 +74,7 @@ func (e *Entity) Get(path string) any {
 func (e *Entity) GetPP(pp *PropPath) any {
 	name := pp.DB()
 	if pp.Len() == 1 && pp.Top() == "#resource" {
-		results, err := Query(`
+		results, err := Query(e.tx, `
             SELECT Content
             FROM ResourceContents
             WHERE VersionSID=? OR
@@ -155,14 +157,14 @@ func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, error) {
 	return NestedGetProp(obj, pp.Next(), prev.Append(pp.First()))
 }
 
-func RawEntityFromPath(regID string, path string) (*Entity, error) {
+func RawEntityFromPath(tx *Tx, regID string, path string) (*Entity, error) {
 	log.VPrintf(3, ">Enter: RawEntityFromPath(%s)", path)
 	defer log.VPrintf(3, "<Exit: RawEntityFromPath")
 
 	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
 	//   0     1      2     3    4     5         6         7     8      9
 
-	results, err := Query(`
+	results, err := Query(tx, `
 		SELECT
             e.RegSID as RegSID,
             e.Level as Level,
@@ -183,7 +185,7 @@ func RawEntityFromPath(regID string, path string) (*Entity, error) {
 		return nil, err
 	}
 
-	return readNextEntity(results)
+	return readNextEntity(tx, results)
 }
 
 // Update the entity's Object - not the other props in Entity. Similar to
@@ -192,7 +194,7 @@ func (e *Entity) Refresh() error {
 	log.VPrintf(3, ">Enter: Refresh(%s)", e.DbSID)
 	defer log.VPrintf(3, "<Exit: Refresh")
 
-	results, err := Query(`
+	results, err := Query(e.tx, `
         SELECT PropName, PropValue, PropType
         FROM Props WHERE EntitySID=? `, e.DbSID)
 	defer results.Close()
@@ -218,19 +220,32 @@ func (e *Entity) Refresh() error {
 	return nil
 }
 
+// All in one: Set, Validate, Save to DB and Commit (or Rollback on error)
 func (e *Entity) Set(path string, val any) error {
+	log.VPrintf(3, ">Enter: Set(%s=%v)", path, val)
+	defer log.VPrintf(3, "<Exit Set")
+
+	err := e.SetSave(path, val)
+	Must(e.tx.Conditional(err))
+
+	return err
+}
+
+// Set, Validate and Save to DB but not Commit
+func (e *Entity) SetSave(path string, val any) error {
 	log.VPrintf(3, ">Enter: Set(%s=%v)", path, val)
 	defer log.VPrintf(3, "<Exit Set")
 
 	pp, err := PropPathFromUI(path)
 	if err == nil {
-		// Set and save
+		// Set, Validate and Save
 		err = e.SetPP(pp, val)
 	}
 
 	return err
 }
 
+// Set the prop in the Entity but don't Validate or Save to the DB
 func (e *Entity) JustSet(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: JustSet(%s=%v)", pp.UI(), val)
 	defer log.VPrintf(3, "<Exit: JustSet")
@@ -293,7 +308,7 @@ func (e *Entity) ValidateAndSave(isNew bool) error {
 	return e.Save()
 }
 
-// This is really just an interenal Setter used for testing.
+// This is really just an internal Setter used for testing.
 // It'sll set a property and then validate and save the entity in the DB
 func (e *Entity) SetPP(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: SetPP(%s: %s=%v)", e.DbSID, pp.UI(), val)
@@ -343,20 +358,21 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	}
 
 	PanicIf(e.DbSID == "", "DbSID should not be empty")
-	PanicIf(e.RegistrySID == "", "RegistrySID should not be empty")
+	PanicIf(e.Registry == nil, "Registry should not be nil")
 
 	// #resource is special and is saved in it's own table
 	// Need to explicitly set #resoure to nil to delete it.
 	if pp.Len() == 1 && pp.Top() == "#resource" {
 		if IsNil(val) {
-			err = Do(`DELETE FROM ResourceContents WHERE VersionSID=?`, e.DbSID)
+			err = Do(e.tx, `DELETE FROM ResourceContents WHERE VersionSID=?`,
+				e.DbSID)
 			return err
 		} else {
 			if val == "" {
 				return nil
 			}
 			// The actual contents
-			err = DoOneTwo(`
+			err = DoOneTwo(e.tx, `
                 REPLACE INTO ResourceContents(VersionSID, Content)
             	VALUES(?,?)`, e.DbSID, val)
 			if err != nil {
@@ -370,7 +386,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 
 	if IsNil(val) {
 		// Should never use this but keeping it just in case
-		err = Do(`DELETE FROM Props WHERE EntitySID=? and PropName=?`,
+		err = Do(e.tx, `DELETE FROM Props WHERE EntitySID=? and PropName=?`,
 			e.DbSID, name)
 	} else {
 		propType := GoToOurType(val)
@@ -404,11 +420,11 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 			dbVal = ""
 		}
 
-		err = DoOneTwo(`
+		err = DoOneTwo(e.tx, `
             REPLACE INTO Props(
               RegistrySID, EntitySID, PropName, PropValue, PropType)
             VALUES( ?,?,?,?,? )`,
-			e.RegistrySID, e.DbSID, name, dbVal, propType)
+			e.Registry.DbSID, e.DbSID, name, dbVal, propType)
 	}
 
 	if err != nil {
@@ -469,7 +485,7 @@ func (e *Entity) SetFromDBName(name string, val *string, propType string) error 
 }
 
 // Create a new Entity based on what's in the DB. Similar to Refresh()
-func readNextEntity(results *Result) (*Entity, error) {
+func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 	entity := (*Entity)(nil)
 
 	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
@@ -482,10 +498,12 @@ func readNextEntity(results *Result) (*Entity, error) {
 
 		if entity == nil {
 			entity = &Entity{
-				RegistrySID: NotNilString(row[0]),
-				DbSID:       NotNilString(row[3]),
-				Plural:      plural,
-				UID:         uid,
+				tx: tx,
+
+				Registry: tx.Registry,
+				DbSID:    NotNilString(row[3]),
+				Plural:   plural,
+				UID:      uid,
 
 				Level:    level,
 				Path:     NotNilString(row[8]),
@@ -552,12 +570,9 @@ var OrderedSpecProps = []*Attribute{
 		getFn:     nil,
 		checkFn: func(e *Entity) error {
 			if e.Object != nil {
-				oldID := any(e.Object["id"])
+				oldID := any(e.UID)
 				newID := any(e.NewObject["id"])
 
-				if IsNil(oldID) {
-					oldID = ""
-				}
 				if !IsNil(newID) && newID == "" {
 					return fmt.Errorf("ID can't be an empty string")
 				}
@@ -569,13 +584,6 @@ var OrderedSpecProps = []*Attribute{
 					return fmt.Errorf("Can't change the ID of an "+
 						"entity(%s->%s)", oldID, newID)
 				}
-				/*
-					v := e.NewObject["id"]
-					if !IsNil(v) && v != e.Object["id"] {
-						return fmt.Errorf("Can't change the ID of an "+
-							"entity(%v->%s)", e.Object["id"], v)
-					}
-				*/
 			}
 			return nil
 		},
@@ -937,7 +945,8 @@ func (e *Entity) Save() error {
 		delete(newObj, coll+"url")
 	}
 
-	if err := Do(`DELETE FROM Props WHERE EntitySID=?`, e.DbSID); err != nil {
+	err := Do(e.tx, `DELETE FROM Props WHERE EntitySID=?`, e.DbSID)
+	if err != nil {
 		log.Printf("Error deleting all props %s", err)
 		return fmt.Errorf("Error deleting all prop: %s", err)
 	}
@@ -1004,7 +1013,7 @@ func (e *Entity) Save() error {
 		return nil
 	}
 
-	err := traverse(NewPP(), newObj, e.NewObject)
+	err = traverse(NewPP(), newObj, e.NewObject)
 	if err == nil {
 		e.Object = newObj
 		e.NewObject = nil
@@ -1021,8 +1030,7 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 	if e.Level == 2 {
 		// On Resource grab latest Version attrs
 		paths := strings.Split(e.Path, "/")
-		reg, _ := FindRegistryBySID(e.RegistrySID)
-		group, _ := reg.FindGroup(paths[0], paths[1])
+		group, _ := e.Registry.FindGroup(paths[0], paths[1])
 		resource, _ := group.FindResource(paths[2], paths[3])
 		ver, _ := resource.GetLatest()
 
@@ -1064,14 +1072,11 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 }
 
 func (e *Entity) GetCollections() []string {
-	reg, err := FindRegistryBySID(e.RegistrySID)
-	PanicIf(reg == nil, "Can't find registry(%s): %s", e.RegistrySID, err)
-
 	paths := strings.Split(e.Abstract, string(DB_IN))
 	if len(paths) == 0 || paths[0] == "" {
-		return SortedKeys(reg.Model.Groups)
+		return SortedKeys(e.Registry.Model.Groups)
 	} else {
-		gm := reg.Model.Groups[paths[0]]
+		gm := e.Registry.Model.Groups[paths[0]]
 		PanicIf(gm == nil, "Can't find Group %q", paths[0])
 
 		if len(paths) == 1 {
@@ -1168,9 +1173,6 @@ func ConvertString(val string, toType string) (any, bool) {
 // no IfValues attributes yet as we need the current set of properties
 // to calculate that
 func (e *Entity) GetBaseAttributes() Attributes {
-	reg, err := FindRegistryBySID(e.RegistrySID)
-	Must(err)
-
 	attrs := Attributes{}
 	level := 0
 	singular := ""
@@ -1179,10 +1181,10 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	// TODO check for conflicts with xReg defined ones
 	paths := strings.Split(e.Abstract, string(DB_IN))
 	if len(paths) == 0 || paths[0] == "" {
-		maps.Copy(attrs, reg.Model.Attributes)
+		maps.Copy(attrs, e.Registry.Model.Attributes)
 	} else {
 		level = len(paths)
-		gm := reg.Model.Groups[paths[0]]
+		gm := e.Registry.Model.Groups[paths[0]]
 		PanicIf(gm == nil, "Can't find Group %q", paths[0])
 		if len(paths) == 1 {
 			maps.Copy(attrs, gm.Attributes)
