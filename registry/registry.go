@@ -653,6 +653,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 			}
 			return fmt.Errorf("Can't find registry %q%s", name, extra)
 		}
+		info.tx.Rollback()
+		info.tx.Registry = reg
 		info.Registry = reg
 	}
 
