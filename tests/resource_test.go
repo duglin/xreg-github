@@ -116,3 +116,37 @@ func TestResourceSet(t *testing.T) {
 	xJSONCheck(t, vt.Get("ext1"), "someext")
 	xJSONCheck(t, vt.Get("ext2"), 123)
 }
+
+func TestResourceRequiredFields(t *testing.T) {
+	reg := NewRegistry("TestResourceRequiredFields")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
+	_, err := rm.AddAttribute(&registry.Attribute{
+		Name:           "clireq",
+		Type:           registry.STRING,
+		ClientRequired: true,
+		ServerRequired: true,
+	})
+	xNoErr(t, err)
+
+	group, err := reg.AddGroup("dirs", "d1")
+	xNoErr(t, err)
+	reg.Commit()
+
+	_, err = group.AddResource("files", "f1", "v1")
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	reg.Rollback()
+
+	f1, err := group.AddResource("files", "f1", "v1",
+		registry.Object{"clireq": "test"})
+	xNoErr(t, err)
+	reg.Commit()
+
+	err = f1.Set("clireq", nil)
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+
+	err = f1.Set("clireq", "again")
+	xNoErr(t, err)
+}

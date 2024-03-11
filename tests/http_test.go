@@ -4432,7 +4432,25 @@ func TestHTTPRequiredFields(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
-		Name:           "clireq",
+		Name:           "clireq1",
+		Type:           registry.STRING,
+		ClientRequired: true,
+		ServerRequired: true,
+	})
+	xNoErr(t, err)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	_, err = gm.AddAttribute(&registry.Attribute{
+		Name:           "clireq2",
+		Type:           registry.STRING,
+		ClientRequired: true,
+		ServerRequired: true,
+	})
+	xNoErr(t, err)
+
+	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name:           "clireq3",
 		Type:           registry.STRING,
 		ClientRequired: true,
 		ServerRequired: true,
@@ -4443,10 +4461,11 @@ func TestHTTPRequiredFields(t *testing.T) {
 	// be rolled back
 	reg.Commit()
 
+	// Registry itself
 	err = reg.Set("description", "testing")
-	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	xCheckErr(t, err, "Required property \"clireq1\" is missing")
 
-	xNoErr(t, reg.JustSet("clireq", "testing"))
+	xNoErr(t, reg.JustSet("clireq1", "testing1"))
 	xNoErr(t, reg.Set("description", "testing"))
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
@@ -4455,8 +4474,166 @@ func TestHTTPRequiredFields(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "testing",
-  "clireq": "testing"
+  "clireq1": "testing1",
+
+  "dirscount": 0,
+  "dirsurl": "http://localhost:8181/dirs"
 }
 `)
 
+	// Groups
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{"description": "testing"}`, 400,
+		`Error processing group(d1): `+
+			`Required property "clireq2" is missing`+"\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{
+  "description": "testing",
+  "clireq2": "testing2"
+}`, 201, `{
+  "id": "d1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1",
+  "description": "testing",
+  "clireq2": "testing2",
+
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
+}
+`)
+
+	// Resources
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta",
+		`{"description": "testing"}`, 400,
+		`Error processing resource(f1): `+
+			`Required property "clireq3" is missing`+"\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta", `{
+  "description": "testingdesc3",
+  "clireq3": "testing3"
+}`, 201, `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+  "description": "testingdesc3",
+  "clireq3": "testing3",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "",
+		URL:    "/dirs/d1/files/f2",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"xRegistry-description: testingdesc",
+		},
+
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Error processing resource(f2): Required property "clireq3" is missing
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "",
+		URL:    "/dirs/d1/files/f2?meta",
+		Method: "PUT",
+		ReqBody: `{
+  "description": "testingdesc2"
+}`,
+
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Error processing resource(f2): Required property "clireq3" is missing
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "",
+		URL:    "/dirs/d1/files/f2",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"xRegistry-description: desctesting",
+			"xRegistry-clireq3: testing3",
+		},
+
+		Code: 201,
+		ResHeaders: []string{
+			"xRegistry-clireq3: testing3",
+			"xRegistry-description: desctesting",
+			"xRegistry-epoch: 1",
+			"xRegistry-id: f2",
+			"xRegistry-latestversionid: 1",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f2/versions/1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2/versions",
+
+			"Content-Length: 0",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f2/versions/1",
+			"Location: http://localhost:8181/dirs/d1/files/f2",
+		},
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "",
+		URL:    "/dirs/d1/files/f2?meta",
+		Method: "PUT",
+		ReqBody: `{
+  "description": "desctesting3",
+  "clireq3": "testing4"
+}`,
+
+		Code: 200,
+		ResBody: `{
+  "id": "f2",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1/files/f2?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1?meta",
+  "description": "desctesting3",
+  "clireq3": "testing4",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "",
+		URL:    "/dirs/d1/files/f2/versions/1?meta",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"xRegistry-id: 1",
+			"xRegistry-description: desctesting",
+			"xRegistry-clireq3: null",
+		},
+		ReqBody: `{
+  "id": "1",
+  "description": "desc2"
+}
+`,
+
+		Code:    400,
+		ResBody: "Error processing resource: Required property \"clireq3\" is missing\n",
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "",
+		URL:    "/dirs/d1/files/f2/versions/1",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"xRegistry-id: 1",
+			"xRegistry-description: desctesting",
+			"xRegistry-clireq3: null",
+		},
+
+		Code:    400,
+		ResBody: "Error processing resource: Required property \"clireq3\" is missing\n",
+	})
 }

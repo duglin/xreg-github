@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"maps"
 	"net/http"
 	"os"
 	"reflect"
@@ -665,10 +664,7 @@ func init() {
 
 func HTTPPutPost(info *RequestInfo) error {
 	method := strings.ToUpper(info.OriginalRequest.Method)
-	IncomingObj := map[string]any{}
-	propsID := "" // ID from body or http header
 	isNew := false
-	isResourceNew := false
 
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
@@ -708,44 +704,39 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("POST not allowed on a version")
 	}
 
-	// Load-up the body
-	// //////////////////////////////////////////////////////
-	body, err := io.ReadAll(info.OriginalRequest.Body)
+	// Ok, now start to del with the incoming request
+	/////////////////////////////////////////////////
+
+	// First lets get the Resource's model to get the RESOURCE 'singular'
+	var resourceModel *ResourceModel
+	resSingular := ""
+	if info.GroupType != "" && info.ResourceType != "" {
+		groupModel := info.Registry.Model.Groups[info.GroupType]
+		resourceModel = groupModel.Resources[info.ResourceType]
+		resSingular = resourceModel.Singular
+	}
+
+	// Get the incoming Object either from the bdy or from xRegistry headers
+	IncomingObj, err := ExtractIncomingObject(info, resSingular)
 	if err != nil {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Error reading body: %s", err)
-	}
-	if len(body) == 0 {
-		body = nil
+		return err
 	}
 
-	// Reg or Group or res/ver+?meta, so parse body as Object
-	// //////////////////////////////////////////////////////
-	if len(info.Parts) < 3 || info.ShowMeta {
-		if strings.TrimSpace(string(body)) == "" {
-			body = []byte("{}") // Be forgiving
+	// ID should be in the body so grab it for later use
+	propsID := ""
+	if v, ok := IncomingObj["id"]; ok {
+		if reflect.ValueOf(v).Kind() == reflect.String {
+			propsID = NotNilString(&v)
 		}
-
-		// err = json.Unmarshal(body, &IncomingObj)
-		err = Unmarshal(body, &IncomingObj)
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("%s", err)
-		}
-
-		// ID should be in the body so grab it for later use
-		tmp := IncomingObj["id"]
-		if reflect.ValueOf(tmp).Kind() == reflect.String {
-			propsID = NotNilString(&tmp)
-		}
-	} else {
-		propsID = info.OriginalRequest.Header.Get("xRegistry-ID")
 	}
+
+	// Walk the PATH and process things
+	///////////////////////////////////
 
 	// URL: /
 	// ////////////////////////////////////////////////////////////////
 	if len(info.Parts) == 0 {
-		// MUST be PUT / - do PUT
+		// MUST be PUT /
 
 		info.Registry.Entity.NewObject = IncomingObj
 
@@ -765,6 +756,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	groupUID := info.GroupUID
 	if len(info.Parts) == 1 {
 		// must be POST /GROUPs
+		// Use the ID from the body if present
 		if groupUID = propsID; groupUID == "" {
 			groupUID = NewUUID()
 		}
@@ -782,6 +774,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		// Group doesn't exist so create it
 		isNew = true
 		if len(info.Parts) > 2 {
+			// Incoming object isn't for the Group
 			group, err = info.Registry.AddGroup(info.GroupType, groupUID)
 		} else {
 			group, err = info.Registry.AddGroup(info.GroupType, groupUID,
@@ -795,15 +788,17 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if len(info.Parts) < 3 {
-		// Either /GROUPs or /GROUPs/gID - do PUT
-		// if !isNew {
-		group.NewObject = IncomingObj
+		// Either /GROUPs or /GROUPs/gID
 
-		if err = group.Entity.ValidateAndSave(isNew); err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Error processing group: %s", err)
+		if !isNew {
+			// Didn't create a new one, so update existing Group
+			group.NewObject = IncomingObj
+
+			if err = group.Entity.ValidateAndSave(isNew); err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("Error processing group: %s", err)
+			}
 		}
-		// }
 
 		info.Parts = []string{info.Parts[0], groupUID}
 		info.What = "Entity"
@@ -817,80 +812,155 @@ func HTTPPutPost(info *RequestInfo) error {
 		return HTTPGet(info)
 	}
 
+	// URL: /GROUPs/gID/RESOURCEs...
+	// ////////////////////////////////////////////////////////////////
+
+	// Some global vars
+	resource := (*Resource)(nil)
+	version := (*Version)(nil)
+	resourceUID := info.ResourceUID
+	versionUID := info.VersionUID
+
+	isResource := false // is entity we're pointing to a Resource or not?
+	isResourceNew := false
+
 	// Do Resources and Versions at the same time
 	// URL: /GROUPs/gID/RESOURCEs
 	// URL: /GROUPs/gID/RESOURCEs/rID
 	// URL: /GROUPs/gID/RESOURCEs/rID/versions[/vID]
 	// ////////////////////////////////////////////////////////////////
 
-	var resourceModel *ResourceModel
-	resSingular := ""
-
-	if info.GroupType != "" {
-		groupModel := info.Registry.Model.Groups[info.GroupType]
-
-		if info.ResourceType != "" {
-			resourceModel = groupModel.Resources[info.ResourceType]
-			resSingular = resourceModel.Singular
-		}
-	}
-
-	resource := (*Resource)(nil)
-	version := (*Version)(nil)
-	resourceUID := info.ResourceUID
-	versionUID := info.VersionUID
+	// This assumes that in the end we'll be dealing with a Version.
+	// If it's new then IncomingObj will be used during the create(), else
+	// IncomingObj will be used for an update in common code after all of the
+	// "if" statements
 
 	if len(info.Parts) == 3 {
-		// must be: POST /GROUPs/gID/RESOURCEs
+		// GROUPs/gID/RESOURCEs - must be POST
+
+		// No ID provided so generate one
 		if resourceUID = propsID; resourceUID == "" {
 			resourceUID = NewUUID()
 		}
+
 		isNew = true
 		isResourceNew = true
+		isResource = true
+
+		delete(IncomingObj, "id") // id is for Res not Version so remove it
+
 		// Create a new Resource and it's first/only/latest Version
 		resource, err = group.AddResource(info.ResourceType, resourceUID,
-			versionUID) // vID should be ""
+			versionUID, IncomingObj) // vID should be ""
 		if err == nil {
 			version, err = resource.GetLatest()
 		}
-	} else {
-		// must be PUT/POST /GROUPs/gID/RESOURCEs/rID...
+	}
 
-		// Check metadata ID == ID in URL, only if doing a resource+PUT.
-		// Check here because later on we'll replace id with the version's
-		// ID and won't be able to check it in updateentity
-		if len(info.Parts) == 4 && method == "PUT" &&
-			propsID != "" && propsID != resourceUID {
+	if len(info.Parts) > 3 {
+		// GROUPs/gID/RESOURCEs/rID...
 
+		resource, err = group.FindResource(info.ResourceType, resourceUID)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error finding resource(%s): %s", resourceUID, err)
+		}
+		// Must(err)
+	}
+
+	if len(info.Parts) == 4 && method == "PUT" {
+		// PUT GROUPs/gID/RESOURCEs/rID
+
+		if propsID != "" && propsID != resourceUID {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Metadata id(%s) doesn't match ID in "+
 				"URL(%s)", propsID, resourceUID)
 		}
 
-		resource, err = group.FindResource(info.ResourceType, resourceUID)
-		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf("Error processing resource(%s): %s", resourceUID, err)
+		if resource != nil {
+			version, err = resource.GetLatest()
+
+			if !info.ShowMeta {
+				// Copy existing props into IncomingObj w/o overwriting
+				CopyNewProps(IncomingObj, version.Object)
+			}
+			isResource = true
+
+			// Fall thru and we'll update the version later on, check err too
 		}
 
 		if resource == nil {
-			if versionUID == "" &&
-				((len(info.Parts) == 4 && method == "POST") ||
-					(len(info.Parts) == 5)) {
-
-				// No vID in URL, grab from props. If missing, auto-generate
-				versionUID = propsID
+			// Create a new Resource and it's first/only/latest Version
+			resource, err = group.AddResource(info.ResourceType, resourceUID,
+				versionUID, IncomingObj) // vID is ""
+			if err == nil {
+				version, err = resource.GetLatest()
 			}
 
 			isNew = true
 			isResourceNew = true
-			// Create a new Resource and it's first/only/latest Version
+		}
+
+		// Fall thru-we'll update the version with IncomingObj below & check err
+	}
+
+	if (len(info.Parts) == 4 && method == "POST") || len(info.Parts) == 5 {
+		// POST GROUPs/gID/RESOURCEs/rID, POST GROUPs/gID/RESOURCEs/rID/versions
+
+		if resource == nil {
+			// Implicitly create the resource
+			versionUID = propsID
+
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
-				versionUID)
+				versionUID, IncomingObj) // no IncomingObj
+			isNew = true
+			isResourceNew = true
 			if err == nil {
 				version, err = resource.GetLatest()
 			}
+		} else {
+			isNew = true
+			versionUID = propsID
+			version, err = resource.AddVersion(versionUID, false, IncomingObj)
 		}
+
+		// Fall thru and check err
+	}
+
+	if len(info.Parts) == 6 {
+		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID
+
+		if resource == nil {
+			// Implicitly create the resource
+			resource, err = group.AddResource(info.ResourceType, resourceUID,
+				versionUID, IncomingObj)
+			isNew = true
+			isResourceNew = true
+		}
+
+		if err == nil {
+			version, err = resource.FindVersion(versionUID)
+			if err != nil {
+				info.StatusCode = http.StatusInternalServerError
+				return fmt.Errorf("Error finding version(%s): %s", versionUID, err)
+			}
+			// Must(err)
+		}
+
+		if err == nil {
+			if version == nil {
+				// We have a Resource, so add a new Version based on IncomingObj
+				version, err = resource.AddVersion(versionUID, false,
+					IncomingObj)
+				isNew = true
+			} else {
+				if !info.ShowMeta {
+					CopyNewProps(IncomingObj, version.Object)
+				}
+			}
+		}
+
+		// Fall thru and check err
 	}
 
 	if err != nil || resource == nil {
@@ -898,172 +968,21 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("Error processing resource(%s): %s", resourceUID, err)
 	}
 
-	// No version means the resource already existed, find/create version
-	if version == nil {
-		if versionUID == "" && len(info.Parts) >= 4 && method == "POST" {
-			// must be: POST /groups/gID/resources/rID
-			//      or: POST /groups/gID/resources/rID/versions
-			// so any ID provided is for the Version.
-			// The len part of the "if" is probably not necessary
-			versionUID = propsID
-		}
-
-		if versionUID != "" {
-			// must be: XXX /groups/gID/resources/rID/versions/vID
-			version, err = resource.FindVersion(versionUID)
-		}
-
-		if err == nil && version == nil {
-			/* Commented out and made the "== 4" into a ">= 4" above
-			// Use the ID from the entity only if the URL pointed to a
-			// version and not the resource
-			if versionUID == "" && len(info.Parts) == 5 {
-				versionUID = propsID
-			}
-			*/
-			if len(info.Parts) == 4 && versionUID == "" && method == "PUT" {
-				// must be: PUT /groups/gID/resources/rID
-				// which means we're updating the latest Version, so get it.
-				// the versionUID == "" is probably not necessary
-				version, err = resource.GetLatest()
-			} else {
-				// else, we were asked to create a new Version.
-				// Don't set "latest" on the resource yet, we'll do that later
-				isNew = true
-				version, err = resource.AddVersion(versionUID, false)
-			}
-		}
-	}
-
 	if err != nil || version == nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
 	}
 
-	isResource := false
+	Must(err) // Previous IFs should stop everything
+
 	versionUID = version.UID
-	currObj := (map[string]any)(nil)
 
-	if len(info.Parts) >= 5 || (len(info.Parts) == 4 && method == "POST") {
-		// entity is a version not a resource
-		currObj = version.Object // Materialize(info)
-	} else {
-		// entity is a resource not a version
-		currObj = resource.Materialize(info)
-		isResource = true
-	}
-
-	if !info.ShowMeta {
-		// xReg metadata are in headers, so apply them as a patch over currObj
-		maps.Copy(IncomingObj, currObj)
-
-		// IncomingObj["#resource"] = body // save new body
-		IncomingObj[resSingular] = body // save new body
-
-		seenMaps := map[string]bool{}
-
-		for name, attr := range attrHeaders {
-			// TODO we may need some kind of "delete if missing" flag on
-			// each httpHeader attribute since some may want to have an
-			// explicit 'null' to be erased instead of just missing (eg patch)
-			if val := info.OriginalRequest.Header.Get(name); val != "" {
-				IncomingObj[attr.Name] = val
-			} else {
-				IncomingObj[attr.Name] = nil
-			}
-		}
-
-		for key, value := range info.OriginalRequest.Header {
-			key := strings.ToLower(key)
-
-			if !strings.HasPrefix(key, "xregistry-") {
-				continue
-			}
-
-			key = strings.TrimSpace(key[10:]) // remove xRegistry-
-			if key == "" {
-				continue
-			}
-
-			if key == resSingular || key == resSingular+"base64" {
-				return fmt.Errorf("'xRegistry-%s' isn't allowed as an HTTP "+
-					"header", key)
-			}
-
-			if key == resSingular+"url" || key == resSingular+"proxyurl" {
-				if len(body) != 0 {
-					return fmt.Errorf("'xRegistry-%s' isn't allowed "+
-						"if there's a body", key)
-				}
-
-				delete(IncomingObj, "#resourceProxyURL")
-				delete(IncomingObj, "#resourceURL")
-				delete(IncomingObj, "#resource")
-			}
-
-			val := any(value[0])
-			if val == "null" {
-				val = nil
-			}
-
-			// If there are -'s then it's a non-scalar, convert it.
-			// Note that any "-" after the 1st is part of the key name
-			// labels-keyName && labels-"key-name"
-			parts := strings.SplitN(key, "-", 2)
-			if len(parts) > 1 {
-				obj := IncomingObj
-
-				if _, ok := seenMaps[parts[0]]; !ok {
-					// First time we've seen this map, delete old stuff
-					delete(IncomingObj, parts[0])
-					seenMaps[parts[0]] = true
-				}
-
-				for i, part := range parts {
-					if i+1 == len(parts) {
-						obj[part] = val
-						continue
-					}
-
-					prop, ok := obj[part]
-					if !ok {
-						if val == nil {
-							break
-						}
-						tmpO := map[string]any{}
-						obj[part] = tmpO
-						obj = map[string]any(tmpO)
-					} else {
-						obj, ok = prop.(map[string]any)
-						if !ok {
-							return fmt.Errorf("HTTP header %q should "+
-								"reference a map", key)
-						}
-					}
-				}
-			} else {
-				if IsNil(val) {
-					if _, ok := seenMaps[key]; ok {
-						// Do nothing if we've seen keys for this map already.
-						// We don't want to erase any keys we just added.
-						// This is an edge/error? case where someone included
-						// xReg-label:null AND xreg-label-foo:foo - keep "foo"
-					} else {
-						delete(IncomingObj, key)
-					}
-				} else {
-					IncomingObj[key] = val
-				}
-			}
-		}
-	} else {
-		// if the incoming entity is a Resource (not Version) then delete the
-		// Versions collection stuff before continuing.
-		if isResource {
-			delete(IncomingObj, "versions")
-			delete(IncomingObj, "versionscount")
-			delete(IncomingObj, "versionsurl")
-		}
+	// if the incoming entity is a Resource (not Version) then delete the
+	// Versions collection stuff before continuing.
+	if isResource {
+		delete(IncomingObj, "versions")
+		delete(IncomingObj, "versionscount")
+		delete(IncomingObj, "versionsurl")
 	}
 
 	IncomingObj["id"] = version.UID
@@ -1619,4 +1538,164 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 
 	info.StatusCode = http.StatusNoContent
 	return nil
+}
+
+func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error) {
+	IncomingObj := map[string]any{}
+
+	// Load-up the body
+	// //////////////////////////////////////////////////////
+	body, err := io.ReadAll(info.OriginalRequest.Body)
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return nil, fmt.Errorf("Error reading body: %s", err)
+	}
+	if len(body) == 0 {
+		body = nil
+	}
+
+	if len(info.Parts) < 3 || info.ShowMeta { // body != nil {
+		if strings.TrimSpace(string(body)) == "" {
+			body = []byte("{}") // Be forgiving
+		}
+
+		// err = json.Unmarshal(body, &IncomingObj)
+		err = Unmarshal(body, &IncomingObj)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return nil, fmt.Errorf("%s", err)
+		}
+	}
+
+	// xReg metadata are in headers, so move them into IncomingObj. We'll
+	// copy over the existing properties latest once we knwo what entity
+	// we're dealing with
+	if len(info.Parts) > 2 && !info.ShowMeta {
+		// IncomingObj["#resource"] = body // save new body
+		IncomingObj[resSingular] = body // save new body
+
+		seenMaps := map[string]bool{}
+
+		for name, attr := range attrHeaders {
+			// TODO we may need some kind of "delete if missing" flag on
+			// each httpHeader attribute since some may want to have an
+			// explicit 'null' to be erased instead of just missing (eg patch)
+			if val := info.OriginalRequest.Header.Get(name); val != "" {
+				IncomingObj[attr.Name] = val
+			} else {
+				IncomingObj[attr.Name] = nil
+			}
+		}
+
+		for key, value := range info.OriginalRequest.Header {
+			key := strings.ToLower(key)
+
+			if !strings.HasPrefix(key, "xregistry-") {
+				continue
+			}
+
+			key = strings.TrimSpace(key[10:]) // remove xRegistry-
+			if key == "" {
+				continue
+			}
+
+			if key == resSingular || key == resSingular+"base64" {
+				return nil, fmt.Errorf("'xRegistry-%s' isn't allowed as "+
+					"an HTTP header", key)
+			}
+
+			if key == resSingular+"url" || key == resSingular+"proxyurl" {
+				if len(body) != 0 {
+					return nil, fmt.Errorf("'xRegistry-%s' isn't allowed "+
+						"if there's a body", key)
+				}
+
+				delete(IncomingObj, "#resourceProxyURL")
+				delete(IncomingObj, "#resourceURL")
+				delete(IncomingObj, "#resource")
+			}
+
+			val := any(value[0])
+			if val == "null" {
+				val = nil
+			}
+
+			// If there are -'s then it's a non-scalar, convert it.
+			// Note that any "-" after the 1st is part of the key name
+			// labels-keyName && labels-"key-name"
+			parts := strings.SplitN(key, "-", 2)
+			if len(parts) > 1 {
+				obj := IncomingObj
+
+				if _, ok := seenMaps[parts[0]]; !ok {
+					// First time we've seen this map, delete old stuff
+					delete(IncomingObj, parts[0])
+					seenMaps[parts[0]] = true
+				}
+
+				for i, part := range parts {
+					if i+1 == len(parts) {
+						obj[part] = val
+						continue
+					}
+
+					prop, ok := obj[part]
+					if !ok {
+						if val == nil {
+							break
+						}
+						tmpO := map[string]any{}
+						obj[part] = tmpO
+						obj = map[string]any(tmpO)
+					} else {
+						obj, ok = prop.(map[string]any)
+						if !ok {
+							return nil, fmt.Errorf("HTTP header %q should "+
+								"reference a map", key)
+						}
+					}
+				}
+			} else {
+				if IsNil(val) {
+					if _, ok := seenMaps[key]; ok {
+						// Do nothing if we've seen keys for this map already.
+						// We don't want to erase any keys we just added.
+						// This is an edge/error? case where someone included
+						// xReg-label:null AND xreg-label-foo:foo - keep "foo"
+					} else {
+						// delete(IncomingObj, key)
+						IncomingObj[key] = nil
+					}
+				} else {
+					IncomingObj[key] = val
+				}
+			}
+		}
+	}
+
+	return IncomingObj, nil
+}
+
+func CopyNewProps(tgt Object, from Object) {
+	// Copy all keys from "from" if there isn't that key in "tgt" already
+	for k, v := range from {
+		if _, ok := tgt[k]; !ok {
+			tgt[k] = v
+		}
+	}
+
+	/*
+		// for each key in tgt that has a value of "nil" delete it
+		nilKeys := []string{}
+
+		for k, v := range tgt {
+			if IsNil(v) {
+				nilKeys = append(nilKeys, k)
+			}
+		}
+
+		for _, k := range nilKeys {
+			delete(tgt, k)
+		}
+	*/
 }

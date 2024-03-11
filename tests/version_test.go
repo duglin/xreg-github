@@ -2,6 +2,8 @@ package tests
 
 import (
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 func TestCreateVersion(t *testing.T) {
@@ -239,4 +241,41 @@ func TestLatestVersion(t *testing.T) {
 	xNoErr(t, v4.Delete(""))
 	xNoErr(t, v5.Delete(""))
 	xCheckGet(t, reg, "dirs/d1/files/f1?meta", "Not found\n")
+}
+
+func TestVersionRequiredFields(t *testing.T) {
+	reg := NewRegistry("TestVersionRequiredFields")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
+	_, err := rm.AddAttribute(&registry.Attribute{
+		Name:           "clireq",
+		Type:           registry.STRING,
+		ClientRequired: true,
+		ServerRequired: true,
+	})
+	xNoErr(t, err)
+
+	group, err := reg.AddGroup("dirs", "d1")
+	xNoErr(t, err)
+
+	f1, err := group.AddResource("files", "f1", "v1",
+		registry.Object{"clireq": "test"})
+	xNoErr(t, err)
+	reg.Commit()
+
+	_, err = f1.AddVersion("v2", true)
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	reg.Rollback()
+
+	v1, err := f1.AddVersion("v2", true, registry.Object{"clireq": "test"})
+	xNoErr(t, err)
+	reg.Commit()
+
+	err = v1.Set("clireq", nil)
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+
+	err = v1.Set("clireq", "again")
+	xNoErr(t, err)
 }

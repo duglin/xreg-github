@@ -87,7 +87,6 @@ func TestGroupRequiredFields(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
-
 	_, err := gm.AddAttribute(&registry.Attribute{
 		Name:           "clireq",
 		Type:           registry.STRING,
@@ -95,21 +94,19 @@ func TestGroupRequiredFields(t *testing.T) {
 		ServerRequired: true,
 	})
 	xNoErr(t, err)
+	reg.Commit()
 
-	xHTTP(t, reg, "PUT", "/dirs/d1", `{"description": "testing"}`, 400,
-		`Error processing group(d1): `+
-			`Required property "clireq" is missing`+"\n")
+	_, err = reg.AddGroup("dirs", "d1")
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	reg.Rollback()
 
-	xHTTP(t, reg, "PUT", "/dirs/d1", `{
-  "description": "testing",
-  "clireq": "testing2"
-}`, 201, `{
-  "id": "d1",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1",
-  "description": "testing",
-  "clireq": "testing2"
-}
-`)
+	g1, err := reg.AddGroup("dirs", "d1", registry.Object{"clireq": "test"})
+	xNoErr(t, err)
+	reg.Commit()
 
+	err = g1.Set("clireq", nil)
+	xCheckErr(t, err, "Required property \"clireq\" is missing")
+
+	err = g1.Set("clireq", "again")
+	xNoErr(t, err)
 }

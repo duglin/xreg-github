@@ -45,7 +45,7 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	return &Resource{Entity: *ent, Group: g}, nil
 }
 
-func (g *Group) AddResource(rType string, id string, vID string) (*Resource, error) {
+func (g *Group) AddResource(rType string, id string, vID string, objs ...Object) (*Resource, error) {
 	log.VPrintf(3, ">Enter: AddResource(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: AddResource")
 
@@ -103,16 +103,18 @@ func (g *Group) AddResource(rType string, id string, vID string) (*Resource, err
 		return nil, err
 	}
 
-	err = r.SetSave(".id", r.UID)
+	err = r.JustSet(".id", r.UID)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO See if this should be JustSet and then call Save() after AddVer?
 	err = r.SetSave(".#nextVersionID", 1)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = r.AddVersion(vID, true)
+	_, err = r.AddVersion(vID, true, objs...)
 	if err != nil {
 		return nil, err
 	}

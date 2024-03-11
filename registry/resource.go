@@ -152,7 +152,7 @@ func (r *Resource) SetLatest(newLatest *Version) error {
 	return r.Entity.SetSave("latestversionid", newLatest.UID)
 }
 
-func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
+func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version, error) {
 	log.VPrintf(3, ">Enter: AddVersion%s)", id)
 	defer log.VPrintf(3, "<Exit: AddVersion")
 
@@ -175,7 +175,7 @@ func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
 			nextID++
 
 			if v == nil {
-				r.SetSave(".#nextVersionID", nextID)
+				r.JustSet(".#nextVersionID", nextID)
 				break
 			}
 		}
@@ -219,9 +219,18 @@ func (r *Resource) AddVersion(id string, latest bool) (*Version, error) {
 	}
 
 	v.SkipEpoch = true
-	if err = v.SetSave("id", id); err != nil {
+	if err = v.JustSet("id", id); err != nil {
 		return nil, err
 	}
+
+	for _, obj := range objs {
+		for key, val := range obj {
+			if err = v.JustSet(key, val); err != nil {
+				return nil, err
+			}
+		}
+	}
+	v.ConvertStrings()
 
 	if err = v.SetSave("epoch", 1); err != nil {
 		return nil, err

@@ -100,6 +100,25 @@ func (e *Entity) GetPP(pp *PropPath) any {
 		return (*(row[0])).([]byte)
 	}
 
+	/*
+		// At some point we may decide we need to check the NewObject map
+		// for the value - eg. if the resource hasn't been saved yet.
+		var val any
+		if e.NewObject != nil {
+			// TODO check this - what if it got nil'd out??  DUG
+			val, _ = ObjectGetProp(e.NewObject, pp)
+			if IsNil(val) {
+				val, _ = ObjectGetProp(e.Object, pp)
+			}
+		} else {
+			val, _ = ObjectGetProp(e.Object, pp)
+		}
+	*/
+
+	// An error from ObjectGetProp is ignored because if they tried to
+	// go into something incorrect/bad we should just return 'nil'.
+	// This may not be the best choice in the long-run - which in case we
+	// should return the 'error'
 	val, _ := ObjectGetProp(e.Object, pp)
 	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, name, val)
 	return val
@@ -264,15 +283,17 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 
 	// Cheat a little just to make caller's life easier by converting
 	// empty structs and maps to be of the type we like (meaning 'any's)
-	if val == struct{}{} {
-		val = map[string]any{}
-	}
-	valValue := reflect.ValueOf(val)
-	if valValue.Kind() == reflect.Slice && valValue.Len() == 0 {
-		val = []any{}
-	}
-	if valValue.Kind() == reflect.Map && valValue.Len() == 0 {
-		val = map[string]any{}
+	if !IsNil(val) {
+		if val == struct{}{} {
+			val = map[string]any{}
+		}
+		valValue := reflect.ValueOf(val)
+		if valValue.Kind() == reflect.Slice && valValue.Len() == 0 {
+			val = []any{}
+		}
+		if valValue.Kind() == reflect.Map && valValue.Len() == 0 {
+			val = map[string]any{}
+		}
 	}
 	// end of cheat
 
@@ -294,6 +315,11 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 func (e *Entity) ValidateAndSave(isNew bool) error {
 	log.VPrintf(3, ">Enter: ValidateAndSave")
 	defer log.VPrintf(3, "<Exit: ValidateAndSave")
+
+	// If nothing changed, just exit
+	// if e.NewObject == nil {
+	// return nil
+	// }
 
 	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
 
@@ -1319,6 +1345,9 @@ func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
 }
 
 func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, error) {
+	log.VPrintf(4, ">Enter: MaterializeProp(%s)", pp.UI())
+	log.VPrintf(4, "<Exit: MaterializeProp")
+
 	// current is existing value, used for adding to maps/arrays
 	if pp == nil {
 		return val, nil
@@ -1385,6 +1414,11 @@ func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, e
 // are not worth cheching since the server generated them.
 // This is mainly used for validating input from a client
 func (e *Entity) Validate() error {
+	if e.Level == 2 {
+		// Skip Resources // TODO DUG - would prefer to not do this
+		return nil
+	}
+
 	// Don't touch what was passed in
 	dupObj := maps.Clone(e.NewObject)
 
@@ -1533,7 +1567,8 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				continue
 			}
 
-			if attr.ClientRequired && !ok { // Required but not present
+			// Required but not present - note that nil means will be deleted
+			if attr.ClientRequired && (!ok || IsNil(val)) {
 				return fmt.Errorf("Required property %q is missing",
 					path.P(key).UI())
 			}

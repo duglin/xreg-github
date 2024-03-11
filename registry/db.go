@@ -404,6 +404,7 @@ func doCount(tx *Tx, cmd string, args ...interface{}) (int, error) {
 	if err != nil {
 		query := SubQuery(cmd, args)
 		log.Printf("doCount:Error DB(%s)->%s\n", query, err)
+		ShowStack()
 		return 0, err
 	}
 
@@ -424,7 +425,10 @@ func DoOne(tx *Tx, cmd string, args ...interface{}) error {
 
 	if count != 1 {
 		query := SubQuery(cmd, args)
+		ShowStack()
 		log.Printf("DoOne:Error DB(%s) didn't change exactly 1 row(%d)",
+			query, count)
+		return fmt.Errorf("DoOne:Error DB(%s) didn't change exactly 1 row(%d)",
 			query, count)
 	}
 
@@ -439,7 +443,10 @@ func DoZeroOne(tx *Tx, cmd string, args ...interface{}) error {
 
 	if count != 0 && count != 1 {
 		query := SubQuery(cmd, args)
+		ShowStack()
 		log.Printf("DoZeroOne:Error DB(%s) didn't change exactly 0/1 rows(%d)",
+			query, count)
+		return fmt.Errorf("DoZeroOne:Error DB(%s) didn't change exactly 0/1 rows(%d)",
 			query, count)
 	}
 
@@ -454,7 +461,10 @@ func DoOneTwo(tx *Tx, cmd string, args ...interface{}) error {
 
 	if count != 1 && count != 2 {
 		query := SubQuery(cmd, args)
+		ShowStack()
 		log.Printf("DoOneTwo:Error DB(%s) didn't change exactly 1/2 rows(%d)",
+			query, count)
+		return fmt.Errorf("DoOneTwo:Error DB(%s) didn't change exactly 1/2 rows(%d)",
 			query, count)
 	}
 
@@ -469,9 +479,11 @@ func DoZeroTwo(tx *Tx, cmd string, args ...interface{}) error {
 
 	if count != 0 && count != 2 {
 		query := SubQuery(cmd, args)
+		ShowStack()
 		log.Printf("DoZeroTwo:Error DB(%s) didn't change exactly 0/2 rows(%d)",
 			query, count)
-		ShowStack()
+		return fmt.Errorf("DoZeroTwo:Error DB(%s) didn't change exactly 0/2 rows(%d)",
+			query, count)
 	}
 
 	return nil
@@ -486,7 +498,10 @@ func DoCount(tx *Tx, num int, cmd string, args ...interface{}) error {
 
 	if count != num {
 		query := SubQuery(cmd, args)
+		ShowStack()
 		log.Printf("DoCount:Error DB(%s) didn't change exactly %d rows(%d)",
+			query, num, count)
+		return fmt.Errorf("DoCount:Error DB(%s) didn't change exactly %d rows(%d)",
 			query, num, count)
 	}
 

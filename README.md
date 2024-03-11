@@ -63,6 +63,9 @@ TODOs:
 - see if we can get rid of/clean-up the FindRegistry stuff
 - need to decide on the best tx isolation level
 - test to ensure we can do 2 tx at the same time
+- convert internal server errors into "panic" so any "error" returned is a user
+  error
+- See if we can remove JustSet and always Save each time since we have TXs now
 
 - test for required fields (singular/complex) at all level
   - esp during creation time
