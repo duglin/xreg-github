@@ -23,7 +23,7 @@ type HTTPTest struct {
 	Code        int
 	HeaderMasks []string
 	ResHeaders  []string // name:value
-	BodyMasks   []string
+	BodyMasks   []string // "PROPNAME" or "SEARCH|REPLACE"
 	ResBody     string
 }
 
@@ -4606,18 +4606,13 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "",
-		URL:    "/dirs/d1/files/f2/versions/1?meta",
+		URL:    "/dirs/d1/files/f2/versions/1",
 		Method: "PUT",
 		ReqHeaders: []string{
 			"xRegistry-id: 1",
 			"xRegistry-description: desctesting",
 			"xRegistry-clireq3: null",
 		},
-		ReqBody: `{
-  "id": "1",
-  "description": "desc2"
-}
-`,
 
 		Code:    400,
 		ResBody: "Error processing resource: Required property \"clireq3\" is missing\n",
@@ -4636,4 +4631,138 @@ func TestHTTPRequiredFields(t *testing.T) {
 		Code:    400,
 		ResBody: "Error processing resource: Required property \"clireq3\" is missing\n",
 	})
+}
+
+func TestHTTPHasDocumentFalse(t *testing.T) {
+	reg := NewRegistry("TestHTTPHasDocumentFalse")
+	defer PassDeleteReg(t, reg)
+
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	xNoErr(t, err)
+
+	// plural, singular, versions, verId bool, latest bool, hasDocument bool
+	_, err = gm.AddResourceModel("bars", "bar", 0, true, true, true)
+	rm, err := gm.AddResourceModel("files", "file", 0, true, true, false)
+	xNoErr(t, err)
+	_, err = rm.AddAttr("*", registry.STRING)
+	xNoErr(t, err)
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files?meta", `{}`, 400,
+		"Specifying \"?meta\" for a Resource that has the model "+
+			"\"hasdocument\" value set to \"false\" is invalid\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta", `{}`, 400,
+		"Specifying \"?meta\" for a Resource that has the model "+
+			"\"hasdocument\" value set to \"false\" is invalid\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?meta", `{}`, 400,
+		"Specifying \"?meta\" for a Resource that has the model "+
+			"\"hasdocument\" value set to \"false\" is invalid\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{}`, 400,
+		"Specifying \"?meta\" for a Resource that has the model "+
+			"\"hasdocument\" value set to \"false\" is invalid\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1?meta", `{}`, 400,
+		"Specifying \"?meta\" for a Resource that has the model "+
+			"\"hasdocument\" value set to \"false\" is invalid\n")
+
+	// Not really a "hasdoc" test, but it has to go someplace :-)
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/dirs/d1/bars?meta",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-id: 123",
+		},
+		ReqBody: `{}`,
+
+		Code: 400,
+		ResBody: `Including "xRegistry" headers when "?meta" is used is invalid
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:     "/dirs/d1/files",
+		Method:  "POST",
+		ReqBody: `{"test":"foo"}`,
+
+		Code:      201,
+		BodyMasks: []string{"id", "files/[a-zA-Z0-9]*|files/xxx"},
+		ResBody: `{
+  "id": "5bd549c7",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/5bd549c7",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/5bd549c7/versions/1",
+  "test": "foo",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/5bd549c7/versions"
+}
+`})
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", `{"foo":"test"}`, 201,
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "foo": "test",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", `{"foo2":"test2"}`, 200,
+		`{
+  "id": "f1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "foo2": "test2",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1", `{"foo2":"test2"}`, 201,
+		`{
+  "id": "2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/2",
+  "latest": true,
+  "foo2": "test2"
+}
+`)
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"foo3":"test3"}`, 201,
+		`{
+  "id": "3",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
+  "latest": true,
+  "foo3": "test3"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/3", `{"foo3.1":"test3.1"}`, 200,
+		`{
+  "id": "3",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
+  "latest": true,
+  "foo3.1": "test3.1"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/4", `{"foo4":"test4"}`, 201,
+		`{
+  "id": "4",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/4",
+  "latest": true,
+  "foo4": "test4"
+}
+`)
+
 }

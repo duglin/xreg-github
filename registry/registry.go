@@ -474,8 +474,10 @@ type RequestInfo struct {
 	Abstract         string
 	GroupType        string
 	GroupUID         string
+	GroupModel       *GroupModel
 	ResourceType     string
 	ResourceUID      string
+	ResourceModel    *ResourceModel
 	VersionUID       string
 	What             string          // Registry, Coll, Entity
 	Inlines          []string        // TODO store a PropPaths instead
@@ -676,6 +678,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		info.StatusCode = http.StatusNotFound
 		return fmt.Errorf("Unknown Group type: %s", info.Parts[0])
 	}
+	info.GroupModel = gModel
 	info.GroupType = info.Parts[0]
 	info.Root += info.Parts[0]
 	info.Abstract += info.Parts[0]
@@ -700,6 +703,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		info.StatusCode = http.StatusNotFound
 		return fmt.Errorf("Unknown Resource type: %s", info.Parts[2])
 	}
+	info.ResourceModel = rModel
 	info.ResourceType = info.Parts[2]
 	info.Root += "/" + info.Parts[2]
 	info.Abstract += "/" + info.Parts[2]

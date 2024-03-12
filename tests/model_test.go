@@ -360,9 +360,9 @@ func TestResourceModelCreate(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+          "self": "http://localhost:8181/dirs/dir1/files/f1",
           "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+          "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
 
           "versionscount": 1,
           "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"

@@ -704,7 +704,15 @@ var OrderedSpecProps = []*Attribute{
 				base = info.BaseURL
 			}
 			if e.Level > 1 {
-				if info != nil && (info.ShowMeta || info.ResourceUID == "") {
+				meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
+				absParts := strings.Split(e.Abstract, string(DB_IN))
+				gm := e.Registry.Model.Groups[absParts[0]]
+				rm := gm.Resources[absParts[1]]
+				if rm.HasDocument == false {
+					meta = false
+				}
+
+				if meta {
 					return base + "/" + e.Path + "?meta"
 				} else {
 					return base + "/" + e.Path
@@ -764,7 +772,16 @@ var OrderedSpecProps = []*Attribute{
 			}
 
 			tmp := base + "/" + e.Path + "/versions/" + val.(string)
-			if info != nil && (info.ShowMeta || info.ResourceUID == "") {
+
+			meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
+			absParts := strings.Split(e.Abstract, string(DB_IN))
+			gm := e.Registry.Model.Groups[absParts[0]]
+			rm := gm.Resources[absParts[1]]
+			if rm.HasDocument == false {
+				meta = false
+			}
+
+			if meta {
 				tmp += "?meta"
 			}
 			return tmp

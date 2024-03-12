@@ -143,20 +143,29 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		info.HTTPWriter = NewBufferedWriter(info)
 	}
 
-	// These should only return an error if they didn't already
-	// send a response back to the client.
-	switch strings.ToUpper(r.Method) {
-	case "GET":
-		err = HTTPGet(info)
-	case "PUT":
-		err = HTTPPutPost(info)
-	case "POST":
-		err = HTTPPutPost(info)
-	case "DELETE":
-		err = HTTPDelete(info)
-	default:
-		info.StatusCode = http.StatusMethodNotAllowed
-		err = fmt.Errorf("HTTP method %q not supported", r.Method)
+	if info.ResourceModel != nil && info.ResourceModel.HasDocument == false &&
+		info.ShowMeta {
+		info.StatusCode = http.StatusBadRequest
+		err = fmt.Errorf("Specifying \"?meta\" for a Resource that has the " +
+			"model \"hasdocument\" value set to \"false\" is invalid")
+	}
+
+	if err == nil {
+		// These should only return an error if they didn't already
+		// send a response back to the client.
+		switch strings.ToUpper(r.Method) {
+		case "GET":
+			err = HTTPGet(info)
+		case "PUT":
+			err = HTTPPutPost(info)
+		case "POST":
+			err = HTTPPutPost(info)
+		case "DELETE":
+			err = HTTPDelete(info)
+		default:
+			info.StatusCode = http.StatusMethodNotAllowed
+			err = fmt.Errorf("HTTP method %q not supported", r.Method)
+		}
 	}
 
 	Must(tx.Conditional(err))
@@ -608,7 +617,10 @@ func HTTPGet(info *RequestInfo) error {
 		return HTTPGETModel(info)
 	}
 
-	if info.What == "Entity" && info.ResourceUID != "" && !info.ShowMeta {
+	metaInBody := (info.ResourceModel == nil) ||
+		(info.ResourceModel.HasDocument == false || info.ShowMeta)
+
+	if info.What == "Entity" && info.ResourceUID != "" && !metaInBody { // !info.ShowMeta {
 		return HTTPGETContent(info)
 	}
 
@@ -666,6 +678,9 @@ func HTTPPutPost(info *RequestInfo) error {
 	method := strings.ToUpper(info.OriginalRequest.Method)
 	isNew := false
 
+	metaInBody := (info.ResourceModel == nil) ||
+		(info.ResourceModel.HasDocument == false || info.ShowMeta)
+
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
 	info.Root = strings.Trim(info.Root, "/")
@@ -708,12 +723,9 @@ func HTTPPutPost(info *RequestInfo) error {
 	/////////////////////////////////////////////////
 
 	// First lets get the Resource's model to get the RESOURCE 'singular'
-	var resourceModel *ResourceModel
 	resSingular := ""
-	if info.GroupType != "" && info.ResourceType != "" {
-		groupModel := info.Registry.Model.Groups[info.GroupType]
-		resourceModel = groupModel.Resources[info.ResourceType]
-		resSingular = resourceModel.Singular
+	if info.ResourceModel != nil {
+		resSingular = info.ResourceModel.Singular
 	}
 
 	// Get the incoming Object either from the bdy or from xRegistry headers
@@ -880,7 +892,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if resource != nil {
 			version, err = resource.GetLatest()
 
-			if !info.ShowMeta {
+			if !metaInBody { // !info.ShowMeta {
 				// Copy existing props into IncomingObj w/o overwriting
 				CopyNewProps(IncomingObj, version.Object)
 			}
@@ -954,7 +966,7 @@ func HTTPPutPost(info *RequestInfo) error {
 					IncomingObj)
 				isNew = true
 			} else {
-				if !info.ShowMeta {
+				if !metaInBody { // !info.ShowMeta {
 					CopyNewProps(IncomingObj, version.Object)
 				}
 			}
@@ -1019,7 +1031,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			// If the user can't control "latest", but they passed in
 			// what we were going to do anyway, let it pass
-			if resourceModel.Latest == false {
+			if info.ResourceModel.Latest == false {
 				if latest != (latestVID == version.UID) {
 					return fmt.Errorf(`"latest" can not be "%v", it is `+
 						`controlled by the server`, latest)
@@ -1124,12 +1136,10 @@ func HTTPSetLatestVersionID(info *RequestInfo) error {
 		return fmt.Errorf("Resource %q not found", info.ResourceUID)
 	}
 
-	groupModel := info.Registry.Model.Groups[info.GroupType]
-	resourceModel := groupModel.Resources[info.ResourceType]
-	if resourceModel.Latest == false {
+	if info.ResourceModel.Latest == false {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Resource %q doesn't allow setting of `+
-			`"latestversionid"`, resourceModel.Plural)
+			`"latestversionid"`, info.ResourceModel.Plural)
 	}
 
 	vID := info.OriginalRequest.URL.Query().Get("setlatestversionid")
@@ -1317,7 +1327,7 @@ func LoadIDList(info *RequestInfo) (IDArray, error) {
 	if len(bodyStr) > 0 {
 		err = Unmarshal([]byte(bodyStr), &list)
 		if err != nil {
-			return nil, fmt.Errorf("%s", err)
+			return nil, err
 		}
 	} else {
 		// IDArray == nil mean no list at all, not same as empty list
@@ -1554,7 +1564,24 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 		body = nil
 	}
 
-	if len(info.Parts) < 3 || info.ShowMeta { // body != nil {
+	metaInBody := (info.ShowMeta ||
+		(info.ResourceModel != nil && info.ResourceModel.HasDocument == false))
+
+	if len(info.Parts) < 3 || metaInBody { // info.ShowMeta { // body != nil {
+		for k, _ := range info.OriginalRequest.Header {
+			k := strings.ToLower(k)
+			if strings.HasPrefix(k, "xregistry-") {
+				info.StatusCode = http.StatusBadRequest
+				if info.ResourceModel.HasDocument == false {
+					return nil, fmt.Errorf("Including \"xRegistry\" headers " +
+						"for a Resource that has the model \"hasdocument\" " +
+						"value of \"false\" is invalid")
+				}
+				return nil, fmt.Errorf("Including \"xRegistry\" headers " +
+					"when \"?meta\" is used is invalid")
+			}
+		}
+
 		if strings.TrimSpace(string(body)) == "" {
 			body = []byte("{}") // Be forgiving
 		}
@@ -1563,14 +1590,14 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 		err = Unmarshal(body, &IncomingObj)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return nil, fmt.Errorf("%s", err)
+			return nil, err
 		}
 	}
 
 	// xReg metadata are in headers, so move them into IncomingObj. We'll
 	// copy over the existing properties latest once we knwo what entity
 	// we're dealing with
-	if len(info.Parts) > 2 && !info.ShowMeta {
+	if len(info.Parts) > 2 && !metaInBody { // !info.ShowMeta {
 		// IncomingObj["#resource"] = body // save new body
 		IncomingObj[resSingular] = body // save new body
 

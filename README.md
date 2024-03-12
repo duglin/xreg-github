@@ -57,7 +57,6 @@ TODOs:
 - copy all of the types tests in http from Reg to groups, resources and vers
 - test to make sure an ID in the body == ID in URL for reg and group
 - support multiple resources/versions in POSTs
-- add support for hasdocument
 - add support for resource vs resourcebase64 - return what was on the PUT
 - add support for "default" in the model
 - see if we can get rid of/clean-up the FindRegistry stuff
@@ -67,7 +66,4 @@ TODOs:
   error
 - See if we can remove JustSet and always Save each time since we have TXs now
 
-- test for required fields (singular/complex) at all level
-  - esp during creation time
-  - did group, continue with res, ver
 - move ParseRequest to http_stuff.go
