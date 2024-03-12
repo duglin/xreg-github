@@ -306,68 +306,75 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(reg.Set("documentation", "https://github.com/duglin/xreg-github"))
 	}
 
-	ep, err := reg.Model.AddGroupModel("endpoints", "endpoint")
-	ErrFatalf(err)
-	attr, err := ep.AddAttr("usage", registry.STRING)
-	ErrFatalf(err)
-	// TODO make these required
-	// attr.ClientRequired = true
-	// attr.ServerRequired = true
-	_, err = ep.AddAttr("origin", registry.URI)
-	ErrFatalf(err)
-	_, err = ep.AddAttr("channel", registry.STRING)
-	ErrFatalf(err)
-	attr, err = ep.AddAttrObj("deprecated")
-	ErrFatalf(err)
-	_, err = attr.AddAttr("effective", registry.TIMESTAMP)
-	ErrFatalf(err)
-	_, err = attr.AddAttr("removal", registry.TIMESTAMP)
-	ErrFatalf(err)
-	_, err = attr.AddAttr("alternative", registry.URL)
-	ErrFatalf(err)
-	_, err = attr.AddAttr("docs", registry.URL)
+	err = reg.LoadModelFromFile("https://raw.githubusercontent.com/xregistry/spec/main/endpoint/model.json")
 	ErrFatalf(err)
 
-	config, err := attr.AddAttrObj("config")
-	ErrFatalf(err)
-	_, err = config.AddAttr("protocol", registry.STRING)
-	ErrFatalf(err)
-	obj, err := config.AddAttrMap("endpoints", registry.NewItemObject())
-	ErrFatalf(err)
-	obj.Item.SetItem(registry.NewItem())
-	_, err = obj.Item.Item.AddAttr("*", registry.ANY)
-	ErrFatalf(err)
+	/*
+		ep, err := reg.Model.AddGroupModel("endpoints", "endpoint")
+		ErrFatalf(err)
+		attr, err := ep.AddAttr("usage", registry.STRING)
+		ErrFatalf(err)
+		// TODO make these required
+		// attr.ClientRequired = true
+		// attr.ServerRequired = true
+		_, err = ep.AddAttr("origin", registry.URI)
+		ErrFatalf(err)
+		_, err = ep.AddAttr("channel", registry.STRING)
+		ErrFatalf(err)
+		attr, err = ep.AddAttrObj("deprecated")
+		ErrFatalf(err)
+		_, err = attr.AddAttr("effective", registry.TIMESTAMP)
+		ErrFatalf(err)
+		_, err = attr.AddAttr("removal", registry.TIMESTAMP)
+		ErrFatalf(err)
+		_, err = attr.AddAttr("alternative", registry.URL)
+		ErrFatalf(err)
+		_, err = attr.AddAttr("docs", registry.URL)
+		ErrFatalf(err)
 
-	auth, err := config.AddAttrObj("authorization")
-	ErrFatalf(err)
-	attr, err = auth.AddAttr("type", registry.STRING)
-	ErrFatalf(err)
-	attr, err = auth.AddAttr("resourceurl", registry.STRING)
-	ErrFatalf(err)
-	attr, err = auth.AddAttr("authorityurl", registry.STRING)
-	ErrFatalf(err)
-	attr, err = auth.AddAttrArray("grant_types", registry.NewItemType(registry.STRING))
-	ErrFatalf(err)
+		config, err := attr.AddAttrObj("config")
+		ErrFatalf(err)
+		_, err = config.AddAttr("protocol", registry.STRING)
+		ErrFatalf(err)
+		obj, err := config.AddAttrMap("endpoints", registry.NewItemObject())
+		ErrFatalf(err)
+		obj.Item.SetItem(registry.NewItem())
+		_, err = obj.Item.Item.AddAttr("*", registry.ANY)
+		ErrFatalf(err)
 
-	_, err = config.AddAttr("strict", registry.BOOLEAN)
-	ErrFatalf(err)
+		auth, err := config.AddAttrObj("authorization")
+		ErrFatalf(err)
+		attr, err = auth.AddAttr("type", registry.STRING)
+		ErrFatalf(err)
+		attr, err = auth.AddAttr("resourceurl", registry.STRING)
+		ErrFatalf(err)
+		attr, err = auth.AddAttr("authorityurl", registry.STRING)
+		ErrFatalf(err)
+		attr, err = auth.AddAttrArray("grant_types", registry.NewItemType(registry.STRING))
+		ErrFatalf(err)
 
-	_, err = config.AddAttrMap("options", registry.NewItemType(registry.ANY))
-	ErrFatalf(err)
+		_, err = config.AddAttr("strict", registry.BOOLEAN)
+		ErrFatalf(err)
 
-	_, err = ep.AddResourceModel("definitions", "definition", 2, true, true, true)
-	ErrFatalf(err)
+		_, err = config.AddAttrMap("options", registry.NewItemType(registry.ANY))
+		ErrFatalf(err)
+
+		_, err = ep.AddResourceModel("definitions", "definition", 2, true, true, true)
+		ErrFatalf(err)
+	*/
 
 	// End of model
 
-	g, err := reg.AddGroup("endpoints", "e1")
+	g, err := reg.AddGroup("endpoints", "e1", registry.Object{
+		"usage": "producer",
+	})
 	ErrFatalf(err)
 	ErrFatalf(g.Set("name", "end1"))
 	ErrFatalf(g.Set("epoch", 1))
 	ErrFatalf(g.Set("labels.stage", "dev"))
 	ErrFatalf(g.Set("labels.stale", "true"))
 
-	r, err := g.AddResource("definitions", "created", "v1")
+	r, err := g.AddResource("messages", "created", "v1")
 	ErrFatalf(err)
 	v, err := r.FindVersion("v1")
 	ErrFatalf(err)
@@ -380,14 +387,16 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(v.Set("epoch", 4))
 	ErrFatalf(r.SetLatest(v))
 
-	r, err = g.AddResource("definitions", "deleted", "v1.0")
+	r, err = g.AddResource("messages", "deleted", "v1.0")
 	ErrFatalf(err)
 	v, err = r.FindVersion("v1.0")
 	ErrFatalf(err)
 	ErrFatalf(v.Set("name", "blobDeleted"))
 	ErrFatalf(v.Set("epoch", 3))
 
-	g, err = reg.AddGroup("endpoints", "e2")
+	g, err = reg.AddGroup("endpoints", "e2", registry.Object{
+		"usage": "consumer",
+	})
 	ErrFatalf(err)
 	ErrFatalf(g.Set("name", "end1"))
 	ErrFatalf(g.Set("epoch", 1))
