@@ -60,13 +60,13 @@ TODOs:
 - see if we can remove JustSet and always Save each time since we have TXs now
 - write down the model for the spec defined attributes
 - convert internal errors into "panic" so any "error" returned is a user error
+- see if we can move "#resource??" into the attributes struct
 
 - pagination
+- add checks for valid obj/map key names in new validation funcs ****
+- support multiple resources/versions in POSTs
+- support overriding spec defined attributes - like "format"
+- support changing the model - test for invalid changes
 - support the create/modify by/on attributes
 - add support for "default" in the model
 - add support for resource vs resourcebase64 - return what was on the PUT
-- support multiple resources/versions in POSTs
-- add checks for valid obj/map key names in new validation funcs ****
-- support overriding spec defined attributes - like "format"
-- see if we can move "#resource??" into the attributes struct
-- support changing the model - test for invalid changes

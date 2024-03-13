@@ -62,8 +62,10 @@ mysql:
 		--name mysql mysql > /dev/null )
 
 mysql-client: mysql
-	docker run -ti --rm --network host mysql \
-		mysql --port 3306 --password=password --protocol tcp
+	@while ! nc -z localhost 3306 ; do echo "Waiting for mysql" ; sleep 2 ; done
+	docker run -ti --rm --network host --name mysql-client mysql \
+		mysql --port 3306 --password=password --protocol tcp || \
+		echo "If it failed, make sure mysql is ready"
 
 k3d: misc/mysql.yaml
 	@k3d cluster list | grep xreg > /dev/null || \
