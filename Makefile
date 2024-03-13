@@ -1,4 +1,4 @@
-all: mysql cmds test image run
+all: mysql cmds test run
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
@@ -6,7 +6,7 @@ IMAGE := duglin/xreg-server
 cmds: server xr
 
 test: export TESTING=1
-test: .test
+test: .test .testimage
 .test: server */*test.go
 	@echo
 	@echo "# Testing"
@@ -39,6 +39,14 @@ image: .image
 		> .dockerout 2>&1 || { cat .dockerout ; rm .dockerout ; exit 1 ; }
 	@rm .dockerout
 	@touch .image
+
+testimage: .testimage
+.testimage: .image
+	@echo Verifying the image via docker run
+	@docker run -ti --network host $(IMAGE) /server --recreate --verify \
+		> .testout 2>&1 || { cat .testout ; rm .testout ; exit 1 ; }
+	@rm .testout
+	@touch .testimage
 
 push: .push
 .push: .image

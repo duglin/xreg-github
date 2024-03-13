@@ -61,6 +61,8 @@ TODOs:
 - write down the model for the spec defined attributes
 - convert internal errors into "panic" so any "error" returned is a user error
 - see if we can move "#resource??" into the attributes struct
+- can we get rid of IsNew?
+- get we get rid of SkipEpoch now that we have TXs?
 
 - pagination
 - add checks for valid obj/map key names in new validation funcs ****

@@ -24,7 +24,7 @@ COPY --from=0 /etc/ssl/certs/ca-certificates.crt \
 
 COPY --from=0 /go/src/server /server
 COPY --from=0 /go/src/xr /xr
-COPY misc/repo.tar /
+COPY misc/repo.tar /misc/repo.tar
 
 CMD [ "/server" ]
 # ENTRYPOINT [ "/usr/bin/sh" ]

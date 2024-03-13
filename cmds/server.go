@@ -21,8 +21,9 @@ func main() {
 		}
 	}
 
-	doDelete := flag.Bool("delete", false, "Delete DB an exit")
+	doDelete := flag.Bool("delete", false, "Delete DB and exit")
 	doRecreate := flag.Bool("recreate", false, "Recreate DB, then run")
+	doVerify := flag.Bool("verify", false, "Exit after loading - for testing")
 	flag.IntVar(&Verbose, "v", Verbose, "Verbose level")
 	flag.Parse()
 
@@ -87,6 +88,10 @@ func main() {
 		if tmpInt != 0 {
 			Port = tmpInt
 		}
+	}
+
+	if *doVerify {
+		os.Exit(0)
 	}
 
 	registry.DefaultRegDbSID = reg.DbSID
