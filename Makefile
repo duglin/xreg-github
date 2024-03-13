@@ -33,9 +33,9 @@ xr: cmds/xr.go registry/*
 	go build $(BUILDFLAGS) -o $@ cmds/xr.go
 
 image: .image
-.image: server Dockerfile
-	@echo docker build -f Dockerfile -t $(IMAGE) . --network host --no-cache
-	@docker build -f Dockerfile -t $(IMAGE) . --network host --no-cache \
+.image: server misc/Dockerfile
+	@echo docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
+	@docker build -f misc/Dockerfile -t $(IMAGE) --no-cache . \
 		> .dockerout 2>&1 || { cat .dockerout ; rm .dockerout ; exit 1 ; }
 	@rm .dockerout
 	@touch .image
@@ -65,7 +65,7 @@ mysql-client: mysql
 	docker run -ti --rm --network host mysql \
 		mysql --port 3306 --password=password --protocol tcp
 
-k3d:
+k3d: misc/mysql.yaml
 	@k3d cluster list | grep xreg > /dev/null || \
 		(creating k3d cluster || \
 		k3d cluster create xreg --wait \
@@ -74,12 +74,12 @@ k3d:
 		while ((kubectl get nodes 2>&1 || true ) | \
 		grep -e "E0727" -e "forbidden" > /dev/null 2>&1  ) ; \
 		do echo -n . ; sleep 1 ; done ; \
-		kubectl apply -f mysql.yaml )
+		kubectl apply -f misc/mysql.yaml )
 
 k3dserver: k3d image
-	-kubectl delete -f deploy.yaml 2> /dev/null
+	-kubectl delete -f misc/deploy.yaml 2> /dev/null
 	k3d image import $(IMAGE) -c xreg
-	kubectl apply -f deploy.yaml
+	kubectl apply -f misc/deploy.yaml
 	sleep 2 ; kubectl logs -f xreg-server
 
 clean:

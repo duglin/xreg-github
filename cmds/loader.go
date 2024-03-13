@@ -63,7 +63,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		defer tarStream.Close()
 	*/
 
-	buf, _ := ioutil.ReadFile("repo.tar")
+	buf, _ := ioutil.ReadFile("misc/repo.tar")
 	tarStream := bytes.NewReader(buf)
 
 	gzf, _ := gzip.NewReader(tarStream)
