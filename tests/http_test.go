@@ -4677,6 +4677,19 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 `,
 	})
 
+	// Load up one that has hasdocument=true
+	xHTTP(t, reg, "PUT", "/dirs/d1/bars/b1?meta", "", 201, `{
+  "id": "b1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/bars/b1?meta",
+  "latestversionid": "1",
+  "latestversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/bars/b1/versions"
+}
+`)
+
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:     "/dirs/d1/files",
 		Method:  "POST",
@@ -4696,6 +4709,73 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "versionsurl": "http://localhost:8181/dirs/d1/files/5bd549c7/versions"
 }
 `})
+
+	// Make sure that each type of Resource (w/ and w/o hasdoc) has the
+	// correct self/latestversionurl URL (meaing w/ and w/o ?meta)
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/dirs/d1?inline",
+		Method: "GET",
+
+		Code: 200,
+		BodyMasks: []string{
+			`"id": "[a-z0-9]{8}"|"id": "xxx"`,
+			`"[a-z0-9]{8}": {|"xxx": {"`,
+			`files/[a-z0-9]{8}|files/xxx`,
+		},
+		ResBody: `{
+  "id": "d1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1",
+
+  "bars": {
+    "b1": {
+      "id": "b1",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/bars/b1?meta",
+      "latestversionid": "1",
+      "latestversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
+
+      "versions": {
+        "1": {
+          "id": "1",
+          "epoch": 1,
+          "self": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
+          "latest": true
+        }
+      },
+      "versionscount": 1,
+      "versionsurl": "http://localhost:8181/dirs/d1/bars/b1/versions"
+    }
+  },
+  "barscount": 1,
+  "barsurl": "http://localhost:8181/dirs/d1/bars",
+  "files": {
+    "de0fe3c9": {
+      "id": "de0fe3c9",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/de0fe3c9",
+      "latestversionid": "1",
+      "latestversionurl": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions/1",
+      "test": "foo",
+
+      "versions": {
+        "1": {
+          "id": "1",
+          "epoch": 1,
+          "self": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions/1",
+          "latest": true,
+          "test": "foo"
+        }
+      },
+      "versionscount": 1,
+      "versionsurl": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions"
+    }
+  },
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
+}
+`,
+	})
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", `{"foo":"test"}`, 201,
 		`{

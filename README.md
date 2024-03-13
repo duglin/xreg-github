@@ -31,6 +31,17 @@ $ curl http://localhost:8080?inline
 $ make mysql-client
 ```
 
+OLD TODO:
+- Move the logic that takes the Path into account for the query into
+  GenerateQuery
+- Make sure that the Path entity is always in the result set when filtering
+- twiddle the self and XXXUrls to include proper filter and inline stuff
+- see if we can get rid of the recursion stuff
+- should we add "/" to then end of the Path for non-collections, then
+  we can just look for PATH/%  and not PATH + PATH/%
+- can we set the registry's path to "" instead of NULL ?? already did, test it
+- add support for boolean types (set/get/filter)
+
 TODOs:
 - add tests for multiple registries at the same time
 - test filtering for (non)empty values - e.g. filter=id=  filter=id
