@@ -160,3 +160,175 @@ func TestRegistryRequiredFields(t *testing.T) {
 `)
 
 }
+
+func TestRegistryDefaultFields(t *testing.T) {
+	reg := NewRegistry("TestRegistryDefaultFields")
+	defer PassDeleteReg(t, reg)
+
+	_, err := reg.Model.AddAttribute(&registry.Attribute{
+		Name:    "defstring",
+		Type:    registry.STRING,
+		Default: "hello",
+	})
+	xCheckErr(t, err, `"model.defstring" must have "serverrequired" since a "default" value is provided`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name:           "defstring",
+		Type:           registry.STRING,
+		ServerRequired: true,
+		Default:        123,
+	})
+	xCheckErr(t, err, `"model.defstring" "default" value must be of type "string"`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name:           "defstring",
+		Type:           registry.OBJECT,
+		ServerRequired: true,
+		Default:        "hello",
+	})
+	xCheckErr(t, err, `"model.defstring" is not a scalar, so "default" is not allowed`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name:           "defstring",
+		Type:           registry.STRING,
+		ServerRequired: true,
+		Default:        map[string]any{"key": "value"},
+	})
+	xCheckErr(t, err, `"model.defstring" "default" value must be of type "string"`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name:           "defstring",
+		Type:           registry.STRING,
+		ServerRequired: true,
+		Default:        "hello",
+	})
+	xNoErr(t, err)
+
+	obj, err := reg.Model.AddAttribute(&registry.Attribute{
+		Name: "myobj",
+		Type: registry.OBJECT,
+	})
+	xNoErr(t, err)
+
+	_, err = obj.AddAttribute(&registry.Attribute{
+		Name:    "defint",
+		Type:    registry.INTEGER,
+		Default: 123,
+	})
+	xCheckErr(t, err, `"model.myobj.defint" must have "serverrequired" since a "default" value is provided`)
+
+	// Old obj pointer is bad
+	obj, _ = reg.Model.Attributes["myobj"]
+
+	_, err = obj.AddAttribute(&registry.Attribute{
+		Name:           "defint",
+		Type:           registry.INTEGER,
+		ServerRequired: true,
+		Default:        "string",
+	})
+	xCheckErr(t, err, `"model.myobj.defint" "default" value must be of type "integer"`)
+	// Old obj pointer is bad
+	obj, _ = reg.Model.Attributes["myobj"]
+
+	_, err = obj.AddAttribute(&registry.Attribute{
+		Name:           "defint",
+		Type:           registry.OBJECT,
+		ServerRequired: true,
+		Default:        "string",
+	})
+	xCheckErr(t, err, `"model.myobj.defint" is not a scalar, so "default" is not allowed`)
+	// Old obj pointer is bad
+	obj, _ = reg.Model.Attributes["myobj"]
+
+	_, err = obj.AddAttribute(&registry.Attribute{
+		Name:           "defint",
+		Type:           registry.INTEGER,
+		ServerRequired: true,
+		Default:        123,
+	})
+	xNoErr(t, err)
+
+	// Commit before we call Set below otherwise the Tx will be rolled back
+	reg.Commit()
+
+	xHTTP(t, reg, "GET", "/", "", 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryDefaultFields",
+  "epoch": 1,
+  "self": "http://localhost:8181/"
+}
+`)
+
+	// Notice the default value is not there, this might need a spec change
+	// DUG TODO ^^
+	xHTTP(t, reg, "GET", "/", "", 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryDefaultFields",
+  "epoch": 1,
+  "self": "http://localhost:8181/"
+}
+`)
+
+	// Notice now "defstring" appears
+	// DUG TODO ^^ and previous one
+	xHTTP(t, reg, "PUT", "/", "", 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryDefaultFields",
+  "epoch": 2,
+  "self": "http://localhost:8181/",
+  "defstring": "hello"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", `{
+  "defstring": "updated hello",
+  "myobj": {}
+}`, 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryDefaultFields",
+  "epoch": 3,
+  "self": "http://localhost:8181/",
+  "defstring": "updated hello",
+  "myobj": {
+    "defint": 123
+  }
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", `{
+  "myobj": {
+    "defint": 666
+  }
+}`, 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryDefaultFields",
+  "epoch": 4,
+  "self": "http://localhost:8181/",
+  "defstring": "hello",
+  "myobj": {
+    "defint": 666
+  }
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", `{
+}`, 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryDefaultFields",
+  "epoch": 5,
+  "self": "http://localhost:8181/",
+  "defstring": "hello"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", `{
+  "myobj": null
+}`, 200, `{
+  "specversion": "0.5",
+  "id": "TestRegistryDefaultFields",
+  "epoch": 6,
+  "self": "http://localhost:8181/",
+  "defstring": "hello"
+}
+`)
+}

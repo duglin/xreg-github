@@ -61,8 +61,11 @@ TODOs:
 - write down the model for the spec defined attributes
 - convert internal errors into "panic" so any "error" returned is a user error
 - see if we can move "#resource??" into the attributes struct
-- can we get rid of IsNew?
+- can we get rid of IsNew from updateFn?
 - get we get rid of SkipEpoch now that we have TXs?
+- fix it so that a failed call to model.Save() (e.g. verify fails) doesn't
+  invalidate existing local variables. See if we can avoid redownloading the
+  model from the DB
 
 - pagination
 - add checks for valid obj/map key names in new validation funcs ****
@@ -70,5 +73,4 @@ TODOs:
 - support overriding spec defined attributes - like "format"
 - support changing the model - test for invalid changes
 - support the create/modify by/on attributes
-- add support for "default" in the model
 - add support for resource vs resourcebase64 - return what was on the PUT

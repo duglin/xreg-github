@@ -321,7 +321,7 @@ func (e *Entity) ValidateAndSave(isNew bool) error {
 	// return nil
 	// }
 
-	log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
+	log.VPrintf(3, "Validating e.NewObject:\n%s", ToJSON(e.NewObject))
 
 	if err := e.Validate(); err != nil {
 		return err
@@ -1083,7 +1083,7 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 				if k == "id" { // Retain Resource ID
 					continue
 				}
-				// exclude props that appear in vers, not resource.latest
+				// exclude props that only appear in vers, eg. ver.latest
 				if prop, ok := SpecProps[k]; ok {
 					if prop.InLevel(3) && !prop.InLevel(2) {
 						continue
@@ -1428,8 +1428,11 @@ func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, e
 }
 
 // Doesn't fully validate in the sense that it'll assume read-only fields
-// are not worth cheching since the server generated them.
-// This is mainly used for validating input from a client
+// are not worth checking since the server generated them.
+// This is mainly used for validating input from a client.
+// NOTE!!! This isn't a read-only operation. Normally it would be, but to
+// avoid traversing the entity more than once, we will tweak things if needed.
+// For example, if a missing attribute has a Default value then we'll add it.
 func (e *Entity) Validate() error {
 	if e.Level == 2 {
 		// Skip Resources // TODO DUG - would prefer to not do this
@@ -1437,34 +1440,11 @@ func (e *Entity) Validate() error {
 	}
 
 	// Don't touch what was passed in
-	dupObj := maps.Clone(e.NewObject)
-
-	for _, coll := range e.GetCollections() {
-		log.VPrintf(3, "Deleting collection: %q", coll)
-		delete(dupObj, coll)
-		delete(dupObj, coll+"count")
-		delete(dupObj, coll+"url")
-	}
 
 	attrs := e.GetAttributes(true)
 	log.VPrintf(3, "========")
-	log.VPrintf(3, "Validating:\n%s", ToJSON(dupObj))
-	return e.ValidateObject(dupObj, attrs, NewPP())
-}
-
-func PrepUpdateEntity(e *Entity, isNew bool) error {
-	attrs := e.GetAttributes(true)
-
-	for key, _ := range attrs {
-		attr := attrs[key]
-		if attr != nil && attr.updateFn != nil {
-			if err := attr.updateFn(e, isNew); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+	log.VPrintf(3, "Validating:\n%s", ToJSON(e.NewObject))
+	return e.ValidateObject(e.NewObject, attrs, NewPP())
 }
 
 // This should be called after all level-specific calculated properties have
@@ -1502,10 +1482,26 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 		}
 	}
 
+	// For top-level entities, get the list of possible collections
+	collections := []string{}
+	if path.Len() == 0 {
+		collections = e.GetCollections()
+	}
+
 	// Don't touch what was passed in
 	objKeys := map[string]bool{}
 	for k, _ := range newObj {
-		objKeys[k] = true
+		// Skip collection related attributes
+		isColl := false
+		for _, coll := range collections {
+			if k == coll || k == coll+"count" || k == coll+"url" {
+				isColl = true
+				break
+			}
+		}
+		if !isColl {
+			objKeys[k] = true
+		}
 	}
 
 	attr := (*Attribute)(nil)
@@ -1533,6 +1529,12 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			}
 
 			val, ok := newObj[key]
+
+			// A Default value is defined but there's no value, so set it
+			// and then let normal processing continue
+			if !IsNil(attr.Default) && (!ok || IsNil(val)) {
+				newObj[key] = attr.Default
+			}
 
 			// Based on the attribute's type check the incoming 'val'.
 			// This will check for adherence to the model (eg type),
@@ -1590,7 +1592,8 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 					path.P(key).UI())
 			}
 
-			if !attr.ClientRequired && (!ok || IsNil(val)) { // treat nil as absent
+			// Not ClientRequired && no there (or being deleted)
+			if !attr.ClientRequired && (!ok || IsNil(val)) {
 				delete(objKeys, key)
 				continue
 			}
@@ -1828,6 +1831,21 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 			}
 			return fmt.Errorf("Attribute %q(%v) must be one of the enum "+
 				"values: %s", path.UI(), val, valids)
+		}
+	}
+
+	return nil
+}
+
+func PrepUpdateEntity(e *Entity, isNew bool) error {
+	attrs := e.GetAttributes(true)
+
+	for key, _ := range attrs {
+		attr := attrs[key]
+		if attr != nil && attr.updateFn != nil {
+			if err := attr.updateFn(e, isNew); err != nil {
+				return err
+			}
 		}
 	}
 

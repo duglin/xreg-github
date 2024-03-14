@@ -146,6 +146,11 @@ func TestModelVerifyRegAttr(t *testing.T) {
 				ClientRequired: true}}},
 			`"model.x" must have "serverrequired" since "clientrequired" is "true"`},
 
+		{"type - missing server required", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: "url",
+				Default: "xxx"}}},
+			`"model.x" must have "serverrequired" since a "default" value is provided`},
+
 		// Now some Item stuff
 		{"Item - missing", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT}}}, ""},

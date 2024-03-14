@@ -42,6 +42,7 @@ type Attribute struct {
 	ReadOnly       bool      `json:"readonly,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
+	Default        any       `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
 	Item       *Item      `json:"item,omitempty"`       // for maps & arrays
@@ -169,6 +170,8 @@ func (m *Model) Save() error {
 		// Kind of extreme, but if there's an error revert the entire
 		// model to the last known good state. So, all of the changes
 		// people made will be lost and any variables are bogus
+		// NOTE any local variable pointing to a model entity will need to
+		// be refresh/refound, the existing pointer will be bad
 		*m = *LoadModel(m.Registry)
 		return err
 	}
@@ -981,7 +984,7 @@ func (a *Attribute) AddAttrMap(name string, item *Item) (*Attribute, error) {
 }
 
 func (a *Attribute) AddAttrObj(name string) (*Attribute, error) {
-	return a.AddAttribute(&Attribute{Name: name, Type: OBJECT, Item: &Item{}})
+	return a.AddAttribute(&Attribute{Name: name, Type: OBJECT})
 }
 
 func (a *Attribute) AddAttrArray(name string, item *Item) (*Attribute, error) {
@@ -1110,6 +1113,8 @@ func (rm *ResourceModel) SetRegistry(reg *Registry) {
 }
 
 type LevelData struct {
+	// AttrNames is the list of known attribute names. We use this to know
+	// if an IfValue SiblingAttribute would conflict if another attribute's name
 	AttrNames map[string]bool
 	Path      *PropPath
 }
@@ -1178,6 +1183,25 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 				path.UI())
 		}
 
+		if !IsNil(attr.Default) {
+			if !attr.ServerRequired {
+				return fmt.Errorf("%q must have \"serverrequired\" "+
+					"since a \"default\" value is provided",
+					path.UI())
+			}
+
+			if IsScalar(attr.Type) != true {
+				return fmt.Errorf("%q is not a scalar, so \"default\" is not "+
+					"allowed", path.UI())
+			}
+
+			val := attr.Default
+			if !IsOfType(val, attr.Type) {
+				return fmt.Errorf("%q \"default\" value must be of type %q",
+					path.UI(), attr.Type)
+			}
+		}
+
 		// Object doesn't need an Item, but maps and arrays do
 		if attr.Type == MAP || attr.Type == ARRAY {
 			if attr.Item == nil {
@@ -1185,8 +1209,13 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			}
 		}
 
-		if attr.Type == OBJECT && attr.Item != nil {
-			return fmt.Errorf("%q must not have an \"item\" section", path.UI())
+		if attr.Type == OBJECT {
+			if attr.Item != nil {
+				return fmt.Errorf("%q must not have an \"item\" section", path.UI())
+			}
+			if err := attr.Attributes.Verify(&LevelData{nil, path}); err != nil {
+				return err
+			}
 		}
 
 		if attr.Item != nil {

@@ -5,6 +5,8 @@ IMAGE := duglin/xreg-server
 
 cmds: server xr
 
+qtest: .test
+
 test: export TESTING=1
 test: .test .testimage
 .test: server */*test.go
