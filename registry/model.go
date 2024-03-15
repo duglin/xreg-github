@@ -32,13 +32,18 @@ type Model struct {
 
 type Attributes map[string]*Attribute // AttrName->Attr
 
+// Do not include "omitempty" on any attribute that has a default value that
+// doesn't match golang's default value for that type. E.g. bool defaults to
+// 'false', but Strict needs to default to 'true'. See the custome Unmarshal
+// funcs in model.go for how we set those
+
 type Attribute struct {
 	Registry       *Registry `json:"-"`
 	Name           string    `json:"name,omitempty"`
 	Type           string    `json:"type,omitempty"`
 	Description    string    `json:"description,omitempty"`
 	Enum           []any     `json:"enum,omitempty"` // just scalars though
-	Strict         bool      `json:"strict,omitempty"`
+	Strict         bool      `json:"strict"`         // do not include omitempty
 	ReadOnly       bool      `json:"readonly,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
@@ -90,11 +95,20 @@ type ResourceModel struct {
 
 	Plural      string     `json:"plural"`
 	Singular    string     `json:"singular"`
-	Versions    int        `json:"versions"`
-	VersionId   bool       `json:"versionid"`
-	Latest      bool       `json:"latest"`
-	HasDocument bool       `json:"hasdocument"`
+	Versions    int        `json:"versions"`    // do not include omitempty
+	VersionId   bool       `json:"versionid"`   // do not include omitempty
+	Latest      bool       `json:"latest"`      // do not include omitempty
+	HasDocument bool       `json:"hasdocument"` // do not include omitempty
 	Attributes  Attributes `json:"attributes,omitempty"`
+}
+
+// Define some custom Unmarshal func to set proper default values
+func (a *Attribute) UnmarshalJSON(data []byte) error {
+	// Set the default values
+	a.Strict = STRICT
+
+	type tmpAttribute Attribute
+	return Unmarshal(data, (*tmpAttribute)(a))
 }
 
 func (r *ResourceModel) UnmarshalJSON(data []byte) error {
@@ -105,7 +119,6 @@ func (r *ResourceModel) UnmarshalJSON(data []byte) error {
 	r.HasDocument = HASDOCUMENT
 
 	type tmpResourceModel ResourceModel
-	// return json.Unmarshal(data, (*tmpResourceModel)(r))
 	return Unmarshal(data, (*tmpResourceModel)(r))
 }
 

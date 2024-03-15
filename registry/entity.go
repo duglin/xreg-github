@@ -635,9 +635,8 @@ var OrderedSpecProps = []*Attribute{
 		updateFn:  nil,
 	},
 	{
-		Name:     "epoch",
-		Type:     UINTEGER,
-		ReadOnly: true,
+		Name: "epoch",
+		Type: UINTEGER,
 
 		levels:    "",
 		mutable:   false,
@@ -691,9 +690,9 @@ var OrderedSpecProps = []*Attribute{
 	},
 	{
 		Name:           "self",
-		Type:           STRING,
-		ServerRequired: true,
+		Type:           URL,
 		ReadOnly:       true,
+		ServerRequired: true,
 
 		levels:    "",
 		mutable:   false,
@@ -802,7 +801,7 @@ var OrderedSpecProps = []*Attribute{
 	},
 	{
 		Name: "documentation",
-		Type: STRING,
+		Type: URL,
 
 		levels:    "",
 		mutable:   true,

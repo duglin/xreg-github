@@ -2,7 +2,8 @@ package registry
 
 const SPECVERSION = "0.5"
 
-// Model attributes
+// Model attribute default values
+const STRICT = true
 const VERSIONS = 1
 const VERSIONID = true
 const LATEST = true

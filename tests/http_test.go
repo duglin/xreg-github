@@ -493,7 +493,6 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody:    "Error processing registry: Attribute \"epoch\"(33) doesn't match existing value (4)\n",
 	})
 
-	t.Logf("MODEL:\n%s", ToJSON(reg.Model))
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT reg - full good",
 		URL:        "/",
@@ -764,7 +763,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody: `Error processing registry: Attribute "self" must be a string
+		ResBody: `Error processing registry: Attribute "self" must be a url
 `,
 	})
 
