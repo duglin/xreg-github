@@ -4845,3 +4845,19 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 `)
 
 }
+
+func TestHTTPModelSchema(t *testing.T) {
+	reg := NewRegistry("TestHTTPModelSchema")
+	defer PassDeleteReg(t, reg)
+
+	xHTTP(t, reg, "GET", "/model", "", 200, `{}
+`)
+
+	xHTTP(t, reg, "GET", "/model?schema=xRegistry", "", 200, `{}
+`)
+
+	xHTTP(t, reg, "GET", "/model?schema=bad", "", 400,
+		`Unsupported schema value: "bad". Must be: "xregistry"
+`)
+
+}

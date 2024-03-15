@@ -411,6 +411,13 @@ func HTTPGETModel(info *RequestInfo) error {
 		return fmt.Errorf("Not found")
 	}
 
+	format := info.OriginalRequest.URL.Query().Get("schema")
+	if format != "" && !strings.EqualFold(format, "xregistry") {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("Unsupported schema value: %q. Must be: "+
+			"\"xregistry\"", format)
+	}
+
 	model := info.Registry.Model
 	if model == nil {
 		model = &Model{}

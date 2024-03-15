@@ -57,7 +57,7 @@ type Attribute struct {
 	// We have them here so we can have access to them in any func that
 	// gets passed the model attribute
 	levels     string // show only for these levels, ""==all
-	mutable    bool   // user editable?
+	immutable  bool   // can change after set?
 	dontStore  bool
 	httpHeader string
 	getFn      func(*Entity, *RequestInfo) any // return prop's value
