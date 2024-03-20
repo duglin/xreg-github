@@ -1,0 +1,13 @@
+#!/bin/bash
+
+TMP=/tmp/output$RANDOM
+
+echo "$@"
+"$@" > $TMP 2>&1
+if [[ "$?" != "0" ]]; then
+	cat $TMP
+	rm $TMP
+	exit 1
+fi
+rm $TMP
+exit 0

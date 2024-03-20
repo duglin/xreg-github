@@ -38,19 +38,16 @@ xr: cmds/xr.go registry/*
 
 image: .image
 .image: server misc/Dockerfile
-	@echo docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
-	@docker build -f misc/Dockerfile -t $(IMAGE) --no-cache . \
-		> .dockerout 2>&1 || { cat .dockerout ; rm .dockerout ; exit 1 ; }
-	@rm .dockerout
+	@echo
+	@echo "# Building the container image"
+	@misc/errOutput docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
 	@touch .image
 
 testimage: .testimage
 .testimage: .image
-	@echo Verifying the image
-	@echo "docker run -ti --network host $(IMAGE) --recreate --verify"
-	@docker run -ti --network host $(IMAGE) --recreate --verify \
-		> .testout 2>&1 || { cat .testout ; rm .testout ; exit 1 ; }
-	@rm .testout
+	@echo
+	@echo "# Verifying the image"
+	@misc/errOutput docker run -ti --network host $(IMAGE) --recreate --verify
 	@touch .testimage
 
 push: .push
