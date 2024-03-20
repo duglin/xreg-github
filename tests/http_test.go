@@ -1007,6 +1007,292 @@ func TestHTTPModel(t *testing.T) {
 }
 `,
 	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "Modify description",
+		URL:        "/model",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "attributes": {
+    "description": {
+      "name": "description",
+      "type": "string",
+      "enum": [ "one", "two" ]
+    }
+  },
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file"
+        }
+      }
+    }
+  }
+}`,
+
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "schemas": [
+    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string",
+      "enum": [
+        "one",
+        "two"
+      ]
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "versions": 1,
+          "versionid": true,
+          "latest": true,
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`,
+	})
+
+	xHTTP(t, reg, "PUT", "/", `{"description": "testing"}`, 400,
+		`Error processing registry: Attribute "description"(testing) must be one of the enum values: one, two`+"\n")
+
+	xHTTP(t, reg, "PUT", "/", `{}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPModel",
+  "epoch": 2,
+  "self": "http://localhost:8181/",
+
+  "dirscount": 0,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", `{"description": "two"}`, 200, `{
+  "specversion": "0.5",
+  "id": "TestHTTPModel",
+  "epoch": 3,
+  "self": "http://localhost:8181/",
+  "description": "two",
+
+  "dirscount": 0,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
 }
 
 func TestHTTPRegistry(t *testing.T) {
