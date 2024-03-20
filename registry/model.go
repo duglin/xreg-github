@@ -63,14 +63,13 @@ type Attribute struct {
 	// We have them here so we can have access to them in any func that
 	// gets passed the model attribute.
 	// If anything gets added below MAKE SURE to update SetSpecPropsFields too
-	levels       string // show only for these levels, ""==all
-	immutable    bool   // can change after set?
-	dontStore    bool
-	httpHeader   string
-	modelExclude bool                            // Show in "/model" or not
-	getFn        func(*Entity, *RequestInfo) any // return prop's value
-	checkFn      func(*Entity) error             // validate incoming prop
-	updateFn     func(*Entity, bool) error       // prep prop for saving to DB
+	levels     string // show only for these levels, ""==all
+	immutable  bool   // can change after set?
+	dontStore  bool
+	httpHeader string
+	getFn      func(*Entity, *RequestInfo) any // return prop's value
+	checkFn    func(*Entity) error             // validate incoming prop
+	updateFn   func(*Entity, bool) error       // prep prop for saving to DB
 }
 
 type Item struct { // for maps and arrays
@@ -121,11 +120,11 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 	for _, specProp := range OrderedSpecProps {
 		if attr, ok := attrsCopy[specProp.Name]; ok {
 			delete(attrsCopy, specProp.Name)
-			/* TODO DUG
+			// We need to exclude "model" because we don't want to show the
+			// end user "model" as a valid attribute in the model.
 			if specProp.Name == "model" {
 				continue
 			}
-			*/
 
 			if count > 0 {
 				buf.WriteRune(',')
@@ -243,7 +242,12 @@ func (m *Model) Save() error {
 		return err
 	}
 
-	buf, _ := json.Marshal(m.Attributes)
+	// Create a temporary type so that we don't use the MarshalJSON func
+	// in model.go. That one will exclude "model" from the serialization and
+	// we don't want to do that when we're saving it in the DB. We only want
+	// to do that when we're serializing the model for the end user.
+	type tmpAttributes Attributes
+	buf, _ := json.Marshal((tmpAttributes)(m.Attributes))
 	attrs := string(buf)
 
 	err = DoZeroOne(m.Registry.tx,
@@ -525,7 +529,6 @@ func LoadModel(reg *Registry) *Model {
 	}
 
 	if row[0] != nil {
-		// json.Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
 		Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
 	}
 	results.Close()
@@ -640,6 +643,8 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 		}
 	}
 
+	m.Attributes = newM.Attributes
+
 	// Find all old groups that need to be deleted
 	for gmPlural, gm := range m.Groups {
 		if newGM, ok := newM.Groups[gmPlural]; !ok {
@@ -669,11 +674,6 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 			}
 		} else {
 			oldGM.Singular = newGM.Singular
-			/*
-				if err = oldGM.Save(); err != nil {
-					return err
-				}
-			*/
 		}
 		oldGM.Attributes = newGM.Attributes
 
@@ -689,11 +689,6 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 				oldRM.VersionId = newRM.VersionId
 				oldRM.Latest = newRM.Latest
 				oldRM.HasDocument = newRM.HasDocument
-				/*
-					if err = oldRM.Save(); err != nil {
-						return err
-					}
-				*/
 			}
 			oldRM.Attributes = newRM.Attributes
 		}
@@ -1094,6 +1089,12 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 // spec defined version of it. There's only so much that we allow the
 // user to customize
 func EnsureAttrOK(userAttr *Attribute, specAttr *Attribute) error {
+	// Just blindly ignore any updates made to "model"
+	if userAttr.Name == "model" {
+		*userAttr = *specAttr
+		return nil
+	}
+
 	if specAttr.ServerRequired {
 		if userAttr.ServerRequired == false {
 			return fmt.Errorf(`"model.%s" must have its "serverrequired" `+
@@ -1104,10 +1105,12 @@ func EnsureAttrOK(userAttr *Attribute, specAttr *Attribute) error {
 				`attribute set to "true"`, userAttr.Name)
 		}
 	}
+
 	if specAttr.Type != userAttr.Type {
 		return fmt.Errorf(`"model.%s" must have a "type" of %q`,
 			userAttr.Name, specAttr.Type)
 	}
+
 	return nil
 }
 
@@ -1135,7 +1138,7 @@ func (m *Model) Verify() error {
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Registry level attribute, then skip it
-		if !specProp.InLevel(0) || specProp.modelExclude {
+		if !specProp.InLevel(0) {
 			continue
 		}
 
@@ -1195,7 +1198,7 @@ func (gm *GroupModel) Verify(gmName string) error {
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Group level attribute, then skip it
-		if !specProp.InLevel(1) || specProp.modelExclude {
+		if !specProp.InLevel(1) {
 			continue
 		}
 
@@ -1271,7 +1274,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Resource level attribute, then skip it
-		if (!specProp.InLevel(3) && !specProp.InLevel(2)) || specProp.modelExclude {
+		if !specProp.InLevel(3) && !specProp.InLevel(2) {
 			continue
 		}
 
@@ -1452,7 +1455,6 @@ func (attrs Attributes) SetSpecPropsFields() {
 			attr.immutable = specProp.immutable
 			attr.dontStore = specProp.dontStore
 			attr.httpHeader = specProp.httpHeader
-			attr.modelExclude = specProp.modelExclude
 			attr.getFn = specProp.getFn
 			attr.checkFn = specProp.checkFn
 			attr.updateFn = specProp.updateFn

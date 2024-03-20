@@ -2350,6 +2350,12 @@ func TestResourceModelCreate(t *testing.T) {
 `)
 
 	newModel := &registry.Model{
+		Attributes: registry.Attributes{
+			"mystr": &registry.Attribute{
+				Name: "mystr",
+				Type: registry.STRING,
+			},
+		},
 		Groups: map[string]*registry.GroupModel{
 			"dirs": &registry.GroupModel{
 				Plural:   "dirs",
@@ -2368,7 +2374,7 @@ func TestResourceModelCreate(t *testing.T) {
 		},
 	}
 
-	reg.Model.ApplyNewModel(newModel)
+	xNoErr(t, reg.Model.ApplyNewModel(newModel))
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
     "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -2434,6 +2440,10 @@ func TestResourceModelCreate(t *testing.T) {
       "name": "modifiedon",
       "type": "timestamp",
       "readonly": true
+    },
+    "mystr": {
+      "name": "mystr",
+      "type": "string"
     }
   },
   "groups": {
@@ -2595,6 +2605,20 @@ func TestResourceModelCreate(t *testing.T) {
 }
 `)
 
+	// Make sure we allow, but ignore updates to "model"
+	newModel = &registry.Model{
+		Attributes: registry.Attributes{
+			"model": &registry.Attribute{
+				Name: "model",
+				Type: registry.STRING,
+			},
+		},
+	}
+	err = reg.Model.ApplyNewModel(newModel)
+	xNoErr(t, err)
+	// Rollback since the previous "newModel" erased too much
+	xNoErr(t, reg.Rollback())
+
 	reg.LoadModel()
 	g, _ := reg.AddGroup("dirs", "dir1")
 	g.AddResource("files", "f1", "v1")
@@ -2669,6 +2693,10 @@ func TestResourceModelCreate(t *testing.T) {
         "name": "modifiedon",
         "type": "timestamp",
         "readonly": true
+      },
+      "mystr": {
+        "name": "mystr",
+        "type": "string"
       }
     },
     "groups": {

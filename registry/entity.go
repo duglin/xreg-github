@@ -911,13 +911,18 @@ var OrderedSpecProps = []*Attribute{
 	},
 	{
 		Name:     "model",
-		Type:     ANY, // OBJECT
+		Type:     OBJECT,
 		ReadOnly: true,
+		Attributes: Attributes{
+			"*": &Attribute{
+				Name: "*",
+				Type: ANY,
+			},
+		},
 
-		levels:       "0",
-		immutable:    true,
-		dontStore:    false,
-		modelExclude: true,
+		levels:    "0",
+		immutable: true,
+		dontStore: false,
 		getFn: func(e *Entity, info *RequestInfo) any {
 			if info != nil && info.ShowModel {
 				model := info.Registry.Model
@@ -1249,8 +1254,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	// level := 0
 	singular := ""
 
-	// Add user-defined attributes
-	// TODO check for conflicts with xReg defined ones
+	// Add attributes from the model (core and user-defined)
 	paths := strings.Split(e.Abstract, string(DB_IN))
 	if len(paths) == 0 || paths[0] == "" {
 		maps.Copy(attrs, e.Registry.Model.Attributes)
