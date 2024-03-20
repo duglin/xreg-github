@@ -38,11 +38,24 @@ type Model struct {
 
 type Attributes map[string]*Attribute // AttrName->Attr
 
+// Defined a separate struct instead of just inlining these attributes so
+// that we can just copy them over in one statement in SetSpecPropsFields()
+// and so that if we add more we don't need to remember to update that func
+type AttrInternals struct {
+	levels     string // show only for these levels, ""==all
+	immutable  bool   // can change after set?
+	dontStore  bool   // don't store this prop in the DB
+	httpHeader string // custom HTTP header name, not xRegistry-xxx
+
+	getFn    func(*Entity, *RequestInfo) any // return prop's value
+	checkFn  func(*Entity) error             // validate incoming prop
+	updateFn func(*Entity, bool) error       // prep prop for saving to DB
+}
+
 // Do not include "omitempty" on any attribute that has a default value that
 // doesn't match golang's default value for that type. E.g. bool defaults to
 // 'false', but Strict needs to default to 'true'. See the custome Unmarshal
 // funcs in model.go for how we set those
-
 type Attribute struct {
 	Registry       *Registry `json:"-"`
 	Name           string    `json:"name,omitempty"`
@@ -63,13 +76,7 @@ type Attribute struct {
 	// We have them here so we can have access to them in any func that
 	// gets passed the model attribute.
 	// If anything gets added below MAKE SURE to update SetSpecPropsFields too
-	levels     string // show only for these levels, ""==all
-	immutable  bool   // can change after set?
-	dontStore  bool
-	httpHeader string
-	getFn      func(*Entity, *RequestInfo) any // return prop's value
-	checkFn    func(*Entity) error             // validate incoming prop
-	updateFn   func(*Entity, bool) error       // prep prop for saving to DB
+	internals AttrInternals
 }
 
 type Item struct { // for maps and arrays
@@ -1031,7 +1038,8 @@ func IsString(daType string) bool {
 }
 
 func (a *Attribute) InLevel(level int) bool {
-	return a.levels == "" || strings.ContainsRune(a.levels, rune('0'+level))
+	return a.internals.levels == "" ||
+		strings.ContainsRune(a.internals.levels, rune('0'+level))
 }
 
 func (a *Attribute) IsScalar() bool {
@@ -1451,13 +1459,7 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 func (attrs Attributes) SetSpecPropsFields() {
 	for k, attr := range attrs {
 		if specProp := SpecProps[k]; specProp != nil {
-			attr.levels = specProp.levels
-			attr.immutable = specProp.immutable
-			attr.dontStore = specProp.dontStore
-			attr.httpHeader = specProp.httpHeader
-			attr.getFn = specProp.getFn
-			attr.checkFn = specProp.checkFn
-			attr.updateFn = specProp.updateFn
+			attr.internals = specProp.internals
 		}
 	}
 }

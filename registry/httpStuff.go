@@ -524,8 +524,8 @@ FROM FullTree WHERE RegSID=? AND `
 		}
 
 		var headerName string
-		if attr.httpHeader != "" {
-			headerName = attr.httpHeader
+		if attr.internals.httpHeader != "" {
+			headerName = attr.internals.httpHeader
 		} else {
 			headerName = "xRegistry-" + key
 		}
@@ -677,8 +677,8 @@ var attrHeaders = map[string]*Attribute{}
 func init() {
 	// Load-up the attributes that have custom http header names
 	for _, attr := range OrderedSpecProps {
-		if attr.httpHeader != "" {
-			attrHeaders[strings.ToLower(attr.httpHeader)] = attr
+		if attr.internals.httpHeader != "" {
+			attrHeaders[strings.ToLower(attr.internals.httpHeader)] = attr
 		}
 	}
 }

@@ -381,7 +381,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	name := pp.DB()
 
 	// Any prop with "dontStore"=true we skip
-	if sp, ok := SpecProps[pp.Top()]; ok && sp.dontStore {
+	if sp, ok := SpecProps[pp.Top()]; ok && sp.internals.dontStore {
 		return nil
 	}
 
@@ -583,123 +583,131 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 		ReadOnly:       true,
 
-		levels:    "0",
-		immutable: true,
-		dontStore: false,
-		getFn: func(e *Entity, info *RequestInfo) any {
-			return SPECVERSION
+		internals: AttrInternals{
+			levels:    "0",
+			immutable: true,
+			dontStore: false,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				return SPECVERSION
+			},
+			checkFn: func(e *Entity) error {
+				tmp := e.NewObject["specversion"]
+				if !IsNil(tmp) && tmp != "" && tmp != SPECVERSION {
+					return fmt.Errorf("Invalid 'specversion': %s", tmp)
+				}
+				return nil
+			},
+			updateFn: nil,
 		},
-		checkFn: func(e *Entity) error {
-			tmp := e.NewObject["specversion"]
-			if !IsNil(tmp) && tmp != "" && tmp != SPECVERSION {
-				return fmt.Errorf("Invalid 'specversion': %s", tmp)
-			}
-			return nil
-		},
-		updateFn: nil,
 	},
 	{
 		Name:           "id",
 		Type:           STRING,
 		ServerRequired: true,
 
-		levels:    "",
-		immutable: true,
-		dontStore: false,
-		getFn:     nil,
-		checkFn: func(e *Entity) error {
-			if e.Object != nil {
-				oldID := any(e.UID)
-				newID := any(e.NewObject["id"])
+		internals: AttrInternals{
+			levels:    "",
+			immutable: true,
+			dontStore: false,
+			getFn:     nil,
+			checkFn: func(e *Entity) error {
+				if e.Object != nil {
+					oldID := any(e.UID)
+					newID := any(e.NewObject["id"])
 
-				if !IsNil(newID) && newID == "" {
-					return fmt.Errorf("ID can't be an empty string")
-				}
-				if IsNil(newID) {
-					newID = ""
-				}
+					if !IsNil(newID) && newID == "" {
+						return fmt.Errorf("ID can't be an empty string")
+					}
+					if IsNil(newID) {
+						newID = ""
+					}
 
-				if newID != "" && oldID != "" && newID != oldID {
-					return fmt.Errorf("Can't change the ID of an "+
-						"entity(%s->%s)", oldID, newID)
+					if newID != "" && oldID != "" && newID != oldID {
+						return fmt.Errorf("Can't change the ID of an "+
+							"entity(%s->%s)", oldID, newID)
+					}
 				}
-			}
-			return nil
-		},
-		updateFn: func(e *Entity, isNew bool) error {
-			if e.Object != nil {
-				if IsNil(e.NewObject["id"]) && !IsNil(e.Object["id"]) {
-					e.NewObject["id"] = e.Object["id"]
-					return nil
+				return nil
+			},
+			updateFn: func(e *Entity, isNew bool) error {
+				if e.Object != nil {
+					if IsNil(e.NewObject["id"]) && !IsNil(e.Object["id"]) {
+						e.NewObject["id"] = e.Object["id"]
+						return nil
+					}
 				}
-			}
-			return nil
+				return nil
+			},
 		},
 	},
 	{
 		Name: "name",
 		Type: STRING,
 
-		levels:    "",
-		immutable: false,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: false,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name:           "epoch",
 		Type:           UINTEGER,
 		ServerRequired: true,
 
-		levels:    "",
-		immutable: true,
-		dontStore: false,
-		getFn:     nil,
-		checkFn: func(e *Entity) error {
-			if e.SkipEpoch {
-				return nil
-			}
+		internals: AttrInternals{
+			levels:    "",
+			immutable: true,
+			dontStore: false,
+			getFn:     nil,
+			checkFn: func(e *Entity) error {
+				if e.SkipEpoch {
+					return nil
+				}
 
-			val := e.NewObject["epoch"]
-			if IsNil(val) {
-				return nil
-			}
+				val := e.NewObject["epoch"]
+				if IsNil(val) {
+					return nil
+				}
 
-			tmp := e.Object["epoch"]
-			oldEpoch := NotNilInt(&tmp)
-			if oldEpoch < 0 {
-				oldEpoch = 0
-			}
+				tmp := e.Object["epoch"]
+				oldEpoch := NotNilInt(&tmp)
+				if oldEpoch < 0 {
+					oldEpoch = 0
+				}
 
-			newEpoch, err := AnyToUInt(val)
-			if err != nil {
-				return fmt.Errorf("Attribute \"epoch\" must be a uinteger")
-			}
+				newEpoch, err := AnyToUInt(val)
+				if err != nil {
+					return fmt.Errorf("Attribute \"epoch\" must be a uinteger")
+				}
 
-			if oldEpoch != 0 && newEpoch != oldEpoch {
-				return fmt.Errorf("Attribute %q(%d) doesn't match existing "+
-					"value (%d)", "epoch", newEpoch, oldEpoch)
-			}
-			return nil
-		},
-		updateFn: func(e *Entity, isNew bool) error {
-			if e.SkipEpoch {
+				if oldEpoch != 0 && newEpoch != oldEpoch {
+					return fmt.Errorf("Attribute %q(%d) doesn't match existing "+
+						"value (%d)", "epoch", newEpoch, oldEpoch)
+				}
 				return nil
-			}
-			tmp := e.Object["epoch"]
-			if IsNil(tmp) {
+			},
+			updateFn: func(e *Entity, isNew bool) error {
+				if e.SkipEpoch {
+					return nil
+				}
+				tmp := e.Object["epoch"]
+				if IsNil(tmp) {
+					return nil
+				}
+				epoch := NotNilInt(&tmp)
+				if epoch < 0 {
+					epoch = 0
+				}
+				if isNew {
+					epoch = 0
+				}
+				e.NewObject["epoch"] = epoch + 1
 				return nil
-			}
-			epoch := NotNilInt(&tmp)
-			if epoch < 0 {
-				epoch = 0
-			}
-			if isNew {
-				epoch = 0
-			}
-			e.NewObject["epoch"] = epoch + 1
-			return nil
+			},
 		},
 	},
 	{
@@ -708,15 +716,91 @@ var OrderedSpecProps = []*Attribute{
 		ReadOnly:       true,
 		ServerRequired: true,
 
-		levels:    "",
-		immutable: true,
-		dontStore: false,
-		getFn: func(e *Entity, info *RequestInfo) any {
-			base := ""
-			if info != nil {
-				base = info.BaseURL
-			}
-			if e.Level > 1 {
+		internals: AttrInternals{
+			levels:    "",
+			immutable: true,
+			dontStore: false,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				base := ""
+				if info != nil {
+					base = info.BaseURL
+				}
+				if e.Level > 1 {
+					meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
+					absParts := strings.Split(e.Abstract, string(DB_IN))
+					gm := e.Registry.Model.Groups[absParts[0]]
+					rm := gm.Resources[absParts[1]]
+					if rm.HasDocument == false {
+						meta = false
+					}
+
+					if meta {
+						return base + "/" + e.Path + "?meta"
+					} else {
+						return base + "/" + e.Path
+					}
+				}
+				return base + "/" + e.Path
+			},
+			checkFn:  nil,
+			updateFn: nil,
+		},
+	},
+	{
+		Name: "latest",
+		Type: BOOLEAN,
+
+		internals: AttrInternals{
+			levels:    "3",
+			immutable: true,
+			dontStore: true,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn: func(e *Entity, isNew bool) error {
+				// TODO if set, set latestvesionid in the resource to this
+				// guy's UID
+
+				return nil
+			},
+		},
+	},
+	{
+		Name:     "latestversionid",
+		Type:     STRING,
+		ReadOnly: true,
+		// ServerRequired: true,
+
+		internals: AttrInternals{
+			levels:    "2",
+			immutable: true,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
+	},
+	{
+		Name:     "latestversionurl",
+		Type:     URL,
+		ReadOnly: true,
+		// ServerRequired: true,
+
+		internals: AttrInternals{
+			levels:    "2",
+			immutable: true,
+			dontStore: false,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				val := e.Object["latestversionid"]
+				if IsNil(val) {
+					return nil
+				}
+				base := ""
+				if info != nil {
+					base = info.BaseURL
+				}
+
+				tmp := base + "/" + e.Path + "/versions/" + val.(string)
+
 				meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
 				absParts := strings.Split(e.Abstract, string(DB_IN))
 				gm := e.Registry.Model.Groups[absParts[0]]
@@ -726,103 +810,39 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if meta {
-					return base + "/" + e.Path + "?meta"
-				} else {
-					return base + "/" + e.Path
+					tmp += "?meta"
 				}
-			}
-			return base + "/" + e.Path
+				return tmp
+			},
+			checkFn:  nil,
+			updateFn: nil,
 		},
-		checkFn:  nil,
-		updateFn: nil,
-	},
-	{
-		Name: "latest",
-		Type: BOOLEAN,
-
-		levels:    "3",
-		immutable: true,
-		dontStore: true,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn: func(e *Entity, isNew bool) error {
-			// TODO if set, set latestvesionid in the resource to this
-			// guy's UID
-
-			return nil
-		},
-	},
-	{
-		Name:     "latestversionid",
-		Type:     STRING,
-		ReadOnly: true,
-		// ServerRequired: true,
-
-		levels:    "2",
-		immutable: true,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
-	},
-	{
-		Name:     "latestversionurl",
-		Type:     URL,
-		ReadOnly: true,
-		// ServerRequired: true,
-
-		levels:    "2",
-		immutable: true,
-		dontStore: false,
-		getFn: func(e *Entity, info *RequestInfo) any {
-			val := e.Object["latestversionid"]
-			if IsNil(val) {
-				return nil
-			}
-			base := ""
-			if info != nil {
-				base = info.BaseURL
-			}
-
-			tmp := base + "/" + e.Path + "/versions/" + val.(string)
-
-			meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
-			absParts := strings.Split(e.Abstract, string(DB_IN))
-			gm := e.Registry.Model.Groups[absParts[0]]
-			rm := gm.Resources[absParts[1]]
-			if rm.HasDocument == false {
-				meta = false
-			}
-
-			if meta {
-				tmp += "?meta"
-			}
-			return tmp
-		},
-		checkFn:  nil,
-		updateFn: nil,
 	},
 	{
 		Name: "description",
 		Type: STRING,
 
-		levels:    "",
-		immutable: false,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: false,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name: "documentation",
 		Type: URL,
 
-		levels:    "",
-		immutable: false,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: false,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name: "labels",
@@ -831,83 +851,97 @@ var OrderedSpecProps = []*Attribute{
 			Type: STRING,
 		},
 
-		levels:    "",
-		immutable: false,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: false,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name: "origin",
 		Type: URI,
 
-		levels:    "123",
-		immutable: false,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "123",
+			immutable: false,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name:     "createdby",
 		Type:     STRING,
 		ReadOnly: true,
 
-		levels:    "",
-		immutable: true,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: true,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name:     "createdon",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
 
-		levels:    "",
-		immutable: true,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: true,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name:     "modifiedby",
 		Type:     STRING,
 		ReadOnly: true,
 
-		levels:    "",
-		immutable: true,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: true,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name:     "modifiedon",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
 
-		levels:    "",
-		immutable: true,
-		dontStore: false,
-		getFn:     nil,
-		checkFn:   nil,
-		updateFn:  nil,
+		internals: AttrInternals{
+			levels:    "",
+			immutable: true,
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
 	},
 	{
 		Name: "contenttype",
 		Type: STRING,
 
-		levels:     "23",
-		immutable:  false,
-		dontStore:  false,
-		httpHeader: "Content-Type",
-		getFn:      nil,
-		checkFn:    nil,
-		updateFn:   nil,
+		internals: AttrInternals{
+			levels:     "23",
+			immutable:  false,
+			dontStore:  false,
+			httpHeader: "Content-Type",
+			getFn:      nil,
+			checkFn:    nil,
+			updateFn:   nil,
+		},
 	},
 	{
 		Name:     "model",
@@ -920,22 +954,24 @@ var OrderedSpecProps = []*Attribute{
 			},
 		},
 
-		levels:    "0",
-		immutable: true,
-		dontStore: false,
-		getFn: func(e *Entity, info *RequestInfo) any {
-			if info != nil && info.ShowModel {
-				model := info.Registry.Model
-				if model == nil {
-					model = &Model{}
+		internals: AttrInternals{
+			levels:    "0",
+			immutable: true,
+			dontStore: false,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				if info != nil && info.ShowModel {
+					model := info.Registry.Model
+					if model == nil {
+						model = &Model{}
+					}
+					httpModel := model // ModelToHTTPModel(model)
+					return httpModel
 				}
-				httpModel := model // ModelToHTTPModel(model)
-				return httpModel
-			}
-			return nil
+				return nil
+			},
+			checkFn:  nil,
+			updateFn: nil,
 		},
-		checkFn:  nil,
-		updateFn: nil,
 	},
 }
 
@@ -1117,13 +1153,13 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 	// Regardless of the type of entity, set the generated properties
 	for _, prop := range OrderedSpecProps {
 		// Only generate props that are for this level, and have a Fn
-		if prop.getFn == nil || !prop.InLevel(e.Level) {
+		if prop.internals.getFn == nil || !prop.InLevel(e.Level) {
 			continue
 		}
 
 		// Only generate/set the value if it's not already set
 		if _, ok := mat[prop.Name]; !ok {
-			if val := prop.getFn(e, info); !IsNil(val) {
+			if val := prop.internals.getFn(e, info); !IsNil(val) {
 				// Only write it if we have a value
 				mat[prop.Name] = val
 			}
@@ -1306,71 +1342,83 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 		// Add resource content attributes
 		attrs[singular] = &Attribute{
-			Name:    singular,
-			Type:    ANY,
-			checkFn: checkFn,
-			updateFn: func(e *Entity, isNew bool) error {
-				v, ok := e.NewObject[singular]
-				if ok {
-					e.NewObject["#resource"] = v
-					// e.NewObject["#resourceURL"] = nil
-					delete(e.NewObject, singular)
-				}
-				return nil
+			Name: singular,
+			Type: ANY,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity, isNew bool) error {
+					v, ok := e.NewObject[singular]
+					if ok {
+						e.NewObject["#resource"] = v
+						// e.NewObject["#resourceURL"] = nil
+						delete(e.NewObject, singular)
+					}
+					return nil
+				},
 			},
 		}
 		attrs[singular+"url"] = &Attribute{
-			Name:    singular + "url",
-			Type:    URL,
-			checkFn: checkFn,
-			updateFn: func(e *Entity, isNew bool) error {
-				v, ok := e.NewObject[singular+"url"]
-				if !ok {
+			Name: singular + "url",
+			Type: URL,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity, isNew bool) error {
+					v, ok := e.NewObject[singular+"url"]
+					if !ok {
+						return nil
+					}
+					e.NewObject["#resource"] = nil
+					e.NewObject["#resourceURL"] = v
+					delete(e.NewObject, singular+"url")
 					return nil
-				}
-				e.NewObject["#resource"] = nil
-				e.NewObject["#resourceURL"] = v
-				delete(e.NewObject, singular+"url")
-				return nil
+				},
 			},
 		}
 		attrs[singular+"proxyurl"] = &Attribute{
-			Name:    singular + "proxyurl",
-			Type:    URL,
-			checkFn: checkFn,
-			updateFn: func(e *Entity, isNew bool) error {
-				v, ok := e.NewObject[singular+"proxyurl"]
-				if !ok {
+			Name: singular + "proxyurl",
+			Type: URL,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity, isNew bool) error {
+					v, ok := e.NewObject[singular+"proxyurl"]
+					if !ok {
+						return nil
+					}
+					e.NewObject["#resource"] = nil
+					e.NewObject["#resourceProxyURL"] = v
+					delete(e.NewObject, singular+"proxyurl")
 					return nil
-				}
-				e.NewObject["#resource"] = nil
-				e.NewObject["#resourceProxyURL"] = v
-				delete(e.NewObject, singular+"proxyurl")
-				return nil
+				},
 			},
 		}
 		attrs[singular+"base64"] = &Attribute{
-			Name:    singular + "base64",
-			Type:    STRING,
-			checkFn: checkFn,
-			updateFn: func(e *Entity, isNew bool) error {
-				v, ok := e.NewObject[singular+"base64"]
-				if !ok {
-					return nil
-				}
-				if !IsNil(v) {
-					data := v.(string)
-					content, err := base64.StdEncoding.DecodeString(data)
-					if err != nil {
-						return fmt.Errorf("Error decoding \"%sbase64\" "+
-							"attribute: "+"%s", singular, err)
+			Name: singular + "base64",
+			Type: STRING,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity, isNew bool) error {
+					v, ok := e.NewObject[singular+"base64"]
+					if !ok {
+						return nil
 					}
-					v = any(content)
-				}
-				e.NewObject["#resource"] = v
-				// e.NewObject["#resourceURL"] = nil
-				delete(e.NewObject, singular+"base64")
-				return nil
+					if !IsNil(v) {
+						data := v.(string)
+						content, err := base64.StdEncoding.DecodeString(data)
+						if err != nil {
+							return fmt.Errorf("Error decoding \"%sbase64\" "+
+								"attribute: "+"%s", singular, err)
+						}
+						v = any(content)
+					}
+					e.NewObject["#resource"] = v
+					// e.NewObject["#resourceURL"] = nil
+					delete(e.NewObject, singular+"base64")
+					return nil
+				},
 			},
 		}
 	}
@@ -1612,8 +1660,8 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			// then allow for that to be called
 			if attr.ReadOnly {
 				// Call the attr's checkFn if there
-				if attr.checkFn != nil {
-					if err := attr.checkFn(e); err != nil {
+				if attr.internals.checkFn != nil {
+					if err := attr.internals.checkFn(e); err != nil {
 						return err
 					}
 				}
@@ -1635,8 +1683,8 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			}
 
 			// Call the attr's checkFn if there - for more refined checks
-			if attr.checkFn != nil {
-				if err := attr.checkFn(e); err != nil {
+			if attr.internals.checkFn != nil {
+				if err := attr.internals.checkFn(e); err != nil {
 					return err
 				}
 			}
@@ -1878,8 +1926,8 @@ func PrepUpdateEntity(e *Entity, isNew bool) error {
 
 	for key, _ := range attrs {
 		attr := attrs[key]
-		if attr.updateFn != nil {
-			if err := attr.updateFn(e, isNew); err != nil {
+		if attr.internals.updateFn != nil {
+			if err := attr.internals.updateFn(e, isNew); err != nil {
 				return err
 			}
 		}
