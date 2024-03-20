@@ -158,7 +158,7 @@ func TestHTTPhtml(t *testing.T) {
 		ResHeaders: []string{"Content-Type:text/html"},
 		ResBody: `<pre>
 {
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPhtml",
   "epoch": 1,
   "self": "<a href="http://localhost:8181/?html">http://localhost:8181/?html</a>"
@@ -183,11 +183,78 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPModel",
   "epoch": 1,
   "self": "http://localhost:8181/",
-  "model": {}
+  "model": {
+    "schemas": [
+      "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
+    ],
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "id": {
+        "name": "id",
+        "type": "string",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdby": {
+        "name": "createdby",
+        "type": "string",
+        "readonly": true
+      },
+      "createdon": {
+        "name": "createdon",
+        "type": "timestamp",
+        "readonly": true
+      },
+      "modifiedby": {
+        "name": "modifiedby",
+        "type": "string",
+        "readonly": true
+      },
+      "modifiedon": {
+        "name": "modifiedon",
+        "type": "timestamp",
+        "readonly": true
+      }
+    }
+  }
 }
 `,
 	})
@@ -202,7 +269,74 @@ func TestHTTPModel(t *testing.T) {
 
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
-		ResBody: `{}
+		ResBody: `{
+  "schemas": [
+    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
+}
 `,
 	})
 
@@ -216,7 +350,74 @@ func TestHTTPModel(t *testing.T) {
 
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
-		ResBody: `{}
+		ResBody: `{
+  "schemas": [
+    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
+}
 `,
 	})
 
@@ -231,8 +432,72 @@ func TestHTTPModel(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "schemas": [
-    "schema1"
-  ]
+    "schema1",
+    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
 }
 `,
 	})
@@ -243,9 +508,6 @@ func TestHTTPModel(t *testing.T) {
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
-  "schemas": [
-    "schema1"
-  ],
   "groups": {
     "dirs": {
       "plural": "dirs",
@@ -264,12 +526,136 @@ func TestHTTPModel(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "schemas": [
-    "schema1"
+    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
   ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -277,7 +663,86 @@ func TestHTTPModel(t *testing.T) {
           "versions": 1,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -317,12 +782,137 @@ func TestHTTPModel(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "schemas": [
-    "schema1"
+    "schema1",
+    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
   ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -330,7 +920,86 @@ func TestHTTPModel(t *testing.T) {
           "versions": 1,
           "versionid": true,
           "latest": true,
-          "hasdocument": false
+          "hasdocument": false,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -436,7 +1105,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 2,
   "self": "http://localhost:8181/"
@@ -453,7 +1122,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 3,
   "self": "http://localhost:8181/"
@@ -472,7 +1141,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 4,
   "self": "http://localhost:8181/"
@@ -499,7 +1168,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 4,
 
@@ -542,7 +1211,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 5,
   "self": "http://localhost:8181/",
@@ -614,7 +1283,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 5,
 
@@ -638,7 +1307,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 6,
   "self": "http://localhost:8181/",
@@ -804,7 +1473,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 7,
   "self": "http://localhost:8181/",
@@ -824,7 +1493,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 8,
   "self": "http://localhost:8181/"
@@ -847,7 +1516,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 9,
   "self": "http://localhost:8181/",
@@ -874,7 +1543,7 @@ func TestHTTPRegistry(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"application/json"},
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
   "epoch": 10,
   "self": "http://localhost:8181/",
@@ -2857,7 +3526,7 @@ func TestHTTPEnum(t *testing.T) {
 		Name:   "myint",
 		Type:   registry.INTEGER,
 		Enum:   []any{1, 2, 3},
-		Strict: true,
+		Strict: registry.PtrBool(true),
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2868,7 +3537,7 @@ func TestHTTPEnum(t *testing.T) {
 }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
   "epoch": 2,
   "self": "http://localhost:8181/"
@@ -2885,7 +3554,7 @@ func TestHTTPEnum(t *testing.T) {
 }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
   "epoch": 3,
   "self": "http://localhost:8181/",
@@ -2906,7 +3575,7 @@ func TestHTTPEnum(t *testing.T) {
 			"one of the enum values: 1, 2, 3\n",
 	})
 
-	attr.Strict = false
+	attr.Strict = registry.PtrBool(false)
 	reg.Model.Save()
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2918,7 +3587,7 @@ func TestHTTPEnum(t *testing.T) {
 }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
   "epoch": 4,
   "self": "http://localhost:8181/",
@@ -2936,7 +3605,7 @@ func TestHTTPEnum(t *testing.T) {
 }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
   "epoch": 5,
   "self": "http://localhost:8181/",
@@ -3046,7 +3715,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 2,
   "self": "http://localhost:8181/",
@@ -3089,7 +3758,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 3,
   "self": "http://localhost:8181/",
@@ -3129,7 +3798,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 4,
   "self": "http://localhost:8181/",
@@ -3162,7 +3831,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 5,
   "self": "http://localhost:8181/",
@@ -3193,7 +3862,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 6,
   "self": "http://localhost:8181/",
@@ -3244,7 +3913,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 7,
   "self": "http://localhost:8181/",
@@ -3263,7 +3932,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 8,
   "self": "http://localhost:8181/",
@@ -3311,7 +3980,7 @@ func TestHTTPIfValue(t *testing.T) {
 	   }`,
 		Code: 200,
 		ResBody: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
   "epoch": 9,
   "self": "http://localhost:8181/",
@@ -4468,7 +5137,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 	xNoErr(t, reg.Set("description", "testing"))
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRequiredFields",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -4850,14 +5519,222 @@ func TestHTTPModelSchema(t *testing.T) {
 	reg := NewRegistry("TestHTTPModelSchema")
 	defer PassDeleteReg(t, reg)
 
-	xHTTP(t, reg, "GET", "/model", "", 200, `{}
+	xHTTP(t, reg, "GET", "/model", "", 200, `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
+}
 `)
 
-	xHTTP(t, reg, "GET", "/model?schema=xRegistry", "", 200, `{}
+	xHTTP(t, reg, "GET", "/model?schema="+registry.XREGSCHEMA, "", 200, `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/model?schema="+registry.XREGSCHEMA+"/"+registry.SPECVERSION, "", 200, `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/model?schema="+registry.XREGSCHEMA+"/bad", "", 400,
+		`Unsupported schema format: xRegistry-json/bad
 `)
 
 	xHTTP(t, reg, "GET", "/model?schema=bad", "", 400,
-		`Unsupported schema value: "bad". Must be: "xregistry"
+		`Unsupported schema format: bad
 `)
 
 }

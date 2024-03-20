@@ -282,7 +282,7 @@ func TestSetLabels(t *testing.T) {
 	ver2.Set(labels.P("2nd").UI(), "3rd")
 
 	xCheckGet(t, reg, "?inline", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestSetLabels",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -354,7 +354,7 @@ func TestSetLabels(t *testing.T) {
 
 	file.SetLatest(ver)
 	xCheckGet(t, reg, "?inline", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestSetLabels",
   "epoch": 1,
   "self": "http://localhost:8181/",

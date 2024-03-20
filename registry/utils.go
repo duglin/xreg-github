@@ -118,6 +118,10 @@ func NotNilBoolDef(val *any, def bool) bool {
 	return ((*val).(int64)) == 1
 }
 
+func PtrBool(b bool) *bool {
+	return &b
+}
+
 func PtrBoolDef(val *any, def bool) *bool {
 	result := NotNilBoolDef(val, def)
 	return &result
@@ -133,6 +137,18 @@ func ToJSON(obj interface{}) string {
 	if err != nil {
 		log.Fatalf("Error Marshaling: %s", err)
 	}
+	return string(buf)
+}
+
+func ToJSONOneLine(obj interface{}) string {
+	buf, err := json.MarshalIndent(obj, "", "  ")
+	if err != nil {
+		log.Fatalf("Error Marshaling: %s", err)
+	}
+
+	re := regexp.MustCompile(`[\s\r\n]*`)
+	buf = re.ReplaceAll(buf, []byte(""))
+
 	return string(buf)
 }
 

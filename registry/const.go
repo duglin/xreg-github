@@ -1,6 +1,7 @@
 package registry
 
 const SPECVERSION = "0.5"
+const XREGSCHEMA = "xRegistry-json"
 
 // Model attribute default values
 const STRICT = true

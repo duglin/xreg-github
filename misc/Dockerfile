@@ -26,6 +26,6 @@ COPY --from=0 /go/src/server /server
 COPY --from=0 /go/src/xr /xr
 COPY misc/repo.tar /misc/repo.tar
 
-CMD [ "/server" ]
+ENTRYPOINT [ "/server" ]
 # ENTRYPOINT [ "/usr/bin/sh" ]
 # CMD [ "-c", "docker-entrypoint.sh mysqld & sleep 10 && /server" ]

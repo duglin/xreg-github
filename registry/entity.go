@@ -375,6 +375,8 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: SetDBProperty(%s=%v)", pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetDBProperty")
 
+	PanicIf(pp.UI() == "", "pp is empty")
+
 	var err error
 	name := pp.DB()
 
@@ -518,6 +520,17 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 	//   0     1      2     3    4     5         6         7     8      9
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		// log.Printf("Row(%d): %#v", len(row), row)
+		if log.GetVerbose() >= 4 {
+			str := "("
+			for _, c := range row {
+				if IsNil(c) || IsNil(*c) {
+					str += "nil,"
+				} else {
+					str += fmt.Sprintf("%s,", *c)
+				}
+			}
+			log.Printf("Row: %s)", str)
+		}
 		level := int((*row[1]).(int64))
 		plural := NotNilString(row[2])
 		uid := NotNilString(row[4])
@@ -727,7 +740,7 @@ var OrderedSpecProps = []*Attribute{
 		Name: "latest",
 		Type: BOOLEAN,
 
-		levels:    "23",
+		levels:    "3",
 		immutable: true,
 		dontStore: true,
 		getFn:     nil,
@@ -740,10 +753,10 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "latestversionid",
-		Type:           STRING,
-		ServerRequired: true,
-		ReadOnly:       true,
+		Name:     "latestversionid",
+		Type:     STRING,
+		ReadOnly: true,
+		// ServerRequired: true,
 
 		levels:    "2",
 		immutable: true,
@@ -753,10 +766,10 @@ var OrderedSpecProps = []*Attribute{
 		updateFn:  nil,
 	},
 	{
-		Name:           "latestversionurl",
-		Type:           URL,
-		ServerRequired: true,
-		ReadOnly:       true,
+		Name:     "latestversionurl",
+		Type:     URL,
+		ReadOnly: true,
+		// ServerRequired: true,
 
 		levels:    "2",
 		immutable: true,
@@ -901,9 +914,10 @@ var OrderedSpecProps = []*Attribute{
 		Type:     ANY, // OBJECT
 		ReadOnly: true,
 
-		levels:    "0",
-		immutable: true,
-		dontStore: false,
+		levels:       "0",
+		immutable:    true,
+		dontStore:    false,
+		modelExclude: true,
 		getFn: func(e *Entity, info *RequestInfo) any {
 			if info != nil && info.ShowModel {
 				model := info.Registry.Model
@@ -1019,7 +1033,7 @@ func (e *Entity) Save() error {
 				}
 				count++
 			}
-			if count == 0 {
+			if count == 0 && pp.Len() != 0 {
 				return e.SetDBProperty(pp, map[string]any{})
 			}
 
@@ -1133,6 +1147,21 @@ func (e *Entity) GetCollections() []string {
 }
 
 func (e *Entity) GetAttributes(useNew bool) Attributes {
+	/*
+		var attrs Attributes
+		parts := strings.Split(e.Abstract, string(DB_IN))
+		if len(parts) == 0 || parts[0] == "" {
+			attrs = maps.Clone(e.Registry.Model.Attributes)
+		} else if len(parts) == 1 {
+			gm := e.Registry.Model.Groups[parts[0]]
+			attrs = maps.Clone(gm.Attributes)
+		} else {
+			gm := e.Registry.Model.Groups[parts[0]]
+			rm := gm.Resources[parts[1]]
+			attrs = maps.Clone(rm.Attributes)
+		}
+	*/
+
 	attrs := e.GetBaseAttributes()
 	if useNew {
 		attrs.AddIfValuesAttributes(e.NewObject)
@@ -1217,7 +1246,7 @@ func ConvertString(val string, toType string) (any, bool) {
 // to calculate that
 func (e *Entity) GetBaseAttributes() Attributes {
 	attrs := Attributes{}
-	level := 0
+	// level := 0
 	singular := ""
 
 	// Add user-defined attributes
@@ -1226,7 +1255,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	if len(paths) == 0 || paths[0] == "" {
 		maps.Copy(attrs, e.Registry.Model.Attributes)
 	} else {
-		level = len(paths)
+		// level = len(paths)
 		gm := e.Registry.Model.Groups[paths[0]]
 		PanicIf(gm == nil, "Can't find Group %q", paths[0])
 		if len(paths) == 1 {
@@ -1241,11 +1270,13 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 	// Add xReg defied attributes
 	// TODO Check for conflicts
-	for _, specProp := range OrderedSpecProps {
-		if specProp.InLevel(level) {
-			attrs[specProp.Name] = specProp
+	/*
+		for _, specProp := range OrderedSpecProps {
+			if specProp.InLevel(level) {
+				attrs[specProp.Name] = specProp
+			}
 		}
-	}
+	*/
 
 	// Add the RESOURCExxx attributes (for resources and versions)
 	if singular != "" {
@@ -1442,6 +1473,7 @@ func (e *Entity) Validate() error {
 	// Don't touch what was passed in
 
 	attrs := e.GetAttributes(true)
+
 	log.VPrintf(3, "========")
 	log.VPrintf(3, "Validating:\n%s", ToJSON(e.NewObject))
 	return e.ValidateObject(e.NewObject, attrs, NewPP())
@@ -1811,7 +1843,7 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 	}
 
 	// don't "return nil" above, we may need to check enum values
-	if len(attr.Enum) > 0 && attr.Strict {
+	if len(attr.Enum) > 0 && (attr.Strict == nil || *(attr.Strict)) {
 		foundOne := false
 		valStr := fmt.Sprintf("%v", val)
 		for _, enumVal := range attr.Enum {
@@ -1842,7 +1874,7 @@ func PrepUpdateEntity(e *Entity, isNew bool) error {
 
 	for key, _ := range attrs {
 		attr := attrs[key]
-		if attr != nil && attr.updateFn != nil {
+		if attr.updateFn != nil {
 			if err := attr.updateFn(e, isNew); err != nil {
 				return err
 			}

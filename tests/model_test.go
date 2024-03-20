@@ -11,13 +11,148 @@ func TestNoModel(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg create didn't work")
 
-	xCheckGet(t, reg, "/model", "{}\n")
+	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
+}
+`)
 	xCheckGet(t, reg, "?model", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestNoModel",
   "epoch": 1,
   "self": "http://localhost:8181/",
-  "model": {}
+  "model": {
+    "schemas": [
+      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+    ],
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "id": {
+        "name": "id",
+        "type": "string",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdby": {
+        "name": "createdby",
+        "type": "string",
+        "readonly": true
+      },
+      "createdon": {
+        "name": "createdon",
+        "type": "timestamp",
+        "readonly": true
+      },
+      "modifiedby": {
+        "name": "modifiedby",
+        "type": "string",
+        "readonly": true
+      },
+      "modifiedon": {
+        "name": "modifiedon",
+        "type": "timestamp",
+        "readonly": true
+      }
+    }
+  }
 }
 `)
 
@@ -32,8 +167,72 @@ func TestRegSchema(t *testing.T) {
 	reg.Model.AddSchema("schema1")
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
-    "schema1"
-  ]
+    "schema1",
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
 }
 `)
 
@@ -41,21 +240,216 @@ func TestRegSchema(t *testing.T) {
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
     "schema1",
-    "schema2"
-  ]
+    "schema2",
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
 }
 `)
 
 	reg.Model.DelSchema("schema1")
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
-    "schema2"
-  ]
+    "schema2",
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
 }
 `)
 
 	reg.Model.DelSchema("schema2")
-	xCheckGet(t, reg, "/model", `{}
+	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  }
+}
 `)
 }
 
@@ -66,22 +460,276 @@ func TestGroupModelCreate(t *testing.T) {
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	xNoErr(t, err)
-	xCheck(t, gm != nil, "gm create didn't work")
+
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
-      "singular": "dir"
+      "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      }
     }
   }
 }
 `)
 
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
-      "singular": "dir"
+      "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      }
     }
   }
 }
@@ -89,10 +737,137 @@ func TestGroupModelCreate(t *testing.T) {
 
 	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
-      "singular": "dir"
+      "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      }
     }
   }
 }
@@ -157,10 +932,137 @@ func TestResourceModelCreate(t *testing.T) {
 	xCheck(t, rm != nil && err == nil, "gm2/rm2 should have worked")
 
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -168,13 +1070,153 @@ func TestResourceModelCreate(t *testing.T) {
           "versions": 5,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     },
     "dirs2": {
       "plural": "dirs2",
       "singular": "dir2",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -182,7 +1224,86 @@ func TestResourceModelCreate(t *testing.T) {
           "versions": 0,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -192,10 +1313,137 @@ func TestResourceModelCreate(t *testing.T) {
 
 	rm2.Delete()
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -203,13 +1451,153 @@ func TestResourceModelCreate(t *testing.T) {
           "versions": 5,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     },
     "dirs2": {
       "plural": "dirs2",
-      "singular": "dir2"
+      "singular": "dir2",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      }
     }
   }
 }
@@ -217,10 +1605,137 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -228,13 +1743,153 @@ func TestResourceModelCreate(t *testing.T) {
           "versions": 5,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     },
     "dirs2": {
       "plural": "dirs2",
-      "singular": "dir2"
+      "singular": "dir2",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      }
     }
   }
 }
@@ -242,10 +1897,137 @@ func TestResourceModelCreate(t *testing.T) {
 
 	gm2.Delete()
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -253,7 +2035,86 @@ func TestResourceModelCreate(t *testing.T) {
           "versions": 5,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -263,10 +2124,137 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -274,7 +2262,86 @@ func TestResourceModelCreate(t *testing.T) {
           "versions": 5,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -303,10 +2370,137 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "dirs": {
       "plural": "dirs",
       "singular": "dir",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "files": {
           "plural": "files",
@@ -314,7 +2508,86 @@ func TestResourceModelCreate(t *testing.T) {
           "versions": 6,
           "versionid": false,
           "latest": false,
-          "hasdocument": false
+          "hasdocument": false,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -327,15 +2600,142 @@ func TestResourceModelCreate(t *testing.T) {
 	g.AddResource("files", "f1", "v1")
 
 	xCheckGet(t, reg, "?model&inline=dirs.files", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
+    "schemas": [
+      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+    ],
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "id": {
+        "name": "id",
+        "type": "string",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdby": {
+        "name": "createdby",
+        "type": "string",
+        "readonly": true
+      },
+      "createdon": {
+        "name": "createdon",
+        "type": "timestamp",
+        "readonly": true
+      },
+      "modifiedby": {
+        "name": "modifiedby",
+        "type": "string",
+        "readonly": true
+      },
+      "modifiedon": {
+        "name": "modifiedon",
+        "type": "timestamp",
+        "readonly": true
+      }
+    },
     "groups": {
       "dirs": {
         "plural": "dirs",
         "singular": "dir",
+        "attributes": {
+          "id": {
+            "name": "id",
+            "type": "string",
+            "serverrequired": true
+          },
+          "name": {
+            "name": "name",
+            "type": "string"
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "uinteger",
+            "serverrequired": true
+          },
+          "self": {
+            "name": "self",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "description": {
+            "name": "description",
+            "type": "string"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "url"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "map",
+            "item": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "name": "origin",
+            "type": "uri"
+          },
+          "createdby": {
+            "name": "createdby",
+            "type": "string",
+            "readonly": true
+          },
+          "createdon": {
+            "name": "createdon",
+            "type": "timestamp",
+            "readonly": true
+          },
+          "modifiedby": {
+            "name": "modifiedby",
+            "type": "string",
+            "readonly": true
+          },
+          "modifiedon": {
+            "name": "modifiedon",
+            "type": "timestamp",
+            "readonly": true
+          }
+        },
         "resources": {
           "files": {
             "plural": "files",
@@ -343,7 +2743,86 @@ func TestResourceModelCreate(t *testing.T) {
             "versions": 6,
             "versionid": false,
             "latest": false,
-            "hasdocument": false
+            "hasdocument": false,
+            "attributes": {
+              "id": {
+                "name": "id",
+                "type": "string",
+                "serverrequired": true
+              },
+              "name": {
+                "name": "name",
+                "type": "string"
+              },
+              "epoch": {
+                "name": "epoch",
+                "type": "uinteger",
+                "serverrequired": true
+              },
+              "self": {
+                "name": "self",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "latest": {
+                "name": "latest",
+                "type": "boolean"
+              },
+              "latestversionid": {
+                "name": "latestversionid",
+                "type": "string",
+                "readonly": true
+              },
+              "latestversionurl": {
+                "name": "latestversionurl",
+                "type": "url",
+                "readonly": true
+              },
+              "description": {
+                "name": "description",
+                "type": "string"
+              },
+              "documentation": {
+                "name": "documentation",
+                "type": "url"
+              },
+              "labels": {
+                "name": "labels",
+                "type": "map",
+                "item": {
+                  "type": "string"
+                }
+              },
+              "origin": {
+                "name": "origin",
+                "type": "uri"
+              },
+              "createdby": {
+                "name": "createdby",
+                "type": "string",
+                "readonly": true
+              },
+              "createdon": {
+                "name": "createdon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "modifiedby": {
+                "name": "modifiedby",
+                "type": "string",
+                "readonly": true
+              },
+              "modifiedon": {
+                "name": "modifiedon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "contenttype": {
+                "name": "contenttype",
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -397,15 +2876,142 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
+    "schemas": [
+      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+    ],
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "id": {
+        "name": "id",
+        "type": "string",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdby": {
+        "name": "createdby",
+        "type": "string",
+        "readonly": true
+      },
+      "createdon": {
+        "name": "createdon",
+        "type": "timestamp",
+        "readonly": true
+      },
+      "modifiedby": {
+        "name": "modifiedby",
+        "type": "string",
+        "readonly": true
+      },
+      "modifiedon": {
+        "name": "modifiedon",
+        "type": "timestamp",
+        "readonly": true
+      }
+    },
     "groups": {
       "dirs": {
         "plural": "dirs",
         "singular": "dir",
+        "attributes": {
+          "id": {
+            "name": "id",
+            "type": "string",
+            "serverrequired": true
+          },
+          "name": {
+            "name": "name",
+            "type": "string"
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "uinteger",
+            "serverrequired": true
+          },
+          "self": {
+            "name": "self",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "description": {
+            "name": "description",
+            "type": "string"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "url"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "map",
+            "item": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "name": "origin",
+            "type": "uri"
+          },
+          "createdby": {
+            "name": "createdby",
+            "type": "string",
+            "readonly": true
+          },
+          "createdon": {
+            "name": "createdon",
+            "type": "timestamp",
+            "readonly": true
+          },
+          "modifiedby": {
+            "name": "modifiedby",
+            "type": "string",
+            "readonly": true
+          },
+          "modifiedon": {
+            "name": "modifiedon",
+            "type": "timestamp",
+            "readonly": true
+          }
+        },
         "resources": {
           "files2": {
             "plural": "files2",
@@ -413,7 +3019,86 @@ func TestResourceModelCreate(t *testing.T) {
             "versions": 6,
             "versionid": false,
             "latest": false,
-            "hasdocument": false
+            "hasdocument": false,
+            "attributes": {
+              "id": {
+                "name": "id",
+                "type": "string",
+                "serverrequired": true
+              },
+              "name": {
+                "name": "name",
+                "type": "string"
+              },
+              "epoch": {
+                "name": "epoch",
+                "type": "uinteger",
+                "serverrequired": true
+              },
+              "self": {
+                "name": "self",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "latest": {
+                "name": "latest",
+                "type": "boolean"
+              },
+              "latestversionid": {
+                "name": "latestversionid",
+                "type": "string",
+                "readonly": true
+              },
+              "latestversionurl": {
+                "name": "latestversionurl",
+                "type": "url",
+                "readonly": true
+              },
+              "description": {
+                "name": "description",
+                "type": "string"
+              },
+              "documentation": {
+                "name": "documentation",
+                "type": "url"
+              },
+              "labels": {
+                "name": "labels",
+                "type": "map",
+                "item": {
+                  "type": "string"
+                }
+              },
+              "origin": {
+                "name": "origin",
+                "type": "uri"
+              },
+              "createdby": {
+                "name": "createdby",
+                "type": "string",
+                "readonly": true
+              },
+              "createdon": {
+                "name": "createdon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "modifiedby": {
+                "name": "modifiedby",
+                "type": "string",
+                "readonly": true
+              },
+              "modifiedon": {
+                "name": "modifiedon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "contenttype": {
+                "name": "contenttype",
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -446,15 +3131,142 @@ func TestResourceModelCreate(t *testing.T) {
 
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
+    "schemas": [
+      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+    ],
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "id": {
+        "name": "id",
+        "type": "string",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdby": {
+        "name": "createdby",
+        "type": "string",
+        "readonly": true
+      },
+      "createdon": {
+        "name": "createdon",
+        "type": "timestamp",
+        "readonly": true
+      },
+      "modifiedby": {
+        "name": "modifiedby",
+        "type": "string",
+        "readonly": true
+      },
+      "modifiedon": {
+        "name": "modifiedon",
+        "type": "timestamp",
+        "readonly": true
+      }
+    },
     "groups": {
       "dirs": {
         "plural": "dirs",
-        "singular": "dir"
+        "singular": "dir",
+        "attributes": {
+          "id": {
+            "name": "id",
+            "type": "string",
+            "serverrequired": true
+          },
+          "name": {
+            "name": "name",
+            "type": "string"
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "uinteger",
+            "serverrequired": true
+          },
+          "self": {
+            "name": "self",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "description": {
+            "name": "description",
+            "type": "string"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "url"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "map",
+            "item": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "name": "origin",
+            "type": "uri"
+          },
+          "createdby": {
+            "name": "createdby",
+            "type": "string",
+            "readonly": true
+          },
+          "createdon": {
+            "name": "createdon",
+            "type": "timestamp",
+            "readonly": true
+          },
+          "modifiedby": {
+            "name": "modifiedby",
+            "type": "string",
+            "readonly": true
+          },
+          "modifiedon": {
+            "name": "modifiedon",
+            "type": "timestamp",
+            "readonly": true
+          }
+        }
       }
     }
   },
@@ -481,15 +3293,142 @@ func TestResourceModelCreate(t *testing.T) {
 	}
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
+    "schemas": [
+      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+    ],
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "id": {
+        "name": "id",
+        "type": "string",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdby": {
+        "name": "createdby",
+        "type": "string",
+        "readonly": true
+      },
+      "createdon": {
+        "name": "createdon",
+        "type": "timestamp",
+        "readonly": true
+      },
+      "modifiedby": {
+        "name": "modifiedby",
+        "type": "string",
+        "readonly": true
+      },
+      "modifiedon": {
+        "name": "modifiedon",
+        "type": "timestamp",
+        "readonly": true
+      }
+    },
     "groups": {
       "dirs2": {
         "plural": "dirs2",
-        "singular": "dir2"
+        "singular": "dir2",
+        "attributes": {
+          "id": {
+            "name": "id",
+            "type": "string",
+            "serverrequired": true
+          },
+          "name": {
+            "name": "name",
+            "type": "string"
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "uinteger",
+            "serverrequired": true
+          },
+          "self": {
+            "name": "self",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "description": {
+            "name": "description",
+            "type": "string"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "url"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "map",
+            "item": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "name": "origin",
+            "type": "uri"
+          },
+          "createdby": {
+            "name": "createdby",
+            "type": "string",
+            "readonly": true
+          },
+          "createdon": {
+            "name": "createdon",
+            "type": "timestamp",
+            "readonly": true
+          },
+          "modifiedby": {
+            "name": "modifiedby",
+            "type": "string",
+            "readonly": true
+          },
+          "modifiedon": {
+            "name": "modifiedon",
+            "type": "timestamp",
+            "readonly": true
+          }
+        }
       }
     }
   },
@@ -525,10 +3464,137 @@ func TestMultModelCreate(t *testing.T) {
 	xCheck(t, rm22 != nil && err == nil, "rm12 should have worked")
 
 	xCheckGet(t, reg, "/model", `{
+  "schemas": [
+    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+  ],
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "id": {
+      "name": "id",
+      "type": "string",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdby": {
+      "name": "createdby",
+      "type": "string",
+      "readonly": true
+    },
+    "createdon": {
+      "name": "createdon",
+      "type": "timestamp",
+      "readonly": true
+    },
+    "modifiedby": {
+      "name": "modifiedby",
+      "type": "string",
+      "readonly": true
+    },
+    "modifiedon": {
+      "name": "modifiedon",
+      "type": "timestamp",
+      "readonly": true
+    }
+  },
   "groups": {
     "gms1": {
       "plural": "gms1",
       "singular": "gm1",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "rms1": {
           "plural": "rms1",
@@ -536,7 +3602,86 @@ func TestMultModelCreate(t *testing.T) {
           "versions": 0,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         },
         "rms2": {
           "plural": "rms2",
@@ -544,13 +3689,153 @@ func TestMultModelCreate(t *testing.T) {
           "versions": 1,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     },
     "gms2": {
       "plural": "gms2",
       "singular": "gm2",
+      "attributes": {
+        "id": {
+          "name": "id",
+          "type": "string",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "origin": {
+          "name": "origin",
+          "type": "uri"
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "string",
+          "readonly": true
+        },
+        "createdon": {
+          "name": "createdon",
+          "type": "timestamp",
+          "readonly": true
+        },
+        "modifiedby": {
+          "name": "modifiedby",
+          "type": "string",
+          "readonly": true
+        },
+        "modifiedon": {
+          "name": "modifiedon",
+          "type": "timestamp",
+          "readonly": true
+        }
+      },
       "resources": {
         "rms1": {
           "plural": "rms1",
@@ -558,7 +3843,86 @@ func TestMultModelCreate(t *testing.T) {
           "versions": 2,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         },
         "rms2": {
           "plural": "rms2",
@@ -566,7 +3930,86 @@ func TestMultModelCreate(t *testing.T) {
           "versions": 3,
           "versionid": true,
           "latest": true,
-          "hasdocument": true
+          "hasdocument": true,
+          "attributes": {
+            "id": {
+              "name": "id",
+              "type": "string",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "latest": {
+              "name": "latest",
+              "type": "boolean"
+            },
+            "latestversionid": {
+              "name": "latestversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "latestversionurl": {
+              "name": "latestversionurl",
+              "type": "url",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "origin": {
+              "name": "origin",
+              "type": "uri"
+            },
+            "createdby": {
+              "name": "createdby",
+              "type": "string",
+              "readonly": true
+            },
+            "createdon": {
+              "name": "createdon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "modifiedby": {
+              "name": "modifiedby",
+              "type": "string",
+              "readonly": true
+            },
+            "modifiedon": {
+              "name": "modifiedon",
+              "type": "timestamp",
+              "readonly": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -617,15 +4060,142 @@ func TestMultModel2Create(t *testing.T) {
 	// /dirs2/f2/f2/v1
 
 	xCheckGet(t, reg, "?model&inline", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestMultModel2Create",
   "epoch": 1,
   "self": "http://localhost:8181/",
   "model": {
+    "schemas": [
+      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
+    ],
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "id": {
+        "name": "id",
+        "type": "string",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdby": {
+        "name": "createdby",
+        "type": "string",
+        "readonly": true
+      },
+      "createdon": {
+        "name": "createdon",
+        "type": "timestamp",
+        "readonly": true
+      },
+      "modifiedby": {
+        "name": "modifiedby",
+        "type": "string",
+        "readonly": true
+      },
+      "modifiedon": {
+        "name": "modifiedon",
+        "type": "timestamp",
+        "readonly": true
+      }
+    },
     "groups": {
       "dirs1": {
         "plural": "dirs1",
         "singular": "dir1",
+        "attributes": {
+          "id": {
+            "name": "id",
+            "type": "string",
+            "serverrequired": true
+          },
+          "name": {
+            "name": "name",
+            "type": "string"
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "uinteger",
+            "serverrequired": true
+          },
+          "self": {
+            "name": "self",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "description": {
+            "name": "description",
+            "type": "string"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "url"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "map",
+            "item": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "name": "origin",
+            "type": "uri"
+          },
+          "createdby": {
+            "name": "createdby",
+            "type": "string",
+            "readonly": true
+          },
+          "createdon": {
+            "name": "createdon",
+            "type": "timestamp",
+            "readonly": true
+          },
+          "modifiedby": {
+            "name": "modifiedby",
+            "type": "string",
+            "readonly": true
+          },
+          "modifiedon": {
+            "name": "modifiedon",
+            "type": "timestamp",
+            "readonly": true
+          }
+        },
         "resources": {
           "files": {
             "plural": "files",
@@ -633,13 +4203,153 @@ func TestMultModel2Create(t *testing.T) {
             "versions": 2,
             "versionid": true,
             "latest": false,
-            "hasdocument": true
+            "hasdocument": true,
+            "attributes": {
+              "id": {
+                "name": "id",
+                "type": "string",
+                "serverrequired": true
+              },
+              "name": {
+                "name": "name",
+                "type": "string"
+              },
+              "epoch": {
+                "name": "epoch",
+                "type": "uinteger",
+                "serverrequired": true
+              },
+              "self": {
+                "name": "self",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "latest": {
+                "name": "latest",
+                "type": "boolean"
+              },
+              "latestversionid": {
+                "name": "latestversionid",
+                "type": "string",
+                "readonly": true
+              },
+              "latestversionurl": {
+                "name": "latestversionurl",
+                "type": "url",
+                "readonly": true
+              },
+              "description": {
+                "name": "description",
+                "type": "string"
+              },
+              "documentation": {
+                "name": "documentation",
+                "type": "url"
+              },
+              "labels": {
+                "name": "labels",
+                "type": "map",
+                "item": {
+                  "type": "string"
+                }
+              },
+              "origin": {
+                "name": "origin",
+                "type": "uri"
+              },
+              "createdby": {
+                "name": "createdby",
+                "type": "string",
+                "readonly": true
+              },
+              "createdon": {
+                "name": "createdon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "modifiedby": {
+                "name": "modifiedby",
+                "type": "string",
+                "readonly": true
+              },
+              "modifiedon": {
+                "name": "modifiedon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "contenttype": {
+                "name": "contenttype",
+                "type": "string"
+              }
+            }
           }
         }
       },
       "dirs2": {
         "plural": "dirs2",
         "singular": "dir2",
+        "attributes": {
+          "id": {
+            "name": "id",
+            "type": "string",
+            "serverrequired": true
+          },
+          "name": {
+            "name": "name",
+            "type": "string"
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "uinteger",
+            "serverrequired": true
+          },
+          "self": {
+            "name": "self",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "description": {
+            "name": "description",
+            "type": "string"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "url"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "map",
+            "item": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "name": "origin",
+            "type": "uri"
+          },
+          "createdby": {
+            "name": "createdby",
+            "type": "string",
+            "readonly": true
+          },
+          "createdon": {
+            "name": "createdon",
+            "type": "timestamp",
+            "readonly": true
+          },
+          "modifiedby": {
+            "name": "modifiedby",
+            "type": "string",
+            "readonly": true
+          },
+          "modifiedon": {
+            "name": "modifiedon",
+            "type": "timestamp",
+            "readonly": true
+          }
+        },
         "resources": {
           "files": {
             "plural": "files",
@@ -647,7 +4357,86 @@ func TestMultModel2Create(t *testing.T) {
             "versions": 0,
             "versionid": false,
             "latest": true,
-            "hasdocument": true
+            "hasdocument": true,
+            "attributes": {
+              "id": {
+                "name": "id",
+                "type": "string",
+                "serverrequired": true
+              },
+              "name": {
+                "name": "name",
+                "type": "string"
+              },
+              "epoch": {
+                "name": "epoch",
+                "type": "uinteger",
+                "serverrequired": true
+              },
+              "self": {
+                "name": "self",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "latest": {
+                "name": "latest",
+                "type": "boolean"
+              },
+              "latestversionid": {
+                "name": "latestversionid",
+                "type": "string",
+                "readonly": true
+              },
+              "latestversionurl": {
+                "name": "latestversionurl",
+                "type": "url",
+                "readonly": true
+              },
+              "description": {
+                "name": "description",
+                "type": "string"
+              },
+              "documentation": {
+                "name": "documentation",
+                "type": "url"
+              },
+              "labels": {
+                "name": "labels",
+                "type": "map",
+                "item": {
+                  "type": "string"
+                }
+              },
+              "origin": {
+                "name": "origin",
+                "type": "uri"
+              },
+              "createdby": {
+                "name": "createdby",
+                "type": "string",
+                "readonly": true
+              },
+              "createdon": {
+                "name": "createdon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "modifiedby": {
+                "name": "modifiedby",
+                "type": "string",
+                "readonly": true
+              },
+              "modifiedon": {
+                "name": "modifiedon",
+                "type": "timestamp",
+                "readonly": true
+              },
+              "contenttype": {
+                "name": "contenttype",
+                "type": "string"
+              }
+            }
           }
         }
       }

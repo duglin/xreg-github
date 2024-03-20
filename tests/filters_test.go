@@ -2,7 +2,8 @@ package tests
 
 import (
 	"testing"
-	// "github.com/duglin/xreg-github/registry"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 func TestBasicFilters(t *testing.T) {
@@ -37,7 +38,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "No Filter",
 			URL:  "?",
 			Exp: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -172,7 +173,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter reg.labels - match",
 			URL:  "?filter=labels.reg1=1ger",
 			Exp: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -189,7 +190,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter labels",
 			URL:  "?filter=dirs.files.labels.file1=1elif",
 			Exp: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -206,7 +207,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter dir file.labels - match 1elif",
 			URL:  "?inline&filter=dirs.files.labels.file1=1elif",
 			Exp: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -279,7 +280,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter dir file.labels - match non-empty string",
 			URL:  "?inline&filter=dirs.files.labels.file1",
 			Exp: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
   "epoch": 1,
   "self": "http://localhost:8181/",

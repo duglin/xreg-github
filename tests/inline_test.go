@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"regexp"
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 func TestBasicInline(t *testing.T) {
@@ -42,7 +44,7 @@ func TestBasicInline(t *testing.T) {
 			Name: "No Inline",
 			URL:  "?",
 			Exp: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -58,7 +60,7 @@ func TestBasicInline(t *testing.T) {
 			Name: "Inline - No Filter - full",
 			URL:  "?inline",
 			Exp: `{
-  "specversion": "0.5",
+  "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",

@@ -333,7 +333,7 @@ func (r *Result) RetrieveNextRowFromDB() bool {
 
 	// Move data from TempData to Data
 
-	if log.GetVerbose() > 3 {
+	if log.GetVerbose() >= 4 {
 		dd := []string{}
 		for _, d := range r.Data {
 			dVal := reflect.ValueOf(*d)
@@ -344,14 +344,14 @@ func (r *Result) RetrieveNextRowFromDB() bool {
 				dd = append(dd, fmt.Sprintf("%v", *d))
 			}
 		}
-		log.VPrintf(4, "row: %v", dd)
+		log.Printf("row: %v", dd)
 	}
 	return true
 }
 
 func Query(tx *Tx, cmd string, args ...interface{}) (*Result, error) {
-	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "Query: %s", SubQuery(cmd, args))
+	if log.GetVerbose() >= 4 {
+		log.Printf("Query: %s", SubQuery(cmd, args))
 	}
 
 	ps, err := tx.Prepare(cmd)

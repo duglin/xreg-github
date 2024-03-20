@@ -1,4 +1,4 @@
-all: mysql cmds test run
+all: mysql cmds test image run
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
@@ -13,7 +13,8 @@ test: .test .testimage
 	@echo
 	@echo "# Testing"
 	@go clean -testcache
-	for s in $(TESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
+	@echo "go test -failfast $(TESTDIRS)"
+	@for s in $(TESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
 	@# go test -failfast $(TESTDIRS)
 	@echo
 	@echo "# Run again w/o cache and w/o deleting the Registry after each one"
@@ -31,6 +32,7 @@ server: cmds/server.go cmds/loader.go registry/*
 	go build $(BUILDFLAGS) -o $@ cmds/server.go cmds/loader.go
 
 xr: cmds/xr.go registry/*
+	@echo
 	@echo "# Building CLI"
 	go build $(BUILDFLAGS) -o $@ cmds/xr.go
 
@@ -44,8 +46,9 @@ image: .image
 
 testimage: .testimage
 .testimage: .image
-	@echo Verifying the image via docker run
-	@docker run -ti --network host $(IMAGE) /server --recreate --verify \
+	@echo Verifying the image
+	@echo "docker run -ti --network host $(IMAGE) --recreate --verify"
+	@docker run -ti --network host $(IMAGE) --recreate --verify \
 		> .testout 2>&1 || { cat .testout ; rm .testout ; exit 1 ; }
 	@rm .testout
 	@touch .testimage
@@ -55,15 +58,23 @@ push: .push
 	docker push $(IMAGE)
 	@touch .push
 
-run: mysql server
+notest run: mysql server image local
+
+start: mysql server image
 	@echo
-	./server --recreate
-
-start: mysql server
+	@echo "# Starting server"
 	./server
+	@#docker run -ti --network host $(IMAGE)
 
-notest: mysql server
+local: mysql server
+	@echo
+	@echo "# Starting server locally from scratch"
 	./server --recreate
+
+docker: mysql image
+	@echo
+	@echo "# Starting server in Docker from scratch"
+	docker run -ti --network host $(IMAGE) --recreate
 
 mysql:
 	@docker container inspect mysql > /dev/null 2>&1 || \
@@ -73,6 +84,9 @@ mysql:
 
 mysql-client: mysql
 	@while ! nc -z localhost 3306 ; do echo "Waiting for mysql" ; sleep 2 ; done
+	@(docker container inspect mysql-client > /dev/null 2>&1 && \
+		echo "Attaching to existing client... (press enter for prompt)" && \
+		docker attach mysql-client) || \
 	docker run -ti --rm --network host --name mysql-client mysql \
 		mysql --port 3306 --password=password --protocol tcp || \
 		echo "If it failed, make sure mysql is ready"
@@ -100,5 +114,5 @@ clean:
 	@rm -f .test .image .push
 	@go clean -cache -testcache
 	@-k3d cluster delete xreg > /dev/null 2>&1
-	@-docker rm -f mysql > /dev/null 2>&1
+	@-docker rm -f mysql mysql-client > /dev/null 2>&1
 	@docker system prune -f > /dev/null

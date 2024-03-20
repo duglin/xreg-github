@@ -3,7 +3,7 @@ package registry
 import (
 	"bytes"
 	// "encoding/base64"
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -412,10 +412,8 @@ func HTTPGETModel(info *RequestInfo) error {
 	}
 
 	format := info.OriginalRequest.URL.Query().Get("schema")
-	if format != "" && !strings.EqualFold(format, "xregistry") {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Unsupported schema value: %q. Must be: "+
-			"\"xregistry\"", format)
+	if format == "" {
+		format = "xRegistry-json"
 	}
 
 	model := info.Registry.Model
@@ -423,7 +421,11 @@ func HTTPGETModel(info *RequestInfo) error {
 		model = &Model{}
 	}
 
-	buf, err := json.MarshalIndent(model, "", "  ")
+	ms := GetModelSerializer(format)
+	if ms == nil {
+		return fmt.Errorf("Unsupported schema format: %s", format)
+	}
+	buf, err := ms(model, format)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return err
@@ -674,7 +676,7 @@ var attrHeaders = map[string]*Attribute{}
 
 func init() {
 	// Load-up the attributes that have custom http header names
-	for _, attr := range SpecProps {
+	for _, attr := range OrderedSpecProps {
 		if attr.httpHeader != "" {
 			attrHeaders[strings.ToLower(attr.httpHeader)] = attr
 		}

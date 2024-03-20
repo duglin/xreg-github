@@ -77,3 +77,4 @@ TODOs:
 - support READONLY Resources
 - support schemas + `xregistry`
 - include core attributes in ?model/model
+- try to remove 'modelExclude' stuff so "model" attr can be copied over

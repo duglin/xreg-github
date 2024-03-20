@@ -296,7 +296,7 @@ func TestBasicTypes(t *testing.T) {
 	}
 
 	xCheckGet(t, reg, "?inline", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestBasicTypes",
   "epoch": 1,
   "self": "http://localhost:8181/",

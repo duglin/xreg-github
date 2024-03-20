@@ -180,6 +180,16 @@ func (jw *JsonWriter) WriteEntity() error {
 		panic(err)
 	}
 
+	// Add the "model" if at the Registry level
+	if myLevel == 0 {
+		val := SpecProps["model"].getFn(jw.Entity, jw.info)
+		if !IsNil(val) {
+			buf, _ := json.MarshalIndent(val, jw.indent, "  ")
+			jw.Printf("%s\n%s%q: %s", extra, jw.indent, "model", string(buf))
+			extra = ","
+		}
+	}
+
 	// Add resource content properties
 	if myLevel >= 2 {
 		absParts := strings.Split(jw.Entity.Abstract, string(DB_IN))

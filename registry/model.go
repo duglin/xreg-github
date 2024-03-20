@@ -1,11 +1,13 @@
 package registry
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"maps"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -14,6 +16,10 @@ import (
 
 var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]{0,62}$")
 var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]{0,62}$")
+
+type ModelSerializer func(*Model, string) ([]byte, error)
+
+var ModelSerializers = map[string]ModelSerializer{}
 
 func IsValidAttributeName(name string) bool {
 	return RegexpPropName.MatchString(name)
@@ -43,7 +49,7 @@ type Attribute struct {
 	Type           string    `json:"type,omitempty"`
 	Description    string    `json:"description,omitempty"`
 	Enum           []any     `json:"enum,omitempty"` // just scalars though
-	Strict         bool      `json:"strict"`         // do not include omitempty
+	Strict         *bool     `json:"strict,omitempty"`
 	ReadOnly       bool      `json:"readonly,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
@@ -55,14 +61,16 @@ type Attribute struct {
 
 	// Internal fields
 	// We have them here so we can have access to them in any func that
-	// gets passed the model attribute
-	levels     string // show only for these levels, ""==all
-	immutable  bool   // can change after set?
-	dontStore  bool
-	httpHeader string
-	getFn      func(*Entity, *RequestInfo) any // return prop's value
-	checkFn    func(*Entity) error             // validate incoming prop
-	updateFn   func(*Entity, bool) error       // prep prop for saving to DB
+	// gets passed the model attribute.
+	// If anything gets added below MAKE SURE to update SetSpecPropsFields too
+	levels       string // show only for these levels, ""==all
+	immutable    bool   // can change after set?
+	dontStore    bool
+	httpHeader   string
+	modelExclude bool                            // Show in "/model" or not
+	getFn        func(*Entity, *RequestInfo) any // return prop's value
+	checkFn      func(*Entity) error             // validate incoming prop
+	updateFn     func(*Entity, bool) error       // prep prop for saving to DB
 }
 
 type Item struct { // for maps and arrays
@@ -102,13 +110,53 @@ type ResourceModel struct {
 	Attributes  Attributes `json:"attributes,omitempty"`
 }
 
-// Define some custom Unmarshal func to set proper default values
-func (a *Attribute) UnmarshalJSON(data []byte) error {
-	// Set the default values
-	a.Strict = STRICT
+// To be picky, let's Marshal the list of attributes with Spec defined ones
+// first, and then the extensions in alphabetical order
+func (attrs Attributes) MarshalJSON() ([]byte, error) {
+	buf := bytes.Buffer{}
+	attrsCopy := maps.Clone(attrs) // Copy so we can delete keys
+	count := 0
 
-	type tmpAttribute Attribute
-	return Unmarshal(data, (*tmpAttribute)(a))
+	buf.WriteString("{")
+	for _, specProp := range OrderedSpecProps {
+		if attr, ok := attrsCopy[specProp.Name]; ok {
+			delete(attrsCopy, specProp.Name)
+			/* TODO DUG
+			if specProp.Name == "model" {
+				continue
+			}
+			*/
+
+			if count > 0 {
+				buf.WriteRune(',')
+			}
+			buf.WriteString(`"` + specProp.Name + `": `)
+			tmpBuf, err := json.Marshal(attr)
+			if err != nil {
+				return nil, err
+			}
+			buf.Write(tmpBuf)
+			count++
+		}
+	}
+
+	for _, name := range SortedKeys(attrsCopy) {
+		if count > 0 {
+			buf.WriteRune(',')
+		}
+		attr := attrsCopy[name]
+		buf.WriteString(`"` + name + `": `)
+		tmpBuf, err := json.Marshal(attr)
+		if err != nil {
+			return nil, err
+		}
+		buf.Write(tmpBuf)
+		// delete(attrsCopy, name)
+		count++
+	}
+
+	buf.WriteString("}")
+	return buf.Bytes(), nil
 }
 
 func (r *ResourceModel) UnmarshalJSON(data []byte) error {
@@ -140,6 +188,7 @@ func (m *Model) AddSchema(schema string) error {
 	}
 
 	m.Schemas = append(m.Schemas, schema)
+	sort.Strings(m.Schemas)
 	return nil
 }
 
@@ -189,10 +238,15 @@ func (m *Model) Save() error {
 		return err
 	}
 
+	err := m.SetSchemas(m.Schemas)
+	if err != nil {
+		return err
+	}
+
 	buf, _ := json.Marshal(m.Attributes)
 	attrs := string(buf)
 
-	err := DoZeroOne(m.Registry.tx,
+	err = DoZeroOne(m.Registry.tx,
 		`UPDATE Registries SET Attributes=? WHERE SID=?`,
 		attrs, m.Registry.DbSID)
 	if err != nil {
@@ -329,6 +383,10 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 	}
 
 	m.Groups[plural] = gm
+
+	if err = m.Save(); err != nil {
+		return nil, err
+	}
 
 	return gm, nil
 }
@@ -473,6 +531,7 @@ func LoadModel(reg *Registry) *Model {
 	results.Close()
 
 	model.Attributes.SetRegistry(reg)
+	model.Attributes.SetSpecPropsFields()
 
 	// Load Schemas
 	results, err = Query(reg.tx, `
@@ -524,6 +583,8 @@ func LoadModel(reg *Registry) *Model {
 				Resources: map[string]*ResourceModel{},
 			}
 
+			g.Attributes.SetSpecPropsFields()
+
 			model.Groups[NotNilString(row[3])] = g
 			groups[NotNilString(row[0])] = g
 
@@ -542,6 +603,8 @@ func LoadModel(reg *Registry) *Model {
 					Latest:      NotNilBoolDef(row[8], LATEST),
 					HasDocument: NotNilBoolDef(row[9], HASDOCUMENT),
 				}
+
+				r.Attributes.SetSpecPropsFields()
 
 				g.Resources[r.Plural] = r
 			}
@@ -564,11 +627,13 @@ func (m *Model) FindGroupModel(gTypePlural string) *GroupModel {
 
 func (m *Model) ApplyNewModel(newM *Model) error {
 	// Delete old Schemas, then add new ones
+	m.Schemas = []string{XREGSCHEMA + "/" + SPECVERSION}
 	err := Do(m.Registry.tx,
 		`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
 	if err != nil {
 		return err
 	}
+
 	for _, schema := range newM.Schemas {
 		if err = m.AddSchema(schema); err != nil {
 			return err
@@ -632,10 +697,10 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 			}
 			oldRM.Attributes = newRM.Attributes
 		}
+	}
 
-		if err := oldGM.Save(); err != nil { // Recursive into RMs
-			return err
-		}
+	if err := m.Save(); err != nil {
+		return err
 	}
 
 	return nil
@@ -796,6 +861,10 @@ func (gm *GroupModel) AddResourceModel(plural string, singular string, versions 
 	}
 
 	gm.Resources[plural] = r
+
+	if err = gm.Registry.Model.Save(); err != nil {
+		return nil, err
+	}
 
 	return r, nil
 }
@@ -1021,8 +1090,69 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 	return attr, nil
 }
 
+// Make sure that the attribute doesn't deviate too much from the
+// spec defined version of it. There's only so much that we allow the
+// user to customize
+func EnsureAttrOK(userAttr *Attribute, specAttr *Attribute) error {
+	if specAttr.ServerRequired {
+		if userAttr.ServerRequired == false {
+			return fmt.Errorf(`"model.%s" must have its "serverrequired" `+
+				`attribute set to "true"`, userAttr.Name)
+		}
+		if specAttr.ReadOnly && !userAttr.ReadOnly {
+			return fmt.Errorf(`"model.%s" must have its "readonly" `+
+				`attribute set to "true"`, userAttr.Name)
+		}
+	}
+	if specAttr.Type != userAttr.Type {
+		return fmt.Errorf(`"model.%s" must have a "type" of %q`,
+			userAttr.Name, specAttr.Type)
+	}
+	return nil
+}
+
 func (m *Model) Verify() error {
-	// Check Registry attributes
+	found := false
+	for _, s := range m.Schemas {
+		if strings.EqualFold(s, XREGSCHEMA+"/"+SPECVERSION) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		m.Schemas = append([]string{XREGSCHEMA + "/" + SPECVERSION}, m.Schemas...)
+	}
+	sort.Strings(m.Schemas)
+
+	// First, make sure we have the xRegistry core/spec defined attributes
+	// in the list and they're not changed in an inappropriate way.
+	// This just checks the Registry.Attributes. Groups and Resources will
+	// be done in their own Verify funcs
+
+	if m.Attributes == nil {
+		m.Attributes = Attributes{}
+	}
+
+	for _, specProp := range OrderedSpecProps {
+		// If it's not a Registry level attribute, then skip it
+		if !specProp.InLevel(0) || specProp.modelExclude {
+			continue
+		}
+
+		modelAttr, ok := m.Attributes[specProp.Name]
+		if !ok {
+			// Missing in model, so add it
+			m.Attributes[specProp.Name] = specProp
+			continue
+		}
+
+		// It's there but make sure it's not changed in a bad way
+		if err := EnsureAttrOK(modelAttr, specProp); err != nil {
+			return err
+		}
+	}
+
+	// Now check Registry attributes for correctness
 	ld := &LevelData{
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("model"),
@@ -1054,6 +1184,32 @@ func (gm *GroupModel) Verify(gmName string) error {
 	if !IsValidAttributeName(gm.Singular) {
 		return fmt.Errorf("Invalid Group 'singular' value %q - must match %q",
 			gm.Singular, RegexpPropName.String())
+	}
+
+	// Make sure we have the xRegistry core/spec defined attributes
+	// in the list and they're not changed in an inappropriate way.
+	// This just checks the Group level Attributes
+	if gm.Attributes == nil {
+		gm.Attributes = Attributes{}
+	}
+
+	for _, specProp := range OrderedSpecProps {
+		// If it's not a Group level attribute, then skip it
+		if !specProp.InLevel(1) || specProp.modelExclude {
+			continue
+		}
+
+		modelAttr, ok := gm.Attributes[specProp.Name]
+		if !ok {
+			// Missing in model, so add it
+			gm.Attributes[specProp.Name] = specProp
+			continue
+		}
+
+		// It's there but make sure it's not changed in a bad way
+		if err := EnsureAttrOK(modelAttr, specProp); err != nil {
+			return err
+		}
 	}
 
 	ld := &LevelData{
@@ -1106,6 +1262,32 @@ func (rm *ResourceModel) Verify(rmName string) error {
 			rmName)
 	}
 
+	// Make sure we have the xRegistry core/spec defined attributes
+	// in the list and they're not changed in an inappropriate way.
+	// This just checks the Group level Attributes
+	if rm.Attributes == nil {
+		rm.Attributes = Attributes{}
+	}
+
+	for _, specProp := range OrderedSpecProps {
+		// If it's not a Resource level attribute, then skip it
+		if (!specProp.InLevel(3) && !specProp.InLevel(2)) || specProp.modelExclude {
+			continue
+		}
+
+		modelAttr, ok := rm.Attributes[specProp.Name]
+		if !ok {
+			// Missing in model, so add it
+			rm.Attributes[specProp.Name] = specProp
+			continue
+		}
+
+		// It's there but make sure it's not changed in a bad way
+		if err := EnsureAttrOK(modelAttr, specProp); err != nil {
+			return err
+		}
+	}
+
 	ld := &LevelData{
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("resources").P(rm.Plural),
@@ -1126,7 +1308,8 @@ func (rm *ResourceModel) SetRegistry(reg *Registry) {
 }
 
 type LevelData struct {
-	// AttrNames is the list of known attribute names. We use this to know
+	// AttrNames is the list of known attribute names for a certain level
+	// an entity (basically the Attributes list + ifValues). We use this to know
 	// if an IfValue SiblingAttribute would conflict if another attribute's name
 	AttrNames map[string]bool
 	Path      *PropPath
@@ -1259,6 +1442,24 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 	return nil
 }
 
+// Copy the internal data for spec defined properties so we can access
+// that info directly from these Attributes instead of having to go back
+// to the SpecProps stuff
+func (attrs Attributes) SetSpecPropsFields() {
+	for k, attr := range attrs {
+		if specProp := SpecProps[k]; specProp != nil {
+			attr.levels = specProp.levels
+			attr.immutable = specProp.immutable
+			attr.dontStore = specProp.dontStore
+			attr.httpHeader = specProp.httpHeader
+			attr.modelExclude = specProp.modelExclude
+			attr.getFn = specProp.getFn
+			attr.checkFn = specProp.checkFn
+			attr.updateFn = specProp.updateFn
+		}
+	}
+}
+
 func (ifvalues IfValues) SetRegistry(reg *Registry) {
 	if ifvalues == nil {
 		return
@@ -1377,3 +1578,58 @@ func AbstractToSingular(reg *Registry, abs string) string {
 	return rm.Singular
 }
 */
+
+// The model serializer we use for the "xRegistry" schema format
+func Model2xRegistryJson(m *Model, format string) ([]byte, error) {
+	return json.MarshalIndent(m, "", "  ")
+}
+
+func GetModelSerializer(format string) ModelSerializer {
+	format = strings.ToLower(format)
+	searchParts := strings.SplitN(format, "/", 2)
+	if searchParts[0] == "" {
+		return nil
+	}
+	if len(searchParts) == 1 {
+		searchParts = append(searchParts, "")
+	}
+
+	result := ModelSerializer(nil)
+	resultVersion := ""
+
+	for format, sm := range ModelSerializers {
+		format = strings.ToLower(format)
+		parts := strings.SplitN(format, "/", 2)
+		if searchParts[0] != parts[0] {
+			continue
+		}
+		if len(parts) == 1 {
+			parts = append(parts, "")
+		}
+
+		if searchParts[1] != "" {
+			if searchParts[1] == parts[1] {
+				// Exact match - stop immediately
+				result = sm
+				break
+			}
+			// Looking for an exact match - not it so skip it
+			continue
+		}
+
+		if resultVersion == "" || strings.Compare(parts[1], resultVersion) > 0 {
+			result = sm
+			resultVersion = parts[1]
+		}
+	}
+
+	return result
+}
+
+func RegisterModelSerializer(name string, sm ModelSerializer) {
+	ModelSerializers[name] = sm
+}
+
+func init() {
+	RegisterModelSerializer(XREGSCHEMA+"/"+SPECVERSION, Model2xRegistryJson)
+}

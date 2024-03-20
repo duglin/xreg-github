@@ -84,10 +84,16 @@ func NewRegistry(tx *Tx, id string) (*Registry, error) {
 	reg.Entity.Registry = reg
 	reg.Model = &Model{
 		Registry: reg,
+		Schemas:  []string{XREGSCHEMA + "/" + SPECVERSION},
 		Groups:   map[string]*GroupModel{},
 	}
 
 	tx.Registry = reg
+
+	err = reg.Model.Verify()
+	if err != nil {
+		return nil, err
+	}
 
 	err = DoOne(tx, `
 		INSERT INTO Models(RegistrySID)
@@ -113,6 +119,10 @@ func NewRegistry(tx *Tx, id string) (*Registry, error) {
 
 	tx.RegistriesByUID[id] = reg
 	tx.RegistriesBySID[reg.DbSID] = reg
+
+	if err = reg.Model.Save(); err != nil {
+		return nil, err
+	}
 
 	return reg, nil
 }

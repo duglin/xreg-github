@@ -14,7 +14,7 @@ func TestCreateRegistry(t *testing.T) {
 	// Check basic GET first
 	xCheckGet(t, reg, "/",
 		`{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestCreateRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/"
@@ -45,7 +45,7 @@ func TestCreateRegistry(t *testing.T) {
 	xCheck(t, reg3 != reg, "reg3 should be different from reg")
 
 	xCheckGet(t, reg, "", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestCreateRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/"
@@ -114,7 +114,7 @@ func TestRegistryProps(t *testing.T) {
 	reg.Set("labels.stage", "dev")
 
 	xCheckGet(t, reg, "", `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryProps",
   "name": "nameIt",
   "epoch": 1,
@@ -150,7 +150,7 @@ func TestRegistryRequiredFields(t *testing.T) {
 	xNoErr(t, reg.Set("description", "testing"))
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryRequiredFields",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -252,7 +252,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	reg.Commit()
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 1,
   "self": "http://localhost:8181/"
@@ -262,7 +262,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	// Notice the default value is not there, this might need a spec change
 	// DUG TODO ^^
 	xHTTP(t, reg, "GET", "/", "", 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 1,
   "self": "http://localhost:8181/"
@@ -272,7 +272,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	// Notice now "defstring" appears
 	// DUG TODO ^^ and previous one
 	xHTTP(t, reg, "PUT", "/", "", 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 2,
   "self": "http://localhost:8181/",
@@ -284,7 +284,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   "defstring": "updated hello",
   "myobj": {}
 }`, 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 3,
   "self": "http://localhost:8181/",
@@ -300,7 +300,7 @@ func TestRegistryDefaultFields(t *testing.T) {
     "defint": 666
   }
 }`, 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 4,
   "self": "http://localhost:8181/",
@@ -313,7 +313,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 
 	xHTTP(t, reg, "PUT", "/", `{
 }`, 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 5,
   "self": "http://localhost:8181/",
@@ -324,7 +324,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/", `{
   "myobj": null
 }`, 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 6,
   "self": "http://localhost:8181/",

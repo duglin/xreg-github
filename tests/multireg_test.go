@@ -28,7 +28,7 @@ func TestMultiReg(t *testing.T) {
 
 	// reg
 	xHTTP(t, reg, "GET", "/", "", 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestMultiReg",
   "epoch": 1,
   "self": "http://localhost:8181/",
@@ -40,7 +40,7 @@ func TestMultiReg(t *testing.T) {
 
 	// reg2
 	xHTTP(t, reg2, "GET", "/reg-reg2", "", 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "reg2",
   "epoch": 1,
   "self": "http://localhost:8181/reg-reg2/",
