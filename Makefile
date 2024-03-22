@@ -20,7 +20,6 @@ test: .test .testimage
 	@echo "# Run again w/o cache and w/o deleting the Registry after each one"
 	@go clean -testcache
 	NO_CACHE=1 NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
-	@echo
 	@touch .test
 
 unittest:

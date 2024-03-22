@@ -5,10 +5,11 @@ const XREGSCHEMA = "xRegistry-json"
 
 // Model attribute default values
 const STRICT = true
-const VERSIONS = 1
+const VERSIONS = 0
 const VERSIONID = true
 const LATEST = true
 const HASDOCUMENT = true
+const READONLY = false
 
 // Attribute types
 const ANY = "any"

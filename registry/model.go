@@ -565,7 +565,7 @@ func LoadModel(reg *Registry) *Model {
 	results, err = Query(reg.tx, `
         SELECT
             SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
-			Versions, VersionId, Latest, ReadOnly, HasDocument
+			Versions, VersionId, Latest, HasDocument, ReadOnly
         FROM ModelEntities
         WHERE RegistrySID=?
         ORDER BY ParentSID ASC`, reg.DbSID)
@@ -612,8 +612,8 @@ func LoadModel(reg *Registry) *Model {
 					Versions:    NotNilIntDef(row[6], VERSIONS),
 					VersionId:   NotNilBoolDef(row[7], VERSIONID),
 					Latest:      NotNilBoolDef(row[8], LATEST),
-					ReadOnly:    NotNilBoolDef(row[9], false),
-					HasDocument: NotNilBoolDef(row[10], HASDOCUMENT),
+					HasDocument: NotNilBoolDef(row[9], HASDOCUMENT),
+					ReadOnly:    NotNilBoolDef(row[10], READONLY),
 				}
 
 				r.Attributes.SetSpecPropsFields()
@@ -695,8 +695,8 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 					Versions:    newRM.Versions,
 					VersionId:   newRM.VersionId,
 					Latest:      newRM.Latest,
-					ReadOnly:    newRM.ReadOnly,
 					HasDocument: newRM.HasDocument,
+					ReadOnly:    newRM.ReadOnly,
 				})
 
 			} else {
@@ -704,8 +704,8 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 				oldRM.Versions = newRM.Versions
 				oldRM.VersionId = newRM.VersionId
 				oldRM.Latest = newRM.Latest
-				oldRM.ReadOnly = newRM.ReadOnly
 				oldRM.HasDocument = newRM.HasDocument
+				oldRM.ReadOnly = newRM.ReadOnly
 			}
 			oldRM.Attributes = newRM.Attributes
 		}
@@ -819,6 +819,18 @@ func (gm *GroupModel) DelAttribute(name string) error {
 	return gm.Registry.Model.Save()
 }
 
+func (gm *GroupModel) AddResourceModelSimple(plural, singular string) (*ResourceModel, error) {
+	return gm.AddResourceModelFull(&ResourceModel{
+		Plural:      plural,
+		Singular:    singular,
+		Versions:    VERSIONS,
+		VersionId:   VERSIONID,
+		Latest:      LATEST,
+		HasDocument: HASDOCUMENT,
+		ReadOnly:    READONLY,
+	})
+}
+
 func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool, hasDocument bool) (*ResourceModel, error) {
 	return gm.AddResourceModelFull(&ResourceModel{
 		Plural:      plural,
@@ -827,7 +839,7 @@ func (gm *GroupModel) AddResourceModel(plural string, singular string, versions 
 		VersionId:   verId,
 		Latest:      latest,
 		HasDocument: hasDocument,
-		ReadOnly:    false,
+		ReadOnly:    READONLY,
 	})
 }
 
@@ -866,10 +878,10 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	err := DoOne(gm.Registry.tx, `
 		INSERT INTO ModelEntities(
 			SID, RegistrySID, ParentSID, Plural, Singular, Versions,
-			VersionId, Latest, ReadOnly, HasDocument)
+			VersionId, Latest, HasDocument, ReadOnly)
 		VALUES(?,?,?,?,?,?,?,?,?,?)`,
 		rm.SID, gm.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.Versions,
-		rm.VersionId, rm.Latest, rm.ReadOnly, rm.HasDocument)
+		rm.VersionId, rm.Latest, rm.HasDocument, rm.ReadOnly)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", rm.Plural, err)
 		return nil, err
@@ -913,20 +925,20 @@ func (rm *ResourceModel) Save() error {
             SID, RegistrySID,
 			ParentSID, Plural, Singular, Versions,
 			Attributes,
-			VersionId, Latest, ReadOnly, HasDocument)
+			VersionId, Latest, HasDocument, ReadOnly)
         VALUES(?,?,?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
             ParentSID=?, Plural=?, Singular=?,
 			Attributes=?,
-            Versions=?, VersionId=?, Latest=?, ReadOnly=?, HasDocument=?`,
+            Versions=?, VersionId=?, Latest=?, HasDocument=?, ReadOnly=?`,
 		rm.SID, rm.GroupModel.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.Versions,
 		attrs,
-		rm.VersionId, rm.Latest, rm.ReadOnly, rm.HasDocument,
+		rm.VersionId, rm.Latest, rm.HasDocument, rm.ReadOnly,
 
 		rm.GroupModel.SID, rm.Plural, rm.Singular,
 		attrs,
-		rm.Versions, rm.VersionId, rm.Latest, rm.ReadOnly, rm.HasDocument)
+		rm.Versions, rm.VersionId, rm.Latest, rm.HasDocument, rm.ReadOnly)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
 		return err
@@ -957,6 +969,21 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 
 	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	}
+
+	if rm.HasDocument == true {
+		invalidNames := []string{
+			rm.Singular,
+			rm.Singular + "url",
+			rm.Singular + "base64",
+			rm.Singular + "proxyurl",
+		}
+
+		for _, name := range invalidNames {
+			if attr.Name == name {
+				return nil, fmt.Errorf("Attribute name is reserved: %s", name)
+			}
+		}
 	}
 
 	if rm.Attributes == nil {
@@ -1467,8 +1494,11 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			if valStr == "" {
 				return fmt.Errorf("%q has an empty ifvalues key", ld.Path.UI())
 			}
+
 			nextLD := &LevelData{ld.AttrNames,
 				ld.Path.P(attr.Name).P("ifvalues").P(valStr)}
+
+			// Recursive
 			if err := ifValue.SiblingAttributes.Verify(nextLD); err != nil {
 				return err
 			}

@@ -660,7 +660,7 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 1,
+          "versions": 0,
           "versionid": true,
           "latest": true,
           "hasdocument": true,
@@ -768,7 +768,7 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 1,
+          "versions": 0,
           "versionid": true,
           "latest": true,
           "hasdocument": false
@@ -917,7 +917,7 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 1,
+          "versions": 0,
           "versionid": true,
           "latest": true,
           "hasdocument": false,
@@ -1177,7 +1177,7 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 1,
+          "versions": 0,
           "versionid": true,
           "latest": true,
           "hasdocument": true,
@@ -4277,6 +4277,140 @@ func TestHTTPIfValue(t *testing.T) {
 `,
 	})
 
+}
+
+func TestHTTPResources(t *testing.T) {
+	reg := NewRegistry("TestHTTPResources")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	xNoErr(t, err)
+	rm, err := gm.AddResourceModelSimple("files", "file")
+	xNoErr(t, err)
+
+	/*
+		_, err := rm.AddAttribute(&registry.Attribute{
+			Name: "files",
+			Type: registry.INTEGER,
+		})
+		xCheckErr(t, err, "Attribute name is reserved: files")
+	*/
+
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name: "file",
+		Type: registry.INTEGER,
+	})
+	xCheckErr(t, err, "Attribute name is reserved: file")
+
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name: "filebase64",
+		Type: registry.INTEGER,
+	})
+	xCheckErr(t, err, "Attribute name is reserved: filebase64")
+
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name: "fileproxyurl",
+		Type: registry.INTEGER,
+	})
+	xCheckErr(t, err, "Attribute name is reserved: fileproxyurl")
+
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name: "mystring",
+		Type: registry.STRING,
+		IfValues: registry.IfValues{
+			"foo": &registry.IfValue{
+				SiblingAttributes: registry.Attributes{
+					"file": &registry.Attribute{
+						Name:     "file",
+						Type:     registry.INTEGER,
+						IfValues: registry.IfValues{},
+					},
+				},
+			},
+		},
+	})
+	xCheckErr(t, err, "Duplicate attribute name (file) at: resources.files.mystring.ifvalues.foo")
+	gm = reg.Model.Groups["dirs"]
+	rm = gm.Resources["files"]
+
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name: "mystring",
+		Type: registry.STRING,
+		IfValues: registry.IfValues{
+			"foo": &registry.IfValue{
+				SiblingAttributes: registry.Attributes{
+					"xxx": &registry.Attribute{
+						Name: "xxx",
+						Type: registry.INTEGER,
+						IfValues: registry.IfValues{
+							"5": &registry.IfValue{
+								SiblingAttributes: registry.Attributes{
+									"xxx": &registry.Attribute{
+										Name: "xxx",
+										Type: registry.STRING,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	xCheckErr(t, err, "Duplicate attribute name (xxx) at: resources.files.mystring.ifvalues.foo.xxx.ifvalues.5")
+	gm = reg.Model.Groups["dirs"]
+	rm = gm.Resources["files"]
+
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name: "mystring",
+		Type: registry.STRING,
+		IfValues: registry.IfValues{
+			"foo": &registry.IfValue{
+				SiblingAttributes: registry.Attributes{
+					"xxx": &registry.Attribute{
+						Name: "xxx",
+						Type: registry.INTEGER,
+						IfValues: registry.IfValues{
+							"5": &registry.IfValue{
+								SiblingAttributes: registry.Attributes{
+									"file": &registry.Attribute{
+										Name: "file",
+										Type: registry.STRING,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	xCheckErr(t, err, "Duplicate attribute name (file) at: resources.files.mystring.ifvalues.foo.xxx.ifvalues.5")
+	gm = reg.Model.Groups["dirs"]
+	rm = gm.Resources["files"]
+
+	// "file" is ok this time because HasDocument=false
+	rm.HasDocument = false
+	xNoErr(t, reg.Model.Save())
+	_, err = rm.AddAttribute(&registry.Attribute{
+		Name: "mystring",
+		Type: registry.STRING,
+		IfValues: registry.IfValues{
+			"foo": &registry.IfValue{
+				SiblingAttributes: registry.Attributes{
+					"file": &registry.Attribute{
+						Name:     "file",
+						Type:     registry.INTEGER,
+						IfValues: registry.IfValues{},
+					},
+				},
+			},
+		},
+	})
+	xNoErr(t, err)
+	gm = reg.Model.Groups["dirs"]
+	rm = gm.Resources["files"]
 }
 
 func TestHTTPNonStrings(t *testing.T) {

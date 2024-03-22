@@ -77,8 +77,8 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     Versions    INT NOT NULL,       # For Resources
     VersionId   BOOL NOT NULL,      # For Resources
     Latest      BOOL NOT NULL,      # For Resources
-    ReadOnly    BOOL NOT NULL,      # For Resources
     HasDocument BOOL NOT NULL,      # For Resources
+    ReadOnly    BOOL NOT NULL,      # For Resources
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),
