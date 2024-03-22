@@ -1752,3 +1752,20 @@ func RegisterModelSerializer(name string, sm ModelSerializer) {
 func init() {
 	RegisterModelSerializer(XREGSCHEMA+"/"+SPECVERSION, Model2xRegistryJson)
 }
+
+func AbstractToModels(reg *Registry, abs string) (*GroupModel, *ResourceModel) {
+	parts := strings.Split(abs, string(DB_IN))
+	if len(parts) == 0 || parts[0] == "" {
+		return nil, nil
+	}
+	gm := reg.Model.Groups[parts[0]]
+	PanicIf(gm == nil, "Can't find Group %q", parts[0])
+
+	rm := (*ResourceModel)(nil)
+	if len(parts) > 1 {
+		rm = gm.Resources[parts[1]]
+		PanicIf(rm == nil, "Cant' find Resource \"%s/%s\"", parts[0], parts[1])
+	}
+	// *GroupModel, *ResourceModel, isVersion
+	return gm, rm
+}

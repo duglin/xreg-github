@@ -727,9 +727,7 @@ var OrderedSpecProps = []*Attribute{
 				}
 				if e.Level > 1 {
 					meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
-					absParts := strings.Split(e.Abstract, string(DB_IN))
-					gm := e.Registry.Model.Groups[absParts[0]]
-					rm := gm.Resources[absParts[1]]
+					_, rm := e.GetModels()
 					if rm.HasDocument == false {
 						meta = false
 					}
@@ -802,9 +800,7 @@ var OrderedSpecProps = []*Attribute{
 				tmp := base + "/" + e.Path + "/versions/" + val.(string)
 
 				meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
-				absParts := strings.Split(e.Abstract, string(DB_IN))
-				gm := e.Registry.Model.Groups[absParts[0]]
-				rm := gm.Resources[absParts[1]]
+				_, rm := e.GetModels()
 				if rm.HasDocument == false {
 					meta = false
 				}
@@ -1170,39 +1166,21 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 }
 
 func (e *Entity) GetCollections() []string {
-	paths := strings.Split(e.Abstract, string(DB_IN))
-	if len(paths) == 0 || paths[0] == "" {
+	if e.Level == 0 {
 		return SortedKeys(e.Registry.Model.Groups)
-	} else {
-		gm := e.Registry.Model.Groups[paths[0]]
-		PanicIf(gm == nil, "Can't find Group %q", paths[0])
-
-		if len(paths) == 1 {
-			return SortedKeys(gm.Resources)
-		} else if len(paths) == 2 {
-			return []string{"versions"}
-		}
+	}
+	if e.Level == 3 {
+		return nil
+	}
+	if e.Level == 2 {
+		return []string{"versions"}
 	}
 
-	return nil
+	gm, _ := e.GetModels()
+	return SortedKeys(gm.Resources)
 }
 
 func (e *Entity) GetAttributes(useNew bool) Attributes {
-	/*
-		var attrs Attributes
-		parts := strings.Split(e.Abstract, string(DB_IN))
-		if len(parts) == 0 || parts[0] == "" {
-			attrs = maps.Clone(e.Registry.Model.Attributes)
-		} else if len(parts) == 1 {
-			gm := e.Registry.Model.Groups[parts[0]]
-			attrs = maps.Clone(gm.Attributes)
-		} else {
-			gm := e.Registry.Model.Groups[parts[0]]
-			rm := gm.Resources[parts[1]]
-			attrs = maps.Clone(rm.Attributes)
-		}
-	*/
-
 	attrs := e.GetBaseAttributes()
 	if useNew {
 		attrs.AddIfValuesAttributes(e.NewObject)
@@ -1292,18 +1270,13 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	hasDoc := true
 
 	// Add attributes from the model (core and user-defined)
-	paths := strings.Split(e.Abstract, string(DB_IN))
-	if len(paths) == 0 || paths[0] == "" {
+	gm, rm := e.GetModels()
+	if gm == nil {
 		maps.Copy(attrs, e.Registry.Model.Attributes)
 	} else {
-		// level = len(paths)
-		gm := e.Registry.Model.Groups[paths[0]]
-		PanicIf(gm == nil, "Can't find Group %q", paths[0])
-		if len(paths) == 1 {
+		if rm == nil {
 			maps.Copy(attrs, gm.Attributes)
 		} else {
-			rm := gm.Resources[paths[1]]
-			PanicIf(rm == nil, "Cant find Resource %q", paths[1])
 			maps.Copy(attrs, rm.Attributes)
 			singular = rm.Singular
 			hasDoc = rm.HasDocument
@@ -1921,6 +1894,10 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 	}
 
 	return nil
+}
+
+func (e *Entity) GetModels() (*GroupModel, *ResourceModel) {
+	return AbstractToModels(e.Registry, e.Abstract)
 }
 
 func PrepUpdateEntity(e *Entity, isNew bool) error {

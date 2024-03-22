@@ -182,11 +182,8 @@ func (jw *JsonWriter) WriteEntity() error {
 
 	// Add resource content properties
 	if myLevel >= 2 {
-		absParts := strings.Split(jw.Entity.Abstract, string(DB_IN))
-		gName := absParts[0]
-		gModel := jw.info.Registry.Model.Groups[gName]
-		rModel := gModel.Resources[absParts[1]]
-		singular := rModel.Singular
+		_, rm := jw.Entity.GetModels()
+		singular := rm.Singular
 
 		if val := jw.Entity.Get("#resourceURL"); val != nil {
 			url := val.(string)

@@ -4394,15 +4394,107 @@ func TestHTTPResources(t *testing.T) {
 			"foo": &registry.IfValue{
 				SiblingAttributes: registry.Attributes{
 					"file": &registry.Attribute{
-						Name:     "file",
-						Type:     registry.INTEGER,
-						IfValues: registry.IfValues{},
+						Name: "file",
+						Type: registry.STRING,
+					},
+					"object": &registry.Attribute{
+						Name: "object",
+						Type: registry.OBJECT,
+						Attributes: registry.Attributes{
+							"objstr": &registry.Attribute{
+								Name: "objstr",
+								Type: registry.STRING,
+								IfValues: registry.IfValues{
+									"objval": {
+										SiblingAttributes: registry.Attributes{
+											"objint": &registry.Attribute{
+												Name: "objint",
+												Type: registry.INTEGER,
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 		},
 	})
 	xNoErr(t, err)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", "{}", 201, `{
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "latest": true
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "mystring": "hello"
+}`, 200, `{
+  "id": "v1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "latest": true,
+  "mystring": "hello"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "file": "fff",
+  "mystring": "hello",
+  "object": {}
+}`, 400, `Error processing resource: Invalid extension(s): file,object
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "file": "fff",
+  "mystring": "foo",
+  "object": {}
+}`, 200, `{
+  "id": "v1",
+  "epoch": 3,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "latest": true,
+  "file": "fff",
+  "mystring": "foo",
+  "object": {}
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "file": "fff",
+  "mystring": "foo",
+  "object": {
+    "objstr": "ooo",
+    "objint": 5
+  }
+}`, 400, `Error processing resource: Invalid extension(s) in "object": objint
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "file": "fff",
+  "mystring": "foo",
+  "object": {
+    "objstr": "objval",
+    "objint": 5
+  }
+}`, 200, `{
+  "id": "v1",
+  "epoch": 4,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "latest": true,
+  "file": "fff",
+  "mystring": "foo",
+  "object": {
+    "objint": 5,
+    "objstr": "objval"
+  }
+}
+`)
+
 }
 
 func TestHTTPNonStrings(t *testing.T) {
