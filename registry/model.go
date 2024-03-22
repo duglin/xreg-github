@@ -234,14 +234,17 @@ func (m *Model) SetPointers() {
 // cases where someone would need to call it manually (e.g. setting an
 // attribute's property - we should technically find a way to catch those
 // cases so code above this shouldn't need to think about it
-func (m *Model) Save() error {
+func (m *Model) VerifyAndSave() error {
 	if err := m.Verify(); err != nil {
 		// Kind of extreme, but if there's an error revert the entire
 		// model to the last known good state. So, all of the changes
 		// people made will be lost and any variables are bogus
 		// NOTE any local variable pointing to a model entity will need to
 		// be refresh/refound, the existing pointer will be bad
-		*m = *LoadModel(m.Registry)
+
+		// No longer needed but left around just in case
+		// *m = *LoadModel(m.Registry)
+
 		return err
 	}
 
@@ -327,11 +330,14 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 		attr.Registry = m.Registry
 	}
 
+	oldVal := m.Attributes[attr.Name]
 	m.Attributes[attr.Name] = attr
 
 	attr.Item.SetRegistry(m.Registry)
 
-	if err := m.Save(); err != nil {
+	if err := m.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(m.Attributes, attr.Name, oldVal)
 		return nil, err
 	}
 
@@ -343,9 +349,15 @@ func (m *Model) DelAttribute(name string) error {
 		return nil
 	}
 
+	oldVal := m.Attributes[name]
 	delete(m.Attributes, name)
 
-	return m.Save()
+	if err := m.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(m.Attributes, name, oldVal)
+		return err
+	}
+	return nil
 }
 
 func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, error) {
@@ -396,7 +408,13 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 
 	m.Groups[plural] = gm
 
-	if err = m.Save(); err != nil {
+	if err = m.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(m.Groups, plural, nil)
+		Must(DoOne(m.Registry.tx, `
+			DELETE FROM ModelEntities WHERE
+			SID=? AND RegistrySID=? AND ParentSID=null AND Plural=?`,
+			mSID, m.Registry.DbSID, plural))
 		return nil, err
 	}
 
@@ -442,11 +460,16 @@ func (i *Item) SetRegistry(reg *Registry) {
 }
 
 func (i *Item) SetItem(item *Item) error {
+	oldVal := i.Item
 	i.Item = item
 	item.SetRegistry(i.Registry)
 
 	if i.Registry != nil {
-		return i.Registry.Model.Save()
+		if err := i.Registry.Model.VerifyAndSave(); err != nil {
+			// Undo
+			i.Item = oldVal
+			return err
+		}
 	}
 	return nil
 }
@@ -480,6 +503,7 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 		i.Attributes = Attributes{}
 	}
 
+	oldVal := i.Attributes[attr.Name]
 	i.Attributes[attr.Name] = attr
 
 	if attr.Registry == nil {
@@ -488,7 +512,9 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 	attr.Item.SetRegistry(i.Registry)
 
 	if i.Registry != nil {
-		if err := i.Registry.Model.Save(); err != nil {
+		if err := i.Registry.Model.VerifyAndSave(); err != nil {
+			// Undo
+			ResetMap(i.Attributes, attr.Name, oldVal)
 			return nil, err
 		}
 	}
@@ -501,10 +527,15 @@ func (i *Item) DelAttribute(name string) error {
 		return nil
 	}
 
+	oldVal := i.Attributes[name]
 	delete(i.Attributes, name)
 
 	if i.Registry != nil {
-		return i.Registry.Model.Save()
+		if err := i.Registry.Model.VerifyAndSave(); err != nil {
+			// Undo
+			ResetMap(i.Attributes, name, oldVal)
+			return err
+		}
 	}
 	return nil
 }
@@ -638,6 +669,10 @@ func (m *Model) FindGroupModel(gTypePlural string) *GroupModel {
 }
 
 func (m *Model) ApplyNewModel(newM *Model) error {
+	if err := newM.Verify(); err != nil {
+		return err
+	}
+
 	// Delete old Schemas, then add new ones
 	m.Schemas = []string{XREGSCHEMA + "/" + SPECVERSION}
 	err := Do(m.Registry.tx,
@@ -711,7 +746,9 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 		}
 	}
 
-	if err := m.Save(); err != nil {
+	if err := m.VerifyAndSave(); err != nil {
+		// Too much to undo. The Verify() at the top should have caught
+		// anything wrong
 		return err
 	}
 
@@ -795,6 +832,7 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 		gm.Attributes = Attributes{}
 	}
 
+	oldVal := gm.Attributes[attr.Name]
 	gm.Attributes[attr.Name] = attr
 
 	if attr.Registry == nil {
@@ -802,7 +840,9 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 	attr.Item.SetRegistry(gm.Registry)
 
-	if err := gm.Registry.Model.Save(); err != nil {
+	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(gm.Attributes, attr.Name, oldVal)
 		return nil, err
 	}
 
@@ -814,9 +854,14 @@ func (gm *GroupModel) DelAttribute(name string) error {
 		return nil
 	}
 
+	oldVal := gm.Attributes[name]
 	delete(gm.Attributes, name)
 
-	return gm.Registry.Model.Save()
+	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(gm.Attributes, name, oldVal)
+	}
+	return nil
 }
 
 func (gm *GroupModel) AddResourceModelSimple(plural, singular string) (*ResourceModel, error) {
@@ -887,9 +932,12 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 		return nil, err
 	}
 
+	oldVal := gm.Resources[rm.Plural]
 	gm.Resources[rm.Plural] = rm
 
-	if err = gm.Registry.Model.Save(); err != nil {
+	if err = gm.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(gm.Resources, rm.Plural, oldVal)
 		return nil, err
 	}
 
@@ -990,6 +1038,7 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 		rm.Attributes = Attributes{}
 	}
 
+	oldVal := rm.Attributes[attr.Name]
 	rm.Attributes[attr.Name] = attr
 
 	if attr.Registry == nil {
@@ -997,7 +1046,9 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 	attr.Item.SetRegistry(rm.GroupModel.Registry)
 
-	if err := rm.GroupModel.Registry.Model.Save(); err != nil {
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(rm.Attributes, attr.Name, oldVal)
 		return nil, err
 	}
 
@@ -1009,9 +1060,15 @@ func (rm *ResourceModel) DelAttribute(name string) error {
 		return nil
 	}
 
+	oldVal := rm.Attributes[name]
 	delete(rm.Attributes, name)
 
-	return rm.GroupModel.Registry.Model.Save()
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(rm.Attributes, name, oldVal)
+		return err
+	}
+	return nil
 }
 
 func (attrs *Attributes) SetRegistry(reg *Registry) {
@@ -1125,10 +1182,13 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 		a.Attributes = Attributes{}
 	}
 
+	oldVal := a.Attributes[attr.Name]
 	a.Attributes[attr.Name] = attr
 	attr.SetRegistry(a.Registry)
 
-	if err := a.Registry.Model.Save(); err != nil {
+	if err := a.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(a.Attributes, attr.Name, oldVal)
 		return nil, err
 	}
 	return attr, nil

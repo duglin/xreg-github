@@ -628,3 +628,12 @@ func GetJSONPointer(data any, path string) (any, error) {
 
 	return data, nil
 }
+
+// Either delete or change the value of a map based on "oldVal" being nil or not
+func ResetMap[M ~map[K]V, K comparable, V any](m M, key K, oldVal V) {
+	if IsNil(oldVal) {
+		delete(m, key)
+	} else {
+		m[key] = oldVal
+	}
+}

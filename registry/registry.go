@@ -120,7 +120,7 @@ func NewRegistry(tx *Tx, id string) (*Registry, error) {
 	tx.RegistriesByUID[id] = reg
 	tx.RegistriesBySID[reg.DbSID] = reg
 
-	if err = reg.Model.Save(); err != nil {
+	if err = reg.Model.VerifyAndSave(); err != nil {
 		return nil, err
 	}
 
@@ -332,7 +332,7 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 	reg.Model.ApplyNewModel(model)
 
 	// reg.Model = model
-	// reg.Model.Save()
+	// reg.Model.VerifyAndSave()
 	return nil
 }
 

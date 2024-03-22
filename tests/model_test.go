@@ -735,7 +735,6 @@ func TestGroupModelCreate(t *testing.T) {
 }
 `)
 
-	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
     "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -1603,7 +1602,6 @@ func TestResourceModelCreate(t *testing.T) {
 }
 `)
 
-	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
     "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -2122,7 +2120,6 @@ func TestResourceModelCreate(t *testing.T) {
 }
 `)
 
-	reg.LoadModel()
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
     "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -2616,11 +2613,13 @@ func TestResourceModelCreate(t *testing.T) {
 	}
 	err = reg.Model.ApplyNewModel(newModel)
 	xNoErr(t, err)
+
 	// Rollback since the previous "newModel" erased too much
 	xNoErr(t, reg.Rollback())
-
 	reg.LoadModel()
-	g, _ := reg.AddGroup("dirs", "dir1")
+
+	g, err := reg.AddGroup("dirs", "dir1")
+	xNoErr(t, err)
 	g.AddResource("files", "f1", "v1")
 
 	xCheckGet(t, reg, "?model&inline=dirs.files", `{

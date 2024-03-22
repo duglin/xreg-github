@@ -3862,7 +3862,7 @@ func TestHTTPEnum(t *testing.T) {
 	})
 
 	attr.Strict = registry.PtrBool(false)
-	reg.Model.Save()
+	reg.Model.VerifyAndSave()
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "PUT reg - int valid - no-strict",
@@ -4331,8 +4331,6 @@ func TestHTTPResources(t *testing.T) {
 		},
 	})
 	xCheckErr(t, err, "Duplicate attribute name (file) at: resources.files.mystring.ifvalues.foo")
-	gm = reg.Model.Groups["dirs"]
-	rm = gm.Resources["files"]
 
 	_, err = rm.AddAttribute(&registry.Attribute{
 		Name: "mystring",
@@ -4359,8 +4357,6 @@ func TestHTTPResources(t *testing.T) {
 		},
 	})
 	xCheckErr(t, err, "Duplicate attribute name (xxx) at: resources.files.mystring.ifvalues.foo.xxx.ifvalues.5")
-	gm = reg.Model.Groups["dirs"]
-	rm = gm.Resources["files"]
 
 	_, err = rm.AddAttribute(&registry.Attribute{
 		Name: "mystring",
@@ -4387,12 +4383,10 @@ func TestHTTPResources(t *testing.T) {
 		},
 	})
 	xCheckErr(t, err, "Duplicate attribute name (file) at: resources.files.mystring.ifvalues.foo.xxx.ifvalues.5")
-	gm = reg.Model.Groups["dirs"]
-	rm = gm.Resources["files"]
 
 	// "file" is ok this time because HasDocument=false
 	rm.HasDocument = false
-	xNoErr(t, reg.Model.Save())
+	xNoErr(t, reg.Model.VerifyAndSave())
 	_, err = rm.AddAttribute(&registry.Attribute{
 		Name: "mystring",
 		Type: registry.STRING,
@@ -4409,8 +4403,6 @@ func TestHTTPResources(t *testing.T) {
 		},
 	})
 	xNoErr(t, err)
-	gm = reg.Model.Groups["dirs"]
-	rm = gm.Resources["files"]
 }
 
 func TestHTTPNonStrings(t *testing.T) {

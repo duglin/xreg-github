@@ -74,6 +74,5 @@ TODOs:
 - support changing the model - test for invalid changes
 - support the create/modify by/on attributes
 - add support for resource vs resourcebase64 - return what was on the PUT
-- support READONLY Resources
 - support non-string "RESOURCE" values (e.g. json)
 - support resources.versions limits

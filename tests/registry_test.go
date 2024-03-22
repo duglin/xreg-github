@@ -217,9 +217,6 @@ func TestRegistryDefaultFields(t *testing.T) {
 	})
 	xCheckErr(t, err, `"model.myobj.defint" must have "serverrequired" since a "default" value is provided`)
 
-	// Old obj pointer is bad
-	obj, _ = reg.Model.Attributes["myobj"]
-
 	_, err = obj.AddAttribute(&registry.Attribute{
 		Name:           "defint",
 		Type:           registry.INTEGER,
@@ -227,8 +224,6 @@ func TestRegistryDefaultFields(t *testing.T) {
 		Default:        "string",
 	})
 	xCheckErr(t, err, `"model.myobj.defint" "default" value must be of type "integer"`)
-	// Old obj pointer is bad
-	obj, _ = reg.Model.Attributes["myobj"]
 
 	_, err = obj.AddAttribute(&registry.Attribute{
 		Name:           "defint",
@@ -237,8 +232,6 @@ func TestRegistryDefaultFields(t *testing.T) {
 		Default:        "string",
 	})
 	xCheckErr(t, err, `"model.myobj.defint" is not a scalar, so "default" is not allowed`)
-	// Old obj pointer is bad
-	obj, _ = reg.Model.Attributes["myobj"]
 
 	_, err = obj.AddAttribute(&registry.Attribute{
 		Name:           "defint",
