@@ -113,6 +113,7 @@ type ResourceModel struct {
 	VersionId   bool       `json:"versionid"`   // do not include omitempty
 	Latest      bool       `json:"latest"`      // do not include omitempty
 	HasDocument bool       `json:"hasdocument"` // do not include omitempty
+	ReadOnly    bool       `json:"readonly,omitempty"`
 	Attributes  Attributes `json:"attributes,omitempty"`
 }
 
@@ -564,7 +565,7 @@ func LoadModel(reg *Registry) *Model {
 	results, err = Query(reg.tx, `
         SELECT
             SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
-			Versions, VersionId, Latest, HasDocument
+			Versions, VersionId, Latest, ReadOnly, HasDocument
         FROM ModelEntities
         WHERE RegistrySID=?
         ORDER BY ParentSID ASC`, reg.DbSID)
@@ -611,7 +612,8 @@ func LoadModel(reg *Registry) *Model {
 					Versions:    NotNilIntDef(row[6], VERSIONS),
 					VersionId:   NotNilBoolDef(row[7], VERSIONID),
 					Latest:      NotNilBoolDef(row[8], LATEST),
-					HasDocument: NotNilBoolDef(row[9], HASDOCUMENT),
+					ReadOnly:    NotNilBoolDef(row[9], false),
+					HasDocument: NotNilBoolDef(row[10], HASDOCUMENT),
 				}
 
 				r.Attributes.SetSpecPropsFields()
@@ -687,14 +689,22 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 		for _, newRM := range newGM.Resources {
 			oldRM := oldGM.Resources[newRM.Plural]
 			if oldRM == nil {
-				oldRM, err = oldGM.AddResourceModel(newRM.Plural,
-					newRM.Singular, newRM.Versions, newRM.VersionId,
-					newRM.Latest, newRM.HasDocument)
+				oldRM, err = oldGM.AddResourceModelFull(&ResourceModel{
+					Plural:      newRM.Plural,
+					Singular:    newRM.Singular,
+					Versions:    newRM.Versions,
+					VersionId:   newRM.VersionId,
+					Latest:      newRM.Latest,
+					ReadOnly:    newRM.ReadOnly,
+					HasDocument: newRM.HasDocument,
+				})
+
 			} else {
 				oldRM.Singular = newRM.Singular
 				oldRM.Versions = newRM.Versions
 				oldRM.VersionId = newRM.VersionId
 				oldRM.Latest = newRM.Latest
+				oldRM.ReadOnly = newRM.ReadOnly
 				oldRM.HasDocument = newRM.HasDocument
 			}
 			oldRM.Attributes = newRM.Attributes
@@ -810,65 +820,68 @@ func (gm *GroupModel) DelAttribute(name string) error {
 }
 
 func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, latest bool, hasDocument bool) (*ResourceModel, error) {
-	if plural == "" {
-		return nil, fmt.Errorf("Can't add a group with an empty plural name")
-	}
-	if singular == "" {
-		return nil, fmt.Errorf("Can't add a group with an empty sigular name")
-	}
-	if versions < 0 {
-		return nil, fmt.Errorf("'versions'(%d) must be >= 0", versions)
-	}
-	if !IsValidAttributeName(plural) {
-		return nil, fmt.Errorf("ResourceModel plural name is not valid")
-	}
-	if !IsValidAttributeName(singular) {
-		return nil, fmt.Errorf("ResourceModel singular name is not valid")
-	}
-
-	for _, r := range gm.Resources {
-		if r.Plural == plural {
-			return nil, fmt.Errorf("Resoucre model plural %q already "+
-				"exists for group %q", plural, gm.Plural)
-		}
-		if r.Singular == singular {
-			return nil,
-				fmt.Errorf("Resoucre model singular %q already "+
-					"exists for group %q", singular, gm.Plural)
-		}
-	}
-
-	mSID := NewUUID()
-
-	err := DoOne(gm.Registry.tx, `
-		INSERT INTO ModelEntities(
-			SID, RegistrySID, ParentSID, Plural, Singular, Versions,
-			VersionId, Latest, HasDocument)
-		VALUES(?,?,?,?,?,?,?,?,?)`,
-		mSID, gm.Registry.DbSID, gm.SID, plural, singular, versions,
-		verId, latest, hasDocument)
-	if err != nil {
-		log.Printf("Error inserting resourceModel(%s): %s", plural, err)
-		return nil, err
-	}
-	r := &ResourceModel{
-		SID:         mSID,
-		GroupModel:  gm,
-		Singular:    singular,
+	return gm.AddResourceModelFull(&ResourceModel{
 		Plural:      plural,
+		Singular:    singular,
 		Versions:    versions,
 		VersionId:   verId,
 		Latest:      latest,
 		HasDocument: hasDocument,
+		ReadOnly:    false,
+	})
+}
+
+func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, error) {
+	if rm.Plural == "" {
+		return nil, fmt.Errorf("Can't add a group with an empty plural name")
+	}
+	if rm.Singular == "" {
+		return nil, fmt.Errorf("Can't add a group with an empty sigular name")
+	}
+	if rm.Versions < 0 {
+		return nil, fmt.Errorf("'versions'(%d) must be >= 0", rm.Versions)
+	}
+	if !IsValidAttributeName(rm.Plural) {
+		return nil, fmt.Errorf("ResourceModel plural name is not valid")
+	}
+	if !IsValidAttributeName(rm.Singular) {
+		return nil, fmt.Errorf("ResourceModel singular name is not valid")
 	}
 
-	gm.Resources[plural] = r
+	for _, r := range gm.Resources {
+		if r.Plural == rm.Plural {
+			return nil, fmt.Errorf("Resource model plural %q already "+
+				"exists for group %q", rm.Plural, gm.Plural)
+		}
+		if r.Singular == rm.Singular {
+			return nil,
+				fmt.Errorf("Resource model singular %q already "+
+					"exists for group %q", rm.Singular, gm.Plural)
+		}
+	}
+
+	rm.SID = NewUUID()
+	rm.GroupModel = gm
+
+	err := DoOne(gm.Registry.tx, `
+		INSERT INTO ModelEntities(
+			SID, RegistrySID, ParentSID, Plural, Singular, Versions,
+			VersionId, Latest, ReadOnly, HasDocument)
+		VALUES(?,?,?,?,?,?,?,?,?,?)`,
+		rm.SID, gm.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.Versions,
+		rm.VersionId, rm.Latest, rm.ReadOnly, rm.HasDocument)
+	if err != nil {
+		log.Printf("Error inserting resourceModel(%s): %s", rm.Plural, err)
+		return nil, err
+	}
+
+	gm.Resources[rm.Plural] = rm
 
 	if err = gm.Registry.Model.Save(); err != nil {
 		return nil, err
 	}
 
-	return r, nil
+	return rm, nil
 }
 
 func (rm *ResourceModel) Delete() error {
@@ -900,20 +913,20 @@ func (rm *ResourceModel) Save() error {
             SID, RegistrySID,
 			ParentSID, Plural, Singular, Versions,
 			Attributes,
-			VersionId, Latest, HasDocument)
-        VALUES(?,?,?,?,?,?,?,?,?,?)
+			VersionId, Latest, ReadOnly, HasDocument)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
             ParentSID=?, Plural=?, Singular=?,
 			Attributes=?,
-            Versions=?, VersionId=?, Latest=?, HasDocument=?`,
+            Versions=?, VersionId=?, Latest=?, ReadOnly=?, HasDocument=?`,
 		rm.SID, rm.GroupModel.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.Versions,
 		attrs,
-		rm.VersionId, rm.Latest, rm.HasDocument,
+		rm.VersionId, rm.Latest, rm.ReadOnly, rm.HasDocument,
 
 		rm.GroupModel.SID, rm.Plural, rm.Singular,
 		attrs,
-		rm.Versions, rm.VersionId, rm.Latest, rm.HasDocument)
+		rm.Versions, rm.VersionId, rm.Latest, rm.ReadOnly, rm.HasDocument)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
 		return err
@@ -986,6 +999,7 @@ func (attrs *Attributes) SetRegistry(reg *Registry) {
 	}
 }
 
+// TODO DUG why do we only do this at the root and not lower down too?
 func (attrs Attributes) AddIfValuesAttributes(obj map[string]any) {
 	attrNames := Keys(attrs)
 	for i := 0; i < len(attrNames); i++ { // since attrs changes
@@ -1303,7 +1317,18 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("resources").P(rm.Plural),
 	}
-	if err := rm.Attributes.Verify(ld); err != nil {
+
+	// Make a copy so we can add the RESOURCExxx attributes, if it has a doc
+	attrs := maps.Clone(rm.Attributes)
+	if rm.HasDocument == true {
+		// DUG TODO see if there's a better way to do this
+		attrs[rm.Singular] = &Attribute{Name: rm.Singular, Type: ANY}
+		attrs[rm.Singular+"url"] = &Attribute{Name: rm.Singular + "url", Type: URL}
+		attrs[rm.Singular+"proxyurl"] = &Attribute{Name: rm.Singular + "proxyurl", Type: URL}
+		attrs[rm.Singular+"base64"] = &Attribute{Name: rm.Singular + "base64", Type: STRING}
+	}
+
+	if err := attrs.Verify(ld); err != nil {
 		return err
 	}
 

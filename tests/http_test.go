@@ -6024,3 +6024,73 @@ func TestHTTPModelSchema(t *testing.T) {
 `)
 
 }
+
+func TestHTTPReadOnlyResource(t *testing.T) {
+	reg := NewRegistry("TestHTTPReadOnlyResource")
+	defer PassDeleteReg(t, reg)
+
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	xNoErr(t, err)
+
+	_, err = gm.AddResourceModelFull(&registry.ResourceModel{
+		Plural:      "files",
+		Singular:    "file",
+		Versions:    0,
+		VersionId:   true,
+		Latest:      true,
+		HasDocument: true,
+		ReadOnly:    true,
+	})
+	xNoErr(t, err)
+
+	xHTTP(t, reg, "PUT", "/dirs/dir1", "{}", 201, `{
+  "id": "dir1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1",
+
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	d1, err := reg.FindGroup("dirs", "dir1")
+	xNoErr(t, err)
+	xCheck(t, d1 != nil, "d1 should not be nil")
+
+	f1, err := d1.AddResource("files", "f1", "v1")
+	xNoErr(t, err)
+	xCheck(t, f1 != nil, "f1 should not be nil")
+
+	xHTTP(t, reg, "GET", "/dirs/dir1/files", "", 200, `{
+  "f1": {
+    "id": "f1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+    "latestversionid": "v1",
+    "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/dir1/files/f1/versions/v1?meta", "", 200, `{
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "latest": true
+}
+`)
+
+	xHTTP(t, reg, "POST", "/dirs/dir1/files", "", 405,
+		"Write operations to read-only resources are not allowed\n")
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1", "", 405,
+		"Write operations to read-only resources are not allowed\n")
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f1", "", 405,
+		"Write operations to read-only resources are not allowed\n")
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f1/versions", "", 405,
+		"Write operations to read-only resources are not allowed\n")
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1", "", 405,
+		"Write operations to read-only resources are not allowed\n")
+}

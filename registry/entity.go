@@ -1289,6 +1289,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	attrs := Attributes{}
 	// level := 0
 	singular := ""
+	hasDoc := true
 
 	// Add attributes from the model (core and user-defined)
 	paths := strings.Split(e.Abstract, string(DB_IN))
@@ -1305,6 +1306,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 			PanicIf(rm == nil, "Cant find Resource %q", paths[1])
 			maps.Copy(attrs, rm.Attributes)
 			singular = rm.Singular
+			hasDoc = rm.HasDocument
 		}
 	}
 
@@ -1319,7 +1321,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	*/
 
 	// Add the RESOURCExxx attributes (for resources and versions)
-	if singular != "" {
+	if hasDoc && singular != "" {
 		checkFn := func(e *Entity) error {
 			list := []string{
 				singular,

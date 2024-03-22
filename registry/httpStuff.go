@@ -728,6 +728,18 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("POST not allowed on a version")
 	}
 
+	// PUT/POST /GROUPs/gID/RESOURCEs... + ReadOnly Resource
+	if info.ResourceModel != nil && info.ResourceModel.ReadOnly &&
+		(method == "PUT" || method == "POST") {
+		// Note that we only block it for end-user interactions, like via
+		// HTTP. If people try to change it via the internal APIs, then
+		// we don't stop it yet. Not sure if we should. TODO
+
+		info.StatusCode = http.StatusMethodNotAllowed
+		return fmt.Errorf("Write operations to read-only resources are not " +
+			"allowed")
+	}
+
 	// Ok, now start to del with the incoming request
 	/////////////////////////////////////////////////
 
