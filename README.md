@@ -54,6 +54,7 @@ TODOs:
 - test to make sure an ID in the body == ID in URL for reg and group
 - test to ensure we can do 2 tx at the same time
 - need to decide on the best tx isolation level
+- add http test for maxVersions (already have non-http tests)
 
 - see if we can prepend Path with / or append it with /
 - see if we can get rid of/clean-up the FindRegistry stuff (and caching)
@@ -75,4 +76,3 @@ TODOs:
 - support the create/modify by/on attributes
 - add support for resource vs resourcebase64 - return what was on the PUT
 - support non-string "RESOURCE" values (e.g. json)
-- support resources.versions limits

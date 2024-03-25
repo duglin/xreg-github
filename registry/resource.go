@@ -136,7 +136,7 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 // Maybe replace error with a panic?
 func (r *Resource) GetLatest() (*Version, error) {
 	val := r.Get("latestversionid")
-	if val == nil {
+	if IsNil(val) {
 		return nil, nil
 		// panic("No latest is set")
 	}
@@ -238,7 +238,12 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 
 	v.SkipEpoch = false
 
-	if latest {
+	// If we can only have one Version, then set the one we just created
+	// as the latest. Basically the "latest" flag is pointless in this case
+	_, rm := r.GetModels()
+	if rm.Versions == 1 {
+		r.SetLatest(v)
+	} else if latest {
 		err = r.SetLatest(v)
 		if err != nil {
 			err = fmt.Errorf("Error setting latestVersionId: %s", err)
@@ -246,8 +251,65 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 		}
 	}
 
+	// If we've reached the maximum # of Versions, then delete oldest
+	if err = r.EnsureMaxVersions(); err != nil {
+		return nil, err
+	}
+
 	log.VPrintf(3, "Created new one - dbSID: %s", v.DbSID)
 	return v, nil
+}
+
+func (r *Resource) EnsureMaxVersions() error {
+	_, rm := r.GetModels()
+	if rm.Versions == 0 {
+		// No limit, so just exit
+		return nil
+	}
+
+	// Get the list of Version IDs for this Resource (oldest first)
+	results, err := Query(r.tx, `
+			SELECT UID,Counter FROM Versions
+			WHERE ResourceSID=? ORDER BY Counter ASC`,
+		r.DbSID)
+	defer results.Close()
+
+	if err != nil {
+		return fmt.Errorf("Error counting Versions: %s", err)
+	}
+
+	vIDs := []string{}
+	for {
+		row := results.NextRow()
+		if row == nil {
+			break
+		}
+		vIDs = append(vIDs, NotNilString(row[0]))
+	}
+	results.Close()
+	PanicIf(len(vIDs) == 0, "Query can't be empty")
+
+	tmp := r.Get("latestversionid")
+	latestID := NotNilString(&tmp)
+
+	// Starting with the oldest, keep deleting until we reach the max
+	// number of Versions allowed. Technically, this should always just
+	// delete 1, but ya never know. Also, skip the one that's tagged
+	// as "latest" since that one is special
+	count := len(vIDs)
+	for count > rm.Versions {
+		// Skip the "latest" Version
+		if vIDs[0] != latestID {
+			err = DoOne(r.tx, `DELETE FROM Versions
+					WHERE ResourceSID=? AND UID=?`, r.DbSID, vIDs[0])
+			if err != nil {
+				return fmt.Errorf("Error deleting Version %q: %s", vIDs[0], err)
+			}
+			count--
+		}
+		vIDs = vIDs[1:]
+	}
+	return nil
 }
 
 func (r *Resource) Delete() error {
@@ -255,4 +317,20 @@ func (r *Resource) Delete() error {
 	defer log.VPrintf(3, "<Exit: Resource.Delete")
 
 	return DoOne(r.tx, `DELETE FROM Resources WHERE SID=?`, r.DbSID)
+}
+
+func (r *Resource) GetVersions() ([]*Version, error) {
+	list := []*Version{}
+
+	entities, err := RawEntitiesFromQuery(r.tx, r.Registry.DbSID,
+		`ParentSID=?`, r.DbSID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, e := range entities {
+		list = append(list, &Version{Entity: *e, Resource: r})
+	}
+
+	return list, nil
 }

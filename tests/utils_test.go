@@ -138,10 +138,10 @@ func xCheckErr(t *testing.T, err error, errStr string) {
 	}
 }
 
-func xCheck(t *testing.T, b bool, errStr string) {
+func xCheck(t *testing.T, b bool, errStr string, args ...any) {
 	t.Helper()
 	if !b {
-		t.Fatalf("%s", errStr)
+		t.Fatalf(errStr, args...)
 	}
 }
 

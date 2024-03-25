@@ -230,7 +230,7 @@ func (m *Model) SetPointers() {
 	}
 }
 
-// Save() should be called by these funcs automatically but there may be
+// VerifyAndSave() should be called by automatically but there may be
 // cases where someone would need to call it manually (e.g. setting an
 // attribute's property - we should technically find a way to catch those
 // cases so code above this shouldn't need to think about it
@@ -248,6 +248,10 @@ func (m *Model) VerifyAndSave() error {
 		return err
 	}
 
+	return m.Save()
+}
+
+func (m *Model) Save() error {
 	err := m.SetSchemas(m.Schemas)
 	if err != nil {
 		return err
@@ -669,6 +673,7 @@ func (m *Model) FindGroupModel(gTypePlural string) *GroupModel {
 }
 
 func (m *Model) ApplyNewModel(newM *Model) error {
+	newM.Registry = m.Registry
 	if err := newM.Verify(); err != nil {
 		return err
 	}
@@ -1083,7 +1088,8 @@ func (attrs *Attributes) SetRegistry(reg *Registry) {
 	}
 }
 
-// TODO DUG why do we only do this at the root and not lower down too?
+// This just does the top-level attributes with the assumption that we'll
+// do the lower-level ones later on in Entity.ValidateObject
 func (attrs Attributes) AddIfValuesAttributes(obj map[string]any) {
 	attrNames := Keys(attrs)
 	for i := 0; i < len(attrNames); i++ { // since attrs changes
@@ -1110,6 +1116,7 @@ func (attrs Attributes) AddIfValuesAttributes(obj map[string]any) {
 						attr.Name, ifValStr, newAttr.Name)
 				}
 				attrs[newAttr.Name] = newAttr
+				// Add new attr name to the list so we can check its ifValues
 				attrNames = append(attrNames, newAttr.Name)
 			}
 		}
@@ -1273,7 +1280,10 @@ func (m *Model) Verify() error {
 		return err
 	}
 
+	// TODO: Verify that the Registry data is model compliant
+
 	for gmName, gm := range m.Groups {
+		gm.Registry = m.Registry
 		if err := gm.Verify(gmName); err != nil {
 			return err
 		}
@@ -1332,7 +1342,10 @@ func (gm *GroupModel) Verify(gmName string) error {
 		return err
 	}
 
+	// TODO: verify the Groups data are model compliant
+
 	for rmName, rm := range gm.Resources {
+		rm.GroupModel = gm
 		if err := rm.Verify(rmName); err != nil {
 			return err
 		}
@@ -1350,7 +1363,7 @@ func (gm *GroupModel) SetRegistry(reg *Registry) {
 	gm.Attributes.SetRegistry(reg)
 
 	for _, rm := range gm.Resources {
-		rm.GroupModel = gm
+		// rm.GroupModel = gm
 		rm.SetRegistry(reg)
 	}
 }
@@ -1419,6 +1432,44 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		return err
 	}
 
+	// TODO: verify the Resources data are model compliant
+	if err := rm.VerifyData(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rm *ResourceModel) VerifyData() error {
+	reg := rm.GroupModel.Registry
+
+	// Query to find all Groups/Resources of the proper type.
+	// The resulting list MUST be Group followed by it's Resources, repeat...
+	gAbs := NewPPP(rm.GroupModel.Plural).Abstract()
+	rAbs := NewPPP(rm.GroupModel.Plural).P(rm.Plural).Abstract()
+	entities, err := RawEntitiesFromQuery(reg.tx, reg.DbSID,
+		`Abstract=? OR Abstract=?`, gAbs, rAbs)
+	if err != nil {
+		return err
+	}
+
+	// First, let's make sure each Resource doesn't have too many Versions
+
+	group := (*Group)(nil)
+	resource := (*Resource)(nil)
+	for _, e := range entities {
+		if e.Level == 1 {
+			group = &Group{Entity: *e, Registry: reg}
+		} else {
+			PanicIf(group == nil, "Group can't be nil")
+			resource = &Resource{Entity: *e, Group: group}
+
+			if err = resource.EnsureMaxVersions(); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -1428,6 +1479,23 @@ func (rm *ResourceModel) SetRegistry(reg *Registry) {
 	}
 
 	rm.Attributes.SetRegistry(reg)
+}
+
+func (rm *ResourceModel) SetMaxVersions(maxV int) error {
+	rm.Versions = maxV
+	return rm.VerifyAndSave()
+}
+
+func (rm *ResourceModel) SetLatest(val bool) error {
+	rm.Latest = val
+	return rm.VerifyAndSave()
+}
+
+func (rm *ResourceModel) VerifyAndSave() error {
+	if err := rm.Verify(rm.Plural); err != nil {
+		return err
+	}
+	return rm.Save()
 }
 
 type LevelData struct {

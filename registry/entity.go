@@ -207,6 +207,53 @@ func RawEntityFromPath(tx *Tx, regID string, path string) (*Entity, error) {
 	return readNextEntity(tx, results)
 }
 
+func RawEntitiesFromQuery(tx *Tx, regID string, query string, args ...any) ([]*Entity, error) {
+	log.VPrintf(3, ">Enter: RawEntititiesFromQuery(%s)", query)
+	defer log.VPrintf(3, "<Exit: RawEntitiesFromQuery")
+
+	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1      2     3    4     5         6         7     8      9
+
+	if query != "" {
+		query = "AND (" + query + ") "
+	}
+	args = append(append([]any{}, regID), args...)
+	results, err := Query(tx, `
+		SELECT
+            e.RegSID as RegSID,
+            e.Level as Level,
+            e.Plural as Plural,
+            e.eSID as eSID,
+            e.UID as UID,
+            p.PropName as PropName,
+            p.PropValue as PropValue,
+            p.PropType as PropType,
+            e.Path as Path,
+            e.Abstract as Abstract
+        FROM Entities AS e
+        LEFT JOIN Props AS p ON (e.eSID=p.EntitySID)
+        WHERE e.RegSID=? `+query+` ORDER BY Path`, args...)
+	defer results.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	entities := []*Entity{}
+	for {
+		e, err := readNextEntity(tx, results)
+		if err != nil {
+			return nil, err
+		}
+		if e == nil {
+			break
+		}
+		entities = append(entities, e)
+	}
+
+	return entities, nil
+}
+
 // Update the entity's Object - not the other props in Entity. Similar to
 // RawEntityFromPath
 func (e *Entity) Refresh() error {
@@ -1621,6 +1668,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 								`siblingattribute: %s`, path.P(key).UI(),
 								valStr, newAttr.Name)
 						}
+						// add new attr to the list so we can check its ifValues
 						if newAttr.Name == "*" {
 							attrs = append([]*Attribute{newAttr}, attrs...)
 						} else {

@@ -4743,8 +4743,7 @@ func TestHTTPLatest(t *testing.T) {
 		ResBody:     `"latest" can not be "false" since doing so would result in no latest version` + "\n",
 	})
 
-	rm.Latest = false
-	rm.Save()
+	rm.SetLatest(false)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "PUT file f1/2 - latest = true - diff server",
@@ -4836,8 +4835,7 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	// Enable client-side setting
-	rm.Latest = true
-	rm.Save()
+	rm.SetLatest(true)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:    "POST file f1?setlatest - empty",
