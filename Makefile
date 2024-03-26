@@ -3,13 +3,15 @@ all: mysql cmds test image run
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
 
-cmds: server xr
+cmds: .cmds
+.cmds: server xr
+	@touch .cmds
 
 qtest: .test
 
 test: export TESTING=1
 test: .test .testimage
-.test: cmds */*test.go
+.test: .cmds */*test.go
 	@echo
 	@echo "# Testing"
 	@go clean -testcache

@@ -19,6 +19,7 @@ func TestXRBasic(t *testing.T) {
 
 	// Make sure we can validate the various spec owned model files
 	files := []string{
+		"sample-model.json",
 		RepoBase + "endpoint/model.json",
 		RepoBase + "message/model.json",
 		RepoBase + "schema/model.json",

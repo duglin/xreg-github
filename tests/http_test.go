@@ -196,11 +196,13 @@ func TestHTTPModel(t *testing.T) {
         "name": "specversion",
         "type": "string",
         "readonly": true,
+        "immutable": true,
         "serverrequired": true
       },
       "id": {
         "name": "id",
         "type": "string",
+        "immutable": true,
         "serverrequired": true
       },
       "name": {
@@ -278,11 +280,13 @@ func TestHTTPModel(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -359,11 +363,13 @@ func TestHTTPModel(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -440,11 +446,13 @@ func TestHTTPModel(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -533,11 +541,13 @@ func TestHTTPModel(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -599,6 +609,7 @@ func TestHTTPModel(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -660,14 +671,15 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 0,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 0,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -768,9 +780,9 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 0,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 0,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": false
         }
       }
@@ -790,11 +802,13 @@ func TestHTTPModel(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -856,6 +870,7 @@ func TestHTTPModel(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -917,14 +932,15 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 0,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 0,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": false,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -1046,11 +1062,13 @@ func TestHTTPModel(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -1116,6 +1134,7 @@ func TestHTTPModel(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -1177,14 +1196,15 @@ func TestHTTPModel(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 0,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 0,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -4743,7 +4763,7 @@ func TestHTTPLatest(t *testing.T) {
 		ResBody:     `"latest" can not be "false" since doing so would result in no latest version` + "\n",
 	})
 
-	rm.SetLatest(false)
+	rm.SetSetLatest(false)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "PUT file f1/2 - latest = true - diff server",
@@ -4835,7 +4855,7 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	// Enable client-side setting
-	rm.SetLatest(true)
+	rm.SetSetLatest(true)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:    "POST file f1?setlatest - empty",
@@ -6030,11 +6050,13 @@ func TestHTTPModelSchema(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -6100,11 +6122,13 @@ func TestHTTPModelSchema(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -6170,11 +6194,13 @@ func TestHTTPModelSchema(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -6249,13 +6275,13 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 	xNoErr(t, err)
 
 	_, err = gm.AddResourceModelFull(&registry.ResourceModel{
-		Plural:      "files",
-		Singular:    "file",
-		Versions:    0,
-		VersionId:   true,
-		Latest:      true,
-		HasDocument: true,
-		ReadOnly:    true,
+		Plural:       "files",
+		Singular:     "file",
+		MaxVersions:  0,
+		SetVersionId: true,
+		SetLatest:    true,
+		HasDocument:  true,
+		ReadOnly:     true,
 	})
 	xNoErr(t, err)
 

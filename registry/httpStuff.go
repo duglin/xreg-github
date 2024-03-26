@@ -1052,7 +1052,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			// If the user can't control "latest", but they passed in
 			// what we were going to do anyway, let it pass
-			if info.ResourceModel.Latest == false {
+			if info.ResourceModel.SetLatest == false {
 				if latest != (latestVID == version.UID) {
 					return fmt.Errorf(`"latest" can not be "%v", it is `+
 						`controlled by the server`, latest)
@@ -1157,7 +1157,7 @@ func HTTPSetLatestVersionID(info *RequestInfo) error {
 		return fmt.Errorf("Resource %q not found", info.ResourceUID)
 	}
 
-	if info.ResourceModel.Latest == false {
+	if info.ResourceModel.SetLatest == false {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Resource %q doesn't allow setting of `+
 			`"latestversionid"`, info.ResourceModel.Plural)

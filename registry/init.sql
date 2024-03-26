@@ -74,11 +74,11 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     Plural      VARCHAR(64),
     Attributes  JSON,               # Until we use the Attributes table
 
-    Versions    INT NOT NULL,       # For Resources
-    VersionId   BOOL NOT NULL,      # For Resources
-    Latest      BOOL NOT NULL,      # For Resources
-    HasDocument BOOL NOT NULL,      # For Resources
-    ReadOnly    BOOL NOT NULL,      # For Resources
+    MaxVersions    INT NOT NULL,       # For Resources
+    SetVersionId   BOOL NOT NULL,      # For Resources
+    SetLatest      BOOL NOT NULL,      # For Resources
+    HasDocument    BOOL NOT NULL,      # For Resources
+    ReadOnly       BOOL NOT NULL,      # For Resources
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),

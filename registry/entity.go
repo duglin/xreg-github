@@ -629,10 +629,10 @@ var OrderedSpecProps = []*Attribute{
 		Type:           STRING,
 		ServerRequired: true,
 		ReadOnly:       true,
+		Immutable:      true,
 
 		internals: AttrInternals{
 			levels:    "0",
-			immutable: true,
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				return SPECVERSION
@@ -650,11 +650,11 @@ var OrderedSpecProps = []*Attribute{
 	{
 		Name:           "id",
 		Type:           STRING,
+		Immutable:      true,
 		ServerRequired: true,
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: true,
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
@@ -693,7 +693,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: false,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -707,7 +706,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: true,
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
@@ -765,7 +763,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: true,
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
@@ -797,7 +794,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "3",
-			immutable: true,
 			dontStore: true,
 			getFn:     nil,
 			checkFn:   nil,
@@ -817,7 +813,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "2",
-			immutable: true,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -832,7 +827,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "2",
-			immutable: true,
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				val := e.Object["latestversionid"]
@@ -867,7 +861,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: false,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -880,7 +873,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: false,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -896,7 +888,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: false,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -909,7 +900,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "123",
-			immutable: false,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -923,7 +913,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: true,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -937,7 +926,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: true,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -951,7 +939,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: true,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -965,7 +952,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "",
-			immutable: true,
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -978,7 +964,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:     "23",
-			immutable:  false,
 			dontStore:  false,
 			httpHeader: "Content-Type",
 			getFn:      nil,
@@ -999,7 +984,6 @@ var OrderedSpecProps = []*Attribute{
 
 		internals: AttrInternals{
 			levels:    "0",
-			immutable: true,
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				if info != nil && info.ShowModel {

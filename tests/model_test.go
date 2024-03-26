@@ -20,11 +20,13 @@ func TestNoModel(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -94,11 +96,13 @@ func TestNoModel(t *testing.T) {
         "name": "specversion",
         "type": "string",
         "readonly": true,
+        "immutable": true,
         "serverrequired": true
       },
       "id": {
         "name": "id",
         "type": "string",
+        "immutable": true,
         "serverrequired": true
       },
       "name": {
@@ -175,11 +179,13 @@ func TestRegSchema(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -248,11 +254,13 @@ func TestRegSchema(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -320,11 +328,13 @@ func TestRegSchema(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -391,11 +401,13 @@ func TestRegSchema(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -470,11 +482,13 @@ func TestGroupModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -536,6 +550,7 @@ func TestGroupModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -607,11 +622,13 @@ func TestGroupModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -673,6 +690,7 @@ func TestGroupModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -744,11 +762,13 @@ func TestGroupModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -810,6 +830,7 @@ func TestGroupModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -939,11 +960,13 @@ func TestResourceModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -1005,6 +1028,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -1066,14 +1090,15 @@ func TestResourceModelCreate(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 5,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 5,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -1159,6 +1184,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -1220,14 +1246,15 @@ func TestResourceModelCreate(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 0,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 0,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -1320,11 +1347,13 @@ func TestResourceModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -1386,6 +1415,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -1447,14 +1477,15 @@ func TestResourceModelCreate(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 5,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 5,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -1540,6 +1571,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -1611,11 +1643,13 @@ func TestResourceModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -1677,6 +1711,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -1738,14 +1773,15 @@ func TestResourceModelCreate(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 5,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 5,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -1831,6 +1867,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -1903,11 +1940,13 @@ func TestResourceModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -1969,6 +2008,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -2030,14 +2070,15 @@ func TestResourceModelCreate(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 5,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 5,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -2129,11 +2170,13 @@ func TestResourceModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -2195,6 +2238,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -2256,14 +2300,15 @@ func TestResourceModelCreate(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 5,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 5,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -2359,11 +2404,11 @@ func TestResourceModelCreate(t *testing.T) {
 				Singular: "dir",
 				Resources: map[string]*registry.ResourceModel{
 					"files": &registry.ResourceModel{
-						Plural:    "files",
-						Singular:  "file",
-						Versions:  6,
-						VersionId: false,
-						Latest:    false,
+						Plural:       "files",
+						Singular:     "file",
+						MaxVersions:  6,
+						SetVersionId: false,
+						SetLatest:    false,
 						// Note that hasdocument is missing -> false per golang
 					},
 				},
@@ -2381,11 +2426,13 @@ func TestResourceModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -2451,6 +2498,7 @@ func TestResourceModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -2512,14 +2560,15 @@ func TestResourceModelCreate(t *testing.T) {
         "files": {
           "plural": "files",
           "singular": "file",
-          "versions": 6,
-          "versionid": false,
-          "latest": false,
+          "maxversions": 6,
+          "setversionid": false,
+          "setlatest": false,
           "hasdocument": false,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -2636,11 +2685,13 @@ func TestResourceModelCreate(t *testing.T) {
         "name": "specversion",
         "type": "string",
         "readonly": true,
+        "immutable": true,
         "serverrequired": true
       },
       "id": {
         "name": "id",
         "type": "string",
+        "immutable": true,
         "serverrequired": true
       },
       "name": {
@@ -2706,6 +2757,7 @@ func TestResourceModelCreate(t *testing.T) {
           "id": {
             "name": "id",
             "type": "string",
+            "immutable": true,
             "serverrequired": true
           },
           "name": {
@@ -2767,14 +2819,15 @@ func TestResourceModelCreate(t *testing.T) {
           "files": {
             "plural": "files",
             "singular": "file",
-            "versions": 6,
-            "versionid": false,
-            "latest": false,
+            "maxversions": 6,
+            "setversionid": false,
+            "setlatest": false,
             "hasdocument": false,
             "attributes": {
               "id": {
                 "name": "id",
                 "type": "string",
+                "immutable": true,
                 "serverrequired": true
               },
               "name": {
@@ -2890,11 +2943,11 @@ func TestResourceModelCreate(t *testing.T) {
 				Singular: "dir",
 				Resources: map[string]*registry.ResourceModel{
 					"files2": &registry.ResourceModel{
-						Plural:    "files2",
-						Singular:  "file",
-						Versions:  6,
-						VersionId: false,
-						Latest:    false,
+						Plural:       "files2",
+						Singular:     "file",
+						MaxVersions:  6,
+						SetVersionId: false,
+						SetLatest:    false,
 					},
 				},
 			},
@@ -2916,11 +2969,13 @@ func TestResourceModelCreate(t *testing.T) {
         "name": "specversion",
         "type": "string",
         "readonly": true,
+        "immutable": true,
         "serverrequired": true
       },
       "id": {
         "name": "id",
         "type": "string",
+        "immutable": true,
         "serverrequired": true
       },
       "name": {
@@ -2982,6 +3037,7 @@ func TestResourceModelCreate(t *testing.T) {
           "id": {
             "name": "id",
             "type": "string",
+            "immutable": true,
             "serverrequired": true
           },
           "name": {
@@ -3043,14 +3099,15 @@ func TestResourceModelCreate(t *testing.T) {
           "files2": {
             "plural": "files2",
             "singular": "file",
-            "versions": 6,
-            "versionid": false,
-            "latest": false,
+            "maxversions": 6,
+            "setversionid": false,
+            "setlatest": false,
             "hasdocument": false,
             "attributes": {
               "id": {
                 "name": "id",
                 "type": "string",
+                "immutable": true,
                 "serverrequired": true
               },
               "name": {
@@ -3171,11 +3228,13 @@ func TestResourceModelCreate(t *testing.T) {
         "name": "specversion",
         "type": "string",
         "readonly": true,
+        "immutable": true,
         "serverrequired": true
       },
       "id": {
         "name": "id",
         "type": "string",
+        "immutable": true,
         "serverrequired": true
       },
       "name": {
@@ -3237,6 +3296,7 @@ func TestResourceModelCreate(t *testing.T) {
           "id": {
             "name": "id",
             "type": "string",
+            "immutable": true,
             "serverrequired": true
           },
           "name": {
@@ -3333,11 +3393,13 @@ func TestResourceModelCreate(t *testing.T) {
         "name": "specversion",
         "type": "string",
         "readonly": true,
+        "immutable": true,
         "serverrequired": true
       },
       "id": {
         "name": "id",
         "type": "string",
+        "immutable": true,
         "serverrequired": true
       },
       "name": {
@@ -3399,6 +3461,7 @@ func TestResourceModelCreate(t *testing.T) {
           "id": {
             "name": "id",
             "type": "string",
+            "immutable": true,
             "serverrequired": true
           },
           "name": {
@@ -3499,11 +3562,13 @@ func TestMultModelCreate(t *testing.T) {
       "name": "specversion",
       "type": "string",
       "readonly": true,
+      "immutable": true,
       "serverrequired": true
     },
     "id": {
       "name": "id",
       "type": "string",
+      "immutable": true,
       "serverrequired": true
     },
     "name": {
@@ -3565,6 +3630,7 @@ func TestMultModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -3626,14 +3692,15 @@ func TestMultModelCreate(t *testing.T) {
         "rms1": {
           "plural": "rms1",
           "singular": "rm1",
-          "versions": 0,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 0,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -3713,14 +3780,15 @@ func TestMultModelCreate(t *testing.T) {
         "rms2": {
           "plural": "rms2",
           "singular": "rm2",
-          "versions": 1,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 1,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -3806,6 +3874,7 @@ func TestMultModelCreate(t *testing.T) {
         "id": {
           "name": "id",
           "type": "string",
+          "immutable": true,
           "serverrequired": true
         },
         "name": {
@@ -3867,14 +3936,15 @@ func TestMultModelCreate(t *testing.T) {
         "rms1": {
           "plural": "rms1",
           "singular": "rm1",
-          "versions": 2,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 2,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -3954,14 +4024,15 @@ func TestMultModelCreate(t *testing.T) {
         "rms2": {
           "plural": "rms2",
           "singular": "rm2",
-          "versions": 3,
-          "versionid": true,
-          "latest": true,
+          "maxversions": 3,
+          "setversionid": true,
+          "setlatest": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -4100,11 +4171,13 @@ func TestMultModel2Create(t *testing.T) {
         "name": "specversion",
         "type": "string",
         "readonly": true,
+        "immutable": true,
         "serverrequired": true
       },
       "id": {
         "name": "id",
         "type": "string",
+        "immutable": true,
         "serverrequired": true
       },
       "name": {
@@ -4166,6 +4239,7 @@ func TestMultModel2Create(t *testing.T) {
           "id": {
             "name": "id",
             "type": "string",
+            "immutable": true,
             "serverrequired": true
           },
           "name": {
@@ -4227,14 +4301,15 @@ func TestMultModel2Create(t *testing.T) {
           "files": {
             "plural": "files",
             "singular": "file",
-            "versions": 2,
-            "versionid": true,
-            "latest": false,
+            "maxversions": 2,
+            "setversionid": true,
+            "setlatest": false,
             "hasdocument": true,
             "attributes": {
               "id": {
                 "name": "id",
                 "type": "string",
+                "immutable": true,
                 "serverrequired": true
               },
               "name": {
@@ -4320,6 +4395,7 @@ func TestMultModel2Create(t *testing.T) {
           "id": {
             "name": "id",
             "type": "string",
+            "immutable": true,
             "serverrequired": true
           },
           "name": {
@@ -4381,14 +4457,15 @@ func TestMultModel2Create(t *testing.T) {
           "files": {
             "plural": "files",
             "singular": "file",
-            "versions": 0,
-            "versionid": false,
-            "latest": true,
+            "maxversions": 0,
+            "setversionid": false,
+            "setlatest": true,
             "hasdocument": true,
             "attributes": {
               "id": {
                 "name": "id",
                 "type": "string",
+                "immutable": true,
                 "serverrequired": true
               },
               "name": {

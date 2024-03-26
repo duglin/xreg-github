@@ -396,6 +396,7 @@ func doCount(tx *Tx, cmd string, args ...interface{}) (int, error) {
 	log.VPrintf(4, "doCount: %q arg: %v", cmd, args)
 	ps, err := tx.Prepare(cmd)
 	if err != nil {
+		ShowStack()
 		return 0, err
 	}
 	defer ps.Close()

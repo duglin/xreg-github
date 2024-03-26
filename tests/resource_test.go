@@ -161,16 +161,16 @@ func TestResourceMaxVersions(t *testing.T) {
 	d1, _ := reg.AddGroup("dirs", "d1")
 
 	_, err = gm.AddResourceModelFull(&registry.ResourceModel{
-		Plural:   "files",
-		Singular: "file",
-		Versions: -1,
+		Plural:      "files",
+		Singular:    "file",
+		MaxVersions: -1,
 	})
 	xCheckErr(t, err, `'versions'(-1) must be >= 0`)
 
 	rm, err := gm.AddResourceModelFull(&registry.ResourceModel{
-		Plural:   "files",
-		Singular: "file",
-		Versions: 1, // ONLY ALLOW 1 VERSION
+		Plural:      "files",
+		Singular:    "file",
+		MaxVersions: 1, // ONLY ALLOW 1 VERSION
 	})
 	xNoErr(t, err)
 

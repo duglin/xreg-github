@@ -1,6 +1,7 @@
 .github
 server
 xr
+.cmds
 .test
 .image
 .testimage

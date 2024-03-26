@@ -241,7 +241,7 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 	// If we can only have one Version, then set the one we just created
 	// as the latest. Basically the "latest" flag is pointless in this case
 	_, rm := r.GetModels()
-	if rm.Versions == 1 {
+	if rm.MaxVersions == 1 {
 		r.SetLatest(v)
 	} else if latest {
 		err = r.SetLatest(v)
@@ -262,7 +262,7 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 
 func (r *Resource) EnsureMaxVersions() error {
 	_, rm := r.GetModels()
-	if rm.Versions == 0 {
+	if rm.MaxVersions == 0 {
 		// No limit, so just exit
 		return nil
 	}
@@ -297,7 +297,7 @@ func (r *Resource) EnsureMaxVersions() error {
 	// delete 1, but ya never know. Also, skip the one that's tagged
 	// as "latest" since that one is special
 	count := len(vIDs)
-	for count > rm.Versions {
+	for count > rm.MaxVersions {
 		// Skip the "latest" Version
 		if vIDs[0] != latestID {
 			err = DoOne(r.tx, `DELETE FROM Versions
