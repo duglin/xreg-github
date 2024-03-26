@@ -1433,8 +1433,13 @@ func (rm *ResourceModel) Verify(rmName string) error {
 	}
 
 	// TODO: verify the Resources data are model compliant
-	if err := rm.VerifyData(); err != nil {
-		return err
+	// Only do this if we have a Registry. It assumes that if we have
+	// no Registry then we're not connected to a backend and there's no data
+	// to verify
+	if rm.GroupModel.Registry != nil {
+		if err := rm.VerifyData(); err != nil {
+			return err
+		}
 	}
 
 	return nil

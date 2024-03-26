@@ -9,7 +9,7 @@ qtest: .test
 
 test: export TESTING=1
 test: .test .testimage
-.test: server */*test.go
+.test: cmds */*test.go
 	@echo
 	@echo "# Testing"
 	@go clean -testcache
