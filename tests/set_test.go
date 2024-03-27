@@ -265,7 +265,7 @@ func TestSetLabels(t *testing.T) {
 	file.Set(labels.P("dd_ff").UI(), "under")
 	file.Set(labels.P("dd.ff").UI(), "dot")
 
-	ver2.Refresh() // very important since ver2 is now stale
+	ver2.Refresh() // very important since ver2 is not stale
 	err = ver.Set(labels.P("vv").UI(), 987.234)
 	if err == nil || err.Error() != `Attribute "labels.vv" must be a string` {
 		t.Errorf("wrong err msg: %s", err)

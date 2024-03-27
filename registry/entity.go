@@ -318,18 +318,19 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 
 	// Assume no other edits are pending
 	// e.Refresh() // trying not to have this here
-	if e.Object == nil {
-		e.Object = map[string]any{}
-	}
 
 	if e.NewObject == nil {
 		// If we don't have a NewObject yet then this is our first update
 		// so clone the current values before adding the new prop/val
-		e.NewObject = maps.Clone(e.Object)
+		if e.Object == nil {
+			e.NewObject = map[string]any{}
+		} else {
+			e.NewObject = maps.Clone(e.Object)
+		}
 	}
 
 	// Cheat a little just to make caller's life easier by converting
-	// empty structs and maps to be of the type we like (meaning 'any's)
+	// empty structs and maps need to be of the type we like (meaning 'any's)
 	if !IsNil(val) {
 		if val == struct{}{} {
 			val = map[string]any{}
@@ -395,7 +396,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	}
 
 	// Make the bold assumption that we we're setting and saving all in one
-	// that a user who is explicitly setting 'epoc' via an interenal
+	// that a user who is explicitly setting 'epoch' via an interenal
 	// set() knows what they're doing
 	save := e.SkipEpoch
 	e.SkipEpoch = true
@@ -658,31 +659,26 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
-				if e.Object != nil {
-					oldID := any(e.UID)
-					newID := any(e.NewObject["id"])
+				oldID := any(e.UID)
+				newID := any(e.NewObject["id"])
 
-					if !IsNil(newID) && newID == "" {
-						return fmt.Errorf("ID can't be an empty string")
-					}
-					if IsNil(newID) {
-						newID = ""
-					}
+				if IsNil(newID) {
+					return nil // Not trying to be updated, so skip it
+				}
 
-					if newID != "" && oldID != "" && newID != oldID {
-						return fmt.Errorf("Can't change the ID of an "+
-							"entity(%s->%s)", oldID, newID)
-					}
+				if newID == "" {
+					return fmt.Errorf("ID can't be an empty string")
+				}
+
+				if oldID != "" && newID != oldID {
+					return fmt.Errorf("Can't change the ID of an "+
+						"entity(%s->%s)", oldID, newID)
 				}
 				return nil
 			},
 			updateFn: func(e *Entity, isNew bool) error {
-				if e.Object != nil {
-					if IsNil(e.NewObject["id"]) && !IsNil(e.Object["id"]) {
-						e.NewObject["id"] = e.Object["id"]
-						return nil
-					}
-				}
+				// Make sure the ID is always set
+				e.NewObject["id"] = e.UID
 				return nil
 			},
 		},

@@ -59,6 +59,7 @@ TODOs:
 - see if we can prepend Path with / or append it with /
 - see if we can get rid of/clean-up the FindRegistry stuff (and caching)
 - see if we can remove JustSet and always Save each time since we have TXs now
+  - Just see if we can clean-up the Set... stuff in general
 - write down the model for the spec defined attributes
 - convert internal errors into "panic" so any "error" returned is a user error
 - see if we can move "#resource??" into the attributes struct
