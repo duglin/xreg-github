@@ -259,7 +259,7 @@ func TestBasicTypes(t *testing.T) {
 		for _, prop := range test.Props {
 			t.Logf("Test: %s  val:%v", prop.Name, prop.Value)
 			// Note that for Resources this will set them on the latest Version
-			err := setter.Set(prop.Name, prop.Value)
+			err := setter.SetSave(prop.Name, prop.Value)
 			if err != nil && err.Error() != prop.ErrMsg {
 				t.Errorf("Error calling set (%q=%v): %q expected %q", prop.Name,
 					prop.Value, err, prop.ErrMsg)
@@ -460,17 +460,17 @@ func TestWildcardBoolTypes(t *testing.T) {
 	_, err = dir.AddResource("files", "f1", "v1")
 	xNoErr(t, err)
 
-	err = reg.Set("bogus", "foo")
+	err = reg.SetSave("bogus", "foo")
 	xCheck(t, err.Error() == `Attribute "bogus" must be a boolean`,
 		fmt.Sprintf("bogus=foo: %s", err))
 
-	err = reg.Set("ext1", true)
+	err = reg.SetSave("ext1", true)
 	xCheck(t, err == nil, fmt.Sprintf("set ext1: %s", err))
 	reg.Refresh()
 	val := reg.Get("ext1")
 	xCheck(t, val == true, fmt.Sprintf("get ext1: %v", val))
 
-	err = reg.Set("ext1", false)
+	err = reg.SetSave("ext1", false)
 	xCheck(t, err == nil, fmt.Sprintf("set ext1-2: %s", err))
 	reg.Refresh()
 	xCheck(t, reg.Get("ext1") == false, fmt.Sprintf("get ext1-2: %v", val))
@@ -484,20 +484,20 @@ func TestWildcardAnyTypes(t *testing.T) {
 	// reg.Model.Save()
 
 	// Make sure we can set the same attr to two different types
-	err := reg.Set("ext1", 5.5)
+	err := reg.SetSave("ext1", 5.5)
 	xCheck(t, err == nil, fmt.Sprintf("set ext1: %s", err))
 	reg.Refresh()
 	val := reg.Get("ext1")
 	xCheck(t, val == 5.5, fmt.Sprintf("get ext1: %v", val))
 
-	err = reg.Set("ext1", "foo")
+	err = reg.SetSave("ext1", "foo")
 	xCheck(t, err == nil, fmt.Sprintf("set ext2: %s", err))
 	reg.Refresh()
 	val = reg.Get("ext1")
 	xCheck(t, val == "foo", fmt.Sprintf("get ext2: %v", val))
 
 	// Make sure we add one of a different type
-	err = reg.Set("ext2", true)
+	err = reg.SetSave("ext2", true)
 	xCheck(t, err == nil, fmt.Sprintf("set ext3 %s", err))
 	reg.Refresh()
 	val = reg.Get("ext2")
@@ -526,18 +526,18 @@ func TestWildcard2LayersTypes(t *testing.T) {
 	xCheck(t, err == nil, "")
 	// reg.Model.Save()
 
-	err = reg.Set("obj.map.k1", 5)
+	err = reg.SetSave("obj.map.k1", 5)
 	xCheck(t, err == nil, fmt.Sprintf("set foo.k1: %s", err))
 	reg.Refresh()
 	val := reg.Get("obj.map.k1")
 	xCheck(t, val == 5, fmt.Sprintf("get foo.k1: %v", val))
 
-	err = reg.Set("obj.map.foo.k1.k2", 5)
+	err = reg.SetSave("obj.map.foo.k1.k2", 5)
 	xCheck(t, err.Error() == `Attribute "obj.map.foo" must be an integer`,
 		fmt.Sprintf("set obj.map.foo.k1.k2: %s", err))
 	// reg.Refresh() // clear bad data
 
-	err = reg.Set("obj.myany.foo.k1.k2", 5)
+	err = reg.SetSave("obj.myany.foo.k1.k2", 5)
 	xCheck(t, err == nil, fmt.Sprintf("set obj.myany.foo.k1.k2: %s", err))
 	reg.Refresh()
 	val = reg.Get("obj.myany.foo.k1.k2")

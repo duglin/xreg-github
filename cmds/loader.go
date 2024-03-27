@@ -85,10 +85,10 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		// log.VPrintf(3, "New registry:\n%#v", reg)
 		defer reg.Rollback()
 
-		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
-		ErrFatalf(reg.Set("name", "APIs-guru Registry"))
-		ErrFatalf(reg.Set("description", "xRegistry view of github.com/APIs-guru/openapi-directory"))
-		ErrFatalf(reg.Set("documentation", "https://github.com/duglin/xreg-github"))
+		ErrFatalf(reg.SetSave("#baseURL", "http://soaphub.org:8585/"))
+		ErrFatalf(reg.SetSave("name", "APIs-guru Registry"))
+		ErrFatalf(reg.SetSave("description", "xRegistry view of github.com/APIs-guru/openapi-directory"))
+		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
 		ErrFatalf(reg.Refresh())
 		// log.VPrintf(3, "New registry:\n%#v", reg)
 
@@ -143,10 +143,10 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 			ErrFatalf(err)
 		}
 
-		ErrFatalf(group.Set("name", group.UID))
-		ErrFatalf(group.Set("modifiedby", "me"))
-		ErrFatalf(group.Set("modifiedon", time.Now().Format(time.RFC3339)))
-		ErrFatalf(group.Set("epoch", 5))
+		ErrFatalf(group.SetSave("name", group.UID))
+		ErrFatalf(group.SetSave("modifiedby", "me"))
+		ErrFatalf(group.SetSave("modifiedon", time.Now().Format(time.RFC3339)))
+		ErrFatalf(group.SetSave("epoch", 5))
 
 		// group2 := reg.FindGroup("apiproviders", parts[0])
 		// log.Printf("Find Group:\n%s", registry.ToJSON(group2))
@@ -171,8 +171,8 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		io.Copy(buf, reader)
 		version, err = res.AddVersion(parts[verIndex], true)
 		ErrFatalf(err)
-		ErrFatalf(version.Set("name", parts[verIndex+1]))
-		ErrFatalf(version.Set("format", "openapi/3.0.6"))
+		ErrFatalf(version.SetSave("name", parts[verIndex+1]))
+		ErrFatalf(version.SetSave("format", "openapi/3.0.6"))
 
 		// Don't upload the file contents into the registry. Instead just
 		// give the registry a URL to it and ask it to server it via proxy.
@@ -183,11 +183,11 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 			"openapi-directory/main/APIs/"
 		switch iter % 3 {
 		case 0:
-			ErrFatalf(version.Set("#resource", buf.Bytes()))
+			ErrFatalf(version.SetSave("#resource", buf.Bytes()))
 		case 1:
-			ErrFatalf(version.Set("#resourceURL", base+header.Name[i+6:]))
+			ErrFatalf(version.SetSave("#resourceURL", base+header.Name[i+6:]))
 		case 2:
-			ErrFatalf(version.Set("#resourceProxyURL", base+header.Name[i+6:]))
+			ErrFatalf(version.SetSave("#resourceProxyURL", base+header.Name[i+6:]))
 		}
 		iter++
 	}
@@ -212,12 +212,12 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		defer reg.Rollback()
 
-		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
-		ErrFatalf(reg.Set("name", "Test Registry"))
-		ErrFatalf(reg.Set("description", "A test reg"))
-		ErrFatalf(reg.Set("documentation", "https://github.com/duglin/xreg-github"))
+		ErrFatalf(reg.SetSave("#baseURL", "http://soaphub.org:8585/"))
+		ErrFatalf(reg.SetSave("name", "Test Registry"))
+		ErrFatalf(reg.SetSave("description", "A test reg"))
+		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
 
-		ErrFatalf(reg.Set("labels.stage", "prod"))
+		ErrFatalf(reg.SetSave("labels.stage", "prod"))
 
 		_, err = reg.Model.AddAttr("bool1", registry.BOOLEAN)
 		ErrFatalf(err)
@@ -250,20 +250,20 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 				registry.NewItemType(registry.STRING)))
 		ErrFatalf(err)
 
-		ErrFatalf(reg.Set("bool1", true))
-		ErrFatalf(reg.Set("int1", 1))
-		ErrFatalf(reg.Set("dec1", 1.1))
-		ErrFatalf(reg.Set("str1", "hi"))
-		ErrFatalf(reg.Set("map1.k1", "v1"))
+		ErrFatalf(reg.SetSave("bool1", true))
+		ErrFatalf(reg.SetSave("int1", 1))
+		ErrFatalf(reg.SetSave("dec1", 1.1))
+		ErrFatalf(reg.SetSave("str1", "hi"))
+		ErrFatalf(reg.SetSave("map1.k1", "v1"))
 
-		ErrFatalf(reg.Set("emptymap", map[string]int{}))
-		ErrFatalf(reg.Set("emptyarr", []int{}))
-		ErrFatalf(reg.Set("emptyobj", map[string]any{})) // struct{}{}))
+		ErrFatalf(reg.SetSave("emptymap", map[string]int{}))
+		ErrFatalf(reg.SetSave("emptyarr", []int{}))
+		ErrFatalf(reg.SetSave("emptyobj", map[string]any{})) // struct{}{}))
 
-		ErrFatalf(reg.Set("arr1[0]", "arr1-value"))
-		ErrFatalf(reg.Set("mapobj.mapkey.inint", 5))
-		ErrFatalf(reg.Set("mapobj['cool.key'].inint", 666))
-		ErrFatalf(reg.Set("arrmap[1].key1", "arrmapk1-value"))
+		ErrFatalf(reg.SetSave("arr1[0]", "arr1-value"))
+		ErrFatalf(reg.SetSave("mapobj.mapkey.inint", 5))
+		ErrFatalf(reg.SetSave("mapobj['cool.key'].inint", 666))
+		ErrFatalf(reg.SetSave("arrmap[1].key1", "arrmapk1-value"))
 	}
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
@@ -278,14 +278,14 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 	g, err := reg.AddGroup("dirs", "dir1")
 	ErrFatalf(err)
-	ErrFatalf(g.Set("labels.private", "true"))
+	ErrFatalf(g.SetSave("labels.private", "true"))
 	r, err := g.AddResource("files", "f1", "v1")
 	ErrFatalf(err)
-	ErrFatalf(g.Set("labels.private", "true"))
+	ErrFatalf(g.SetSave("labels.private", "true"))
 	_, err = r.AddVersion("v2", true)
 	ErrFatalf(err)
-	ErrFatalf(r.Set("labels.stage", "dev"))
-	ErrFatalf(r.Set("labels.none", ""))
+	ErrFatalf(r.SetSave("labels.stage", "dev"))
+	ErrFatalf(r.SetSave("labels.none", ""))
 
 	_, err = g.AddResource("datas", "d1", "v1")
 
@@ -308,10 +308,10 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		defer reg.Rollback()
 
-		ErrFatalf(reg.Set("#baseURL", "http://soaphub.org:8585/"))
-		ErrFatalf(reg.Set("name", "Endpoints Registry"))
-		ErrFatalf(reg.Set("description", "An impl of the endpoints spec"))
-		ErrFatalf(reg.Set("documentation", "https://github.com/duglin/xreg-github"))
+		ErrFatalf(reg.SetSave("#baseURL", "http://soaphub.org:8585/"))
+		ErrFatalf(reg.SetSave("name", "Endpoints Registry"))
+		ErrFatalf(reg.SetSave("description", "An impl of the endpoints spec"))
+		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
 	}
 
 	err = reg.LoadModelFromFile("https://raw.githubusercontent.com/xregistry/spec/main/endpoint/model.json")
@@ -377,37 +377,37 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		"usage": "producer",
 	})
 	ErrFatalf(err)
-	ErrFatalf(g.Set("name", "end1"))
-	ErrFatalf(g.Set("epoch", 1))
-	ErrFatalf(g.Set("labels.stage", "dev"))
-	ErrFatalf(g.Set("labels.stale", "true"))
+	ErrFatalf(g.SetSave("name", "end1"))
+	ErrFatalf(g.SetSave("epoch", 1))
+	ErrFatalf(g.SetSave("labels.stage", "dev"))
+	ErrFatalf(g.SetSave("labels.stale", "true"))
 
 	r, err := g.AddResource("messages", "created", "v1")
 	ErrFatalf(err)
 	v, err := r.FindVersion("v1")
 	ErrFatalf(err)
-	ErrFatalf(v.Set("name", "blobCreated"))
-	ErrFatalf(v.Set("epoch", 2))
+	ErrFatalf(v.SetSave("name", "blobCreated"))
+	ErrFatalf(v.SetSave("epoch", 2))
 
 	v, err = r.AddVersion("v2", true)
 	ErrFatalf(err)
-	ErrFatalf(v.Set("name", "blobCreated"))
-	ErrFatalf(v.Set("epoch", 4))
+	ErrFatalf(v.SetSave("name", "blobCreated"))
+	ErrFatalf(v.SetSave("epoch", 4))
 	ErrFatalf(r.SetLatest(v))
 
 	r, err = g.AddResource("messages", "deleted", "v1.0")
 	ErrFatalf(err)
 	v, err = r.FindVersion("v1.0")
 	ErrFatalf(err)
-	ErrFatalf(v.Set("name", "blobDeleted"))
-	ErrFatalf(v.Set("epoch", 3))
+	ErrFatalf(v.SetSave("name", "blobDeleted"))
+	ErrFatalf(v.SetSave("epoch", 3))
 
 	g, err = reg.AddGroup("endpoints", "e2", registry.Object{
 		"usage": "consumer",
 	})
 	ErrFatalf(err)
-	ErrFatalf(g.Set("name", "end1"))
-	ErrFatalf(g.Set("epoch", 1))
+	ErrFatalf(g.SetSave("name", "end1"))
+	ErrFatalf(g.SetSave("epoch", 1))
 
 	ErrFatalf(reg.Model.Verify())
 	reg.Commit()
@@ -429,10 +429,10 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		defer reg.Rollback()
 
-		reg.Set("#baseURL", "http://soaphub.org:8585/")
-		reg.Set("name", "Messages Registry")
-		reg.Set("description", "An impl of the messages spec")
-		reg.Set("documentation", "https://github.com/duglin/xreg-github")
+		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
+		reg.SetSave("name", "Messages Registry")
+		reg.SetSave("description", "An impl of the messages spec")
+		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
 	err = reg.LoadModelFromFile("https://raw.githubusercontent.com/xregistry/spec/main/message/model.json")
@@ -494,10 +494,10 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		defer reg.Rollback()
 
-		reg.Set("#baseURL", "http://soaphub.org:8585/")
-		reg.Set("name", "Schemas Registry")
-		reg.Set("description", "An impl of the schemas spec")
-		reg.Set("documentation", "https://github.com/duglin/xreg-github")
+		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
+		reg.SetSave("name", "Schemas Registry")
+		reg.SetSave("description", "An impl of the schemas spec")
+		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
 	msgs, _ := reg.Model.AddGroupModel("schemagroups", "schemagroup")

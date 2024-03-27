@@ -61,7 +61,7 @@ func TestSetResource(t *testing.T) {
 
 	// Make sure setting it on the version is seen by res.Latest and res
 	namePP := NewPP().P("name").UI()
-	file.Set(namePP, "myName")
+	file.SetSave(namePP, "myName")
 	ver, _ := file.FindVersion("v1")
 	val := ver.Get(namePP)
 	if val != "myName" {
@@ -72,13 +72,13 @@ func TestSetResource(t *testing.T) {
 	xCheckEqual(t, "", name, "myName")
 
 	// Verify that nil and "" are treated differently
-	ver.Set(namePP, nil)
+	ver.SetSave(namePP, nil)
 	ver2, _ := file.FindVersion(ver.UID)
 	xJSONCheck(t, ver2, ver)
 	val = ver.Get(namePP)
 	xCheck(t, val == nil, "Setting to nil should return nil")
 
-	ver.Set(namePP, "")
+	ver.SetSave(namePP, "")
 	ver2, _ = file.FindVersion(ver.UID)
 	xJSONCheck(t, ver2, ver)
 	val = ver.Get(namePP)
@@ -100,7 +100,7 @@ func TestSetVersion(t *testing.T) {
 
 	// Make sure setting it on the version is seen by res.Latest and res
 	namePP := NewPP().P("name").UI()
-	ver.Set(namePP, "myName")
+	ver.SetSave(namePP, "myName")
 	file, _ = dir.FindResource("files", "f1")
 	l, err := file.GetLatest()
 	xNoErr(t, err)
@@ -133,17 +133,17 @@ func TestSetDots(t *testing.T) {
 	dir, _ := reg.AddGroup("dirs", "d1")
 	labels := NewPP().P("labels")
 
-	xNoErr(t, reg.Commit())
+	// xNoErr(t, reg.Commit())
 
-	err := dir.Set(labels.UI(), "xxx")
+	err := dir.SetSave(labels.UI(), "xxx")
 	xCheck(t, err != nil, "labels=xxx should fail")
 
 	// Nesting under labels should fail
-	err = dir.Set(labels.P("xxx").P("yyy").UI(), "xy")
+	err = dir.SetSave(labels.P("xxx").P("yyy").UI(), "xy")
 	xJSONCheck(t, err, `Attribute "labels.xxx" must be a string`)
 
 	// dots are ok as tag names
-	err = dir.Set(labels.P("abc.def").UI(), "ABC")
+	err = dir.SetSave(labels.P("abc.def").UI(), "ABC")
 	xNoErr(t, err)
 	xJSONCheck(t, dir.Get(labels.P("abc.def").UI()), "ABC")
 
@@ -162,7 +162,7 @@ func TestSetDots(t *testing.T) {
 }
 `)
 
-	err = dir.Set("labels", nil)
+	err = dir.SetSave("labels", nil)
 	xJSONCheck(t, err, nil)
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
@@ -174,24 +174,24 @@ func TestSetDots(t *testing.T) {
 }
 `)
 
-	err = dir.Set(NewPP().P("labels").P("xxx/yyy").UI(), nil)
+	err = dir.SetSave(NewPP().P("labels").P("xxx/yyy").UI(), nil)
 	xCheck(t, err.Error() == `Unexpected / in "labels.xxx/yyy" at pos 11`,
 		fmt.Sprintf("labels.xxx/yyy=nil should fail: %s", err))
 
-	err = dir.Set(NewPP().P("labels").P("").P("abc").UI(), nil)
+	err = dir.SetSave(NewPP().P("labels").P("").P("abc").UI(), nil)
 	xJSONCheck(t, err, `Unexpected . in "labels..abc" at pos 8`)
 
-	err = dir.Set(NewPP().P("labels").P("xxx.yyy").UI(), "xxx")
+	err = dir.SetSave(NewPP().P("labels").P("xxx.yyy").UI(), "xxx")
 	xJSONCheck(t, err, nil)
 
-	err = dir.Set(NewPP().P("xxx.yyy").UI(), nil)
+	err = dir.SetSave(NewPP().P("xxx.yyy").UI(), nil)
 	xJSONCheck(t, err, `Invalid extension(s): xxx`)
 	xCheck(t, err != nil, "xxx.yyy=nil should fail")
-	err = dir.Set("xxx.", "xxx")
+	err = dir.SetSave("xxx.", "xxx")
 	xCheck(t, err != nil, "xxx.=xxx should fail")
-	err = dir.Set(".xxx", "xxx")
+	err = dir.SetSave(".xxx", "xxx")
 	xCheck(t, err != nil, ".xxx=xxx should fail")
-	err = dir.Set(".xxx.", "xxx")
+	err = dir.SetSave(".xxx.", "xxx")
 	xCheck(t, err != nil, ".xxx.=xxx should fail")
 }
 
@@ -209,64 +209,64 @@ func TestSetLabels(t *testing.T) {
 
 	// /dirs/d1/f1/v1
 	labels := NewPP().P("labels")
-	err := reg.Set(labels.P("r2").UI(), "123.234")
+	err := reg.SetSave(labels.P("r2").UI(), "123.234")
 	xNoErr(t, err)
 	reg.Refresh()
 	// But it's a string here because labels is a map[string]string
 	xJSONCheck(t, reg.Get(labels.P("r2").UI()), "123.234")
-	err = reg.Set("labels.r1", "foo")
+	err = reg.SetSave("labels.r1", "foo")
 	xNoErr(t, err)
 	reg.Refresh()
 	xJSONCheck(t, reg.Get(labels.P("r1").UI()), "foo")
-	err = reg.Set(labels.P("r1").UI(), nil)
+	err = reg.SetSave(labels.P("r1").UI(), nil)
 	xNoErr(t, err)
 	reg.Refresh()
 	xJSONCheck(t, reg.Get(labels.P("r1").UI()), nil)
 
-	err = dir.Set(labels.P("d1").UI(), "bar")
+	err = dir.SetSave(labels.P("d1").UI(), "bar")
 	xNoErr(t, err)
 	dir.Refresh()
 	xJSONCheck(t, dir.Get(labels.P("d1").UI()), "bar")
 	// test override
-	err = dir.Set(labels.P("d1").UI(), "foo")
+	err = dir.SetSave(labels.P("d1").UI(), "foo")
 	xNoErr(t, err)
 	dir.Refresh()
 	xJSONCheck(t, dir.Get(labels.P("d1").UI()), "foo")
-	err = dir.Set(labels.P("d1").UI(), nil)
+	err = dir.SetSave(labels.P("d1").UI(), nil)
 	xNoErr(t, err)
 	dir.Refresh()
 	xJSONCheck(t, dir.Get(labels.P("d1").UI()), nil)
 
-	err = file.Set(labels.P("f1").UI(), "foo")
+	err = file.SetSave(labels.P("f1").UI(), "foo")
 	xNoErr(t, err)
 	file.Refresh()
 	xJSONCheck(t, file.Get(labels.P("f1").UI()), "foo")
-	err = file.Set(labels.P("f1").UI(), nil)
+	err = file.SetSave(labels.P("f1").UI(), nil)
 	xNoErr(t, err)
 	file.Refresh()
 	xJSONCheck(t, file.Get(labels.P("f1").UI()), nil)
 
 	// Set before we refresh to see if creating v2 causes issues
 	// see comment below too
-	err = ver.Set(labels.P("v1").UI(), "foo")
+	err = ver.SetSave(labels.P("v1").UI(), "foo")
 	xNoErr(t, err)
 	ver.Refresh()
 	xJSONCheck(t, ver.Get(labels.P("v1").UI()), "foo")
-	err = ver.Set(labels.P("v1").UI(), nil)
+	err = ver.SetSave(labels.P("v1").UI(), nil)
 	xNoErr(t, err)
 	ver.Refresh()
 	xJSONCheck(t, ver.Get(labels.P("v1").UI()), nil)
 
-	dir.Set(labels.P("dd").UI(), "dd.foo")
-	file.Set(labels.P("ff").UI(), "ff.bar")
+	dir.SetSave(labels.P("dd").UI(), "dd.foo")
+	file.SetSave(labels.P("ff").UI(), "ff.bar")
 
-	file.Set(labels.P("dd-ff").UI(), "dash")
-	file.Set(labels.P("dd-ff-ff").UI(), "dashes")
-	file.Set(labels.P("dd_ff").UI(), "under")
-	file.Set(labels.P("dd.ff").UI(), "dot")
+	file.SetSave(labels.P("dd-ff").UI(), "dash")
+	file.SetSave(labels.P("dd-ff-ff").UI(), "dashes")
+	file.SetSave(labels.P("dd_ff").UI(), "under")
+	file.SetSave(labels.P("dd.ff").UI(), "dot")
 
 	ver2.Refresh() // very important since ver2 is not stale
-	err = ver.Set(labels.P("vv").UI(), 987.234)
+	err = ver.SetSave(labels.P("vv").UI(), 987.234)
 	if err == nil || err.Error() != `Attribute "labels.vv" must be a string` {
 		t.Errorf("wrong err msg: %s", err)
 		t.FailNow()
@@ -277,9 +277,9 @@ func TestSetLabels(t *testing.T) {
 	// We update v1(ver) after we created v2(ver2). At one point in time
 	// this could cause both versions to be tagged as "latest". Make sure
 	// we don't have that situation. See comment above too
-	err = ver.Set(labels.P("vv2").UI(), "v11")
+	err = ver.SetSave(labels.P("vv2").UI(), "v11")
 	xNoErr(t, err)
-	ver2.Set(labels.P("2nd").UI(), "3rd")
+	ver2.SetSave(labels.P("2nd").UI(), "3rd")
 
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "`+registry.SPECVERSION+`",

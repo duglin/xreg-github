@@ -2737,33 +2737,33 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 
 	// ProxyURL
 	f, _ := d.AddResource("files", "f1-proxy", "v1")
-	f.Set(NewPP().P("#resource").UI(), "Hello world! v1")
+	f.SetSave(NewPP().P("#resource").UI(), "Hello world! v1")
 
 	v, _ := f.AddVersion("v2", true)
-	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
 	v, _ = f.AddVersion("v3", true)
-	v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+	v.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	// URL
 	f, _ = d.AddResource("files", "f2-url", "v1")
-	f.Set(NewPP().P("#resource").UI(), "Hello world! v1")
+	f.SetSave(NewPP().P("#resource").UI(), "Hello world! v1")
 
 	v, _ = f.AddVersion("v2", true)
-	v.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+	v.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	v, _ = f.AddVersion("v3", true)
-	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
 	// Resource
 	f, _ = d.AddResource("files", "f3-resource", "v1")
-	f.Set(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+	f.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	v, _ = f.AddVersion("v2", true)
-	v.Set(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
 	v, _ = f.AddVersion("v3", true)
-	v.Set(NewPP().P("#resource").UI(), "Hello world! v3")
+	v.SetSave(NewPP().P("#resource").UI(), "Hello world! v3")
 
 	// /dirs/d1/files/f1-proxy/v1 - resource
 	//                        /v2 - URL
@@ -5652,11 +5652,11 @@ func TestHTTPRequiredFields(t *testing.T) {
 	reg.Commit()
 
 	// Registry itself
-	err = reg.Set("description", "testing")
+	err = reg.SetSave("description", "testing")
 	xCheckErr(t, err, "Required property \"clireq1\" is missing")
 
 	xNoErr(t, reg.JustSet("clireq1", "testing1"))
-	xNoErr(t, reg.Set("description", "testing"))
+	xNoErr(t, reg.SetSave("description", "testing"))
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",

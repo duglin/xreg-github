@@ -21,8 +21,8 @@ func TestBasicFilters(t *testing.T) {
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1", true)
 
-	reg.Set("labels.reg1", "1ger")
-	f.Set("labels.file1", "1elif")
+	reg.SetSave("labels.reg1", "1ger")
+	f.SetSave("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1
 	//            /v2
@@ -353,11 +353,11 @@ func TestANDORFilters(t *testing.T) {
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
 	f.AddVersion("v2", true)
-	f.Set("name", "f1")
+	f.SetSave("name", "f1")
 	d, _ = reg.AddGroup("dirs", "d2")
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1", true)
-	f.Set("name", "f2")
+	f.SetSave("name", "f2")
 
 	gm, err = reg.Model.AddGroupModel("schemagroups", "schemagroup")
 	xNoErr(t, err)
@@ -369,8 +369,8 @@ func TestANDORFilters(t *testing.T) {
 	xNoErr(t, err)
 	s.AddVersion("v2.0", true)
 
-	reg.Set("labels.reg1", "1ger")
-	f.Set("labels.file1", "1elif")
+	reg.SetSave("labels.reg1", "1ger")
+	f.SetSave("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1     f1.name=f1
 	//            /v2

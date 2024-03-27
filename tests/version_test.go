@@ -273,9 +273,9 @@ func TestVersionRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 	reg.Commit()
 
-	err = v1.Set("clireq", nil)
+	err = v1.SetSave("clireq", nil)
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 
-	err = v1.Set("clireq", "again")
+	err = v1.SetSave("clireq", "again")
 	xNoErr(t, err)
 }

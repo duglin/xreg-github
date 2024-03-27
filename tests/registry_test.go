@@ -103,15 +103,15 @@ func TestRegistryProps(t *testing.T) {
 	reg := NewRegistry("TestRegistryProps")
 	defer PassDeleteReg(t, reg)
 
-	err := reg.Set("specversion", "x.y")
+	err := reg.SetSave("specversion", "x.y")
 	if err == nil {
 		t.Errorf("Setting specversion to x.y should have failed")
 		t.FailNow()
 	}
-	reg.Set("name", "nameIt")
-	reg.Set("description", "a very cool reg")
-	reg.Set("documentation", "https://docs.com")
-	reg.Set("labels.stage", "dev")
+	reg.SetSave("name", "nameIt")
+	reg.SetSave("description", "a very cool reg")
+	reg.SetSave("documentation", "https://docs.com")
+	reg.SetSave("labels.stage", "dev")
 
 	xCheckGet(t, reg, "", `{
   "specversion": "`+registry.SPECVERSION+`",
@@ -143,11 +143,11 @@ func TestRegistryRequiredFields(t *testing.T) {
 	// Commit before we call Set below otherwise the Tx will be rolled back
 	reg.Commit()
 
-	err = reg.Set("description", "testing")
+	err = reg.SetSave("description", "testing")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 
 	xNoErr(t, reg.JustSet("clireq", "testing2"))
-	xNoErr(t, reg.Set("description", "testing"))
+	xNoErr(t, reg.SetSave("description", "testing"))
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",

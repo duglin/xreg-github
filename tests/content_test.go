@@ -34,24 +34,24 @@ func TestResourceContents(t *testing.T) {
 	f1, err := d1.AddResource("files", "f1", "v1")
 	xNoErr(t, err)
 
-	f1.Set("name", "file1")
-	f1.Set("labels.str1", "foo")
-	f1.Set("labels.str2", "")
-	// f1.Set("labels.int", 6)
-	// f1.Set("labels.bool", true)
-	// f1.Set("labels.decimal", 123.456)
-	f1.Set("str1", "foo")
-	f1.Set("str2", "")
-	f1.Set("int1", 6)
-	f1.Set("int2", -5)
-	f1.Set("int3", 0)
-	f1.Set("bool1", true)
-	f1.Set("bool2", false)
-	f1.Set("dec1", 123.456)
-	f1.Set("dec2", -456.876)
-	f1.Set("dec3", 0.0)
+	f1.SetSave("name", "file1")
+	f1.SetSave("labels.str1", "foo")
+	f1.SetSave("labels.str2", "")
+	// f1.SetSave("labels.int", 6)
+	// f1.SetSave("labels.bool", true)
+	// f1.SetSave("labels.decimal", 123.456)
+	f1.SetSave("str1", "foo")
+	f1.SetSave("str2", "")
+	f1.SetSave("int1", 6)
+	f1.SetSave("int2", -5)
+	f1.SetSave("int3", 0)
+	f1.SetSave("bool1", true)
+	f1.SetSave("bool2", false)
+	f1.SetSave("dec1", 123.456)
+	f1.SetSave("dec2", -456.876)
+	f1.SetSave("dec3", 0.0)
 
-	f1.Set("#resource", "Hello there")
+	f1.SetSave("#resource", "Hello there")
 
 	f1.Refresh()
 	xCheckEqual(t, "", NotNilString(f1.Get("#resource")), "Hello there")
@@ -71,7 +71,7 @@ func TestResourceContents(t *testing.T) {
 	})
 
 	v2, _ := f1.AddVersion("v2", true)
-	v2.Set("#resource", "This is version 2")
+	v2.SetSave("#resource", "This is version 2")
 
 	CompareContentMeta(t, reg, &Test{
 		Code:    200,
@@ -88,7 +88,7 @@ func TestResourceContents(t *testing.T) {
 	})
 
 	v3, _ := f1.AddVersion("v3", true)
-	v3.Set("#resourceProxyURL", "http://example.com")
+	v3.SetSave("#resourceProxyURL", "http://example.com")
 
 	CompareContentMeta(t, reg, &Test{
 		Code:    200,
@@ -105,7 +105,7 @@ func TestResourceContents(t *testing.T) {
 	})
 
 	v4, _ := f1.AddVersion("v4", true)
-	v4.Set("#resourceURL", "http://example.com")
+	v4.SetSave("#resourceURL", "http://example.com")
 
 	CompareContentMeta(t, reg, &Test{
 		Code: 303,

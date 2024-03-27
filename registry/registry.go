@@ -151,8 +151,8 @@ func (reg *Registry) Get(name string) any {
 }
 
 // Technically this should be called SetValidateSave
-func (reg *Registry) Set(name string, val any) error {
-	return reg.Entity.Set(name, val)
+func (reg *Registry) SetCommit(name string, val any) error {
+	return reg.Entity.SetCommit(name, val)
 }
 
 func (reg *Registry) JustSet(name string, val any) error {

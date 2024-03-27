@@ -34,14 +34,14 @@ func (r *Resource) Get(name string) any {
 	return v.Entity.Get(name)
 }
 
-func (r *Resource) Set(name string, val any) error {
-	log.VPrintf(4, "Set: r(%s).Set(%s,%v)", r.UID, name, val)
+func (r *Resource) SetCommit(name string, val any) error {
+	log.VPrintf(4, "Set: r(%s).SetCommit(%s,%v)", r.UID, name, val)
 	if name[0] == '.' { // Force it to be on the Resource, not latest Version
 		if name == ".latestVersionId" {
 			log.Printf("Shouldn't be setting .latestVersionId directly-1")
 			panic("can't set .latestversionid directly")
 		}
-		return r.Entity.Set(name[1:], val)
+		return r.Entity.SetCommit(name[1:], val)
 	}
 
 	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
@@ -49,7 +49,7 @@ func (r *Resource) Set(name string, val any) error {
 			log.Printf("Shouldn't be setting .latestVersionId directly-2")
 			panic("can't set .latestversionid directly")
 		}
-		return r.Entity.Set(name, val)
+		return r.Entity.SetCommit(name, val)
 	}
 
 	v, err := r.GetLatest()
@@ -58,7 +58,7 @@ func (r *Resource) Set(name string, val any) error {
 	}
 
 	v.SkipEpoch = r.SkipEpoch
-	return v.Set(name, val)
+	return v.SetCommit(name, val)
 }
 
 func (r *Resource) JustSet(name string, val any) error {

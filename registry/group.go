@@ -15,8 +15,8 @@ func (g *Group) Get(name string) any {
 	return g.Entity.Get(name)
 }
 
-func (g *Group) Set(name string, val any) error {
-	return g.Entity.Set(name, val)
+func (g *Group) SetCommit(name string, val any) error {
+	return g.Entity.SetCommit(name, val)
 }
 
 func (g *Group) JustSet(name string, val any) error {

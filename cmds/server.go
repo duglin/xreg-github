@@ -58,7 +58,8 @@ func main() {
 		r, err := g.AddResource("files", "f1", "v1")
 		v1, err := r.FindVersion("v1")
 		r.AddVersion("v2", true)
-		v1.Set("name", "myname")
+		ErrFatalf(v1.SetSave("name", "myname"))
+		ErrFatalf(reg.Commit())
 		os.Exit(0)
 	}
 

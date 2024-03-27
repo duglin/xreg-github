@@ -104,9 +104,9 @@ func TestGroupRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 	reg.Commit()
 
-	err = g1.Set("clireq", nil)
+	err = g1.SetSave("clireq", nil)
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 
-	err = g1.Set("clireq", "again")
+	err = g1.SetSave("clireq", "again")
 	xNoErr(t, err)
 }

@@ -38,7 +38,8 @@ type Entity struct {
 
 type EntitySetter interface {
 	Get(name string) any
-	Set(name string, val any) error
+	SetCommit(name string, val any) error // Should never be used
+	SetSave(name string, val any) error
 }
 
 func GoToOurType(val any) string {
@@ -287,8 +288,11 @@ func (e *Entity) Refresh() error {
 }
 
 // All in one: Set, Validate, Save to DB and Commit (or Rollback on error)
-func (e *Entity) Set(path string, val any) error {
-	log.VPrintf(3, ">Enter: Set(%s=%v)", path, val)
+// Should never be used because the act of committing should be done
+// by the caller once all of the changes are done. This is a holdover from
+// before we had transaction support - once we're sure, delete it
+func (e *Entity) SetCommit(path string, val any) error {
+	log.VPrintf(3, ">Enter: SetCommit(%s=%v)", path, val)
 	defer log.VPrintf(3, "<Exit Set")
 
 	err := e.SetSave(path, val)
@@ -299,7 +303,7 @@ func (e *Entity) Set(path string, val any) error {
 
 // Set, Validate and Save to DB but not Commit
 func (e *Entity) SetSave(path string, val any) error {
-	log.VPrintf(3, ">Enter: Set(%s=%v)", path, val)
+	log.VPrintf(3, ">Enter: SetSave(%s=%v)", path, val)
 	defer log.VPrintf(3, "<Exit Set")
 
 	pp, err := PropPathFromUI(path)

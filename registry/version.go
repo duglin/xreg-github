@@ -15,8 +15,8 @@ func (v *Version) Get(name string) any {
 	return v.Entity.Get(name)
 }
 
-func (v *Version) Set(name string, val any) error {
-	return v.Entity.Set(name, val)
+func (v *Version) SetCommit(name string, val any) error {
+	return v.Entity.SetCommit(name, val)
 }
 
 func (v *Version) JustSet(name string, val any) error {
