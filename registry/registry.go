@@ -89,6 +89,7 @@ func NewRegistry(tx *Tx, id string) (*Registry, error) {
 	}
 
 	tx.Registry = reg
+	reg.tx = tx
 
 	err = reg.Model.Verify()
 	if err != nil {
@@ -111,14 +112,6 @@ func NewRegistry(tx *Tx, id string) (*Registry, error) {
 	if err = reg.SetSave("epoch", 1); err != nil {
 		return nil, err
 	}
-
-	if tx.RegistriesByUID == nil {
-		tx.RegistriesByUID = map[string]*Registry{}
-		tx.RegistriesBySID = map[string]*Registry{}
-	}
-
-	tx.RegistriesByUID[id] = reg
-	tx.RegistriesBySID[reg.DbSID] = reg
 
 	if err = reg.Model.VerifyAndSave(); err != nil {
 		return nil, err
@@ -167,25 +160,12 @@ func (reg *Registry) Delete() error {
 	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.UID)
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
 
-	err := DoOne(reg.tx, `DELETE FROM Registries WHERE SID=?`, reg.DbSID)
-	if err == nil {
-		delete(reg.tx.RegistriesByUID, reg.UID)
-		delete(reg.tx.RegistriesBySID, reg.DbSID)
-	}
-	return err
+	return DoOne(reg.tx, `DELETE FROM Registries WHERE SID=?`, reg.DbSID)
 }
 
 func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistrySID(%s)", sid)
 	defer log.VPrintf(3, "<Exit: FindRegistrySID")
-
-	/*
-		if os.Getenv("NO_CACHE") == "" {
-			if reg, ok := tx.RegistriesBySID[sid]; ok {
-				return reg, nil
-			}
-		}
-	*/
 
 	results, err := Query(tx, `SELECT UID FROM Registries WHERE SID=?`, sid)
 	defer results.Close()
@@ -225,14 +205,6 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 		}()
 	}
 
-	/*
-		if os.Getenv("NO_CACHE") == "" {
-			if reg, ok := tx.RegistriesByUID[id]; ok {
-				return reg, nil
-			}
-		}
-	*/
-
 	results, err := Query(tx, `
 	   	SELECT SID
 	   	FROM Registries
@@ -268,16 +240,9 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 		tx.Registry = reg
 	}
 	reg.Entity.Registry = reg
+	reg.tx = tx
 
 	reg.LoadModel()
-
-	if tx.RegistriesByUID == nil {
-		tx.RegistriesByUID = map[string]*Registry{}
-		tx.RegistriesBySID = map[string]*Registry{}
-	}
-
-	tx.RegistriesByUID[reg.UID] = reg
-	tx.RegistriesBySID[reg.DbSID] = reg
 
 	return reg, nil
 }

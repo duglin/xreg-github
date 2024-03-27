@@ -57,11 +57,9 @@ TODOs:
 - add http test for maxVersions (already have non-http tests)
 
 - see if we can prepend Path with / or append it with /
-- see if we can get rid of/clean-up the FindRegistry stuff (and caching)
 - see if we can remove all uses of JustSet except for the few testing cases
   where we need to set a property w/o verifying/saving it
   - Just see if we can clean-up the Set... stuff in general
-- write down the model for the spec defined attributes
 - convert internal errors into "panic" so any "error" returned is a user error
 - see if we can move "#resource??" into the attributes struct
 - can we get rid of IsNew from updateFn?

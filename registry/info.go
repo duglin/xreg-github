@@ -246,11 +246,11 @@ func (info *RequestInfo) ParseRequestURL() error {
 		if reg == nil {
 			extra := ""
 			if err != nil {
-				extra = err.Error()
+				extra = ": " + err.Error()
 			}
 			return fmt.Errorf("Can't find registry %q%s", name, extra)
 		}
-		info.tx.Rollback()
+		info.tx.Rollback() // Not sure why
 		info.tx.Registry = reg
 		info.Registry = reg
 	}

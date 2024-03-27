@@ -107,9 +107,6 @@ type Tx struct {
 	// For debugging
 	uuid  string   // just a unique ID for the TXs map key
 	stack []string // Stack at time NewTX
-
-	RegistriesByUID map[string]*Registry // UID -> *Registry
-	RegistriesBySID map[string]*Registry // DbSID -> *Registry
 }
 
 func (tx *Tx) String() string {

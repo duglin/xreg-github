@@ -749,7 +749,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		resSingular = info.ResourceModel.Singular
 	}
 
-	// Get the incoming Object either from the bdy or from xRegistry headers
+	// Get the incoming Object either from the body or from xRegistry headers
 	IncomingObj, err := ExtractIncomingObject(info, resSingular)
 	if err != nil {
 		return err
