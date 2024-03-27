@@ -632,9 +632,9 @@ var OrderedSpecProps = []*Attribute{
 	{
 		Name:           "specversion",
 		Type:           STRING,
-		ServerRequired: true,
 		ReadOnly:       true,
 		Immutable:      true,
+		ServerRequired: true,
 
 		internals: AttrInternals{
 			levels:    "0",

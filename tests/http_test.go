@@ -1303,7 +1303,7 @@ func TestHTTPModel(t *testing.T) {
 `)
 
 	xHTTP(t, reg, "PUT", "/", `{"description": "two"}`, 200, `{
-  "specversion": "0.5",
+  "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPModel",
   "epoch": 3,
   "self": "http://localhost:8181/",
