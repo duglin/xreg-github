@@ -75,4 +75,3 @@ TODOs:
 - add support for resource vs resourcebase64 - return what was on the PUT
 - support non-string "RESOURCE" values (e.g. json)
 - add tests for immutable attributes
-- add a tx.AddVersion/GetVersion so people don't need to do it themselves

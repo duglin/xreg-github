@@ -104,11 +104,16 @@ type Tx struct {
 	tx       *sql.Tx
 	Registry *Registry
 
+	// Cache of entities this Tx is dealing with. Things can get funky if
+	// we have more than one instance of the same entity in memory.
 	// TODO DUG expand this to save all types, not just Versions.
 	// Also, consider having Commit() just automatically call ValidateAndSave
 	// for all entities in the Tx - then people don't need to call save
 	// explicitly
-	Versions map[string]*Version // DbSID
+	// Registries map[string]*Registry // reg.UID
+	// Groups     map[string]*Group    // reg.DbSID+g.UID
+	// Resources  map[string]*Resource // reg.DbSID+g.DbSID+r.UID
+	Versions map[string]*Version // reg.DbSID+g.DbSID+r.DbSID+v.UID
 
 	// For debugging
 	uuid  string   // just a unique ID for the TXs map key
@@ -126,12 +131,6 @@ func (tx *Tx) String() string {
 		txStr = "<set>"
 	}
 	return fmt.Sprintf("Tx: sql.tx: %s, Registry: %s", txStr, regStr)
-}
-
-func NewTxWithRegistry(reg *Registry) *Tx {
-	tx := NewTx()
-	tx.Registry = reg
-	return tx
 }
 
 func NewTx() *Tx {
@@ -176,7 +175,7 @@ func (tx *Tx) Commit() error {
 
 	delete(TXs, tx.uuid)
 	tx.tx = nil
-	tx.Versions = nil
+	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
 	tx.uuid = ""
 
 	return nil
@@ -194,7 +193,7 @@ func (tx *Tx) Rollback() error {
 
 	delete(TXs, tx.uuid)
 	tx.tx = nil
-	tx.Versions = nil
+	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
 	tx.uuid = ""
 
 	return nil
@@ -215,6 +214,21 @@ func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
 	ps, err := tx.tx.Prepare(query)
 
 	return ps, err
+}
+
+func (tx *Tx) AddVersion(v *Version) {
+	if tx.Versions == nil {
+		tx.Versions = map[string]*Version{}
+	}
+	tx.Versions[v.Resource.Group.Registry.DbSID+
+		v.Resource.Group.DbSID+
+		v.Resource.DbSID+
+		v.UID] = v
+}
+
+func (tx *Tx) GetVersion(r *Resource, vID string) *Version {
+	key := r.Group.Registry.DbSID + r.Group.DbSID + r.DbSID + vID
+	return tx.Versions[key]
 }
 
 type Result struct {

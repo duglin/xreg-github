@@ -117,6 +117,10 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 	log.VPrintf(3, ">Enter: FindVersion(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindVersion")
 
+	if v := r.tx.GetVersion(r, id); v != nil {
+		return v, nil
+	}
+
 	ent, err := RawEntityFromPath(r.tx, r.Group.Registry.DbSID,
 		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+id)
 	if err != nil {
@@ -127,12 +131,8 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 		return nil, nil
 	}
 
-	if v := r.tx.Versions[ent.DbSID]; v != nil {
-		return v, nil
-	}
-
 	v := &Version{Entity: *ent, Resource: r}
-	v.tx.Versions[v.DbSID] = v
+	v.tx.AddVersion(v)
 	return v, nil
 }
 
@@ -221,7 +221,7 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 		return nil, err
 	}
 
-	v.tx.Versions[v.DbSID] = v
+	v.tx.AddVersion(v)
 
 	if err = v.JustSet("id", id); err != nil {
 		return nil, err
@@ -360,10 +360,10 @@ func (r *Resource) GetVersions() ([]*Version, error) {
 	}
 
 	for _, e := range entities {
-		var v *Version
-		if v = r.tx.Versions[e.DbSID]; v == nil {
+		v := r.tx.GetVersion(r, e.UID)
+		if v == nil {
 			v = &Version{Entity: *e, Resource: r}
-			v.tx.Versions[v.DbSID] = v
+			v.tx.AddVersion(v)
 		}
 		list = append(list, v)
 	}
