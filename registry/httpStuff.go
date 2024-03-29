@@ -629,7 +629,7 @@ func HTTPGet(info *RequestInfo) error {
 	metaInBody := (info.ResourceModel == nil) ||
 		(info.ResourceModel.HasDocument == false || info.ShowMeta)
 
-	if info.What == "Entity" && info.ResourceUID != "" && !metaInBody { // !info.ShowMeta {
+	if info.What == "Entity" && info.ResourceUID != "" && !metaInBody {
 		return HTTPGETContent(info)
 	}
 
@@ -854,8 +854,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	resourceUID := info.ResourceUID
 	versionUID := info.VersionUID
 
-	isResource := false // is entity we're pointing to a Resource or not?
-	isResourceNew := false
+	// isResourceNew := false
 
 	// Do Resources and Versions at the same time
 	// URL: /GROUPs/gID/RESOURCEs
@@ -868,6 +867,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	// IncomingObj will be used for an update in common code after all of the
 	// "if" statements
 
+	latest := (*bool)(nil)
+
 	if len(info.Parts) == 3 {
 		// GROUPs/gID/RESOURCEs - must be POST
 
@@ -877,8 +878,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		isNew = true
-		isResourceNew = true
-		isResource = true
+		// isResourceNew = true
 
 		delete(IncomingObj, "id") // id is for Res not Version so remove it
 
@@ -913,16 +913,22 @@ func HTTPPutPost(info *RequestInfo) error {
 		if resource != nil {
 			version, err = resource.GetLatest()
 
-			if !metaInBody { // !info.ShowMeta {
+			if !metaInBody {
 				// Copy existing props into IncomingObj w/o overwriting
 				CopyNewProps(IncomingObj, version.Object)
 			}
-			isResource = true
 
-			// Fall thru and we'll update the version later on, check err too
-		}
+			// They passed in a Resource, but we're going to use the data
+			// to create a Versions so we need to delete the new collections
+			// from the Version,but the collections are Resource-based colls
+			resource.RemoveCollections(IncomingObj)
 
-		if resource == nil {
+			IncomingObj["id"] = version.UID
+			version.NewObject = IncomingObj
+			version.ConvertStrings(nil)
+
+			err = version.ValidateAndSave(isNew)
+		} else {
 			// Create a new Resource and it's first/only/latest Version
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID, IncomingObj) // vID is ""
@@ -931,7 +937,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			isNew = true
-			isResourceNew = true
 		}
 
 		// Fall thru-we'll update the version with IncomingObj below & check err
@@ -947,14 +952,15 @@ func HTTPPutPost(info *RequestInfo) error {
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID, IncomingObj) // no IncomingObj
 			isNew = true
-			isResourceNew = true
+			// isResourceNew = true
 			if err == nil {
 				version, err = resource.GetLatest()
 			}
 		} else {
 			isNew = true
 			versionUID = propsID
-			version, err = resource.AddVersion(versionUID, false, IncomingObj)
+			version, err = resource.AddVersion(versionUID,
+				latest == nil || *latest, IncomingObj)
 		}
 
 		// Fall thru and check err
@@ -968,7 +974,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID, IncomingObj)
 			isNew = true
-			isResourceNew = true
 		}
 
 		if err == nil {
@@ -977,18 +982,43 @@ func HTTPPutPost(info *RequestInfo) error {
 				info.StatusCode = http.StatusInternalServerError
 				return fmt.Errorf("Error finding version(%s): %s", versionUID, err)
 			}
-			// Must(err)
-		}
 
-		if err == nil {
 			if version == nil {
 				// We have a Resource, so add a new Version based on IncomingObj
-				version, err = resource.AddVersion(versionUID, false,
-					IncomingObj)
+				version, err = resource.AddVersion(versionUID,
+					latest == nil || *latest, IncomingObj)
 				isNew = true
-			} else {
-				if !metaInBody { // !info.ShowMeta {
+			} else if !isNew {
+				if !metaInBody {
 					CopyNewProps(IncomingObj, version.Object)
+				}
+
+				// They passed in a Resource, but we're going to use the data
+				// to create a Versions so we need to delete the new collections
+				// from the Version,but the collections are Resource-based colls
+				resource.RemoveCollections(IncomingObj)
+
+				IncomingObj["id"] = version.UID
+				version.NewObject = IncomingObj
+				version.ConvertStrings(nil)
+
+				l := version.NewObject["latest"]
+				err = version.ValidateAndSave(isNew)
+				// TODO move this to version.go - DUG
+				if err == nil && !IsNil(l) {
+					if info.ResourceModel.SetLatest == false {
+						latestVID := resource.Get("latestversionid").(string)
+						if l != (latestVID == version.UID) {
+							return fmt.Errorf(`"latest" can not be "%v", it `+
+								`is controlled by the server`, l)
+						}
+					}
+					if l.(bool) == true {
+						err = resource.SetLatest(version)
+					} else {
+						err = fmt.Errorf(`"latest" can not be "false" ` +
+							`since doing so would result in no latest version`)
+					}
 				}
 			}
 		}
@@ -996,78 +1026,17 @@ func HTTPPutPost(info *RequestInfo) error {
 		// Fall thru and check err
 	}
 
-	if err != nil || resource == nil {
+	if err != nil && resource == nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing resource(%s): %s", resourceUID, err)
 	}
 
-	if err != nil || version == nil {
+	if err != nil && version == nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
 	}
 
-	Must(err) // Previous IFs should stop everything
-
-	versionUID = version.UID
-
-	// if the incoming entity is a Resource (not Version) then delete the
-	// Versions collection stuff before continuing.
-	if isResource {
-		delete(IncomingObj, "versions")
-		delete(IncomingObj, "versionscount")
-		delete(IncomingObj, "versionsurl")
-	}
-
-	IncomingObj["id"] = version.UID
-	delete(IncomingObj, "latestversionid")
-	delete(IncomingObj, "latestversionurl")
-
-	version.NewObject = IncomingObj
-	version.ConvertStrings()
-
-	// If "latest" is in the incoming msg then see if we can do what they ask.
-	// Else set current version to the latest if it's new
-	setLatest := isNew
-	if latestVal, ok := IncomingObj["latest"]; ok {
-		latest, ok := latestVal.(bool)
-		if !ok {
-			return fmt.Errorf(`"latest" must be a boolean`)
-		}
-		if isResourceNew {
-			if latest == false {
-				return fmt.Errorf(`"latest" can not be "false" since ` +
-					`there is only one version, so it must be the latest`)
-			}
-		} else {
-			latestVID := resource.Get("latestversionid").(string)
-			if err != nil {
-				return err
-			}
-			if latest == false {
-				if version.UID == latestVID {
-					return fmt.Errorf(`"latest" can not be "false" since ` +
-						`doing so would result in no latest version`)
-				}
-			}
-
-			// If the user can't control "latest", but they passed in
-			// what we were going to do anyway, let it pass
-			if info.ResourceModel.SetLatest == false {
-				if latest != (latestVID == version.UID) {
-					return fmt.Errorf(`"latest" can not be "%v", it is `+
-						`controlled by the server`, latest)
-				}
-			} else {
-				// Ok, let them control it
-				setLatest = latest
-			}
-		}
-	}
-	if setLatest {
-		resource.SetLatest(version)
-	}
-
-	if err = version.ValidateAndSave(isNew); err != nil {
+	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing resource: %s", err)
 	}
@@ -1083,8 +1052,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	location := info.BaseURL + "/" + resource.Path
 	// location := resource.Path
 	if originalLen > 4 || (originalLen == 4 && method == "POST") {
-		info.Parts = append(info.Parts, "versions", versionUID)
-		info.VersionUID = versionUID
+		info.Parts = append(info.Parts, "versions", version.UID)
+		info.VersionUID = version.UID
 		location += "/versions/" + info.VersionUID
 		// location = version.Path
 	}
@@ -1588,7 +1557,7 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 	metaInBody := (info.ShowMeta ||
 		(info.ResourceModel != nil && info.ResourceModel.HasDocument == false))
 
-	if len(info.Parts) < 3 || metaInBody { // info.ShowMeta { // body != nil {
+	if len(info.Parts) < 3 || metaInBody {
 		for k, _ := range info.OriginalRequest.Header {
 			k := strings.ToLower(k)
 			if strings.HasPrefix(k, "xregistry-") {
@@ -1618,7 +1587,7 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 	// xReg metadata are in headers, so move them into IncomingObj. We'll
 	// copy over the existing properties latest once we knwo what entity
 	// we're dealing with
-	if len(info.Parts) > 2 && !metaInBody { // !info.ShowMeta {
+	if len(info.Parts) > 2 && !metaInBody {
 		// IncomingObj["#resource"] = body // save new body
 		IncomingObj[resSingular] = body // save new body
 

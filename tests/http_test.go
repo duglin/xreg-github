@@ -4682,7 +4682,7 @@ func TestHTTPLatest(t *testing.T) {
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody: `"latest" can not be "false" since there is only one version, so it must be the latest
+		ResBody: `Error processing resource(f1): "latest" can not be "false" since doing so would result in no latest version
 `,
 	})
 
@@ -4760,7 +4760,7 @@ func TestHTTPLatest(t *testing.T) {
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody:     `"latest" can not be "false" since doing so would result in no latest version` + "\n",
+		ResBody:     `Error processing resource: "latest" can not be "false" since doing so would result in no latest version` + "\n",
 	})
 
 	rm.SetSetLatest(false)

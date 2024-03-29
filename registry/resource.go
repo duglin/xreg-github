@@ -224,13 +224,34 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 	}
 
 	for _, obj := range objs {
+		v.ConvertStrings(obj)
 		for key, val := range obj {
 			if err = v.JustSet(key, val); err != nil {
 				return nil, err
 			}
 		}
 	}
-	v.ConvertStrings()
+	l, ok := v.NewObject["latest"]
+	if !ok {
+		l = latest
+	} else {
+		// if "latest" was part of the data then it's from a user, make
+		// sure they're allowed to set it
+		_, rm := r.GetModels()
+		if l != latest && rm.SetLatest == false {
+			return nil, fmt.Errorf(`"latest" can not be "%v", it is `+
+				`controlled by the server`, latest)
+		}
+	}
+
+	vIDs, err := r.GetVersionIDs()
+	if err != nil {
+		return nil, err
+	}
+	if len(vIDs) == 1 && l == false {
+		return nil, fmt.Errorf(`"latest" can not be "false" since ` +
+			`doing so would result in no latest version`)
+	}
 
 	if err = v.SetSave("epoch", 1); err != nil {
 		return nil, err
@@ -260,13 +281,7 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 	return v, nil
 }
 
-func (r *Resource) EnsureMaxVersions() error {
-	_, rm := r.GetModels()
-	if rm.MaxVersions == 0 {
-		// No limit, so just exit
-		return nil
-	}
-
+func (r *Resource) GetVersionIDs() ([]string, error) {
 	// Get the list of Version IDs for this Resource (oldest first)
 	results, err := Query(r.tx, `
 			SELECT UID,Counter FROM Versions
@@ -275,7 +290,7 @@ func (r *Resource) EnsureMaxVersions() error {
 	defer results.Close()
 
 	if err != nil {
-		return fmt.Errorf("Error counting Versions: %s", err)
+		return nil, fmt.Errorf("Error counting Versions: %s", err)
 	}
 
 	vIDs := []string{}
@@ -287,6 +302,20 @@ func (r *Resource) EnsureMaxVersions() error {
 		vIDs = append(vIDs, NotNilString(row[0]))
 	}
 	results.Close()
+	return vIDs, nil
+}
+
+func (r *Resource) EnsureMaxVersions() error {
+	_, rm := r.GetModels()
+	if rm.MaxVersions == 0 {
+		// No limit, so just exit
+		return nil
+	}
+
+	vIDs, err := r.GetVersionIDs()
+	if err != nil {
+		return err
+	}
 	PanicIf(len(vIDs) == 0, "Query can't be empty")
 
 	tmp := r.Get("latestversionid")

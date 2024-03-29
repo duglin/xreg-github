@@ -365,7 +365,7 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 }
 
 func (e *Entity) ValidateAndSave(isNew bool) error {
-	log.VPrintf(3, ">Enter: ValidateAndSave")
+	log.VPrintf(3, ">Enter: ValidateAndSave %s/%s", e.Abstract, e.UID)
 	defer log.VPrintf(3, "<Exit: ValidateAndSave")
 
 	// If nothing changed, just exit
@@ -1016,7 +1016,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	fn func(*Entity, *RequestInfo, string, any, *Attribute) error) error {
 
 	daObj := e.Materialize(info)
-	attrs := e.GetAttributes(false)
+	attrs := e.GetAttributes(e.Object)
 
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
@@ -1052,7 +1052,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 }
 
 func (e *Entity) Save() error {
-	log.VPrintf(3, ">Enter: Save(%s/%s)", e.Plural, e.UID)
+	log.VPrintf(3, ">Enter: Save(%s/%s)", e.Abstract, e.UID)
 	defer log.VPrintf(3, "<Exit: Save")
 
 	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID,
@@ -1064,11 +1064,7 @@ func (e *Entity) Save() error {
 	// TODO calculate which to delete based on attr properties
 	delete(newObj, "self")
 
-	for _, coll := range e.GetCollections() {
-		delete(newObj, coll)
-		delete(newObj, coll+"count")
-		delete(newObj, coll+"url")
-	}
+	e.RemoveCollections(newObj)
 
 	err := Do(e.tx, `DELETE FROM Props WHERE EntitySID=?`, e.DbSID)
 	if err != nil {
@@ -1196,6 +1192,26 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 	return mat
 }
 
+// This will remove all Collection related attributes from the entity.
+// While this is an Entity.Func, we allow callers to pass in the Object
+// data to use instead of the e.Object/NewObject so that we'll use this
+// Entity's Level (which tells us which collections it has), on the 'obj'.
+// This is handy for cases where we need to remove the Resource's collections
+// from a Version's Object - like ona PUT to /GROUPs/gID/RESOURECEs/rID
+// where we're passing in what looks like a Resource entity, but we're
+// really using it to create a Version
+func (e *Entity) RemoveCollections(obj Object) {
+	if obj == nil {
+		obj = e.NewObject
+	}
+
+	for _, coll := range e.GetCollections() {
+		delete(obj, coll)
+		delete(obj, coll+"count")
+		delete(obj, coll+"url")
+	}
+}
+
 func (e *Entity) GetCollections() []string {
 	if e.Level == 0 {
 		return SortedKeys(e.Registry.Model.Groups)
@@ -1211,13 +1227,14 @@ func (e *Entity) GetCollections() []string {
 	return SortedKeys(gm.Resources)
 }
 
-func (e *Entity) GetAttributes(useNew bool) Attributes {
+func (e *Entity) GetAttributes(obj Object) Attributes {
 	attrs := e.GetBaseAttributes()
-	if useNew {
-		attrs.AddIfValuesAttributes(e.NewObject)
-	} else {
-		attrs.AddIfValuesAttributes(e.Object)
+	if obj == nil {
+		obj = e.NewObject
 	}
+
+	attrs.AddIfValuesAttributes(obj)
+
 	return attrs
 }
 
@@ -1226,10 +1243,14 @@ func (e *Entity) GetAttributes(useNew bool) Attributes {
 // we're assuming they're all strings, at first.
 // Assume that if anything is wrong that it'll be flagged later by the
 // verfication checks
-func (e *Entity) ConvertStrings() {
-	attrs := e.GetAttributes(true) // Use e.NewObject
+func (e *Entity) ConvertStrings(obj Object) {
+	if obj == nil {
+		obj = e.NewObject
+	}
 
-	for key, val := range e.NewObject {
+	attrs := e.GetAttributes(obj) // Use e.NewObject
+
+	for key, val := range obj {
 		attr := attrs[key]
 		if attr == nil {
 			attr = attrs["*"]
@@ -1252,7 +1273,7 @@ func (e *Entity) ConvertStrings() {
 		case BOOLEAN, DECIMAL, INTEGER, UINTEGER:
 			if newVal, ok := ConvertString(valStr, attr.Type); ok {
 				// Replace the string with the non-string value
-				e.NewObject[key] = newVal
+				obj[key] = newVal
 			}
 		case MAP:
 			if valValue.Kind() == reflect.Map {
@@ -1529,8 +1550,7 @@ func (e *Entity) Validate() error {
 	}
 
 	// Don't touch what was passed in
-
-	attrs := e.GetAttributes(true)
+	attrs := e.GetAttributes(e.NewObject)
 
 	log.VPrintf(3, "========")
 	log.VPrintf(3, "Validating:\n%s", ToJSON(e.NewObject))
@@ -1933,7 +1953,7 @@ func (e *Entity) GetModels() (*GroupModel, *ResourceModel) {
 }
 
 func PrepUpdateEntity(e *Entity, isNew bool) error {
-	attrs := e.GetAttributes(true)
+	attrs := e.GetAttributes(e.NewObject)
 
 	for key, _ := range attrs {
 		attr := attrs[key]
