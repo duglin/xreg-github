@@ -854,8 +854,6 @@ func HTTPPutPost(info *RequestInfo) error {
 	resourceUID := info.ResourceUID
 	versionUID := info.VersionUID
 
-	// isResourceNew := false
-
 	// Do Resources and Versions at the same time
 	// URL: /GROUPs/gID/RESOURCEs
 	// URL: /GROUPs/gID/RESOURCEs/rID
@@ -878,7 +876,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		isNew = true
-		// isResourceNew = true
 
 		delete(IncomingObj, "id") // id is for Res not Version so remove it
 
@@ -898,7 +895,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error finding resource(%s): %s", resourceUID, err)
 		}
-		// Must(err)
 	}
 
 	if len(info.Parts) == 4 && method == "PUT" {
@@ -952,7 +948,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID, IncomingObj) // no IncomingObj
 			isNew = true
-			// isResourceNew = true
 			if err == nil {
 				version, err = resource.GetLatest()
 			}
@@ -980,7 +975,8 @@ func HTTPPutPost(info *RequestInfo) error {
 			version, err = resource.FindVersion(versionUID)
 			if err != nil {
 				info.StatusCode = http.StatusInternalServerError
-				return fmt.Errorf("Error finding version(%s): %s", versionUID, err)
+				return fmt.Errorf("Error finding version(%s): %s", versionUID,
+					err)
 			}
 
 			if version == nil {
