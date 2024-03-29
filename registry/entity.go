@@ -30,10 +30,10 @@ type Entity struct {
 
 	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
-	Level     int // 0=registry, 1=group, 2=resource, 3=version
-	Path      string
-	Abstract  string
-	SkipEpoch bool `json:"-"` // Should we skip epoch-specific processing?
+	Level    int // 0=registry, 1=group, 2=resource, 3=version
+	Path     string
+	Abstract string
+	EpochSet bool `json:"-"` // Has epoch been updated this transaction?
 }
 
 type EntitySetter interface {
@@ -350,11 +350,7 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	// end of cheat
 
 	if pp.Top() == "epoch" {
-		save := e.SkipEpoch
-		e.SkipEpoch = true
-		defer func() {
-			e.SkipEpoch = save
-		}()
+		e.EpochSet = true
 	}
 
 	log.VPrintf(3, "Abstract/ID: %s/%s", e.Abstract, e.UID)
@@ -364,7 +360,7 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	return ObjectSetProp(e.NewObject, pp, val)
 }
 
-func (e *Entity) ValidateAndSave(isNew bool) error {
+func (e *Entity) ValidateAndSave() error {
 	log.VPrintf(3, ">Enter: ValidateAndSave %s/%s", e.Abstract, e.UID)
 	defer log.VPrintf(3, "<Exit: ValidateAndSave")
 
@@ -379,7 +375,7 @@ func (e *Entity) ValidateAndSave(isNew bool) error {
 		return err
 	}
 
-	if err := PrepUpdateEntity(e, isNew); err != nil {
+	if err := PrepUpdateEntity(e); err != nil {
 		return err
 	}
 
@@ -399,14 +395,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 		return err
 	}
 
-	// Make the bold assumption that we we're setting and saving all in one
-	// that a user who is explicitly setting 'epoch' via an interenal
-	// set() knows what they're doing
-	save := e.SkipEpoch
-	e.SkipEpoch = true
-	defer func() { e.SkipEpoch = save }()
-
-	err := e.ValidateAndSave(false)
+	err := e.ValidateAndSave()
 	if err != nil {
 		// If there's an error, and we're making the assumption that we're
 		// setting and saving all in one shot (and there are no other edits
@@ -680,7 +669,7 @@ var OrderedSpecProps = []*Attribute{
 				}
 				return nil
 			},
-			updateFn: func(e *Entity, isNew bool) error {
+			updateFn: func(e *Entity) error {
 				// Make sure the ID is always set
 				e.NewObject["id"] = e.UID
 				return nil
@@ -709,7 +698,8 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
-				if e.SkipEpoch {
+				// If we explicitly setEpoch via internal API then don't check
+				if e.EpochSet {
 					return nil
 				}
 
@@ -730,27 +720,26 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if oldEpoch != 0 && newEpoch != oldEpoch {
-					return fmt.Errorf("Attribute %q(%d) doesn't match existing "+
-						"value (%d)", "epoch", newEpoch, oldEpoch)
+					return fmt.Errorf("Attribute %q(%d) doesn't match "+
+						"existing value (%d)", "epoch", newEpoch, oldEpoch)
 				}
 				return nil
 			},
-			updateFn: func(e *Entity, isNew bool) error {
-				if e.SkipEpoch {
+			updateFn: func(e *Entity) error {
+				// If we already set Epoch in this Tx, just exit
+				if e.EpochSet {
 					return nil
 				}
-				tmp := e.Object["epoch"]
-				if IsNil(tmp) {
-					return nil
-				}
-				epoch := NotNilInt(&tmp)
-				if epoch < 0 {
-					epoch = 0
-				}
-				if isNew {
-					epoch = 0
-				}
+
+				// This assumes that ALL entities must have an Epoch property
+				// that we wnt to set. At one point this wasn't true for
+				// Resources but hopefully that's no loner true
+
+				oldEpoch := e.Object["epoch"]
+				epoch := NotNilInt(&oldEpoch)
+
 				e.NewObject["epoch"] = epoch + 1
+				e.EpochSet = true
 				return nil
 			},
 		},
@@ -797,7 +786,7 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: true,
 			getFn:     nil,
 			checkFn:   nil,
-			updateFn: func(e *Entity, isNew bool) error {
+			updateFn: func(e *Entity) error {
 				// TODO if set, set latestvesionid in the resource to this
 				// guy's UID
 
@@ -1027,8 +1016,10 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		}
 
 		if val, ok := daObj[prop.Name]; ok {
-			if err := fn(e, info, prop.Name, val, attr); err != nil {
-				return err
+			if !IsNil(val) {
+				if err := fn(e, info, prop.Name, val, attr); err != nil {
+					return err
+				}
 			}
 			delete(daObj, prop.Name)
 		}
@@ -1054,6 +1045,11 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 func (e *Entity) Save() error {
 	log.VPrintf(3, ">Enter: Save(%s/%s)", e.Abstract, e.UID)
 	defer log.VPrintf(3, "<Exit: Save")
+
+	if IsNil(e.NewObject["epoch"]) {
+		log.Printf("Save.NewObject:\n%s", ToJSON(e.NewObject))
+		panic("Epoch is nil")
+	}
 
 	log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID,
 		ToJSON(e.NewObject))
@@ -1374,7 +1370,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 			internals: AttrInternals{
 				checkFn: checkFn,
-				updateFn: func(e *Entity, isNew bool) error {
+				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular]
 					if ok {
 						e.NewObject["#resource"] = v
@@ -1391,7 +1387,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 			internals: AttrInternals{
 				checkFn: checkFn,
-				updateFn: func(e *Entity, isNew bool) error {
+				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular+"url"]
 					if !ok {
 						return nil
@@ -1409,7 +1405,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 			internals: AttrInternals{
 				checkFn: checkFn,
-				updateFn: func(e *Entity, isNew bool) error {
+				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular+"proxyurl"]
 					if !ok {
 						return nil
@@ -1427,7 +1423,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 			internals: AttrInternals{
 				checkFn: checkFn,
-				updateFn: func(e *Entity, isNew bool) error {
+				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular+"base64"]
 					if !ok {
 						return nil
@@ -1952,13 +1948,13 @@ func (e *Entity) GetModels() (*GroupModel, *ResourceModel) {
 	return AbstractToModels(e.Registry, e.Abstract)
 }
 
-func PrepUpdateEntity(e *Entity, isNew bool) error {
+func PrepUpdateEntity(e *Entity) error {
 	attrs := e.GetAttributes(e.NewObject)
 
 	for key, _ := range attrs {
 		attr := attrs[key]
 		if attr.internals.updateFn != nil {
-			if err := attr.internals.updateFn(e, isNew); err != nil {
+			if err := attr.internals.updateFn(e); err != nil {
 				return err
 			}
 		}

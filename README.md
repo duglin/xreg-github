@@ -62,8 +62,6 @@ TODOs:
   - Just see if we can clean-up the Set... stuff in general
 - convert internal errors into "panic" so any "error" returned is a user error
 - see if we can move "#resource??" into the attributes struct
-- can we get rid of IsNew from updateFn?
-- get we get rid of SkipEpoch now that we have TXs?
 - fix it so that a failed call to model.Save() (e.g. verify fails) doesn't
   invalidate existing local variables. See if we can avoid redownloading the
   model from the DB
@@ -77,3 +75,4 @@ TODOs:
 - add support for resource vs resourcebase64 - return what was on the PUT
 - support non-string "RESOURCE" values (e.g. json)
 - add tests for immutable attributes
+- add a tx.AddVersion/GetVersion so people don't need to do it themselves

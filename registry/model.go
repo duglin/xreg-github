@@ -48,7 +48,7 @@ type AttrInternals struct {
 
 	getFn    func(*Entity, *RequestInfo) any // return prop's value
 	checkFn  func(*Entity) error             // validate incoming prop
-	updateFn func(*Entity, bool) error       // prep prop for saving to DB
+	updateFn func(*Entity) error             // prep prop for saving to DB
 }
 
 // Do not include "omitempty" on any attribute that has a default value that

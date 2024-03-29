@@ -2275,16 +2275,40 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT resources - w/doc - revert content-type and body",
+		Name:       "PUT resources - w/doc - no content-type",
 		URL:        "/dirs/dir1/files/f1",
 		Method:     "PUT",
 		ReqHeaders: []string{},
-		ReqBody:    "My cool doc - new x2",
+		ReqBody:    "My cool doc - new one",
 		Code:       200,
 		ResHeaders: []string{
-			"Content-Type: text/plain; charset=utf-8",
+			"Content-Type: my/format",
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 3",
+			"xRegistry-latestversionid: 1",
+			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
+			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Content-Length: 21",
+		},
+		ResBody: `My cool doc - new one`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "PUT resources - w/doc - revert content-type and body",
+		URL:    "/dirs/dir1/files/f1",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"Content-Type: null",
+		},
+		ReqBody: "My cool doc - new x2",
+		Code:    200,
+		ResHeaders: []string{
+			// "Content-Type: text/plain; charset=utf-8",
+			"xRegistry-id: f1",
+			"xRegistry-epoch: 4",
 			"xRegistry-latestversionid: 1",
 			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",

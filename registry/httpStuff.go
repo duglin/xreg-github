@@ -773,7 +773,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		info.Registry.Entity.NewObject = IncomingObj
 
-		if err = info.Registry.Entity.ValidateAndSave(false); err != nil {
+		if err = info.Registry.Entity.ValidateAndSave(); err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Error processing registry: %s", err)
 		}
@@ -827,7 +827,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			// Didn't create a new one, so update existing Group
 			group.NewObject = IncomingObj
 
-			if err = group.Entity.ValidateAndSave(isNew); err != nil {
+			if err = group.Entity.ValidateAndSave(); err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return fmt.Errorf("Error processing group: %s", err)
 			}
@@ -923,7 +923,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			version.NewObject = IncomingObj
 			version.ConvertStrings(nil)
 
-			err = version.ValidateAndSave(isNew)
+			err = version.ValidateAndSave()
 		} else {
 			// Create a new Resource and it's first/only/latest Version
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
@@ -999,7 +999,7 @@ func HTTPPutPost(info *RequestInfo) error {
 				version.ConvertStrings(nil)
 
 				l := version.NewObject["latest"]
-				err = version.ValidateAndSave(isNew)
+				err = version.ValidateAndSave()
 				// TODO move this to version.go - DUG
 				if err == nil && !IsNil(l) {
 					if info.ResourceModel.SetLatest == false {
@@ -1593,10 +1593,14 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 			// TODO we may need some kind of "delete if missing" flag on
 			// each httpHeader attribute since some may want to have an
 			// explicit 'null' to be erased instead of just missing (eg patch)
-			if val := info.OriginalRequest.Header.Get(name); val != "" {
-				IncomingObj[attr.Name] = val
-			} else {
-				IncomingObj[attr.Name] = nil
+			vals, ok := info.OriginalRequest.Header[http.CanonicalHeaderKey(name)]
+			if ok {
+				val := vals[0]
+				if val == "null" {
+					IncomingObj[attr.Name] = nil
+				} else {
+					IncomingObj[attr.Name] = val
+				}
 			}
 		}
 
@@ -1648,7 +1652,14 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 
 				for i, part := range parts {
 					if i+1 == len(parts) {
-						obj[part] = val
+						// Should we just skip all of this logic if nil?
+						// If we try, watch for the case where someone
+						// has just xReg-label-foo:null, it should probably
+						// create the empty map anyway. And watch for the
+						// case mentioned below
+						if val != nil {
+							obj[part] = val
+						}
 						continue
 					}
 

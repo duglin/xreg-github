@@ -57,7 +57,6 @@ func (r *Resource) SetCommit(name string, val any) error {
 		panic(err)
 	}
 
-	v.SkipEpoch = r.SkipEpoch
 	return v.SetCommit(name, val)
 }
 
@@ -84,7 +83,6 @@ func (r *Resource) JustSet(name string, val any) error {
 		panic(err)
 	}
 
-	v.SkipEpoch = r.SkipEpoch
 	return v.JustSet(name, val)
 }
 
@@ -111,7 +109,6 @@ func (r *Resource) SetSave(name string, val any) error {
 		panic(err)
 	}
 
-	v.SkipEpoch = r.SkipEpoch
 	return v.SetSave(name, val)
 }
 
@@ -130,7 +127,13 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 		return nil, nil
 	}
 
-	return &Version{Entity: *ent, Resource: r}, nil
+	if v := r.tx.Versions[ent.DbSID]; v != nil {
+		return v, nil
+	}
+
+	v := &Version{Entity: *ent, Resource: r}
+	v.tx.Versions[v.DbSID] = v
+	return v, nil
 }
 
 // Maybe replace error with a panic?
@@ -218,7 +221,8 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 		return nil, err
 	}
 
-	v.SkipEpoch = true
+	v.tx.Versions[v.DbSID] = v
+
 	if err = v.JustSet("id", id); err != nil {
 		return nil, err
 	}
@@ -253,11 +257,9 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 			`doing so would result in no latest version`)
 	}
 
-	if err = v.SetSave("epoch", 1); err != nil {
+	if err = v.ValidateAndSave(); err != nil {
 		return nil, err
 	}
-
-	v.SkipEpoch = false
 
 	// If we can only have one Version, then set the one we just created
 	// as the latest. Basically the "latest" flag is pointless in this case
@@ -358,7 +360,12 @@ func (r *Resource) GetVersions() ([]*Version, error) {
 	}
 
 	for _, e := range entities {
-		list = append(list, &Version{Entity: *e, Resource: r})
+		var v *Version
+		if v = r.tx.Versions[e.DbSID]; v == nil {
+			v = &Version{Entity: *e, Resource: r}
+			v.tx.Versions[v.DbSID] = v
+		}
+		list = append(list, v)
 	}
 
 	return list, nil

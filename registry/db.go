@@ -104,6 +104,12 @@ type Tx struct {
 	tx       *sql.Tx
 	Registry *Registry
 
+	// TODO DUG expand this to save all types, not just Versions.
+	// Also, consider having Commit() just automatically call ValidateAndSave
+	// for all entities in the Tx - then people don't need to call save
+	// explicitly
+	Versions map[string]*Version // DbSID
+
 	// For debugging
 	uuid  string   // just a unique ID for the TXs map key
 	stack []string // Stack at time NewTX
@@ -152,6 +158,7 @@ func (tx *Tx) NewTx() {
 	Must(err)
 
 	tx.tx = t
+	tx.Versions = map[string]*Version{}
 	tx.uuid = NewUUID()
 	tx.stack = GetStack()
 	TXs[tx.uuid] = tx
@@ -169,6 +176,7 @@ func (tx *Tx) Commit() error {
 
 	delete(TXs, tx.uuid)
 	tx.tx = nil
+	tx.Versions = nil
 	tx.uuid = ""
 
 	return nil
@@ -186,6 +194,7 @@ func (tx *Tx) Rollback() error {
 
 	delete(TXs, tx.uuid)
 	tx.tx = nil
+	tx.Versions = nil
 	tx.uuid = ""
 
 	return nil
