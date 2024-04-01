@@ -67,6 +67,8 @@ TODOs:
   model from the DB
 
 - pagination
+- have DB generate the COLLECTIONcount attributes so people can query over
+  them and we don't need the code to calculate them
 - add checks for valid obj/map key names in new validation funcs ****
 - support multiple resources/versions in POSTs
 - support overriding spec defined attributes - like "format"

@@ -32,10 +32,10 @@ server: cmds/server.go cmds/loader.go registry/*
 	@echo "# Building server"
 	go build $(BUILDFLAGS) -o $@ cmds/server.go cmds/loader.go
 
-xr: cmds/xr.go registry/*
+xr: cmds/xr*.go registry/*
 	@echo
 	@echo "# Building CLI"
-	go build $(BUILDFLAGS) -o $@ cmds/xr.go
+	go build $(BUILDFLAGS) -o $@ cmds/xr*.go
 
 image: .image
 .image: server misc/Dockerfile
