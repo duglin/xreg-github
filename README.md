@@ -77,3 +77,4 @@ TODOs:
 - add support for resource vs resourcebase64 - return what was on the PUT
 - support non-string "RESOURCE" values (e.g. json)
 - add tests for immutable attributes
+- get rid of the "Error processing" part of the error msgs

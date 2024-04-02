@@ -395,6 +395,9 @@ func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, 
 
 	for _, obj := range objs {
 		for k, v := range obj {
+			if k == "id" && v != id {
+				return nil, fmt.Errorf("The IDs must match(%q vs %q)", id, v)
+			}
 			if err = g.JustSet(k, v); err != nil {
 				return nil, err
 			}

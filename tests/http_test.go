@@ -2148,7 +2148,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group(dir2): Can't change the ID of an entity(dir2->dir3)\n",
+		ResBody:    "Error processing group(dir2): The IDs must match(\"dir2\" vs \"dir3\")\n",
 	})
 
 }
@@ -4466,6 +4466,9 @@ func TestHTTPResources(t *testing.T) {
 		},
 	})
 	xNoErr(t, err)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/vx", `{"id":"x"}`, 400,
+		`Error processing resource(f1): The IDs must match("vx" vs "x")`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", "{}", 201, `{
   "id": "v1",
