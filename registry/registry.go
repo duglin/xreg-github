@@ -29,7 +29,11 @@ func (r *Registry) Commit() error {
 	return nil
 }
 
-func NewRegistry(tx *Tx, id string) (*Registry, error) {
+type RegOpt string
+
+const RegOpt_TrackTimestamps = RegOpt("TRACK_TIMESTAMPS")
+
+func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 	log.VPrintf(3, ">Enter: NewRegistry %q", id)
 	defer log.VPrintf(3, "<Exit: NewRegistry")
 
@@ -109,6 +113,15 @@ func NewRegistry(tx *Tx, id string) (*Registry, error) {
 	if err = reg.JustSet("id", reg.UID); err != nil {
 		return nil, err
 	}
+
+	for _, regOpt := range regOpts {
+		if regOpt == RegOpt_TrackTimestamps {
+			if err = reg.TrackTimestamps(true); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if err = reg.SetSave("epoch", 1); err != nil {
 		return nil, err
 	}
@@ -137,6 +150,14 @@ func GetRegistryNames() []string {
 	}
 
 	return res
+}
+
+func (reg *Registry) TrackTimestamps(val bool) error {
+	if val {
+		return reg.SetSave("#tracktimestamps", true)
+	} else {
+		return reg.SetSave("#tracktimestamps", nil)
+	}
 }
 
 func (reg *Registry) Get(name string) any {

@@ -121,6 +121,10 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 
 	defer func() { log.VPrintf(3, "Info:\n%s\n", ToJSON(info)) }()
 
+	if tmp := r.Header.Get("xRegistry~User"); tmp != "" {
+		tx.User = tmp
+	}
+
 	err := info.ParseRequestURL()
 	if err != nil {
 		if info.StatusCode == 0 {

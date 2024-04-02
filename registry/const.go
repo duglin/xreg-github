@@ -1,5 +1,9 @@
 package registry
 
+import "os"
+
+var TESTING = (os.Getenv("TESTING") != "")
+
 const SPECVERSION = "0.5"
 const XREGSCHEMA = "xRegistry-json"
 

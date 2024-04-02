@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -353,5 +354,5 @@ func TestProcessImports(t *testing.T) {
 		}
 	}
 
-	server.Shutdown(nil)
+	server.Shutdown(context.Background())
 }

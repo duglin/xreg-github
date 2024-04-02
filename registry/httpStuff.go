@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	// "os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -89,7 +89,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		// As of now we should never have more than one active Tx during
 		// testing
-		if os.Getenv("TESTING") != "" {
+		if TESTING {
 			l := len(TXs)
 			if (tx.tx == nil && l > 0) || (tx.tx != nil && l > 1) {
 				log.Printf(">End of HTTP Request")

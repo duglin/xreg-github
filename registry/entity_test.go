@@ -298,7 +298,6 @@ func TestSetProp(t *testing.T) {
 }
 
 func TestGetProp(t *testing.T) {
-
 	type Obj map[string]any
 
 	type Test struct {
@@ -390,7 +389,7 @@ func TestGetProp(t *testing.T) {
 			obj = start
 		}
 
-		val, err := ObjectGetProp(obj, pp)
+		val, _, err := ObjectGetProp(obj, pp)
 
 		if (err == nil && test.Error != "") ||
 			(err != nil && test.Error != err.Error()) {
@@ -415,4 +414,38 @@ func TestGetProp(t *testing.T) {
 
 		start = obj
 	}
+}
+
+func TestGetPropUpdate(t *testing.T) {
+	obj := Object{
+		"attr1": "foo",
+		"attr2": nil,
+	}
+
+	val, ok, err := ObjectGetProp(obj, NewPPP("attr1"))
+	if val != "foo" || ok != true || err != nil {
+		t.Logf("val: %v  ok: %v  err: %v", val, ok, err)
+		t.Fatalf("attr1 failed")
+	}
+
+	val, ok, err = ObjectGetProp(obj, NewPPP("attr2"))
+	if val != nil || ok != true || err != nil {
+		t.Logf("val: %v  ok: %v  err: %v", val, ok, err)
+		t.Fatalf("attr2 failed")
+	}
+
+	val, ok, err = ObjectGetProp(obj, NewPPP("attr3"))
+	if val != nil || ok == true || err != nil {
+		t.Logf("val: %v  ok: %v  err: %v", val, ok, err)
+		t.Fatalf("attr3 failed")
+	}
+
+	val, ok, err = ObjectGetProp(obj, NewPPP("attr4").P("foo"))
+	if val != nil || ok == true || err == nil ||
+		err.Error() != "Can't traverse into nothing: attr4" {
+
+		t.Logf("val: %v  ok: %v  err: %v", val, ok, err)
+		t.Fatalf("attr4.foo failed")
+	}
+
 }

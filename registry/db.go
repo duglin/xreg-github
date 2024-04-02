@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"runtime/pprof"
 	"strings"
+	"time"
 
 	log "github.com/duglin/dlog"
 	_ "github.com/go-sql-driver/mysql"
@@ -100,9 +101,15 @@ func (fp *FilterPProf) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+// Holds info about the current transaction. In a lot of ways this is similar
+// to golang's Context in that it holds other info related to the current
+// changes that are going on. Maybe one day convert this to a Context where
+// Tx is just as apsect of it.
 type Tx struct {
-	tx       *sql.Tx
-	Registry *Registry
+	tx         *sql.Tx
+	Registry   *Registry
+	CreateTime string // use for entity timestamps too
+	User       string
 
 	// Cache of entities this Tx is dealing with. Things can get funky if
 	// we have more than one instance of the same entity in memory.
@@ -157,6 +164,11 @@ func (tx *Tx) NewTx() {
 	Must(err)
 
 	tx.tx = t
+	// if TESTING {
+	tx.CreateTime = time.Now().Format(time.RFC3339Nano)
+	// } else {
+	// tx.CreateTime = time.Now().Format(time.RFC3339)
+	// }
 	tx.Versions = map[string]*Version{}
 	tx.uuid = NewUUID()
 	tx.stack = GetStack()
@@ -175,6 +187,7 @@ func (tx *Tx) Commit() error {
 
 	delete(TXs, tx.uuid)
 	tx.tx = nil
+	tx.CreateTime = ""
 	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
 	tx.uuid = ""
 
@@ -193,6 +206,7 @@ func (tx *Tx) Rollback() error {
 
 	delete(TXs, tx.uuid)
 	tx.tx = nil
+	tx.CreateTime = ""
 	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
 	tx.uuid = ""
 

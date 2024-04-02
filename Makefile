@@ -9,8 +9,8 @@ cmds: .cmds
 
 qtest: .test
 
-test: export TESTING=1
 test: .test .testimage
+.test: export TESTING=1
 .test: .cmds */*test.go
 	@echo
 	@echo "# Testing"

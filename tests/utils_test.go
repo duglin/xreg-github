@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 	os.Exit(rc)
 }
 
-func NewRegistry(name string) *registry.Registry {
+func NewRegistry(name string, opts ...registry.RegOpt) *registry.Registry {
 	var err error
 
 	reg, _ := registry.FindRegistry(nil, name)
@@ -63,7 +63,7 @@ func NewRegistry(name string) *registry.Registry {
 		reg.Commit()
 	}
 
-	reg, err = registry.NewRegistry(nil, name)
+	reg, err = registry.NewRegistry(nil, name, opts...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating registry %q: %s", name, err)
 		os.Exit(1)
@@ -186,9 +186,13 @@ func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string
 	xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
 }
 
-func xCheckEqual(t *testing.T, extra string, got string, exp string) {
+func xCheckEqual(t *testing.T, extra string, gotAny any, expAny any) {
 	t.Helper()
 	pos := 0
+
+	got := fmt.Sprintf("%v", gotAny)
+	exp := fmt.Sprintf("%v", expAny)
+
 	for pos < len(got) && pos < len(exp) && got[pos] == exp[pos] {
 		pos++
 	}

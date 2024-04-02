@@ -101,41 +101,44 @@ func (e *Entity) GetPP(pp *PropPath) any {
 		return (*(row[0])).([]byte)
 	}
 
-	/*
-		// At some point we may decide we need to check the NewObject map
-		// for the value - eg. if the resource hasn't been saved yet.
-		var val any
-		if e.NewObject != nil {
-			// TODO check this - what if it got nil'd out??  DUG
-			val, _ = ObjectGetProp(e.NewObject, pp)
-			if IsNil(val) {
-				val, _ = ObjectGetProp(e.Object, pp)
-			}
-		} else {
-			val, _ = ObjectGetProp(e.Object, pp)
+	// See if we have an updated value in NewObject, if not grab from Object
+	var val any
+	if e.NewObject != nil {
+		var ok bool
+		val, ok, _ = ObjectGetProp(e.NewObject, pp)
+		if !ok {
+			val, _, _ = ObjectGetProp(e.Object, pp)
 		}
-	*/
+	} else {
+		val, _, _ = ObjectGetProp(e.Object, pp)
+	}
 
-	// An error from ObjectGetProp is ignored because if they tried to
-	// go into something incorrect/bad we should just return 'nil'.
-	// This may not be the best choice in the long-run - which in case we
-	// should return the 'error'
-	val, _ := ObjectGetProp(e.Object, pp)
+	// We used to just grab from Object, not NewObject
+	/*
+		// An error from ObjectGetProp is ignored because if they tried to
+		// go into something incorrect/bad we should just return 'nil'.
+		// This may not be the best choice in the long-run - which in case we
+		// should return the 'error'
+		val, _ , _ := ObjectGetProp(e.Object, pp)
+	*/
 	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, name, val)
 	return val
 }
 
-func ObjectGetProp(obj any, pp *PropPath) (any, error) {
+// Value, Found, Error
+func ObjectGetProp(obj any, pp *PropPath) (any, bool, error) {
 	return NestedGetProp(obj, pp, NewPP())
 }
 
-func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, error) {
+// Value, Found, Error
+func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, bool, error) {
 	log.VPrintf(3, "ObjectGetProp: %q\nobj:\n%s", pp.UI(), ToJSON(obj))
 	if pp == nil || pp.Len() == 0 {
-		return obj, nil
+		return obj, true, nil
 	}
 	if IsNil(obj) {
-		return nil, fmt.Errorf("Can't traverse into nothing: %s", prev.UI())
+		return nil, false,
+			fmt.Errorf("Can't traverse into nothing: %s", prev.UI())
 	}
 
 	objValue := reflect.ValueOf(obj)
@@ -143,16 +146,19 @@ func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, error) {
 	if index := part.Index; index >= 0 {
 		// Is an array
 		if objValue.Kind() != reflect.Slice {
-			return nil, fmt.Errorf("Can't index into non-array: %s", prev.UI())
+			return nil, false,
+				fmt.Errorf("Can't index into non-array: %s", prev.UI())
 		}
 		if index < 0 || index >= objValue.Len() {
-			return nil, fmt.Errorf("Array reference %q out of bounds: "+
-				"(max:%d-1)", prev.Append(pp.First()).UI(), objValue.Len())
+			return nil, false,
+				fmt.Errorf("Array reference %q out of bounds: "+
+					"(max:%d-1)", prev.Append(pp.First()).UI(), objValue.Len())
 		}
 		objValue = objValue.Index(index)
 		if objValue.IsValid() {
 			obj = objValue.Interface()
 		} else {
+			panic("help") // Should never get here
 			obj = nil
 		}
 		return NestedGetProp(obj, pp.Next(), prev.Append(pp.First()))
@@ -160,11 +166,11 @@ func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, error) {
 
 	// Is map/object
 	if objValue.Kind() != reflect.Map {
-		return nil, fmt.Errorf("Can't reference a non-map/object: %s",
+		return nil, false, fmt.Errorf("Can't reference a non-map/object: %s",
 			prev.UI())
 	}
 	if objValue.Type().Key().Kind() != reflect.String {
-		return nil, fmt.Errorf("Key of %q must be a string, not %s",
+		return nil, false, fmt.Errorf("Key of %q must be a string, not %s",
 			prev.UI(), objValue.Type().Key().Kind())
 	}
 
@@ -172,6 +178,9 @@ func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, error) {
 	if objValue.IsValid() {
 		obj = objValue.Interface()
 	} else {
+		if pp.Next().Len() == 0 {
+			return nil, false, nil
+		}
 		obj = nil
 	}
 	return NestedGetProp(obj, pp.Next(), prev.Append(pp.First()))
@@ -363,6 +372,9 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 func (e *Entity) ValidateAndSave() error {
 	log.VPrintf(3, ">Enter: ValidateAndSave %s/%s", e.Abstract, e.UID)
 	defer log.VPrintf(3, "<Exit: ValidateAndSave")
+
+	// Make sure we have a tx since Validate assumes it
+	e.tx.NewTx()
 
 	// If nothing changed, just exit
 	// if e.NewObject == nil {
@@ -905,7 +917,9 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
-			updateFn:  nil,
+			updateFn: func(e *Entity) error {
+				return nil
+			},
 		},
 	},
 	{
@@ -918,7 +932,16 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
-			updateFn:  nil,
+			updateFn: func(e *Entity) error {
+				ct := e.Object["createdon"]
+				isNew := IsNil(e.Object["epoch"])
+				if IsNil(ct) && isNew {
+					if e.Registry.Get("#tracktimestamps") == true {
+						e.NewObject["createdon"] = e.tx.CreateTime
+					}
+				}
+				return nil
+			},
 		},
 	},
 	{
@@ -944,7 +967,12 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
-			updateFn:  nil,
+			updateFn: func(e *Entity) error {
+				if e.Registry.Get("#tracktimestamps") == true {
+					e.NewObject["modifiedon"] = e.tx.CreateTime
+				}
+				return nil
+			},
 		},
 	},
 	{
@@ -1953,6 +1981,18 @@ func PrepUpdateEntity(e *Entity) error {
 
 	for key, _ := range attrs {
 		attr := attrs[key]
+
+		// Any ReadOnly attribute in Object, but not in NewObject, must
+		// be one that we want to keep around. Note that a 'nil' in NewObject
+		// will not grab the one in Object - assumes we want to erase the val
+		if attr.ReadOnly {
+			oldVal, ok1 := e.Object[attr.Name]
+			_, ok2 := e.NewObject[attr.Name]
+			if ok1 && !ok2 {
+				e.NewObject[attr.Name] = oldVal
+			}
+		}
+
 		if attr.internals.updateFn != nil {
 			if err := attr.internals.updateFn(e); err != nil {
 				return err
