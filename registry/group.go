@@ -103,13 +103,13 @@ func (g *Group) AddResource(rType string, id string, vID string, objs ...Object)
 		return nil, err
 	}
 
-	err = r.JustSet(".id", r.UID)
+	err = r.JustSet("id", r.UID)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO See if this should be JustSet and then call Save() after AddVer?
-	err = r.SetSave(".#nextVersionID", 1)
+	err = r.SetSave("#nextversionid", 1)
 	if err != nil {
 		return nil, err
 	}

@@ -12,18 +12,18 @@ type Resource struct {
 	Group *Group
 }
 
+// These attributes are on the Resource not the Version
+// We used to use a "." as a prefix to know - may still need to at some point
+var specialResourceAttrs = map[string]bool{
+	"id":               true,
+	"defaultversionid": true,
+	"#nextversionid":   true,
+}
+
 func (r *Resource) Get(name string) any {
 	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
 
-	// Names that starts with a dot(.) means it's a resource prop, not ver prop
-	if name[0] == '.' {
-		return r.Entity.Get(name[1:])
-	}
-
-	// These are also resource properties, not vesion properties
-	if name == "id" || name == "defaultversionid" ||
-		name == "defaultversionurl" || name == "#nextVersionID" {
-
+	if specialResourceAttrs[name] {
 		return r.Entity.Get(name)
 	}
 
@@ -36,19 +36,7 @@ func (r *Resource) Get(name string) any {
 
 func (r *Resource) SetCommit(name string, val any) error {
 	log.VPrintf(4, "Set: r(%s).SetCommit(%s,%v)", r.UID, name, val)
-	if name[0] == '.' { // Force it to be on the Resource, not default Version
-		if name == ".defaultVersionId" {
-			log.Printf("Shouldn't be setting .defaultVersionId directly-1")
-			panic("can't set .defaultversionid directly")
-		}
-		return r.Entity.SetCommit(name[1:], val)
-	}
-
-	if name == "id" || name == "defaultversionid" || name == "defaultversionurl" {
-		if name == "defaultversionid" {
-			log.Printf("Shouldn't be setting .defaultVersionId directly-2")
-			panic("can't set .defaultversionid directly")
-		}
+	if specialResourceAttrs[name] {
 		return r.Entity.SetCommit(name, val)
 	}
 
@@ -62,19 +50,7 @@ func (r *Resource) SetCommit(name string, val any) error {
 
 func (r *Resource) JustSet(name string, val any) error {
 	log.VPrintf(4, "JustSet: r(%s).JustSet(%s,%v)", r.UID, name, val)
-	if name[0] == '.' { // Force it to be on the Resource, not default Version
-		if name == ".defaultVersionId" {
-			log.Printf("Shouldn't be setting .defaultVersionId directly-1")
-			panic("can't set .defaultversionid directly")
-		}
-		return r.Entity.JustSet(NewPPP(name[1:]), val)
-	}
-
-	if name == "id" || name == "defaultversionid" || name == "defaultversionurl" {
-		if name == "defaultversionid" {
-			log.Printf("Shouldn't be setting .defaultVersionId directly-2")
-			panic("can't set .defaultversionid directly")
-		}
+	if specialResourceAttrs[name] {
 		return r.Entity.JustSet(NewPPP(name), val)
 	}
 
@@ -88,19 +64,7 @@ func (r *Resource) JustSet(name string, val any) error {
 
 func (r *Resource) SetSave(name string, val any) error {
 	log.VPrintf(4, "SetSave: r(%s).SetSave(%s,%v)", r.UID, name, val)
-	if name[0] == '.' { // Force it to be on the Resource, not default Version
-		if name == ".defaultVersionId" {
-			log.Printf("Shouldn't be setting .defaultVersionId directly-1")
-			panic("can't set .defaultversionid directly")
-		}
-		return r.Entity.SetSave(name[1:], val)
-	}
-
-	if name == "id" || name == "defaultversionid" || name == "defaultversionurl" {
-		if name == "defaultversionid" {
-			log.Printf("Shouldn't be setting .defaultVersionId directly-2")
-			panic("can't set .defaultversionid directly")
-		}
+	if specialResourceAttrs[name] {
 		return r.Entity.SetSave(name, val)
 	}
 
@@ -152,7 +116,7 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 	if r.Get("defaultversionid") == newDefault.UID {
 		return nil
 	}
-	return r.Entity.SetSave("defaultversionid", newDefault.UID)
+	return r.SetSave("defaultversionid", newDefault.UID)
 }
 
 func (r *Resource) AddVersion(id string, isDefault bool, objs ...Object) (*Version, error) {
@@ -164,7 +128,7 @@ func (r *Resource) AddVersion(id string, isDefault bool, objs ...Object) (*Versi
 
 	if id == "" {
 		// No versionID provided so grab the next available one
-		tmp := r.Get("#nextVersionID")
+		tmp := r.Get("#nextversionid")
 		nextID := NotNilInt(&tmp)
 		for {
 			id = strconv.Itoa(nextID)
@@ -178,7 +142,7 @@ func (r *Resource) AddVersion(id string, isDefault bool, objs ...Object) (*Versi
 			nextID++
 
 			if v == nil {
-				r.JustSet(".#nextVersionID", nextID)
+				r.JustSet("#nextversionid", nextID)
 				break
 			}
 		}
@@ -272,7 +236,7 @@ func (r *Resource) AddVersion(id string, isDefault bool, objs ...Object) (*Versi
 	} else if isDefault {
 		err = r.SetDefault(v)
 		if err != nil {
-			err = fmt.Errorf("Error setting defaultVersionId: %s", err)
+			err = fmt.Errorf("Error setting defaultversionid: %s", err)
 			return v, err
 		}
 	}

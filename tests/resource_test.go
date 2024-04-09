@@ -100,10 +100,10 @@ func TestResourceSet(t *testing.T) {
 	xNoErr(t, f1.SetSave("ext2", 123))
 
 	// Make sure the props on the resource weren't set
-	xCheck(t, f1.Get(".name") == nil, ".name should be nil")
-	xCheck(t, f1.Get(".epoch") == 1, ".epoch should be 1")
-	xCheck(t, f1.Get(".ext1") == nil, ".ext1 should be nil")
-	xCheck(t, f1.Get(".ext2") == nil, ".ext2 should be nil")
+	xCheck(t, f1.Entity.Get("name") == nil, "name should be nil")
+	xCheck(t, f1.Entity.Get("epoch") == 1, "epoch should be 1")
+	xCheck(t, f1.Entity.Get("ext1") == nil, "ext1 should be nil")
+	xCheck(t, f1.Entity.Get("ext2") == nil, "ext2 should be nil")
 
 	ft, _ := d1.FindResource("files", "f1")
 
