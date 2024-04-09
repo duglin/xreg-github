@@ -699,7 +699,8 @@ func TestHTTPModel(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -960,7 +961,8 @@ func TestHTTPModel(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -1224,7 +1226,8 @@ func TestHTTPModel(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",

@@ -1118,7 +1118,8 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -1274,7 +1275,8 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -1505,7 +1507,8 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -1801,7 +1804,8 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -2098,7 +2102,8 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -2328,7 +2333,8 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -2588,7 +2594,8 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -2847,7 +2854,8 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "latest": {
                 "name": "latest",
-                "type": "boolean"
+                "type": "boolean",
+                "readonly": true
               },
               "latestversionid": {
                 "name": "latestversionid",
@@ -3127,7 +3135,8 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "latest": {
                 "name": "latest",
-                "type": "boolean"
+                "type": "boolean",
+                "readonly": true
               },
               "latestversionid": {
                 "name": "latestversionid",
@@ -3720,7 +3729,8 @@ func TestMultModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -3808,7 +3818,8 @@ func TestMultModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -3964,7 +3975,8 @@ func TestMultModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -4052,7 +4064,8 @@ func TestMultModelCreate(t *testing.T) {
             },
             "latest": {
               "name": "latest",
-              "type": "boolean"
+              "type": "boolean",
+              "readonly": true
             },
             "latestversionid": {
               "name": "latestversionid",
@@ -4329,7 +4342,8 @@ func TestMultModel2Create(t *testing.T) {
               },
               "latest": {
                 "name": "latest",
-                "type": "boolean"
+                "type": "boolean",
+                "readonly": true
               },
               "latestversionid": {
                 "name": "latestversionid",
@@ -4485,7 +4499,8 @@ func TestMultModel2Create(t *testing.T) {
               },
               "latest": {
                 "name": "latest",
-                "type": "boolean"
+                "type": "boolean",
+                "readonly": true
               },
               "latestversionid": {
                 "name": "latestversionid",

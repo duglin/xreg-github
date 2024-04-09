@@ -65,6 +65,11 @@ TODOs:
 - fix it so that a failed call to model.Save() (e.g. verify fails) doesn't
   invalidate existing local variables. See if we can avoid redownloading the
   model from the DB
+- make sure we check for uniqueness of IDs - they're case insensitive and
+  unique within the scope of their parent
+- make sure we throw an error if ?specversion on HTTP requests specifies the
+  wrong version
+- make sure we have tests for resoucre.readonly - in particular DELETE
 
 - pagination
 - have DB generate the COLLECTIONcount attributes so people can query over
@@ -78,3 +83,7 @@ TODOs:
 - support non-string "RESOURCE" values (e.g. json)
 - add tests for immutable attributes
 - get rid of the "Error processing" part of the error msgs
+- make sure that if maxversions is 1, then setlatest MUST be false
+- support/test use of 'setversionid'
+- support new semantics of setlatestversionid query parameter
+- s/latest/default/g

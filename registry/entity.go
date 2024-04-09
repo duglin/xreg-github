@@ -790,8 +790,9 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "latest",
-		Type: BOOLEAN,
+		Name:     "latest",
+		Type:     BOOLEAN,
+		ReadOnly: true,
 
 		internals: AttrInternals{
 			levels:    "3",
