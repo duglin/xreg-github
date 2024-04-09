@@ -393,7 +393,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	ErrFatalf(v.SetSave("name", "blobCreated"))
 	ErrFatalf(v.SetSave("epoch", 4))
-	ErrFatalf(r.SetLatest(v))
+	ErrFatalf(r.SetDefault(v))
 
 	r, err = g.AddResource("messages", "deleted", "v1.0")
 	ErrFatalf(err)

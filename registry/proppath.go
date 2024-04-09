@@ -10,7 +10,7 @@ import (
 
 const UX_IN = '.'
 
-// If DB_IN changes then LatestProps in init.sql needs to change too
+// If DB_IN changes then DefaultProps in init.sql needs to change too
 const DB_IN = ','
 const DB_INDEX = '#'
 

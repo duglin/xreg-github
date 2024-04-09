@@ -258,7 +258,7 @@ func TestBasicTypes(t *testing.T) {
 
 		for _, prop := range test.Props {
 			t.Logf("Test: %s  val:%v", prop.Name, prop.Value)
-			// Note that for Resources this will set them on the latest Version
+			// Note that for Resources this will set them on the default Version
 			err := setter.SetSave(prop.Name, prop.Value)
 			if err != nil && err.Error() != prop.ErrMsg {
 				t.Errorf("Error calling set (%q=%v): %q expected %q", prop.Name,
@@ -382,8 +382,8 @@ func TestBasicTypes(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-          "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
           "filebool1": true,
           "filebool2": false,
           "filedec1": 456.5,
@@ -401,7 +401,7 @@ func TestBasicTypes(t *testing.T) {
               "id": "v1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
-              "latest": true,
+              "isdefault": true,
               "filebool1": true,
               "filebool2": false,
               "filedec1": 456.5,

@@ -81,7 +81,7 @@ func (e *Entity) GetPP(pp *PropPath) any {
             WHERE VersionSID=? OR
 			      VersionSID=(SELECT eSID FROM FullTree WHERE ParentSID=? AND
 				  PropName=? and PropValue='true')
-			`, e.DbSID, e.DbSID, NewPPP("latest").DB())
+			`, e.DbSID, e.DbSID, NewPPP("isdefault").DB())
 		defer results.Close()
 
 		if err != nil {
@@ -790,7 +790,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "latest",
+		Name:     "isdefault",
 		Type:     BOOLEAN,
 		ReadOnly: true,
 
@@ -800,7 +800,7 @@ var OrderedSpecProps = []*Attribute{
 			getFn:     nil,
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
-				// TODO if set, set latestvesionid in the resource to this
+				// TODO if set, set defaultversionid in the resource to this
 				// guy's UID
 
 				return nil
@@ -808,7 +808,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "latestversionid",
+		Name:     "defaultversionid",
 		Type:     STRING,
 		ReadOnly: true,
 		// ServerRequired: true,
@@ -822,7 +822,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "latestversionurl",
+		Name:     "defaultversionurl",
 		Type:     URL,
 		ReadOnly: true,
 		// ServerRequired: true,
@@ -831,7 +831,7 @@ var OrderedSpecProps = []*Attribute{
 			levels:    "2",
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
-				val := e.Object["latestversionid"]
+				val := e.Object["defaultversionid"]
 				if IsNil(val) {
 					return nil
 				}
@@ -1167,18 +1167,18 @@ func (e *Entity) Save() error {
 	return err
 }
 
-// Note that this will copy the latest version props to the resource.
+// Note that this will copy the default version props to the resource.
 // This is mainly used for end-user facing serialization of the entity
 func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 	mat := maps.Clone(e.Object)
 
 	// Copy all Version props into the Resource (except for a few)
 	if e.Level == 2 {
-		// On Resource grab latest Version attrs
+		// On Resource grab default Version attrs
 		paths := strings.Split(e.Path, "/")
 		group, _ := e.Registry.FindGroup(paths[0], paths[1])
 		resource, _ := group.FindResource(paths[2], paths[3])
-		ver, _ := resource.GetLatest()
+		ver, _ := resource.GetDefault()
 
 		if ver != nil { // can be nil during resource.create()
 			// Copy version specific attributes not found in Resources
@@ -1186,7 +1186,7 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 				if k == "id" { // Retain Resource ID
 					continue
 				}
-				// exclude props that only appear in vers, eg. ver.latest
+				// exclude props that only appear in vers, eg. ver.isdefault
 				if prop, ok := SpecProps[k]; ok {
 					if prop.InLevel(3) && !prop.InLevel(2) {
 						continue

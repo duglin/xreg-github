@@ -11,7 +11,7 @@ const XREGSCHEMA = "xRegistry-json"
 const STRICT = true
 const VERSIONS = 0
 const VERSIONID = true
-const LATEST = true
+const SETDEFAULT = true
 const HASDOCUMENT = true
 const READONLY = false
 

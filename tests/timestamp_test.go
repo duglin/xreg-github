@@ -119,8 +119,8 @@ func TestTimestampRegistry(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-          "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
           "createdon": "YYYY-MM-DDTHH:MM:SSZ",
           "modifiedon": "YYYY-MM-DDTHH:MM:SSZ",
 
@@ -129,7 +129,7 @@ func TestTimestampRegistry(t *testing.T) {
               "id": "v1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
-              "latest": true,
+              "isdefault": true,
               "createdon": "YYYY-MM-DDTHH:MM:SSZ",
               "modifiedon": "YYYY-MM-DDTHH:MM:SSZ"
             }

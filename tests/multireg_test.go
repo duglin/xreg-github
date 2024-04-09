@@ -66,8 +66,8 @@ func TestMultiReg(t *testing.T) {
   "id": "f2",
   "epoch": 1,
   "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2/versions/1?meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2/versions"

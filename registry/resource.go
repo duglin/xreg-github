@@ -21,13 +21,13 @@ func (r *Resource) Get(name string) any {
 	}
 
 	// These are also resource properties, not vesion properties
-	if name == "id" || name == "latestversionid" ||
-		name == "latestversionurl" || name == "#nextVersionID" {
+	if name == "id" || name == "defaultversionid" ||
+		name == "defaultversionurl" || name == "#nextVersionID" {
 
 		return r.Entity.Get(name)
 	}
 
-	v, err := r.GetLatest()
+	v, err := r.GetDefault()
 	if err != nil {
 		panic(err)
 	}
@@ -36,23 +36,23 @@ func (r *Resource) Get(name string) any {
 
 func (r *Resource) SetCommit(name string, val any) error {
 	log.VPrintf(4, "Set: r(%s).SetCommit(%s,%v)", r.UID, name, val)
-	if name[0] == '.' { // Force it to be on the Resource, not latest Version
-		if name == ".latestVersionId" {
-			log.Printf("Shouldn't be setting .latestVersionId directly-1")
-			panic("can't set .latestversionid directly")
+	if name[0] == '.' { // Force it to be on the Resource, not default Version
+		if name == ".defaultVersionId" {
+			log.Printf("Shouldn't be setting .defaultVersionId directly-1")
+			panic("can't set .defaultversionid directly")
 		}
 		return r.Entity.SetCommit(name[1:], val)
 	}
 
-	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
-		if name == "latestversionid" {
-			log.Printf("Shouldn't be setting .latestVersionId directly-2")
-			panic("can't set .latestversionid directly")
+	if name == "id" || name == "defaultversionid" || name == "defaultversionurl" {
+		if name == "defaultversionid" {
+			log.Printf("Shouldn't be setting .defaultVersionId directly-2")
+			panic("can't set .defaultversionid directly")
 		}
 		return r.Entity.SetCommit(name, val)
 	}
 
-	v, err := r.GetLatest()
+	v, err := r.GetDefault()
 	if err != nil {
 		panic(err)
 	}
@@ -62,23 +62,23 @@ func (r *Resource) SetCommit(name string, val any) error {
 
 func (r *Resource) JustSet(name string, val any) error {
 	log.VPrintf(4, "JustSet: r(%s).JustSet(%s,%v)", r.UID, name, val)
-	if name[0] == '.' { // Force it to be on the Resource, not latest Version
-		if name == ".latestVersionId" {
-			log.Printf("Shouldn't be setting .latestVersionId directly-1")
-			panic("can't set .latestversionid directly")
+	if name[0] == '.' { // Force it to be on the Resource, not default Version
+		if name == ".defaultVersionId" {
+			log.Printf("Shouldn't be setting .defaultVersionId directly-1")
+			panic("can't set .defaultversionid directly")
 		}
 		return r.Entity.JustSet(NewPPP(name[1:]), val)
 	}
 
-	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
-		if name == "latestversionid" {
-			log.Printf("Shouldn't be setting .latestVersionId directly-2")
-			panic("can't set .latestversionid directly")
+	if name == "id" || name == "defaultversionid" || name == "defaultversionurl" {
+		if name == "defaultversionid" {
+			log.Printf("Shouldn't be setting .defaultVersionId directly-2")
+			panic("can't set .defaultversionid directly")
 		}
 		return r.Entity.JustSet(NewPPP(name), val)
 	}
 
-	v, err := r.GetLatest()
+	v, err := r.GetDefault()
 	if err != nil {
 		panic(err)
 	}
@@ -88,23 +88,23 @@ func (r *Resource) JustSet(name string, val any) error {
 
 func (r *Resource) SetSave(name string, val any) error {
 	log.VPrintf(4, "SetSave: r(%s).SetSave(%s,%v)", r.UID, name, val)
-	if name[0] == '.' { // Force it to be on the Resource, not latest Version
-		if name == ".latestVersionId" {
-			log.Printf("Shouldn't be setting .latestVersionId directly-1")
-			panic("can't set .latestversionid directly")
+	if name[0] == '.' { // Force it to be on the Resource, not default Version
+		if name == ".defaultVersionId" {
+			log.Printf("Shouldn't be setting .defaultVersionId directly-1")
+			panic("can't set .defaultversionid directly")
 		}
 		return r.Entity.SetSave(name[1:], val)
 	}
 
-	if name == "id" || name == "latestversionid" || name == "latestversionurl" {
-		if name == "latestversionid" {
-			log.Printf("Shouldn't be setting .latestVersionId directly-2")
-			panic("can't set .latestversionid directly")
+	if name == "id" || name == "defaultversionid" || name == "defaultversionurl" {
+		if name == "defaultversionid" {
+			log.Printf("Shouldn't be setting .defaultVersionId directly-2")
+			panic("can't set .defaultversionid directly")
 		}
 		return r.Entity.SetSave(name, val)
 	}
 
-	v, err := r.GetLatest()
+	v, err := r.GetDefault()
 	if err != nil {
 		panic(err)
 	}
@@ -137,25 +137,25 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 }
 
 // Maybe replace error with a panic?
-func (r *Resource) GetLatest() (*Version, error) {
-	val := r.Get("latestversionid")
+func (r *Resource) GetDefault() (*Version, error) {
+	val := r.Get("defaultversionid")
 	if IsNil(val) {
 		return nil, nil
-		// panic("No latest is set")
+		// panic("No default is set")
 	}
 
 	return r.FindVersion(val.(string))
 }
 
-func (r *Resource) SetLatest(newLatest *Version) error {
+func (r *Resource) SetDefault(newDefault *Version) error {
 	// already set
-	if r.Get("latestversionid") == newLatest.UID {
+	if r.Get("defaultversionid") == newDefault.UID {
 		return nil
 	}
-	return r.Entity.SetSave("latestversionid", newLatest.UID)
+	return r.Entity.SetSave("defaultversionid", newDefault.UID)
 }
 
-func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version, error) {
+func (r *Resource) AddVersion(id string, isDefault bool, objs ...Object) (*Version, error) {
 	log.VPrintf(3, ">Enter: AddVersion%s)", id)
 	defer log.VPrintf(3, "<Exit: AddVersion")
 
@@ -174,7 +174,7 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 					id, err)
 			}
 
-			// Increment no matter what since it's "next" not "latest"
+			// Increment no matter what since it's "next" not "default"
 			nextID++
 
 			if v == nil {
@@ -238,16 +238,16 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 			}
 		}
 	}
-	l, ok := v.NewObject["latest"]
+	l, ok := v.NewObject["isdefault"]
 	if !ok {
-		l = latest
+		l = isDefault
 	} else {
-		// if "latest" was part of the data then it's from a user, make
+		// if "isdefault" was part of the data then it's from a user, make
 		// sure they're allowed to set it
 		_, rm := r.GetModels()
-		if l != latest && rm.SetLatest == false {
-			return nil, fmt.Errorf(`"latest" can not be "%v", it is `+
-				`controlled by the server`, latest)
+		if l != isDefault && rm.SetDefault == false {
+			return nil, fmt.Errorf(`"isdefault" can not be "%v", it is `+
+				`controlled by the server`, isDefault)
 		}
 	}
 
@@ -256,8 +256,8 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 		return nil, err
 	}
 	if len(vIDs) == 1 && l == false {
-		return nil, fmt.Errorf(`"latest" can not be "false" since ` +
-			`doing so would result in no latest version`)
+		return nil, fmt.Errorf(`"isdefault" can not be "false" since ` +
+			`doing so would result in no default version`)
 	}
 
 	if err = v.ValidateAndSave(); err != nil {
@@ -265,14 +265,14 @@ func (r *Resource) AddVersion(id string, latest bool, objs ...Object) (*Version,
 	}
 
 	// If we can only have one Version, then set the one we just created
-	// as the latest. Basically the "latest" flag is pointless in this case
+	// as the default. Basically the "default" flag is pointless in this case
 	_, rm := r.GetModels()
 	if rm.MaxVersions == 1 {
-		r.SetLatest(v)
-	} else if latest {
-		err = r.SetLatest(v)
+		r.SetDefault(v)
+	} else if isDefault {
+		err = r.SetDefault(v)
 		if err != nil {
-			err = fmt.Errorf("Error setting latestVersionId: %s", err)
+			err = fmt.Errorf("Error setting defaultVersionId: %s", err)
 			return v, err
 		}
 	}
@@ -323,17 +323,17 @@ func (r *Resource) EnsureMaxVersions() error {
 	}
 	PanicIf(len(vIDs) == 0, "Query can't be empty")
 
-	tmp := r.Get("latestversionid")
-	latestID := NotNilString(&tmp)
+	tmp := r.Get("defaultversionid")
+	defaultID := NotNilString(&tmp)
 
 	// Starting with the oldest, keep deleting until we reach the max
 	// number of Versions allowed. Technically, this should always just
 	// delete 1, but ya never know. Also, skip the one that's tagged
-	// as "latest" since that one is special
+	// as "default" since that one is special
 	count := len(vIDs)
 	for count > rm.MaxVersions {
-		// Skip the "latest" Version
-		if vIDs[0] != latestID {
+		// Skip the "default" Version
+		if vIDs[0] != defaultID {
 			err = DoOne(r.tx, `DELETE FROM Versions
 					WHERE ResourceSID=? AND UID=?`, r.DbSID, vIDs[0])
 			if err != nil {

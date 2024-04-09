@@ -76,8 +76,8 @@ func TestBasicInline(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-          "latestversionid": "v2",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+          "defaultversionid": "v2",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
           "versions": {
             "v1": {
@@ -89,7 +89,7 @@ func TestBasicInline(t *testing.T) {
               "id": "v2",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
-              "latest": true
+              "isdefault": true
             }
           },
           "versionscount": 2,
@@ -109,8 +109,8 @@ func TestBasicInline(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2?meta",
-          "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
+          "defaultversionid": "v1.1",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
 
           "versions": {
             "v1": {
@@ -122,7 +122,7 @@ func TestBasicInline(t *testing.T) {
               "id": "v1.1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
-              "latest": true
+              "isdefault": true
             }
           },
           "versionscount": 2,
@@ -146,15 +146,15 @@ func TestBasicInline(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
-          "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
-              "latest": true
+              "isdefault": true
             }
           },
           "versionscount": 1,
@@ -336,13 +336,13 @@ func TestResourceInline(t *testing.T) {
 
 	// /dirs/d1/files/f1-proxy/v1 - resource
 	//                        /v2 - URL
-	//                        /v3 - ProxyURL  <- latest
+	//                        /v3 - ProxyURL  <- default
 	// /dirs/d1/files/f2-url/v1 - resource
 	//                      /v2 - ProxyURL
-	//                      /v3 - URL  <- latest
+	//                      /v3 - URL  <- default
 	// /dirs/d1/files/f3-resource/v1 - ProxyURL
 	//                           /v2 - URL
-	//                           /v3 - resource  <- latest
+	//                           /v3 - resource  <- default
 
 	tests := []struct {
 		Name string
@@ -365,7 +365,7 @@ func TestResourceInline(t *testing.T) {
     "d1": {
       "files": {
         "f1-proxy": {
-          "latestversionid": "v3",
+          "defaultversionid": "v3",
           "filebase64": "aGVsbG8tUHJveHk=",
           "versions": {
             "v1": {
@@ -381,7 +381,7 @@ func TestResourceInline(t *testing.T) {
           "versionscount": 3,
         },
         "f2-url": {
-          "latestversionid": "v3",
+          "defaultversionid": "v3",
           "fileurl": "http://localhost:8181/EMPTY-URL",
           "versions": {
             "v1": {
@@ -397,7 +397,7 @@ func TestResourceInline(t *testing.T) {
           "versionscount": 3,
         },
         "f3-resource": {
-          "latestversionid": "v3",
+          "defaultversionid": "v3",
           "filebase64": "SGVsbG8gd29ybGQhIHYz",
           "versions": {
             "v1": {
@@ -429,7 +429,7 @@ func TestResourceInline(t *testing.T) {
     "d1": {
       "files": {
         "f1-proxy": {
-          "latestversionid": "v3",
+          "defaultversionid": "v3",
           "filebase64": "aGVsbG8tUHJveHk=",
           "versionscount": 3,
         }
@@ -450,7 +450,7 @@ func TestResourceInline(t *testing.T) {
     "d1": {
       "files": {
         "f1-proxy": {
-          "latestversionid": "v3",
+          "defaultversionid": "v3",
           "versions": {
             "v1": {
               "filebase64": "SGVsbG8gd29ybGQhIHYx"
@@ -492,7 +492,7 @@ func TestResourceInline(t *testing.T) {
 			Name: "Inline - at file + inline file",
 			URL:  "/dirs/d1/files/f1-proxy?meta&inline=file",
 			Exp: `{
-  "latestversionid": "v3",
+  "defaultversionid": "v3",
   "filebase64": "aGVsbG8tUHJveHk=",
   "versionscount": 3,
 }
@@ -502,7 +502,7 @@ func TestResourceInline(t *testing.T) {
 			Name: "Inline - at file + inline file",
 			URL:  "/dirs/d1/files/f1-proxy?meta&inline=versions.file",
 			Exp: `{
-  "latestversionid": "v3",
+  "defaultversionid": "v3",
   "versions": {
     "v1": {
       "filebase64": "SGVsbG8gd29ybGQhIHYx"
@@ -546,8 +546,8 @@ func TestResourceInline(t *testing.T) {
 			`"id"`,
 			`"epoch"`,
 			`"self"`,
-			`"latest"`,
-			`"latestversionurl"`,
+			`"isdefault"`,
+			`"defaultversionurl"`,
 			`"versionsurl"`,
 			`"dirsurl"`,
 		}

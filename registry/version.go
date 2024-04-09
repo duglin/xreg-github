@@ -34,11 +34,11 @@ func (v *Version) Delete(nextVersionID string) error {
 	var err error
 	nextVersion := (*Version)(nil)
 	if nextVersionID == v.UID {
-		return fmt.Errorf("Can't set latestversionid to Version being deleted")
+		return fmt.Errorf("Can't set defaultversionid to Version being deleted")
 	}
 
-	currentLatest := v.Resource.Get("latestversionid")
-	mustChange := (v.UID == currentLatest)
+	currentDefault := v.Resource.Get("defaultversionid")
+	mustChange := (v.UID == currentDefault)
 
 	if nextVersionID == "" && mustChange {
 		results, err := Query(v.tx, `
@@ -49,7 +49,7 @@ func (v *Version) Delete(nextVersionID string) error {
 		defer results.Close()
 
 		if err != nil {
-			return fmt.Errorf("Error finding next latestVersionID for "+
+			return fmt.Errorf("Error finding next defaultVersionID for "+
 				"Resource "+"%q: %s",
 				v.Resource.UID, err)
 		}
@@ -59,17 +59,17 @@ func (v *Version) Delete(nextVersionID string) error {
 		}
 	}
 
-	if nextVersionID != "" && nextVersionID != currentLatest {
+	if nextVersionID != "" && nextVersionID != currentDefault {
 		nextVersion, err = v.Resource.FindVersion(nextVersionID)
 		if err != nil {
 			return err
 		}
 		if nextVersion == nil {
-			return fmt.Errorf("Can't find next latest Version %q",
+			return fmt.Errorf("Can't find next default Version %q",
 				nextVersionID)
 		}
 
-		if err = v.Resource.SetLatest(nextVersion); err != nil {
+		if err = v.Resource.SetDefault(nextVersion); err != nil {
 			return err
 		}
 	}
@@ -90,6 +90,6 @@ func (v *Version) Delete(nextVersionID string) error {
 	return nil
 }
 
-func (v *Version) SetLatest() error {
-	return v.Resource.SetLatest(v)
+func (v *Version) SetDefault() error {
+	return v.Resource.SetDefault(v)
 }

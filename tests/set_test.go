@@ -59,7 +59,7 @@ func TestSetResource(t *testing.T) {
 
 	// /dirs/d1/f1/v1
 
-	// Make sure setting it on the version is seen by res.Latest and res
+	// Make sure setting it on the version is seen by res.Default and res
 	namePP := NewPP().P("name").UI()
 	file.SetSave(namePP, "myName")
 	ver, _ := file.FindVersion("v1")
@@ -98,16 +98,16 @@ func TestSetVersion(t *testing.T) {
 
 	// /dirs/d1/f1/v1
 
-	// Make sure setting it on the version is seen by res.Latest and res
+	// Make sure setting it on the version is seen by res.Default and res
 	namePP := NewPP().P("name").UI()
 	ver.SetSave(namePP, "myName")
 	file, _ = dir.FindResource("files", "f1")
-	l, err := file.GetLatest()
+	l, err := file.GetDefault()
 	xNoErr(t, err)
-	xCheck(t, l != nil, "latest is nil")
+	xCheck(t, l != nil, "default is nil")
 	val := l.Get(namePP)
 	if val != "myName" {
-		t.Errorf("resource.latest.Name is %q, should be 'myName'", val)
+		t.Errorf("resource.default.Name is %q, should be 'myName'", val)
 	}
 	val = file.Get(namePP)
 	if val != "myName" {
@@ -275,7 +275,7 @@ func TestSetLabels(t *testing.T) {
 
 	// Important test
 	// We update v1(ver) after we created v2(ver2). At one point in time
-	// this could cause both versions to be tagged as "latest". Make sure
+	// this could cause both versions to be tagged as "default". Make sure
 	// we don't have that situation. See comment above too
 	err = ver.SetSave(labels.P("vv2").UI(), "v11")
 	xNoErr(t, err)
@@ -304,8 +304,8 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-          "latestversionid": "v2",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+          "defaultversionid": "v2",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
           "labels": {
             "2nd": "3rd",
             "dd-ff": "dash",
@@ -328,7 +328,7 @@ func TestSetLabels(t *testing.T) {
               "id": "v2",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
-              "latest": true,
+              "isdefault": true,
               "labels": {
                 "2nd": "3rd",
                 "dd-ff": "dash",
@@ -352,7 +352,7 @@ func TestSetLabels(t *testing.T) {
 }
 `)
 
-	file.SetLatest(ver)
+	file.SetDefault(ver)
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestSetLabels",
@@ -376,8 +376,8 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-          "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
           "labels": {
             "vv2": "v11"
           },
@@ -387,7 +387,7 @@ func TestSetLabels(t *testing.T) {
               "id": "v1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
-              "latest": true,
+              "isdefault": true,
               "labels": {
                 "vv2": "v11"
               }

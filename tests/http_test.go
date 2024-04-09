@@ -673,7 +673,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -697,18 +697,18 @@ func TestHTTPModel(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -783,7 +783,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": false
         }
       }
@@ -935,7 +935,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": false,
           "attributes": {
             "id": {
@@ -959,18 +959,18 @@ func TestHTTPModel(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -1200,7 +1200,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1224,18 +1224,18 @@ func TestHTTPModel(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -2191,8 +2191,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"Content-Type: ",
 			"xRegistry-id: xxx",
 			"xRegistry-epoch: 1",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/xxx",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/xxx/versions",
@@ -2218,8 +2218,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: xxx",
 			"xRegistry-epoch: 1",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/xxx",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/xxx/versions",
@@ -2241,8 +2241,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 1",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
@@ -2266,8 +2266,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"Content-Type: my/format",
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 2",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
@@ -2288,8 +2288,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"Content-Type: my/format",
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
@@ -2312,8 +2312,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			// "Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 4",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
@@ -2359,8 +2359,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -2376,7 +2376,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "PUT resources - update latest - content",
+		Name:        "PUT resources - update default - content",
 		URL:         "/dirs/dir1/files/f3",
 		Method:      "PUT",
 		ReqHeaders:  []string{},
@@ -2389,8 +2389,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 2",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -2420,8 +2420,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f4",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f4/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f4/versions/1",
 			"xRegistry-name: my doc",
 			"xRegistry-fileurl: http://example.com",
 			"xRegistry-versionscount: 1",
@@ -2433,7 +2433,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - URL",
+		Name:   "PUT resources - update default - URL",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2447,8 +2447,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 3",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -2464,7 +2464,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - URL + body - error",
+		Name:   "PUT resources - update default - URL + body - error",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2478,7 +2478,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - URL - null",
+		Name:   "PUT resources - update default - URL - null",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2492,8 +2492,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 4",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -2507,7 +2507,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "PUT resources - update latest - w/body",
+		Name:        "PUT resources - update default - w/body",
 		URL:         "/dirs/dir1/files/f3",
 		Method:      "PUT",
 		ReqHeaders:  []string{},
@@ -2519,8 +2519,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 5",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
@@ -2534,7 +2534,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - w/body - clear 1 prop",
+		Name:   "PUT resources - update default - w/body - clear 1 prop",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2548,8 +2548,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 6",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
@@ -2562,7 +2562,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - w/body - edit 2 label",
+		Name:   "PUT resources - update default - w/body - edit 2 label",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2577,8 +2577,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 7",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-origin: foo.com",
 			"xRegistry-labels-l1: l1l1",
@@ -2591,7 +2591,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - w/body - edit 1 label",
+		Name:   "PUT resources - update default - w/body - edit 1 label",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2605,8 +2605,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 8",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-origin: foo.com",
 			"xRegistry-labels-l3: 3333",
@@ -2618,7 +2618,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - w/body - delete labels",
+		Name:   "PUT resources - update default - w/body - delete labels",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2632,8 +2632,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 9",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-origin: foo.com",
 			"xRegistry-versionscount: 1",
@@ -2644,7 +2644,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT resources - update latest - w/body - delete+add labels",
+		Name:   "PUT resources - update default - w/body - delete+add labels",
 		URL:    "/dirs/dir1/files/f3",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -2662,8 +2662,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 10",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-origin: foo.com",
 			"xRegistry-labels-foo: foo",
@@ -2698,8 +2698,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-epoch: 11",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-origin: foo.com",
 			"xRegistry-labels-foo: foo",
@@ -2794,16 +2794,16 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 
 	// /dirs/d1/files/f1-proxy/v1 - resource
 	//                        /v2 - URL
-	//                        /v3 - ProxyURL  <- latest
+	//                        /v3 - ProxyURL  <- default
 	// /dirs/d1/files/f2-url/v1 - resource
 	//                      /v2 - ProxyURL
-	//                      /v3 - URL  <- latest
+	//                      /v3 - URL  <- default
 	// /dirs/d1/files/f3-resource/v1 - ProxyURL
 	//                           /v2 - URL
-	//                           /v3 - resource  <- latest
+	//                           /v3 - resource  <- default
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - f1",
+		Name:        "GET resource - default - f1",
 		URL:         "/dirs/d1/files/f1-proxy",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -2813,8 +2813,8 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 			"xRegistry-id: f1-proxy",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
 			"xRegistry-versionscount: 3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
@@ -2829,7 +2829,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - f1/v3",
+		Name:        "GET resource - default - f1/v3",
 		URL:         "/dirs/d1/files/f1-proxy/versions/v3",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -2839,7 +2839,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 			"xRegistry-id: v3",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ResBody: "hello-Proxy",
 	})
@@ -2851,7 +2851,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - f1/v2",
+		Name:        "GET resource - default - f1/v2",
 		URL:         "/dirs/d1/files/f1-proxy/versions/v2",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -2875,7 +2875,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - f2",
+		Name:        "GET resource - default - f2",
 		URL:         "/dirs/d1/files/f2-url",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -2885,8 +2885,8 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 			"xRegistry-id: f2-url",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2-url",
-			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f2-url/versions/v3",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f2-url/versions/v3",
 			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2-url/versions",
 			"xRegistry-versionscount: 3",
@@ -2903,7 +2903,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - f3",
+		Name:        "GET resource - default - f3",
 		URL:         "/dirs/d1/files/f3-resource",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -2913,8 +2913,8 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 			"xRegistry-id: f3-resource",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f3-resource",
-			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f3-resource/versions/v3",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f3-resource/versions/v3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f3-resource/versions",
 			"xRegistry-versionscount: 3",
 		},
@@ -2957,8 +2957,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f1-proxy",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -2980,8 +2980,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f1-proxy",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
   "filebase64": "SGVsbG8gd29ybGQhIHYx",
 
   "versionscount": 1,
@@ -3002,7 +3002,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id: 1",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/1",
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1-proxy/versions/1",
 			"Content-Length: 15",
 		},
@@ -3022,8 +3022,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f1-proxy",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1?meta",
   "filebase64": "SGVsbG8gd29ybGQhIHYx",
 
   "versionscount": 1,
@@ -3051,7 +3051,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v2",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
-  "latest": true
+  "isdefault": true
 }
 `,
 	})
@@ -3069,7 +3069,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:2",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
-			"xRegistry-latest:true",
+			"xRegistry-isdefault:true",
 			"Location:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"Content-Length:10",
@@ -3107,8 +3107,8 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:f1-proxy",
 			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-latestversionid:2",
-			"xRegistry-latestversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
+			"xRegistry-defaultversionid:2",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"xRegistry-versionscount:3",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 		},
@@ -3127,15 +3127,15 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:f1-proxy",
 			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-latestversionid:2",
-			"xRegistry-latestversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
+			"xRegistry-defaultversionid:2",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"xRegistry-versionscount:3",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 		},
 		ResBody: `more data`,
 	})
 
-	// Update latest with fileURL
+	// Update default with fileURL
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT file f1-proxy - use fileurl",
 		URL:        "/dirs/d1/files/f1-proxy?meta",
@@ -3152,8 +3152,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f1-proxy",
   "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
-  "latestversionid": "2",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2?meta",
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2?meta",
   "fileurl": "http://localhost:8181/EMPTY-URL",
 
   "versionscount": 3,
@@ -3162,7 +3162,7 @@ func TestHTTPVersions(t *testing.T) {
 `,
 	})
 
-	// Update latest - delete fileurl, notice no "id" either
+	// Update default - delete fileurl, notice no "id" either
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT file f1-proxy - del fileurl",
 		URL:        "/dirs/d1/files/f1-proxy?meta",
@@ -3177,8 +3177,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f1-proxy",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
-  "latestversionid": "2",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2?meta",
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2?meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3186,7 +3186,7 @@ func TestHTTPVersions(t *testing.T) {
 `,
 	})
 
-	// Update latest - set 'file' and 'fileurl' - error
+	// Update default - set 'file' and 'fileurl' - error
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT file f1-proxy - dup files",
 		URL:        "/dirs/d1/files/f1-proxy?meta",
@@ -3203,7 +3203,7 @@ func TestHTTPVersions(t *testing.T) {
 `,
 	})
 
-	// Update latest - set 'filebase64' and 'fileurl' - error
+	// Update default - set 'filebase64' and 'fileurl' - error
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT file f1-proxy - dup files base64",
 		URL:        "/dirs/d1/files/f1-proxy?meta",
@@ -3220,7 +3220,7 @@ func TestHTTPVersions(t *testing.T) {
 `,
 	})
 
-	// Update latest - with 'filebase64'
+	// Update default - with 'filebase64'
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT file f1-proxy - use base64",
 		URL:        "/dirs/d1/files/f1-proxy?meta",
@@ -3236,8 +3236,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f1-proxy",
   "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy?meta",
-  "latestversionid": "2",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2?meta",
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2?meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3245,7 +3245,7 @@ func TestHTTPVersions(t *testing.T) {
 `,
 	})
 
-	// Get latest
+	// Get default
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:        "GET file f1-proxy - use base64",
 		URL:         "/dirs/d1/files/f1-proxy",
@@ -3258,8 +3258,8 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id: f1-proxy",
 			"xRegistry-epoch: 5",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-latestversionid: 2",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
+			"xRegistry-defaultversionid: 2",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"xRegistry-versionscount: 3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 		},
@@ -3283,7 +3283,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:v1",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v1",
-			"xRegistry-latest:true",
+			"xRegistry-isdefault:true",
 		},
 		ResBody: "Hello world - v1",
 	})
@@ -3304,7 +3304,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:v2",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v2",
-			"xRegistry-latest:true",
+			"xRegistry-isdefault:true",
 		},
 		ResBody: "hello-Proxy",
 	})
@@ -3325,24 +3325,24 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:v3",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v3",
-			"xRegistry-latest:true",
+			"xRegistry-isdefault:true",
 			"xRegistry-fileurl:http://localhost:8181/EMPTY-URL",
 		},
 		ResBody: "",
 	})
 
-	// testing of "latest" processing
+	// testing of "isdefault" processing
 
 	// Set up the following:
 	// /dirs/d1/files/ff1-proxy/v1 - resource
 	//                        /v2 - URL
-	//                        /v3 - ProxyURL  <- latest
+	//                        /v3 - ProxyURL  <- default
 	// /dirs/d1/files/ff2-url/v1 - resource
 	//                      /v2 - ProxyURL
-	//                      /v3 - URL  <- latest
+	//                      /v3 - URL  <- default
 	// /dirs/d1/files/ff3-resource/v1 - ProxyURL
 	//                           /v2 - URL
-	//                           /v3 - resource  <- latest
+	//                           /v3 - resource  <- default
 
 	// Now create the ff1-proxy variants
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -3361,7 +3361,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v1?meta",
-  "latest": true
+  "isdefault": true
 }
 `,
 	})
@@ -3382,7 +3382,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v2",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v2?meta",
-  "latest": true,
+  "isdefault": true,
   "fileurl": "http://localhost:8181/EMPTY-URL"
 }
 `,
@@ -3404,7 +3404,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v3",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3?meta",
-  "latest": true
+  "isdefault": true
 }
 `,
 	})
@@ -3452,7 +3452,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v1?meta",
-  "latest": true
+  "isdefault": true
 }
 `,
 	})
@@ -3473,7 +3473,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v2",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v2?meta",
-  "latest": true
+  "isdefault": true
 }
 `,
 	})
@@ -3494,7 +3494,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v3",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v3?meta",
-  "latest": true,
+  "isdefault": true,
   "fileurl": "http://localhost:8181/EMPTY-URL"
 }
 `,
@@ -3543,7 +3543,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v1?meta",
-  "latest": true
+  "isdefault": true
 }
 `,
 	})
@@ -3564,7 +3564,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v2",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v2?meta",
-  "latest": true,
+  "isdefault": true,
   "fileurl": "http://localhost:8181/EMPTY-URL"
 }
 `,
@@ -3586,7 +3586,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v3",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3?meta",
-  "latest": true
+  "isdefault": true
 }
 `,
 	})
@@ -3619,7 +3619,7 @@ func TestHTTPVersions(t *testing.T) {
 	// Now do some testing
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - ff1",
+		Name:        "GET resource - default - ff1",
 		URL:         "/dirs/d1/files/ff1-proxy",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -3629,8 +3629,8 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id: ff1-proxy",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff1-proxy",
-			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
 			"xRegistry-versionscount: 3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions",
 			"Content-Location: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
@@ -3639,7 +3639,7 @@ func TestHTTPVersions(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - ff1/v3",
+		Name:        "GET resource - default - ff1/v3",
 		URL:         "/dirs/d1/files/ff1-proxy/versions/v3",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -3649,13 +3649,13 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id: v3",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ResBody: "hello-Proxy",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - ff1/v2",
+		Name:        "GET resource - default - ff1/v2",
 		URL:         "/dirs/d1/files/ff1-proxy/versions/v2",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -3672,7 +3672,7 @@ func TestHTTPVersions(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - ff2",
+		Name:        "GET resource - default - ff2",
 		URL:         "/dirs/d1/files/ff2-url",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -3682,8 +3682,8 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id: ff2-url",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff2-url",
-			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/ff2-url/versions/v3",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff2-url/versions/v3",
 			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff2-url/versions",
 			"xRegistry-versionscount: 3",
@@ -3693,7 +3693,7 @@ func TestHTTPVersions(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "GET resource - latest - ff3",
+		Name:        "GET resource - default - ff3",
 		URL:         "/dirs/d1/files/ff3-resource",
 		Method:      "GET",
 		ReqHeaders:  []string{},
@@ -3703,8 +3703,8 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id: ff3-resource",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff3-resource",
-			"xRegistry-latestversionid: v3",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff3-resource/versions",
 			"xRegistry-versionscount: 3",
 		},
@@ -3730,7 +3730,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:v1",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/v1",
-			"xRegistry-latest:true",
+			"xRegistry-isdefault:true",
 		},
 		ResBody: "Hello world - v1",
 	})
@@ -3754,7 +3754,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:1",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/1",
-			"xRegistry-latest:true",
+			"xRegistry-isdefault:true",
 		},
 		ResBody: "Hello world - v2",
 	})
@@ -3772,8 +3772,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f5",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f5?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1?meta",
   "contenttype": "my/format2",
 
   "versionscount": 2,
@@ -3797,8 +3797,8 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-id:f5",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5",
-			"xRegistry-latestversionid:1",
-			"xRegistry-latestversionurl:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f5/versions/1",
 			"xRegistry-versionscount:2",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f5/versions",
 		},
@@ -3838,8 +3838,8 @@ func TestHTTPVersions(t *testing.T) {
   "id": "f5",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f5?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1?meta",
   "contenttype": "my/format2",
 
   "versionscount": 2,
@@ -4477,7 +4477,7 @@ func TestHTTPResources(t *testing.T) {
   "id": "v1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
-  "latest": true
+  "isdefault": true
 }
 `)
 
@@ -4487,7 +4487,7 @@ func TestHTTPResources(t *testing.T) {
   "id": "v1",
   "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
-  "latest": true,
+  "isdefault": true,
   "mystring": "hello"
 }
 `)
@@ -4507,7 +4507,7 @@ func TestHTTPResources(t *testing.T) {
   "id": "v1",
   "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
-  "latest": true,
+  "isdefault": true,
   "file": "fff",
   "mystring": "foo",
   "object": {}
@@ -4535,7 +4535,7 @@ func TestHTTPResources(t *testing.T) {
   "id": "v1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
-  "latest": true,
+  "isdefault": true,
   "file": "fff",
   "mystring": "foo",
   "object": {
@@ -4613,8 +4613,8 @@ func TestHTTPNonStrings(t *testing.T) {
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 1",
 			"Content-Type:text/plain; charset=utf-8",
@@ -4635,8 +4635,8 @@ func TestHTTPNonStrings(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "ext": true,
   "ifext": 666,
   "mybool": true,
@@ -4691,8 +4691,8 @@ func TestHTTPNonStrings(t *testing.T) {
 	})
 }
 
-func TestHTTPLatest(t *testing.T) {
-	reg := NewRegistry("TestHTTPLatest")
+func TestHTTPDefault(t *testing.T) {
+	reg := NewRegistry("TestHTTPDefault")
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
@@ -4702,26 +4702,26 @@ func TestHTTPLatest(t *testing.T) {
 	reg.AddGroup("dirs", "d1")
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1 - latest = false",
+		Name:   "PUT file f1 - default = false",
 		URL:    "/dirs/d1/files/f1",
 		Method: "PUT",
 		ReqHeaders: []string{
-			"xRegistry-latest: false",
+			"xRegistry-isdefault: false",
 		},
 		ReqBody:     `hello`,
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody: `Error processing resource(f1): "latest" can not be "false" since doing so would result in no latest version
+		ResBody: `Error processing resource(f1): "isdefault" can not be "false" since doing so would result in no default version
 `,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1 - latest = true",
+		Name:   "PUT file f1 - isdefault = true",
 		URL:    "/dirs/d1/files/f1",
 		Method: "PUT",
 		ReqHeaders: []string{
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ReqBody:     `hello`,
 		Code:        201,
@@ -4732,8 +4732,8 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 		},
@@ -4741,7 +4741,7 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "POST file f1 - no latest",
+		Name:        "POST file f1 - no isdefault",
 		URL:         "/dirs/d1/files/f1",
 		Method:      "POST",
 		ReqHeaders:  []string{},
@@ -4754,17 +4754,17 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-id: 2",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ResBody: `hello`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/1 - latest = true",
+		Name:   "PUT file f1/1 - isdefault = true",
 		URL:    "/dirs/d1/files/f1/versions/1",
 		Method: "PUT",
 		ReqHeaders: []string{
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ReqBody:     `hello`,
 		Code:        200,
@@ -4774,48 +4774,48 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-id: 1",
 			"xRegistry-epoch: 2",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ResBody: `hello`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/1 - latest = false",
+		Name:   "PUT file f1/1 - isdefault = false",
 		URL:    "/dirs/d1/files/f1/versions/1",
 		Method: "PUT",
 		ReqHeaders: []string{
-			"xRegistry-latest: false",
+			"xRegistry-isdefault: false",
 		},
 		ReqBody:     `hello`,
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody:     `Error processing resource: "latest" can not be "false" since doing so would result in no latest version` + "\n",
+		ResBody:     `Error processing resource: "isdefault" can not be "false" since doing so would result in no default version` + "\n",
 	})
 
-	rm.SetSetLatest(false)
+	rm.SetSetDefault(false)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/2 - latest = true - diff server",
+		Name:   "PUT file f1/2 - isdefault = true - diff server",
 		URL:    "/dirs/d1/files/f1/versions/2",
 		Method: "PUT",
 		ReqHeaders: []string{
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ReqBody:     `hello`,
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody: `"latest" can not be "true", it is controlled by the server
+		ResBody: `"isdefault" can not be "true", it is controlled by the server
 `,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/1 - latest = true - match server",
+		Name:   "PUT file f1/1 - isdefault = true - match server",
 		URL:    "/dirs/d1/files/f1/versions/1",
 		Method: "PUT",
 		ReqHeaders: []string{
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ReqBody:     `hello`,
 		Code:        200,
@@ -4825,13 +4825,13 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-id: 1",
 			"xRegistry-epoch: 3",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ResBody: `hello`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "PUT file f1/1 - no latest",
+		Name:        "PUT file f1/1 - no isdefault",
 		URL:         "/dirs/d1/files/f1/versions/1",
 		Method:      "PUT",
 		ReqHeaders:  []string{},
@@ -4843,13 +4843,13 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-id: 1",
 			"xRegistry-epoch: 4",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
-			"xRegistry-latest: true",
+			"xRegistry-isdefault: true",
 		},
 		ResBody: `hello`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "PUT file f1/2 - no latest",
+		Name:        "PUT file f1/2 - no isdefault",
 		URL:         "/dirs/d1/files/f1/versions/2",
 		Method:      "PUT",
 		ReqHeaders:  []string{},
@@ -4865,63 +4865,63 @@ func TestHTTPLatest(t *testing.T) {
 		ResBody: `hello`,
 	})
 
-	// Now test ?setlatestversid stuff
+	// Now test ?setdefaultversionid stuff
 	///////////////////////////////
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:    "POST file f1?setlatest= not allowed",
-		URL:     "/dirs/d1/files/f1?setlatestversionid",
+		Name:    "POST file f1?setdefault= not allowed",
+		URL:     "/dirs/d1/files/f1?setdefaultversionid",
 		Method:  "POST",
 		Code:    400,
-		ResBody: `Resource "files" doesn't allow setting of "latestversionid"` + "\n",
+		ResBody: `Resource "files" doesn't allow setting of "defaultversionid"` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:    "POST file f1?meta&setlatest= not allowed",
-		URL:     "/dirs/d1/files/f1?&meta&setlatestversionid",
+		Name:    "POST file f1?meta&setdefault= not allowed",
+		URL:     "/dirs/d1/files/f1?&meta&setdefaultversionid",
 		Method:  "POST",
 		Code:    400,
-		ResBody: `Resource "files" doesn't allow setting of "latestversionid"` + "\n",
+		ResBody: `Resource "files" doesn't allow setting of "defaultversionid"` + "\n",
 	})
 
 	// Enable client-side setting
-	rm.SetSetLatest(true)
+	rm.SetSetDefault(true)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:    "POST file f1?setlatest - empty",
-		URL:     "/dirs/d1/files/f1?setlatestversionid",
+		Name:    "POST file f1?setdefault - empty",
+		URL:     "/dirs/d1/files/f1?setdefaultversionid",
 		Method:  "POST",
 		Code:    400,
-		ResBody: `"setlatestversionid" must not be empty` + "\n",
+		ResBody: `"setdefaultversionid" must not be empty` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:    "POST file f1?setlatest= - empty",
-		URL:     "/dirs/d1/files/f1?setlatestversionid=",
+		Name:    "POST file f1?setdefault= - empty",
+		URL:     "/dirs/d1/files/f1?setdefaultversionid=",
 		Method:  "POST",
 		Code:    400,
-		ResBody: `"setlatestversionid" must not be empty` + "\n",
+		ResBody: `"setdefaultversionid" must not be empty` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:    "POST file f1?meta&setlatest - empty",
-		URL:     "/dirs/d1/files/f1?meta&setlatestversionid",
+		Name:    "POST file f1?meta&setdefault - empty",
+		URL:     "/dirs/d1/files/f1?meta&setdefaultversionid",
 		Method:  "POST",
 		Code:    400,
-		ResBody: `"setlatestversionid" must not be empty` + "\n",
+		ResBody: `"setdefaultversionid" must not be empty` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:    "POST file f1?meta&setlatest= - empty",
-		URL:     "/dirs/d1/files/f1?meta&setlatestversionid=",
+		Name:    "POST file f1?meta&setdefault= - empty",
+		URL:     "/dirs/d1/files/f1?meta&setdefaultversionid=",
 		Method:  "POST",
 		Code:    400,
-		ResBody: `"setlatestversionid" must not be empty` + "\n",
+		ResBody: `"setdefaultversionid" must not be empty` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST file f1?setlatest=1 - no change",
-		URL:    "/dirs/d1/files/f1?setlatestversionid=1",
+		Name:   "POST file f1?setdefault=1 - no change",
+		URL:    "/dirs/d1/files/f1?setdefaultversionid=1",
 		Method: "POST",
 		ReqHeaders: []string{
 			`xRegistry-id: bogus`,
@@ -4934,8 +4934,8 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 4",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount: 2",
 			"Content-Length: 5",
@@ -4945,8 +4945,8 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST file f1?meta&setlatest=1 - no change",
-		URL:    "/dirs/d1/files/f1?meta&setlatestversionid=1",
+		Name:   "POST file f1?meta&setdefault=1 - no change",
+		URL:    "/dirs/d1/files/f1?meta&setdefaultversionid=1",
 		Method: "POST",
 		ReqHeaders: []string{
 			`xRegistry-id: bogus`,
@@ -4961,8 +4961,8 @@ func TestHTTPLatest(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -4971,8 +4971,8 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST file f1?setlatest=1 - set to 2",
-		URL:    "/dirs/d1/files/f1?setlatestversionid=2",
+		Name:   "POST file f1?setdefault=1 - set to 2",
+		URL:    "/dirs/d1/files/f1?setdefaultversionid=2",
 		Method: "POST",
 		ReqHeaders: []string{
 			`xRegistry-id: bogus`,
@@ -4985,8 +4985,8 @@ func TestHTTPLatest(t *testing.T) {
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 2",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-latestversionid: 2",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"xRegistry-defaultversionid: 2",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/2",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount: 2",
 			"Content-Length: 5",
@@ -4996,8 +4996,8 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST file f1?setlatest=1 - set back to 1",
-		URL:    "/dirs/d1/files/f1?meta&setlatestversionid=1",
+		Name:   "POST file f1?setdefault=1 - set back to 1",
+		URL:    "/dirs/d1/files/f1?meta&setdefaultversionid=1",
 		Method: "POST",
 		ReqHeaders: []string{
 			`xRegistry-id: bogus`,
@@ -5012,8 +5012,8 @@ func TestHTTPLatest(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -5023,8 +5023,8 @@ func TestHTTPLatest(t *testing.T) {
 
 	// errors
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST setlatest bad group type",
-		URL:        "/badgroup/d1/files/f1?meta&setlatestversionid=1",
+		Name:       "POST setdefault bad group type",
+		URL:        "/badgroup/d1/files/f1?meta&setdefaultversionid=1",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
 		Code:       404,
@@ -5033,8 +5033,8 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST setlatest bad group",
-		URL:        "/dirs/dx/files/f1?meta&setlatestversionid=1",
+		Name:       "POST setdefault bad group",
+		URL:        "/dirs/dx/files/f1?meta&setdefaultversionid=1",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
 		Code:       404,
@@ -5043,8 +5043,8 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST setlatest bad resource type",
-		URL:        "/dirs/d1/badfiles/f1?meta&setlatestversionid=1",
+		Name:       "POST setdefault bad resource type",
+		URL:        "/dirs/d1/badfiles/f1?meta&setdefaultversionid=1",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
 		Code:       404,
@@ -5053,8 +5053,8 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST setlatest bad resource",
-		URL:        "/dirs/d1/files/xxf1?meta&setlatestversionid=1",
+		Name:       "POST setdefault bad resource",
+		URL:        "/dirs/d1/files/xxf1?meta&setdefaultversionid=1",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
 		Code:       404,
@@ -5063,8 +5063,8 @@ func TestHTTPLatest(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST setlatest bad version",
-		URL:        "/dirs/d1/files/f1?meta&setlatestversionid=3",
+		Name:       "POST setdefault bad version",
+		URL:        "/dirs/d1/files/f1?meta&setdefaultversionid=3",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
 		Code:       404,
@@ -5383,8 +5383,8 @@ func TestHTTPDelete(t *testing.T) {
     "id": "f6",
     "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/f6?meta",
-    "latestversionid": "v6.1",
-    "latestversionurl": "http://localhost:8181/dirs/d1/files/f6/versions/v6.1?meta",
+    "defaultversionid": "v6.1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f6/versions/v6.1?meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d1/files/f6/versions"
@@ -5424,8 +5424,8 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v5",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
   "versionscount": 10,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -5465,13 +5465,13 @@ func TestHTTPDelete(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions", `[]`, 204, "") // No-op
 
-	// Make sure we have some left, and latest is still v5
+	// Make sure we have some left, and default is still v5
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v5",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
   "versions": {
     "v10": {
@@ -5488,7 +5488,7 @@ func TestHTTPDelete(t *testing.T) {
       "id": "v5",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
-      "latest": true
+      "isdefault": true
     },
     "v6": {
       "id": "v6",
@@ -5506,26 +5506,26 @@ func TestHTTPDelete(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v5?setlatestversionid=v3",
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v5?setdefaultversionid=v3",
 		``, 204, "")
 
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=v9",
-		``, 400, "Can't set latestversionid to Version being deleted\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setdefaultversionid=v9",
+		``, 400, "Can't set defaultversionid to Version being deleted\n")
 
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=vx",
-		``, 400, "Can't find next latest Version \"vx\"\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setdefaultversionid=vx",
+		``, 400, "Can't find next default Version \"vx\"\n")
 
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=v3",
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setdefaultversionid=v3",
 		``, 204, "")
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setlatestversionid=vx",
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v9?setdefaultversionid=vx",
 		``, 404, "Version \"v9\" not found\n")
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v3",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
+  "defaultversionid": "v3",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
   "versions": {
     "v10": {
@@ -5537,7 +5537,7 @@ func TestHTTPDelete(t *testing.T) {
       "id": "v3",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
-      "latest": true
+      "isdefault": true
     },
     "v6": {
       "id": "v6",
@@ -5552,18 +5552,18 @@ func TestHTTPDelete(t *testing.T) {
 
 	f1.AddVersion("v1", false)
 	// bad next
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=vx", `[{"id":"v6"}]`, 400, "Can't find next latest Version \"vx\"\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setdefaultversionid=vx", `[{"id":"v6"}]`, 400, "Can't find next default Version \"vx\"\n")
 	// next = being deleted
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=v6", `[{"id":"v6"}]`, 400, "Can't set latestversionid to Version being deleted\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setdefaultversionid=v6", `[{"id":"v6"}]`, 400, "Can't set defaultversionid to Version being deleted\n")
 
-	// delete non-latest, change latest
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=v10", `[{"id":"v6"}]`, 204, "")
+	// delete non-default, change default
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setdefaultversionid=v10", `[{"id":"v6"}]`, 204, "")
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v10",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
+  "defaultversionid": "v10",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
   "versions": {
     "v1": {
@@ -5575,7 +5575,7 @@ func TestHTTPDelete(t *testing.T) {
       "id": "v10",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
-      "latest": true
+      "isdefault": true
     },
     "v3": {
       "id": "v3",
@@ -5588,14 +5588,14 @@ func TestHTTPDelete(t *testing.T) {
 }
 `)
 
-	// delete non-latest, latest not move
+	// delete non-default, default not move
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions", `[{"id":"v3"}]`, 204, "")
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v10",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
+  "defaultversionid": "v10",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
   "versions": {
     "v1": {
@@ -5607,27 +5607,27 @@ func TestHTTPDelete(t *testing.T) {
       "id": "v10",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
-      "latest": true
+      "isdefault": true
     }
   },
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setlatestversionid=v1", `[]`, 204, "")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setdefaultversionid=v1", `[]`, 204, "")
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?meta&inline", "", 200, `{
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
 
   "versions": {
     "v1": {
       "id": "v1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
-      "latest": true
+      "isdefault": true
     },
     "v10": {
       "id": "v10",
@@ -5734,8 +5734,8 @@ func TestHTTPRequiredFields(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "description": "testingdesc3",
   "clireq3": "testing3",
 
@@ -5787,8 +5787,8 @@ func TestHTTPRequiredFields(t *testing.T) {
 			"xRegistry-description: desctesting",
 			"xRegistry-epoch: 1",
 			"xRegistry-id: f2",
-			"xRegistry-latestversionid: 1",
-			"xRegistry-latestversionurl: http://localhost:8181/dirs/d1/files/f2/versions/1",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f2/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2/versions",
@@ -5813,8 +5813,8 @@ func TestHTTPRequiredFields(t *testing.T) {
   "id": "f2",
   "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f2?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1?meta",
   "description": "desctesting3",
   "clireq3": "testing4",
 
@@ -5860,7 +5860,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	xNoErr(t, err)
 
-	// plural, singular, versions, verId bool, latest bool, hasDocument bool
+	// plural, singular, versions, verId bool, isDefault bool, hasDocument bool
 	_, err = gm.AddResourceModel("bars", "bar", 0, true, true, true)
 	rm, err := gm.AddResourceModel("files", "file", 0, true, true, false)
 	xNoErr(t, err)
@@ -5902,8 +5902,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "b1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/bars/b1?meta",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/bars/b1/versions"
@@ -5921,8 +5921,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "5bd549c7",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/5bd549c7",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/5bd549c7/versions/1",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/5bd549c7/versions/1",
   "test": "foo",
 
   "versionscount": 1,
@@ -5931,7 +5931,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 `})
 
 	// Make sure that each type of Resource (w/ and w/o hasdoc) has the
-	// correct self/latestversionurl URL (meaing w/ and w/o ?meta)
+	// correct self/defaultversionurl URL (meaing w/ and w/o ?meta)
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/dirs/d1?inline",
 		Method: "GET",
@@ -5952,15 +5952,15 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
       "id": "b1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/bars/b1?meta",
-      "latestversionid": "1",
-      "latestversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
+      "defaultversionid": "1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
 
       "versions": {
         "1": {
           "id": "1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/bars/b1/versions/1?meta",
-          "latest": true
+          "isdefault": true
         }
       },
       "versionscount": 1,
@@ -5974,8 +5974,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
       "id": "de0fe3c9",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/de0fe3c9",
-      "latestversionid": "1",
-      "latestversionurl": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions/1",
+      "defaultversionid": "1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions/1",
       "test": "foo",
 
       "versions": {
@@ -5983,7 +5983,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
           "id": "1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions/1",
-          "latest": true,
+          "isdefault": true,
           "test": "foo"
         }
       },
@@ -6002,8 +6002,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
   "foo": "test",
 
   "versionscount": 1,
@@ -6016,8 +6016,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "f1",
   "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1",
-  "latestversionid": "1",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
   "foo2": "test2",
 
   "versionscount": 1,
@@ -6030,7 +6030,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "2",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/2",
-  "latest": true,
+  "isdefault": true,
   "foo2": "test2"
 }
 `)
@@ -6040,7 +6040,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "3",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
-  "latest": true,
+  "isdefault": true,
   "foo3": "test3"
 }
 `)
@@ -6050,7 +6050,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "3",
   "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
-  "latest": true,
+  "isdefault": true,
   "foo3.1": "test3.1"
 }
 `)
@@ -6060,7 +6060,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "id": "4",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/4",
-  "latest": true,
+  "isdefault": true,
   "foo4": "test4"
 }
 `)
@@ -6309,7 +6309,7 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 		Singular:     "file",
 		MaxVersions:  0,
 		SetVersionId: true,
-		SetLatest:    true,
+		SetDefault:   true,
 		HasDocument:  true,
 		ReadOnly:     true,
 	})
@@ -6338,8 +6338,8 @@ func TestHTTPReadOnlyResource(t *testing.T) {
     "id": "f1",
     "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
-    "latestversionid": "v1",
-    "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+    "defaultversionid": "v1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -6351,7 +6351,7 @@ func TestHTTPReadOnlyResource(t *testing.T) {
   "id": "v1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
-  "latest": true
+  "isdefault": true
 }
 `)
 

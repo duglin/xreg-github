@@ -221,7 +221,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 			// TODO will need to sort the maps before diff'ing
 			str := ""
 			str = fmt.Sprintf("%v", propValue)
-			if name == "self" || name == "latestversionurl" {
+			if name == "self" || name == "defaultversionurl" {
 				xCheckEqual(t, "", value[0]+"?meta", str)
 				break
 			}

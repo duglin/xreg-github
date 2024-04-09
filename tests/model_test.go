@@ -1092,7 +1092,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1116,18 +1116,18 @@ func TestResourceModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -1249,7 +1249,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1273,18 +1273,18 @@ func TestResourceModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -1481,7 +1481,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1505,18 +1505,18 @@ func TestResourceModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -1778,7 +1778,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1802,18 +1802,18 @@ func TestResourceModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -2076,7 +2076,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -2100,18 +2100,18 @@ func TestResourceModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -2307,7 +2307,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -2331,18 +2331,18 @@ func TestResourceModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -2414,7 +2414,7 @@ func TestResourceModelCreate(t *testing.T) {
 						Singular:     "file",
 						MaxVersions:  6,
 						SetVersionId: false,
-						SetLatest:    false,
+						SetDefault:   false,
 						// Note that hasdocument is missing -> false per golang
 					},
 				},
@@ -2568,7 +2568,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 6,
           "setversionid": false,
-          "setlatest": false,
+          "setdefault": false,
           "hasdocument": false,
           "attributes": {
             "id": {
@@ -2592,18 +2592,18 @@ func TestResourceModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -2828,7 +2828,7 @@ func TestResourceModelCreate(t *testing.T) {
             "singular": "file",
             "maxversions": 6,
             "setversionid": false,
-            "setlatest": false,
+            "setdefault": false,
             "hasdocument": false,
             "attributes": {
               "id": {
@@ -2852,18 +2852,18 @@ func TestResourceModelCreate(t *testing.T) {
                 "readonly": true,
                 "serverrequired": true
               },
-              "latest": {
-                "name": "latest",
+              "isdefault": {
+                "name": "isdefault",
                 "type": "boolean",
                 "readonly": true
               },
-              "latestversionid": {
-                "name": "latestversionid",
+              "defaultversionid": {
+                "name": "defaultversionid",
                 "type": "string",
                 "readonly": true
               },
-              "latestversionurl": {
-                "name": "latestversionurl",
+              "defaultversionurl": {
+                "name": "defaultversionurl",
                 "type": "url",
                 "readonly": true
               },
@@ -2928,8 +2928,8 @@ func TestResourceModelCreate(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/dir1/files/f1",
-          "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
 
           "versionscount": 1,
           "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -2955,7 +2955,7 @@ func TestResourceModelCreate(t *testing.T) {
 						Singular:     "file",
 						MaxVersions:  6,
 						SetVersionId: false,
-						SetLatest:    false,
+						SetDefault:   false,
 					},
 				},
 			},
@@ -3109,7 +3109,7 @@ func TestResourceModelCreate(t *testing.T) {
             "singular": "file",
             "maxversions": 6,
             "setversionid": false,
-            "setlatest": false,
+            "setdefault": false,
             "hasdocument": false,
             "attributes": {
               "id": {
@@ -3133,18 +3133,18 @@ func TestResourceModelCreate(t *testing.T) {
                 "readonly": true,
                 "serverrequired": true
               },
-              "latest": {
-                "name": "latest",
+              "isdefault": {
+                "name": "isdefault",
                 "type": "boolean",
                 "readonly": true
               },
-              "latestversionid": {
-                "name": "latestversionid",
+              "defaultversionid": {
+                "name": "defaultversionid",
                 "type": "string",
                 "readonly": true
               },
-              "latestversionurl": {
-                "name": "latestversionurl",
+              "defaultversionurl": {
+                "name": "defaultversionurl",
                 "type": "url",
                 "readonly": true
               },
@@ -3703,7 +3703,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm1",
           "maxversions": 0,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -3727,18 +3727,18 @@ func TestMultModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -3792,7 +3792,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm2",
           "maxversions": 1,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -3816,18 +3816,18 @@ func TestMultModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -3949,7 +3949,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm1",
           "maxversions": 2,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -3973,18 +3973,18 @@ func TestMultModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -4038,7 +4038,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm2",
           "maxversions": 3,
           "setversionid": true,
-          "setlatest": true,
+          "setdefault": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -4062,18 +4062,18 @@ func TestMultModelCreate(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
-            "latest": {
-              "name": "latest",
+            "isdefault": {
+              "name": "isdefault",
               "type": "boolean",
               "readonly": true
             },
-            "latestversionid": {
-              "name": "latestversionid",
+            "defaultversionid": {
+              "name": "defaultversionid",
               "type": "string",
               "readonly": true
             },
-            "latestversionurl": {
-              "name": "latestversionurl",
+            "defaultversionurl": {
+              "name": "defaultversionurl",
               "type": "url",
               "readonly": true
             },
@@ -4316,7 +4316,7 @@ func TestMultModel2Create(t *testing.T) {
             "singular": "file",
             "maxversions": 2,
             "setversionid": true,
-            "setlatest": false,
+            "setdefault": false,
             "hasdocument": true,
             "attributes": {
               "id": {
@@ -4340,18 +4340,18 @@ func TestMultModel2Create(t *testing.T) {
                 "readonly": true,
                 "serverrequired": true
               },
-              "latest": {
-                "name": "latest",
+              "isdefault": {
+                "name": "isdefault",
                 "type": "boolean",
                 "readonly": true
               },
-              "latestversionid": {
-                "name": "latestversionid",
+              "defaultversionid": {
+                "name": "defaultversionid",
                 "type": "string",
                 "readonly": true
               },
-              "latestversionurl": {
-                "name": "latestversionurl",
+              "defaultversionurl": {
+                "name": "defaultversionurl",
                 "type": "url",
                 "readonly": true
               },
@@ -4473,7 +4473,7 @@ func TestMultModel2Create(t *testing.T) {
             "singular": "file",
             "maxversions": 0,
             "setversionid": false,
-            "setlatest": true,
+            "setdefault": true,
             "hasdocument": true,
             "attributes": {
               "id": {
@@ -4497,18 +4497,18 @@ func TestMultModel2Create(t *testing.T) {
                 "readonly": true,
                 "serverrequired": true
               },
-              "latest": {
-                "name": "latest",
+              "isdefault": {
+                "name": "isdefault",
                 "type": "boolean",
                 "readonly": true
               },
-              "latestversionid": {
-                "name": "latestversionid",
+              "defaultversionid": {
+                "name": "defaultversionid",
                 "type": "string",
                 "readonly": true
               },
-              "latestversionurl": {
-                "name": "latestversionurl",
+              "defaultversionurl": {
+                "name": "defaultversionurl",
                 "type": "url",
                 "readonly": true
               },
@@ -4573,8 +4573,8 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs1/d1/files/f1?meta",
-          "latestversionid": "v2",
-          "latestversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
+          "defaultversionid": "v2",
+          "defaultversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
 
           "versions": {
             "v1": {
@@ -4586,7 +4586,7 @@ func TestMultModel2Create(t *testing.T) {
               "id": "v2",
               "epoch": 1,
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
-              "latest": true
+              "isdefault": true
             }
           },
           "versionscount": 2,
@@ -4606,8 +4606,8 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs1/d2/files/f2?meta",
-          "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
+          "defaultversionid": "v1.1",
+          "defaultversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
 
           "versions": {
             "v1": {
@@ -4619,7 +4619,7 @@ func TestMultModel2Create(t *testing.T) {
               "id": "v1.1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
-              "latest": true
+              "isdefault": true
             }
           },
           "versionscount": 2,
@@ -4643,15 +4643,15 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
-          "latestversionid": "v1",
-          "latestversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
-              "latest": true
+              "isdefault": true
             }
           },
           "versionscount": 1,

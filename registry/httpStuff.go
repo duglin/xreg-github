@@ -483,9 +483,9 @@ FROM FullTree WHERE RegSID=? AND `
 	var version *Entity
 	versionsCount := 0
 	if info.VersionUID == "" {
-		// We're on a Resource, so go find the latest Version and count
+		// We're on a Resource, so go find the default Version and count
 		// how many versions there are for the VersionsCount attribute
-		vID := entity.Get("latestversionid").(string)
+		vID := entity.Get("defaultversionid").(string)
 		for {
 			v, err := readNextEntity(info.tx, results)
 			if v == nil && version == nil {
@@ -699,10 +699,10 @@ func HTTPPutPost(info *RequestInfo) error {
 		return HTTPPUTModel(info)
 	}
 
-	// POST /groups/gID/resources/rID?setlatestversiond is special
+	// POST /groups/gID/resources/rID?setdefaultversiond is special
 	if len(info.Parts) == 4 && method == "POST" {
-		if _, ok := info.OriginalRequest.URL.Query()["setlatestversionid"]; ok {
-			return HTTPSetLatestVersionID(info)
+		if _, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]; ok {
+			return HTTPSetDefaultVersionID(info)
 		}
 	}
 
@@ -865,7 +865,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	// IncomingObj will be used for an update in common code after all of the
 	// "if" statements
 
-	latest := (*bool)(nil)
+	isDefault := (*bool)(nil)
 
 	if len(info.Parts) == 3 {
 		// GROUPs/gID/RESOURCEs - must be POST
@@ -879,11 +879,11 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		delete(IncomingObj, "id") // id is for Res not Version so remove it
 
-		// Create a new Resource and it's first/only/latest Version
+		// Create a new Resource and it's first/only/default Version
 		resource, err = group.AddResource(info.ResourceType, resourceUID,
 			versionUID, IncomingObj) // vID should be ""
 		if err == nil {
-			version, err = resource.GetLatest()
+			version, err = resource.GetDefault()
 		}
 	}
 
@@ -907,7 +907,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		if resource != nil {
-			version, err = resource.GetLatest()
+			version, err = resource.GetDefault()
 
 			if !metaInBody {
 				// Copy existing props into IncomingObj w/o overwriting
@@ -925,11 +925,11 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			err = version.ValidateAndSave()
 		} else {
-			// Create a new Resource and it's first/only/latest Version
+			// Create a new Resource and it's first/only/default Version
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID, IncomingObj) // vID is ""
 			if err == nil {
-				version, err = resource.GetLatest()
+				version, err = resource.GetDefault()
 			}
 
 			isNew = true
@@ -949,13 +949,13 @@ func HTTPPutPost(info *RequestInfo) error {
 				versionUID, IncomingObj) // no IncomingObj
 			isNew = true
 			if err == nil {
-				version, err = resource.GetLatest()
+				version, err = resource.GetDefault()
 			}
 		} else {
 			isNew = true
 			versionUID = propsID
 			version, err = resource.AddVersion(versionUID,
-				latest == nil || *latest, IncomingObj)
+				isDefault == nil || *isDefault, IncomingObj)
 		}
 
 		// Fall thru and check err
@@ -982,7 +982,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			if version == nil {
 				// We have a Resource, so add a new Version based on IncomingObj
 				version, err = resource.AddVersion(versionUID,
-					latest == nil || *latest, IncomingObj)
+					isDefault == nil || *isDefault, IncomingObj)
 				isNew = true
 			} else if !isNew {
 				if !metaInBody {
@@ -998,22 +998,22 @@ func HTTPPutPost(info *RequestInfo) error {
 				version.NewObject = IncomingObj
 				version.ConvertStrings(nil)
 
-				l := version.NewObject["latest"]
+				l := version.NewObject["isdefault"]
 				err = version.ValidateAndSave()
 				// TODO move this to version.go - DUG
 				if err == nil && !IsNil(l) {
-					if info.ResourceModel.SetLatest == false {
-						latestVID := resource.Get("latestversionid").(string)
-						if l != (latestVID == version.UID) {
-							return fmt.Errorf(`"latest" can not be "%v", it `+
-								`is controlled by the server`, l)
+					if info.ResourceModel.SetDefault == false {
+						defaultVID := resource.Get("defaultversionid").(string)
+						if l != (defaultVID == version.UID) {
+							return fmt.Errorf(`"isdefault" can not be "%v", `+
+								`it is controlled by the server`, l)
 						}
 					}
 					if l.(bool) == true {
-						err = resource.SetLatest(version)
+						err = resource.SetDefault(version)
 					} else {
-						err = fmt.Errorf(`"latest" can not be "false" ` +
-							`since doing so would result in no latest version`)
+						err = fmt.Errorf(`"isdefault" can not be "false" ` +
+							`since doing so would result in no default version`)
 					}
 				}
 			}
@@ -1100,7 +1100,7 @@ func HTTPPUTModel(info *RequestInfo) error {
 	return HTTPGETModel(info)
 }
 
-func HTTPSetLatestVersionID(info *RequestInfo) error {
+func HTTPSetDefaultVersionID(info *RequestInfo) error {
 	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
@@ -1122,16 +1122,16 @@ func HTTPSetLatestVersionID(info *RequestInfo) error {
 		return fmt.Errorf("Resource %q not found", info.ResourceUID)
 	}
 
-	if info.ResourceModel.SetLatest == false {
+	if info.ResourceModel.SetDefault == false {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Resource %q doesn't allow setting of `+
-			`"latestversionid"`, info.ResourceModel.Plural)
+			`"defaultversionid"`, info.ResourceModel.Plural)
 	}
 
-	vID := info.OriginalRequest.URL.Query().Get("setlatestversionid")
+	vID := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
 	if vID == "" {
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf(`"setlatestversionid" must not be empty`)
+		return fmt.Errorf(`"setdefaultversionid" must not be empty`)
 	}
 
 	version, err := resource.FindVersion(vID)
@@ -1144,10 +1144,10 @@ func HTTPSetLatestVersionID(info *RequestInfo) error {
 		return fmt.Errorf("Version %q not found", vID)
 	}
 
-	err = resource.SetLatest(version)
+	err = resource.SetDefault(version)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
-		return fmt.Errorf("Error setting latest version: %s", err)
+		return fmt.Errorf("Error setting default version: %s", err)
 	}
 
 	return HTTPGet(info)
@@ -1278,8 +1278,8 @@ func HTTPDelete(info *RequestInfo) error {
 					info.VersionUID, e)
 			}
 		}
-		nextLatest := info.OriginalRequest.URL.Query().Get("setlatestversionid")
-		err = version.Delete(nextLatest)
+		nextDefault := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
+		err = version.Delete(nextDefault)
 
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
@@ -1449,7 +1449,7 @@ func HTTPDeleteResources(info *RequestInfo) error {
 }
 
 func HTTPDeleteVersions(info *RequestInfo) error {
-	nextLatest := info.OriginalRequest.URL.Query().Get("setlatestversionid")
+	nextDefault := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
 
 	list, err := LoadIDList(info)
 	if err != nil {
@@ -1512,20 +1512,20 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 			}
 		}
 
-		err = version.Delete(nextLatest)
+		err = version.Delete(nextDefault)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
 		}
 	}
 
-	if nextLatest != "" {
-		version, err := resource.FindVersion(nextLatest)
+	if nextDefault != "" {
+		version, err := resource.FindVersion(nextDefault)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf(`Error getting Version %q: %s`, nextLatest, err)
+			return fmt.Errorf(`Error getting Version %q: %s`, nextDefault, err)
 		}
-		err = resource.SetLatest(version)
+		err = resource.SetDefault(version)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1581,7 +1581,7 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 	}
 
 	// xReg metadata are in headers, so move them into IncomingObj. We'll
-	// copy over the existing properties latest once we knwo what entity
+	// copy over the existing properties later once we know what entity
 	// we're dealing with
 	if len(info.Parts) > 2 && !metaInBody {
 		// IncomingObj["#resource"] = body // save new body

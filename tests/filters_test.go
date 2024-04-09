@@ -226,8 +226,8 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2?meta",
-          "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
+          "defaultversionid": "v1.1",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
           "labels": {
             "file1": "1elif"
           },
@@ -242,7 +242,7 @@ func TestBasicFilters(t *testing.T) {
               "id": "v1.1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
-              "latest": true,
+              "isdefault": true,
               "labels": {
                 "file1": "1elif"
               }
@@ -299,8 +299,8 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2?meta",
-          "latestversionid": "v1.1",
-          "latestversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
+          "defaultversionid": "v1.1",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
           "labels": {
             "file1": "1elif"
           },
@@ -315,7 +315,7 @@ func TestBasicFilters(t *testing.T) {
               "id": "v1.1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
-              "latest": true,
+              "isdefault": true,
               "labels": {
                 "file1": "1elif"
               }
@@ -438,12 +438,12 @@ func TestANDORFilters(t *testing.T) {
 		},
 		{
 			Name: "dirsOR and sOR - match second",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.latestversionid=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.defaultversionid=v2.0",
 			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and sOR - both match",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.latestversionid=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.defaultversionid=v2.0",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 	}

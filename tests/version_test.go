@@ -26,7 +26,7 @@ func TestCreateVersion(t *testing.T) {
 	vt, err := f1.AddVersion("v2", true)
 	xCheck(t, vt == nil && err != nil, "Dup v2 should have faile")
 
-	l, err := f1.GetLatest()
+	l, err := f1.GetDefault()
 	xNoErr(t, err)
 	xJSONCheck(t, l, v2)
 
@@ -78,19 +78,19 @@ func TestCreateVersion(t *testing.T) {
 	vt, err = f1.FindVersion("v2")
 	xCheck(t, err == nil && vt == nil, "Finding delete version failed")
 
-	// check that latest == v1 now
+	// check that default == v1 now
 	// delete v1, check that f1 is deleted too
 	err = f1.Refresh()
 	xNoErr(t, err)
 
-	xJSONCheck(t, f1.Get("latestversionid"), "v1")
+	xJSONCheck(t, f1.Get("defaultversionid"), "v1")
 
 	vt, err = f1.AddVersion("v2", true)
 	xCheck(t, vt != nil && err == nil, "Adding v2 again")
 
 	vt, err = f1.AddVersion("v3", true)
 	xCheck(t, vt != nil && err == nil, "Added v3")
-	xJSONCheck(t, f1.Get("latestversionid"), "v3")
+	xJSONCheck(t, f1.Get("defaultversionid"), "v3")
 
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{},"v3":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
@@ -98,8 +98,8 @@ func TestCreateVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v3",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
+  "defaultversionid": "v3",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -109,14 +109,14 @@ func TestCreateVersion(t *testing.T) {
 	xNoErr(t, err)
 	err = vt.Delete("")
 	xNoErr(t, err)
-	xJSONCheck(t, f1.Get("latestversionid"), "v3")
+	xJSONCheck(t, f1.Get("defaultversionid"), "v3")
 
 	vt, err = f1.FindVersion("v3")
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "Can't be nil")
 	err = vt.Delete("")
 	xNoErr(t, err)
-	xJSONCheck(t, f1.Get("latestversionid"), "v1")
+	xJSONCheck(t, f1.Get("defaultversionid"), "v1")
 
 	f1, err = d2.FindResource("files", "f1")
 	xNoErr(t, err)
@@ -131,14 +131,14 @@ func TestCreateVersion(t *testing.T) {
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f1":{"versions":{"v1.1":{},"v3":{}}}}}}}`)
 
 	err = vt.Delete("v2")
-	xCheckErr(t, err, `Can't find next latest Version "v2"`)
+	xCheckErr(t, err, `Can't find next default Version "v2"`)
 
 	vt, err = f1.FindVersion("v1.1")
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "should not be nil")
 
 	err = vt.Delete("v1.1")
-	xCheckErr(t, err, `Can't set latestversionid to Version being deleted`)
+	xCheckErr(t, err, `Can't set defaultversionid to Version being deleted`)
 
 	vt, err = f1.AddVersion("v4", true)
 	xNoErr(t, err)
@@ -152,8 +152,8 @@ func TestCreateVersion(t *testing.T) {
     "id": "f1",
     "epoch": 1,
     "self": "http://localhost:8181/dirs/d2/files/f1?meta",
-    "latestversionid": "v3",
-    "latestversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/v3?meta",
+    "defaultversionid": "v3",
+    "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/v3?meta",
 
     "versionscount": 2,
     "versionsurl": "http://localhost:8181/dirs/d2/files/f1/versions"
@@ -162,8 +162,8 @@ func TestCreateVersion(t *testing.T) {
 `)
 }
 
-func TestLatestVersion(t *testing.T) {
-	reg := NewRegistry("TestLatestVersion")
+func Testdefaultversion(t *testing.T) {
+	reg := NewRegistry("Testdefaultversion")
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
@@ -183,8 +183,8 @@ func TestLatestVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v4",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
+  "defaultversionid": "v4",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
 
   "versionscount": 5,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -198,8 +198,8 @@ func TestLatestVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v4",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
+  "defaultversionid": "v4",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
 
   "versionscount": 4,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -207,7 +207,7 @@ func TestLatestVersion(t *testing.T) {
 `)
 
 	err = v3.Delete("v1")
-	xCheckErr(t, err, "Can't find next latest Version \"v1\"")
+	xCheckErr(t, err, "Can't find next default Version \"v1\"")
 	err = v3.Delete("v2")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
@@ -215,8 +215,8 @@ func TestLatestVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v2",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -230,8 +230,8 @@ func TestLatestVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v5",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"

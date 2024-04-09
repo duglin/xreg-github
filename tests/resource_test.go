@@ -46,8 +46,8 @@ func TestCreateResource(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "latestversionid": "v2",
-  "latestversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -110,7 +110,7 @@ func TestResourceSet(t *testing.T) {
 	xJSONCheck(t, ft, f1)
 
 	// Make sure the version was set
-	vt, _ := ft.GetLatest()
+	vt, _ := ft.GetDefault()
 	xJSONCheck(t, vt.Get("name"), "myName")
 	xJSONCheck(t, vt.Get("epoch"), 68)
 	xJSONCheck(t, vt.Get("ext1"), "someext")
@@ -180,16 +180,16 @@ func TestResourceMaxVersions(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 1, "Should be just one version")
 
-	latest, err := f1.GetLatest()
-	xCheck(t, latest != nil && err == nil && latest.UID == "v1",
-		"err: %q latest: %s", err, ToJSON(latest))
+	defaultV, err := f1.GetDefault()
+	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v1",
+		"err: %q default: %s", err, ToJSON(defaultV))
 
 	// Create v2 and bump v1 out of the list
 	v2, err := f1.AddVersion("v2", true)
 	xCheck(t, v2 != nil && err == nil, "Creating v2 failed: %s", err)
-	latest, err = f1.GetLatest()
-	xCheck(t, latest != nil && err == nil && latest.UID == "v2",
-		"err: %q latest: %s", err, ToJSON(latest))
+	defaultV, err = f1.GetDefault()
+	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v2",
+		"err: %q default: %s", err, ToJSON(defaultV))
 	vers, err = f1.GetVersions()
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 1 && vers[0].Object["id"] == "v2", "Should be v2")
@@ -197,24 +197,24 @@ func TestResourceMaxVersions(t *testing.T) {
 	err = rm.SetMaxVersions(2)
 	xNoErr(t, err)
 
-	// Create v3, but keep v2 as latest
+	// Create v3, but keep v2 as default
 	v3, err := f1.AddVersion("v3", false)
 	xCheck(t, v3 != nil && err == nil, "Creating v3 failed: %s", err)
-	latest, err = f1.GetLatest()
-	xCheck(t, latest != nil && err == nil && latest.UID == "v2",
-		"err: %q latest: %s", err, ToJSON(latest))
+	defaultV, err = f1.GetDefault()
+	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v2",
+		"err: %q defaultV: %s", err, ToJSON(defaultV))
 	vers, err = f1.GetVersions()
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 2, "Should be 2")
 	xCheck(t, vers[0].Object["id"] == "v2", "0=v2")
 	xCheck(t, vers[1].Object["id"] == "v3", "1=v3")
 
-	// Create v4, which should bump v3 out of the list, not v2 (latest)
+	// Create v4, which should bump v3 out of the list, not v2 (default)
 	v4, err := f1.AddVersion("v4", false)
 	xCheck(t, v4 != nil && err == nil, "Creating v4 failed: %s", err)
-	latest, err = f1.GetLatest()
-	xCheck(t, latest != nil && err == nil && latest.UID == "v2",
-		"err: %q latest: %s", err, ToJSON(latest))
+	defaultV, err = f1.GetDefault()
+	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v2",
+		"err: %q defaultV: %s", err, ToJSON(defaultV))
 	vers, err = f1.GetVersions()
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 2, "Should be 2, but is: %d", len(vers))
@@ -239,9 +239,9 @@ func TestResourceMaxVersions(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 7, "Should be 7, but is: %d", len(vers))
 	xCheck(t, len(vers) == 7, "Should be 7, but is: %s", ToJSON(vers))
-	latest, err = f1.GetLatest()
-	xCheck(t, latest != nil && err == nil && latest.UID == "v5",
-		"err: %q latest: %s", err, ToJSON(latest))
+	defaultV, err = f1.GetDefault()
+	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v5",
+		"err: %q defaultV: %s", err, ToJSON(defaultV))
 
 	// Now set maxVer to 1 and just v5 should remain
 	err = rm.SetMaxVersions(1)
