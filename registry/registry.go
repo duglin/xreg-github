@@ -188,27 +188,37 @@ func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistrySID(%s)", sid)
 	defer log.VPrintf(3, "<Exit: FindRegistrySID")
 
-	results, err := Query(tx, `SELECT UID FROM Registries WHERE SID=?`, sid)
-	defer results.Close()
+	if tx.Registry != nil && tx.Registry.DbSID == sid {
+		return tx.Registry, nil
+	}
 
+	ent, err := RawEntityFromPath(tx, sid, "")
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Registry %q: %s", sid, err)
 	}
-
-	row := results.NextRow()
-	if row == nil {
-		return nil, fmt.Errorf("Error finding Registry %q: no match", sid)
+	if ent == nil {
+		return nil, nil
 	}
-	results.Close()
 
-	uid := NotNilString(row[0])
-	return FindRegistry(tx, uid)
+	reg := &Registry{Entity: *ent}
+	if tx.Registry == nil {
+		tx.Registry = reg
+	}
+	reg.Entity.Registry = reg
+	reg.tx = tx
+
+	reg.LoadModel()
+	return reg, nil
 }
 
 // BY UID
 func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	log.VPrintf(3, ">Enter: FindRegistry(%s)", id)
 	defer log.VPrintf(3, "<Exit: FindRegistry")
+
+	if tx != nil && tx.Registry != nil && tx.Registry.UID == id {
+		return tx.Registry, nil
+	}
 
 	newTx := false
 	if tx == nil {
@@ -230,6 +240,7 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	   	SELECT SID
 	   	FROM Registries
 	   	WHERE UID=?`, id)
+
 	defer results.Close()
 
 	if err != nil {
@@ -240,26 +251,32 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	}
 
 	row := results.NextRow()
+
 	if row == nil {
 		log.VPrintf(3, "None found")
 		return nil, nil
 	}
+
 	id = NotNilString(row[0])
 	results.Close()
 
 	ent, err := RawEntityFromPath(tx, id, "")
+
 	if err != nil {
 		if newTx {
 			tx.Rollback()
 		}
 		return nil, fmt.Errorf("Error finding Registry %q: %s", id, err)
 	}
+
 	PanicIf(ent == nil, "No entity but we found a reg")
 
 	reg := &Registry{Entity: *ent}
+
 	if tx.Registry == nil {
 		tx.Registry = reg
 	}
+
 	reg.Entity.Registry = reg
 	reg.tx = tx
 

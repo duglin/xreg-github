@@ -699,8 +699,19 @@ func HTTPPutPost(info *RequestInfo) error {
 		return HTTPPUTModel(info)
 	}
 
+	// Load-up the body
+	// //////////////////////////////////////////////////////
+	body, err := io.ReadAll(info.OriginalRequest.Body)
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("Error reading body: %s", err)
+	}
+	if len(body) == 0 {
+		body = nil
+	}
+
 	// POST /groups/gID/resources/rID?setdefaultversiond is special
-	if len(info.Parts) == 4 && method == "POST" {
+	if metaInBody && len(info.Parts) == 4 && method == "POST" && body == nil {
 		if _, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]; ok {
 			return HTTPSetDefaultVersionID(info)
 		}
@@ -740,8 +751,8 @@ func HTTPPutPost(info *RequestInfo) error {
 			"allowed")
 	}
 
-	// Ok, now start to del with the incoming request
-	/////////////////////////////////////////////////
+	// Ok, now start to deal with the incoming request
+	//////////////////////////////////////////////////
 
 	// First lets get the Resource's model to get the RESOURCE 'singular'
 	resSingular := ""
@@ -750,7 +761,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	// Get the incoming Object either from the body or from xRegistry headers
-	IncomingObj, err := ExtractIncomingObject(info, resSingular)
+	IncomingObj, err := ExtractIncomingObject(info, body, resSingular)
 	if err != nil {
 		return err
 	}
@@ -865,8 +876,6 @@ func HTTPPutPost(info *RequestInfo) error {
 	// IncomingObj will be used for an update in common code after all of the
 	// "if" statements
 
-	isDefault := (*bool)(nil)
-
 	if len(info.Parts) == 3 {
 		// GROUPs/gID/RESOURCEs - must be POST
 
@@ -954,8 +963,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		} else {
 			isNew = true
 			versionUID = propsID
-			version, err = resource.AddVersion(versionUID,
-				isDefault == nil || *isDefault, IncomingObj)
+			version, err = resource.AddVersion(versionUID, IncomingObj)
 		}
 
 		// Fall thru and check err
@@ -981,8 +989,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			if version == nil {
 				// We have a Resource, so add a new Version based on IncomingObj
-				version, err = resource.AddVersion(versionUID,
-					isDefault == nil || *isDefault, IncomingObj)
+				version, err = resource.AddVersion(versionUID, IncomingObj)
 				isNew = true
 			} else if !isNew {
 				if !metaInBody {
@@ -998,24 +1005,7 @@ func HTTPPutPost(info *RequestInfo) error {
 				version.NewObject = IncomingObj
 				version.ConvertStrings(nil)
 
-				l := version.NewObject["isdefault"]
 				err = version.ValidateAndSave()
-				// TODO move this to version.go - DUG
-				if err == nil && !IsNil(l) {
-					if info.ResourceModel.SetDefault == false {
-						defaultVID := resource.Get("defaultversionid").(string)
-						if l != (defaultVID == version.UID) {
-							return fmt.Errorf(`"isdefault" can not be "%v", `+
-								`it is controlled by the server`, l)
-						}
-					}
-					if l.(bool) == true {
-						err = resource.SetDefault(version)
-					} else {
-						err = fmt.Errorf(`"isdefault" can not be "false" ` +
-							`since doing so would result in no default version`)
-					}
-				}
 			}
 		}
 
@@ -1035,6 +1025,12 @@ func HTTPPutPost(info *RequestInfo) error {
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Error processing resource: %s", err)
+	}
+
+	// Process any ?setdefaultversionid query parameter there might be
+	err = ProcessSetDefaultVersionIDFlag(info, resource)
+	if err != nil {
+		return err
 	}
 
 	originalLen := len(info.Parts)
@@ -1100,6 +1096,48 @@ func HTTPPUTModel(info *RequestInfo) error {
 	return HTTPGETModel(info)
 }
 
+func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource) error {
+	vIDs, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]
+	if !ok {
+		return nil
+	}
+
+	if info.ResourceModel.SetDefault == false {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf(`Resource %q doesn't allow setting of `+
+			`"defaultversionid"`, info.ResourceModel.Plural)
+	}
+
+	vID := vIDs[0]
+
+	if vID == "" {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf(`"setdefaultversionid" must not be empty`)
+	}
+
+	if vID == "null" {
+		return resource.SetDefault(nil)
+	}
+
+	version, err := resource.FindVersion(vID)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error finding version(%s): %s", vID, err)
+	}
+	if version == nil {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Version %q not found", vID)
+	}
+
+	err = resource.SetDefault(version)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf("Error setting default version: %s", err)
+	}
+
+	return nil
+}
+
 func HTTPSetDefaultVersionID(info *RequestInfo) error {
 	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
 	if err != nil {
@@ -1122,32 +1160,9 @@ func HTTPSetDefaultVersionID(info *RequestInfo) error {
 		return fmt.Errorf("Resource %q not found", info.ResourceUID)
 	}
 
-	if info.ResourceModel.SetDefault == false {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf(`Resource %q doesn't allow setting of `+
-			`"defaultversionid"`, info.ResourceModel.Plural)
-	}
-
-	vID := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
-	if vID == "" {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf(`"setdefaultversionid" must not be empty`)
-	}
-
-	version, err := resource.FindVersion(vID)
+	err = ProcessSetDefaultVersionIDFlag(info, resource)
 	if err != nil {
-		info.StatusCode = http.StatusInternalServerError
-		return fmt.Errorf("Error finding version(%s): %s", vID, err)
-	}
-	if version == nil {
-		info.StatusCode = http.StatusNotFound
-		return fmt.Errorf("Version %q not found", vID)
-	}
-
-	err = resource.SetDefault(version)
-	if err != nil {
-		info.StatusCode = http.StatusInternalServerError
-		return fmt.Errorf("Error setting default version: %s", err)
+		return err
 	}
 
 	return HTTPGet(info)
@@ -1536,16 +1551,9 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 	return nil
 }
 
-func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error) {
+func ExtractIncomingObject(info *RequestInfo, body []byte, resSingular string) (Object, error) {
 	IncomingObj := map[string]any{}
 
-	// Load-up the body
-	// //////////////////////////////////////////////////////
-	body, err := io.ReadAll(info.OriginalRequest.Body)
-	if err != nil {
-		info.StatusCode = http.StatusBadRequest
-		return nil, fmt.Errorf("Error reading body: %s", err)
-	}
 	if len(body) == 0 {
 		body = nil
 	}
@@ -1573,7 +1581,7 @@ func ExtractIncomingObject(info *RequestInfo, resSingular string) (Object, error
 		}
 
 		// err = json.Unmarshal(body, &IncomingObj)
-		err = Unmarshal(body, &IncomingObj)
+		err := Unmarshal(body, &IncomingObj)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return nil, err

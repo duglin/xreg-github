@@ -70,7 +70,7 @@ func TestResourceContents(t *testing.T) {
 		Headers: nil,
 	})
 
-	v2, _ := f1.AddVersion("v2", true)
+	v2, _ := f1.AddVersion("v2")
 	v2.SetSave("#resource", "This is version 2")
 
 	CompareContentMeta(t, reg, &Test{
@@ -87,7 +87,7 @@ func TestResourceContents(t *testing.T) {
 		Headers: nil,
 	})
 
-	v3, _ := f1.AddVersion("v3", true)
+	v3, _ := f1.AddVersion("v3")
 	v3.SetSave("#resourceProxyURL", "http://example.com")
 
 	CompareContentMeta(t, reg, &Test{
@@ -104,7 +104,7 @@ func TestResourceContents(t *testing.T) {
 		Headers: []string{"Content-Type: text/html"},
 	})
 
-	v4, _ := f1.AddVersion("v4", true)
+	v4, _ := f1.AddVersion("v4")
 	v4.SetSave("#resourceURL", "http://example.com")
 
 	CompareContentMeta(t, reg, &Test{

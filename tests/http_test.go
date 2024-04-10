@@ -71,6 +71,7 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 	xCheck(t, res.StatusCode == test.Code,
 		fmt.Sprintf("Expected status %d, got %d\n%s", test.Code, res.StatusCode, string(resBody)))
 
+	// t.Logf("%v\n%s", res.Header, string(resBody))
 	testHeaders := map[string]bool{}
 	for _, header := range test.ResHeaders {
 		name, value, _ := strings.Cut(header, ":")
@@ -702,6 +703,11 @@ func TestHTTPModel(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
+            "setdefault": {
+              "name": "setdefault",
+              "type": "boolean",
+              "readonly": true
+            },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
@@ -961,6 +967,11 @@ func TestHTTPModel(t *testing.T) {
             },
             "isdefault": {
               "name": "isdefault",
+              "type": "boolean",
+              "readonly": true
+            },
+            "setdefault": {
+              "name": "setdefault",
               "type": "boolean",
               "readonly": true
             },
@@ -1226,6 +1237,11 @@ func TestHTTPModel(t *testing.T) {
             },
             "isdefault": {
               "name": "isdefault",
+              "type": "boolean",
+              "readonly": true
+            },
+            "setdefault": {
+              "name": "setdefault",
               "type": "boolean",
               "readonly": true
             },
@@ -2766,30 +2782,30 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 	f, _ := d.AddResource("files", "f1-proxy", "v1")
 	f.SetSave(NewPP().P("#resource").UI(), "Hello world! v1")
 
-	v, _ := f.AddVersion("v2", true)
+	v, _ := f.AddVersion("v2")
 	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
-	v, _ = f.AddVersion("v3", true)
+	v, _ = f.AddVersion("v3")
 	v.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	// URL
 	f, _ = d.AddResource("files", "f2-url", "v1")
 	f.SetSave(NewPP().P("#resource").UI(), "Hello world! v1")
 
-	v, _ = f.AddVersion("v2", true)
+	v, _ = f.AddVersion("v2")
 	v.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
-	v, _ = f.AddVersion("v3", true)
+	v, _ = f.AddVersion("v3")
 	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
 	// Resource
 	f, _ = d.AddResource("files", "f3-resource", "v1")
 	f.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
 
-	v, _ = f.AddVersion("v2", true)
+	v, _ = f.AddVersion("v2")
 	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
 
-	v, _ = f.AddVersion("v3", true)
+	v, _ = f.AddVersion("v3")
 	v.SetSave(NewPP().P("#resource").UI(), "Hello world! v3")
 
 	// /dirs/d1/files/f1-proxy/v1 - resource
@@ -4702,21 +4718,6 @@ func TestHTTPDefault(t *testing.T) {
 	reg.AddGroup("dirs", "d1")
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1 - default = false",
-		URL:    "/dirs/d1/files/f1",
-		Method: "PUT",
-		ReqHeaders: []string{
-			"xRegistry-isdefault: false",
-		},
-		ReqBody:     `hello`,
-		Code:        400,
-		HeaderMasks: []string{},
-		ResHeaders:  []string{},
-		ResBody: `Error processing resource(f1): "isdefault" can not be "false" since doing so would result in no default version
-`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "PUT file f1 - isdefault = true",
 		URL:    "/dirs/d1/files/f1",
 		Method: "PUT",
@@ -4760,12 +4761,10 @@ func TestHTTPDefault(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/1 - isdefault = true",
-		URL:    "/dirs/d1/files/f1/versions/1",
-		Method: "PUT",
-		ReqHeaders: []string{
-			"xRegistry-isdefault: true",
-		},
+		Name:        "PUT file f1/1 - setdefaultversionid = 1",
+		URL:         "/dirs/d1/files/f1/versions/1?setdefaultversionid=1",
+		Method:      "PUT",
+		ReqHeaders:  []string{},
 		ReqBody:     `hello`,
 		Code:        200,
 		HeaderMasks: []string{},
@@ -4780,43 +4779,10 @@ func TestHTTPDefault(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/1 - isdefault = false",
-		URL:    "/dirs/d1/files/f1/versions/1",
-		Method: "PUT",
-		ReqHeaders: []string{
-			"xRegistry-isdefault: false",
-		},
-		ReqBody:     `hello`,
-		Code:        400,
-		HeaderMasks: []string{},
-		ResHeaders:  []string{},
-		ResBody:     `Error processing resource: "isdefault" can not be "false" since doing so would result in no default version` + "\n",
-	})
-
-	rm.SetSetDefault(false)
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/2 - isdefault = true - diff server",
-		URL:    "/dirs/d1/files/f1/versions/2",
-		Method: "PUT",
-		ReqHeaders: []string{
-			"xRegistry-isdefault: true",
-		},
-		ReqBody:     `hello`,
-		Code:        400,
-		HeaderMasks: []string{},
-		ResHeaders:  []string{},
-		ResBody: `"isdefault" can not be "true", it is controlled by the server
-`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT file f1/1 - isdefault = true - match server",
-		URL:    "/dirs/d1/files/f1/versions/1",
-		Method: "PUT",
-		ReqHeaders: []string{
-			"xRegistry-isdefault: true",
-		},
+		Name:        "PUT file f1/1 - setdefaultversionid = null, switches default",
+		URL:         "/dirs/d1/files/f1/versions/1?setdefaultversionid=null",
+		Method:      "PUT",
+		ReqHeaders:  []string{},
 		ReqBody:     `hello`,
 		Code:        200,
 		HeaderMasks: []string{},
@@ -4825,13 +4791,40 @@ func TestHTTPDefault(t *testing.T) {
 			"xRegistry-id: 1",
 			"xRegistry-epoch: 3",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
-			"xRegistry-isdefault: true",
 		},
 		ResBody: `hello`,
 	})
 
+	rm.SetSetDefault(false)
+
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "PUT file f1/1 - no isdefault",
+		Name:        "PUT file f1/2 - setdefault=2 - diff server",
+		URL:         "/dirs/d1/files/f1/versions/2?setdefaultversionid=2",
+		Method:      "PUT",
+		ReqHeaders:  []string{},
+		ReqBody:     `hello`,
+		Code:        400,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `Resource "files" doesn't allow setting of "defaultversionid"
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:        "PUT file f1/1 - setdefault=1 - match server",
+		URL:         "/dirs/d1/files/f1/versions/1?setdefaultversionid=1",
+		Method:      "PUT",
+		ReqHeaders:  []string{},
+		ReqBody:     `hello`,
+		Code:        400,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `Resource "files" doesn't allow setting of "defaultversionid"
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:        "PUT file f1/1 - no setdefault",
 		URL:         "/dirs/d1/files/f1/versions/1",
 		Method:      "PUT",
 		ReqHeaders:  []string{},
@@ -4843,13 +4836,12 @@ func TestHTTPDefault(t *testing.T) {
 			"xRegistry-id: 1",
 			"xRegistry-epoch: 4",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
-			"xRegistry-isdefault: true",
 		},
 		ResBody: `hello`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "PUT file f1/2 - no isdefault",
+		Name:        "PUT file f1/2 - no setdefault",
 		URL:         "/dirs/d1/files/f1/versions/2",
 		Method:      "PUT",
 		ReqHeaders:  []string{},
@@ -4861,6 +4853,7 @@ func TestHTTPDefault(t *testing.T) {
 			"xRegistry-id: 2",
 			"xRegistry-epoch: 2",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"xRegistry-isdefault: true",
 		},
 		ResBody: `hello`,
 	})
@@ -4924,34 +4917,29 @@ func TestHTTPDefault(t *testing.T) {
 		URL:    "/dirs/d1/files/f1?setdefaultversionid=1",
 		Method: "POST",
 		ReqHeaders: []string{
-			`xRegistry-id: bogus`,
+			`xRegistry-id: newone`,
 		},
-		ReqBody:     `ignore me`,
-		Code:        200,
+		ReqBody:     `pick me`,
+		Code:        201,
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
-			"xRegistry-id: f1",
-			"xRegistry-epoch: 4",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
-			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
-			"xRegistry-versionscount: 2",
-			"Content-Length: 5",
-			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-id: newone",
+			"xRegistry-epoch: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/newone",
+			"Content-Length: 7",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/newone",
+			"Location: http://localhost:8181/dirs/d1/files/f1/versions/newone",
 		},
-		ResBody: `hello`,
+		ResBody: `pick me`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST file f1?meta&setdefault=1 - no change",
-		URL:    "/dirs/d1/files/f1?meta&setdefaultversionid=1",
-		Method: "POST",
-		ReqHeaders: []string{
-			`xRegistry-id: bogus`,
-		},
-		ReqBody:     `ignore me`,
+		Name:        "POST file f1?meta&setdefault=1 - no change",
+		URL:         "/dirs/d1/files/f1?meta&setdefaultversionid=1",
+		Method:      "POST",
+		ReqHeaders:  []string{},
+		ReqBody:     ``,
 		Code:        200,
 		HeaderMasks: []string{},
 		ResHeaders: []string{
@@ -4961,10 +4949,11 @@ func TestHTTPDefault(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
-  "versionscount": 2,
+  "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `,
@@ -4978,31 +4967,25 @@ func TestHTTPDefault(t *testing.T) {
 			`xRegistry-id: bogus`,
 		},
 		ReqBody:     `ignore me`,
-		Code:        200,
+		Code:        201,
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
-			"xRegistry-id: f1",
-			"xRegistry-epoch: 2",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid: 2",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/2",
-			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
-			"xRegistry-versionscount: 2",
-			"Content-Length: 5",
-			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"xRegistry-id: bogus",
+			"xRegistry-epoch: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/bogus",
+			"Content-Length: 9",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/bogus",
 		},
-		ResBody: `hello`,
+		ResBody: `ignore me`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST file f1?setdefault=1 - set back to 1",
-		URL:    "/dirs/d1/files/f1?meta&setdefaultversionid=1",
-		Method: "POST",
-		ReqHeaders: []string{
-			`xRegistry-id: bogus`,
-		},
-		ReqBody:     `ignore me`,
+		Name:        "POST file f1?setdefault=1 - set back to 1",
+		URL:         "/dirs/d1/files/f1?meta&setdefaultversionid=1",
+		Method:      "POST",
+		ReqHeaders:  []string{},
+		ReqBody:     ``, // must be empty for set to work
 		Code:        200,
 		HeaderMasks: []string{},
 		ResHeaders: []string{
@@ -5012,10 +4995,11 @@ func TestHTTPDefault(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
-  "versionscount": 2,
+  "versionscount": 4,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `,
@@ -5409,15 +5393,16 @@ func TestHTTPDelete(t *testing.T) {
 	// DELETE Versions
 	f1, err := d1.AddResource("files", "f1", "v1")
 	xNoErr(t, err)
-	f1.AddVersion("v2", true)
-	f1.AddVersion("v3", true)
-	f1.AddVersion("v4", true)
-	f1.AddVersion("v5", true)
-	f1.AddVersion("v6", false)
-	f1.AddVersion("v7", false)
-	f1.AddVersion("v8", false)
-	f1.AddVersion("v9", false)
-	f1.AddVersion("v10", false)
+	f1.AddVersion("v2")
+	f1.AddVersion("v3")
+	f1.AddVersion("v4")
+	v5, _ := f1.AddVersion("v5")
+	xNoErr(t, f1.SetDefault(v5))
+	f1.AddVersion("v6")
+	f1.AddVersion("v7")
+	f1.AddVersion("v8")
+	f1.AddVersion("v9")
+	f1.AddVersion("v10")
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?meta", ``, 200,
 		`{
@@ -5524,6 +5509,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v3",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
@@ -5550,7 +5536,7 @@ func TestHTTPDelete(t *testing.T) {
 }
 `)
 
-	f1.AddVersion("v1", false)
+	f1.AddVersion("v1")
 	// bad next
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setdefaultversionid=vx", `[{"id":"v6"}]`, 400, "Can't find next default Version \"vx\"\n")
 	// next = being deleted
@@ -5562,6 +5548,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v10",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
@@ -5594,6 +5581,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v10",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
@@ -5619,6 +5607,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
 

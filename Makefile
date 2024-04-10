@@ -106,8 +106,18 @@ k3dserver: k3d image
 	kubectl apply -f misc/deploy.yaml
 	sleep 2 ; kubectl logs -f xreg-server
 
+prof: server qtest
+	@# May need to install: apt-get install graphviz
+	NO_CACHE=1 NO_DELETE_REGISTRY=1 \
+		go test -cpuprofile cpu.prof -memprofile mem.prof -bench . \
+		github.com/duglin/xreg-github/tests
+	@# go tool pprof -http:0.0.0.0:9999 cpu.prof
+	@go tool pprof -top -cum cpu.prof | sed -n '0,/flat/p;/xreg/p' | more
+	@rm -f cpu.prof mem.prof tests.test
+
 clean:
 	@echo "# Cleaning"
+	@rm -f cpu.prof mem.prof
 	@rm -f server xr
 	@rm -f .test .image .push
 	@go clean -cache -testcache

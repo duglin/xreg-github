@@ -29,10 +29,10 @@ func TestCreateGroup(t *testing.T) {
 	ft, err = d1.AddResource("files", "f1", "v2")
 	xCheck(t, ft == nil && err != nil, "Dup files should have failed - 2")
 
-	f1.AddVersion("v2", true)
+	f1.AddVersion("v2")
 	d2, _ := reg.AddGroup("dirs", "d2")
 	f2, _ := d2.AddResource("files", "f2", "v1")
-	f2.AddVersion("v1.1", true)
+	f2.AddVersion("v1.1")
 
 	// /dirs/d1/f1/v1
 	//            /v2

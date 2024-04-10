@@ -225,6 +225,7 @@ func xCheckEqual(t *testing.T, extra string, gotAny any, expAny any) {
 }
 
 func xJSONCheck(t *testing.T, gotObj any, expObj any) {
+	t.Helper()
 	got := ToJSON(gotObj)
 	exp := ToJSON(expObj)
 	xCheckEqual(t, "", got, exp)

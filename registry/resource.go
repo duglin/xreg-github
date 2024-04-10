@@ -17,6 +17,7 @@ type Resource struct {
 var specialResourceAttrs = map[string]bool{
 	"id":               true,
 	"defaultversionid": true,
+	"setdefault":       true,
 	"#nextversionid":   true,
 }
 
@@ -111,15 +112,42 @@ func (r *Resource) GetDefault() (*Version, error) {
 	return r.FindVersion(val.(string))
 }
 
+// Only call this if you want things to be sticky (when not nil).
+// Creating a new version should do this directly
 func (r *Resource) SetDefault(newDefault *Version) error {
 	// already set
-	if r.Get("defaultversionid") == newDefault.UID {
+	if newDefault != nil && r.Get("defaultversionid") == newDefault.UID {
+		// But make sure we're sticky, could just be a coincidence
+		if r.Get("setdefault") != true {
+			return r.JustSet("setdefault", true)
+		}
 		return nil
 	}
+
+	if newDefault == nil {
+		if err := r.JustSet("setdefault", nil); err != nil {
+			return err
+		}
+
+		vIDs, err := r.GetVersionIDs()
+		if err != nil {
+			return err
+		}
+		newDefault, err = r.FindVersion(vIDs[len(vIDs)-1])
+		if err != nil {
+			return err
+		}
+		PanicIf(newDefault == nil, "No newest")
+	}
+
+	if err := r.JustSet("setdefault", true); err != nil {
+		return err
+	}
+
 	return r.SetSave("defaultversionid", newDefault.UID)
 }
 
-func (r *Resource) AddVersion(id string, isDefault bool, objs ...Object) (*Version, error) {
+func (r *Resource) AddVersion(id string, objs ...Object) (*Version, error) {
 	log.VPrintf(3, ">Enter: AddVersion%s)", id)
 	defer log.VPrintf(3, "<Exit: AddVersion")
 
@@ -202,42 +230,19 @@ func (r *Resource) AddVersion(id string, isDefault bool, objs ...Object) (*Versi
 			}
 		}
 	}
-	l, ok := v.NewObject["isdefault"]
-	if !ok {
-		l = isDefault
-	} else {
-		// if "isdefault" was part of the data then it's from a user, make
-		// sure they're allowed to set it
-		_, rm := r.GetModels()
-		if l != isDefault && rm.SetDefault == false {
-			return nil, fmt.Errorf(`"isdefault" can not be "%v", it is `+
-				`controlled by the server`, isDefault)
-		}
-	}
-
-	vIDs, err := r.GetVersionIDs()
-	if err != nil {
-		return nil, err
-	}
-	if len(vIDs) == 1 && l == false {
-		return nil, fmt.Errorf(`"isdefault" can not be "false" since ` +
-			`doing so would result in no default version`)
-	}
 
 	if err = v.ValidateAndSave(); err != nil {
 		return nil, err
 	}
 
 	// If we can only have one Version, then set the one we just created
-	// as the default. Basically the "default" flag is pointless in this case
+	// as the default.
+	// Also set it if we're not sticky w.r.t. default version
 	_, rm := r.GetModels()
-	if rm.MaxVersions == 1 {
-		r.SetDefault(v)
-	} else if isDefault {
-		err = r.SetDefault(v)
+	if rm.MaxVersions == 1 || r.Get("setdefault") != true {
+		err = r.SetSave("defaultversionid", v.UID)
 		if err != nil {
-			err = fmt.Errorf("Error setting defaultversionid: %s", err)
-			return v, err
+			return nil, err
 		}
 	}
 

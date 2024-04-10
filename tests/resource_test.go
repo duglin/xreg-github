@@ -22,11 +22,11 @@ func TestCreateResource(t *testing.T) {
 	ft, err := d1.AddResource("files", "f1", "v1")
 	xCheck(t, ft == nil && err != nil, "Dup f1 should have failed")
 
-	v2, err := f1.AddVersion("v2", true)
+	v2, err := f1.AddVersion("v2")
 	xNoErr(t, err)
 	xCheck(t, v2 != nil && err == nil, "Creating v2 failed")
 
-	vt, err := f1.AddVersion("v2", true)
+	vt, err := f1.AddVersion("v2")
 	xCheck(t, vt == nil && err != nil, "Dup v2 should have faile")
 
 	d2, err := reg.AddGroup("dirs", "d2")
@@ -34,7 +34,7 @@ func TestCreateResource(t *testing.T) {
 	xCheck(t, d2 != nil && err == nil, "Creating d2 failed")
 
 	f2, _ := d2.AddResource("files", "f2", "v1")
-	f2.AddVersion("v1.1", true)
+	f2.AddVersion("v1.1")
 
 	// /dirs/d1/f1/v1
 	//            /v2
@@ -185,7 +185,7 @@ func TestResourceMaxVersions(t *testing.T) {
 		"err: %q default: %s", err, ToJSON(defaultV))
 
 	// Create v2 and bump v1 out of the list
-	v2, err := f1.AddVersion("v2", true)
+	v2, err := f1.AddVersion("v2")
 	xCheck(t, v2 != nil && err == nil, "Creating v2 failed: %s", err)
 	defaultV, err = f1.GetDefault()
 	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v2",
@@ -198,7 +198,8 @@ func TestResourceMaxVersions(t *testing.T) {
 	xNoErr(t, err)
 
 	// Create v3, but keep v2 as default
-	v3, err := f1.AddVersion("v3", false)
+	xNoErr(t, f1.SetDefault(v2))
+	v3, err := f1.AddVersion("v3")
 	xCheck(t, v3 != nil && err == nil, "Creating v3 failed: %s", err)
 	defaultV, err = f1.GetDefault()
 	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v2",
@@ -210,7 +211,7 @@ func TestResourceMaxVersions(t *testing.T) {
 	xCheck(t, vers[1].Object["id"] == "v3", "1=v3")
 
 	// Create v4, which should bump v3 out of the list, not v2 (default)
-	v4, err := f1.AddVersion("v4", false)
+	v4, err := f1.AddVersion("v4")
 	xCheck(t, v4 != nil && err == nil, "Creating v4 failed: %s", err)
 	defaultV, err = f1.GetDefault()
 	xCheck(t, defaultV != nil && err == nil && defaultV.UID == "v2",
@@ -225,15 +226,16 @@ func TestResourceMaxVersions(t *testing.T) {
 	err = rm.SetMaxVersions(0)
 	xNoErr(t, err)
 
-	_, err = f1.AddVersion("v5", true)
+	v5, err := f1.AddVersion("v5")
 	xNoErr(t, err)
-	_, err = f1.AddVersion("v6", false)
+	xNoErr(t, f1.SetDefault(v5))
+	_, err = f1.AddVersion("v6")
 	xNoErr(t, err)
-	_, err = f1.AddVersion("v7", false)
+	_, err = f1.AddVersion("v7")
 	xNoErr(t, err)
-	_, err = f1.AddVersion("v8", false)
+	_, err = f1.AddVersion("v8")
 	xNoErr(t, err)
-	_, err = f1.AddVersion("v9", false)
+	_, err = f1.AddVersion("v9")
 	xNoErr(t, err)
 	vers, err = f1.GetVersions()
 	xNoErr(t, err)

@@ -205,7 +205,7 @@ func TestSetLabels(t *testing.T) {
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
 	ver, _ := file.FindVersion("v1")
-	ver2, _ := file.AddVersion("v2", true)
+	ver2, _ := file.AddVersion("v2")
 
 	// /dirs/d1/f1/v1
 	labels := NewPP().P("labels")
@@ -376,6 +376,7 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+          "setdefault": true,
           "defaultversionid": "v1",
           "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
           "labels": {

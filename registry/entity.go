@@ -808,6 +808,19 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
+		Name:     "setdefault",
+		Type:     BOOLEAN,
+		ReadOnly: true,
+
+		internals: AttrInternals{
+			levels:    "2",
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
+	},
+	{
 		Name:     "defaultversionid",
 		Type:     STRING,
 		ReadOnly: true,

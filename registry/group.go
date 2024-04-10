@@ -114,7 +114,7 @@ func (g *Group) AddResource(rType string, id string, vID string, objs ...Object)
 		return nil, err
 	}
 
-	_, err = r.AddVersion(vID, true, objs...)
+	_, err = r.AddVersion(vID, objs...)
 	if err != nil {
 		return nil, err
 	}

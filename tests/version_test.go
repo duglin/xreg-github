@@ -19,11 +19,11 @@ func TestCreateVersion(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, f1 != nil, "Creating f1 failed")
 
-	v2, err := f1.AddVersion("v2", true)
+	v2, err := f1.AddVersion("v2")
 	xNoErr(t, err)
 	xCheck(t, v2 != nil, "Creating v2 failed")
 
-	vt, err := f1.AddVersion("v2", true)
+	vt, err := f1.AddVersion("v2")
 	xCheck(t, vt == nil && err != nil, "Dup v2 should have faile")
 
 	l, err := f1.GetDefault()
@@ -37,7 +37,7 @@ func TestCreateVersion(t *testing.T) {
 	f2, err := d2.AddResource("files", "f1", "v1")
 	xNoErr(t, err)
 	xCheck(t, f2 != nil, "Creating d2/f1/v1 failed")
-	_, err = f2.AddVersion("v1.1", true)
+	_, err = f2.AddVersion("v1.1")
 	xNoErr(t, err)
 
 	// /dirs/d1/f1/v1
@@ -85,11 +85,12 @@ func TestCreateVersion(t *testing.T) {
 
 	xJSONCheck(t, f1.Get("defaultversionid"), "v1")
 
-	vt, err = f1.AddVersion("v2", true)
+	vt, err = f1.AddVersion("v2")
 	xCheck(t, vt != nil && err == nil, "Adding v2 again")
 
-	vt, err = f1.AddVersion("v3", true)
+	vt, err = f1.AddVersion("v3")
 	xCheck(t, vt != nil && err == nil, "Added v3")
+	xNoErr(t, vt.SetDefault())
 	xJSONCheck(t, f1.Get("defaultversionid"), "v3")
 
 	xCheckGet(t, reg, "?inline&oneline",
@@ -98,6 +99,7 @@ func TestCreateVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v3",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
@@ -120,7 +122,8 @@ func TestCreateVersion(t *testing.T) {
 
 	f1, err = d2.FindResource("files", "f1")
 	xNoErr(t, err)
-	_, err = f1.AddVersion("v3", false)
+	xNoErr(t, f1.SetDefault(v2))
+	_, err = f1.AddVersion("v3")
 	xNoErr(t, err)
 	vt, err = f1.FindVersion("v1")
 	xNoErr(t, err)
@@ -140,7 +143,7 @@ func TestCreateVersion(t *testing.T) {
 	err = vt.Delete("v1.1")
 	xCheckErr(t, err, `Can't set defaultversionid to Version being deleted`)
 
-	vt, err = f1.AddVersion("v4", true)
+	vt, err = f1.AddVersion("v4")
 	xNoErr(t, err)
 
 	err = vt.Delete("v3")
@@ -152,6 +155,7 @@ func TestCreateVersion(t *testing.T) {
     "id": "f1",
     "epoch": 1,
     "self": "http://localhost:8181/dirs/d2/files/f1?meta",
+    "setdefault": true,
     "defaultversionid": "v3",
     "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/v3?meta",
 
@@ -173,10 +177,12 @@ func Testdefaultversion(t *testing.T) {
 	d1, _ := reg.AddGroup("dirs", "d1")
 	f1, _ := d1.AddResource("files", "f1", "v1")
 	v1, _ := f1.FindVersion("v1")
-	v2, _ := f1.AddVersion("v2", true)
-	v3, _ := f1.AddVersion("v3", false)
-	v4, _ := f1.AddVersion("v4", true)
-	v5, _ := f1.AddVersion("v5", false)
+	v2, _ := f1.AddVersion("v2")
+	xNoErr(t, f1.SetDefault(v2))
+	v3, _ := f1.AddVersion("v3")
+	v4, _ := f1.AddVersion("v4")
+	xNoErr(t, f1.SetDefault(v4))
+	v5, _ := f1.AddVersion("v5")
 
 	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
 		`{
@@ -265,11 +271,11 @@ func TestVersionRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 	reg.Commit()
 
-	_, err = f1.AddVersion("v2", true)
+	_, err = f1.AddVersion("v2")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 	reg.Rollback()
 
-	v1, err := f1.AddVersion("v2", true, registry.Object{"clireq": "test"})
+	v1, err := f1.AddVersion("v2", registry.Object{"clireq": "test"})
 	xNoErr(t, err)
 	reg.Commit()
 

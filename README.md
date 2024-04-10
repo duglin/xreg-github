@@ -85,5 +85,7 @@ TODOs:
 - get rid of the "Error processing" part of the error msgs
 - make sure that if maxversions is 1, then setlatest MUST be false
 - support/test use of 'setversionid'
-- support new semantics of setlatestversionid query parameter
-- s/latest/default/g
+- test for setting setdefaultversionid to different values
+  - in particular when creating a new version w/o an ID
+  - on an existing resource and on a new resource
+  - make sure setting it to null clears sticky and sets it to newest
