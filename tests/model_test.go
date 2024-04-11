@@ -2443,9 +2443,9 @@ func TestResourceModelCreate(t *testing.T) {
 						Plural:       "files",
 						Singular:     "file",
 						MaxVersions:  6,
-						SetVersionId: false,
-						SetDefault:   false,
-						// Note that hasdocument is missing -> false per golang
+						SetVersionId: registry.PtrBool(false),
+						SetDefault:   registry.PtrBool(false),
+						HasDocument:  registry.PtrBool(false),
 					},
 				},
 			},
@@ -2994,8 +2994,9 @@ func TestResourceModelCreate(t *testing.T) {
 						Plural:       "files2",
 						Singular:     "file",
 						MaxVersions:  6,
-						SetVersionId: false,
-						SetDefault:   false,
+						SetVersionId: registry.PtrBool(false),
+						SetDefault:   registry.PtrBool(false),
+						HasDocument:  registry.PtrBool(false),
 					},
 				},
 			},
@@ -3593,19 +3594,19 @@ func TestMultModelCreate(t *testing.T) {
 	xCheck(t, gm1 != nil && err == nil, "gm1 should have worked")
 
 	rm1, err := gm1.AddResourceModel("rms1", "rm1", 0, true, true, true)
-	xCheck(t, rm1 != nil && err == nil, "rm1 should have worked")
+	xCheck(t, rm1 != nil && err == nil, "rm1 should have worked: %s", err)
 
-	rm2, err := gm1.AddResourceModel("rms2", "rm2", 1, true, true, true)
-	xCheck(t, rm2 != nil && err == nil, "rm2 should have worked")
+	rm2, err := gm1.AddResourceModel("rms2", "rm2", 1, true, false, true)
+	xCheck(t, rm2 != nil && err == nil, "rm2 should have worked: %s", err)
 
 	gm2, err := reg.Model.AddGroupModel("gms2", "gm2")
-	xCheck(t, gm1 != nil && err == nil, "gm1 should have worked")
+	xCheck(t, gm1 != nil && err == nil, "gm1 should have worked: %s", err)
 
 	rm21, err := gm2.AddResourceModel("rms1", "rm1", 2, true, true, true)
-	xCheck(t, rm21 != nil && err == nil, "rm21 should have worked")
+	xCheck(t, rm21 != nil && err == nil, "rm21 should have worked: %s", err)
 
 	rm22, err := gm2.AddResourceModel("rms2", "rm2", 3, true, true, true)
-	xCheck(t, rm22 != nil && err == nil, "rm12 should have worked")
+	xCheck(t, rm22 != nil && err == nil, "rm12 should have worked: %s", err)
 
 	xCheckGet(t, reg, "/model", `{
   "schemas": [
@@ -3842,7 +3843,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm2",
           "maxversions": 1,
           "setversionid": true,
-          "setdefault": true,
+          "setdefault": false,
           "hasdocument": true,
           "attributes": {
             "id": {

@@ -1,5 +1,11 @@
 all: mysql cmds test image run
 
+# Notes:
+# export XR_SPEC=$HOME/go/src/github.com/xregistry/spec -> to load local models
+# export VERBOSE=x                                      -> control log verbosity
+# export DBHOST=localhost                               -> mySQL host
+# export DBPORT=3306                                    -> mySql port
+
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
 

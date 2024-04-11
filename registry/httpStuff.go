@@ -143,7 +143,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		info.HTTPWriter = NewBufferedWriter(info)
 	}
 
-	if info.ResourceModel != nil && info.ResourceModel.HasDocument == false &&
+	if info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false &&
 		info.ShowMeta {
 		info.StatusCode = http.StatusBadRequest
 		err = fmt.Errorf("Specifying \"?meta\" for a Resource that has the " +
@@ -627,7 +627,7 @@ func HTTPGet(info *RequestInfo) error {
 	}
 
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.HasDocument == false || info.ShowMeta)
+		(info.ResourceModel.GetHasDocument() == false || info.ShowMeta)
 
 	if info.What == "Entity" && info.ResourceUID != "" && !metaInBody {
 		return HTTPGETContent(info)
@@ -688,7 +688,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	isNew := false
 
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.HasDocument == false || info.ShowMeta)
+		(info.ResourceModel.GetHasDocument() == false || info.ShowMeta)
 
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
@@ -1102,7 +1102,7 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource) error
 		return nil
 	}
 
-	if info.ResourceModel.SetDefault == false {
+	if info.ResourceModel.GetSetDefault() == false {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Resource %q doesn't allow setting of `+
 			`"defaultversionid"`, info.ResourceModel.Plural)
@@ -1559,14 +1559,14 @@ func ExtractIncomingObject(info *RequestInfo, body []byte, resSingular string) (
 	}
 
 	metaInBody := (info.ShowMeta ||
-		(info.ResourceModel != nil && info.ResourceModel.HasDocument == false))
+		(info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false))
 
 	if len(info.Parts) < 3 || metaInBody {
 		for k, _ := range info.OriginalRequest.Header {
 			k := strings.ToLower(k)
 			if strings.HasPrefix(k, "xregistry-") {
 				info.StatusCode = http.StatusBadRequest
-				if info.ResourceModel.HasDocument == false {
+				if info.ResourceModel.GetHasDocument() == false {
 					return nil, fmt.Errorf("Including \"xRegistry\" headers " +
 						"for a Resource that has the model \"hasdocument\" " +
 						"value of \"false\" is invalid")

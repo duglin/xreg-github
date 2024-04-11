@@ -773,7 +773,7 @@ var OrderedSpecProps = []*Attribute{
 				if e.Level > 1 {
 					meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
 					_, rm := e.GetModels()
-					if rm.HasDocument == false {
+					if rm.GetHasDocument() == false {
 						meta = false
 					}
 
@@ -857,7 +857,7 @@ var OrderedSpecProps = []*Attribute{
 
 				meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
 				_, rm := e.GetModels()
-				if rm.HasDocument == false {
+				if rm.GetHasDocument() == false {
 					meta = false
 				}
 
@@ -1369,7 +1369,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 		} else {
 			maps.Copy(attrs, rm.Attributes)
 			singular = rm.Singular
-			hasDoc = rm.HasDocument
+			hasDoc = rm.GetHasDocument() == true
 		}
 	}
 
@@ -1960,7 +1960,7 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 	}
 
 	// don't "return nil" above, we may need to check enum values
-	if len(attr.Enum) > 0 && (attr.Strict == nil || *(attr.Strict)) {
+	if len(attr.Enum) > 0 && attr.GetStrict() {
 		foundOne := false
 		valStr := fmt.Sprintf("%v", val)
 		for _, enumVal := range attr.Enum {

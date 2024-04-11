@@ -110,9 +110,9 @@ type ResourceModel struct {
 	Plural       string     `json:"plural"`
 	Singular     string     `json:"singular"`
 	MaxVersions  int        `json:"maxversions"`  // do not include omitempty
-	SetVersionId bool       `json:"setversionid"` // do not include omitempty
-	SetDefault   bool       `json:"setdefault"`   // do not include omitempty
-	HasDocument  bool       `json:"hasdocument"`  // do not include omitempty
+	SetVersionId *bool      `json:"setversionid"` // do not include omitempty
+	SetDefault   *bool      `json:"setdefault"`   // do not include omitempty
+	HasDocument  *bool      `json:"hasdocument"`  // do not include omitempty
 	ReadOnly     bool       `json:"readonly,omitempty"`
 	Attributes   Attributes `json:"attributes,omitempty"`
 }
@@ -168,10 +168,10 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 
 func (r *ResourceModel) UnmarshalJSON(data []byte) error {
 	// Set the default values
-	r.MaxVersions = VERSIONS
-	r.SetVersionId = VERSIONID
-	r.SetDefault = SETDEFAULT
-	r.HasDocument = HASDOCUMENT
+	r.MaxVersions = MAXVERSIONS
+	r.SetVersionId = PtrBool(SETVERSIONID)
+	r.SetDefault = PtrBool(SETDEFAULT)
+	r.HasDocument = PtrBool(HASDOCUMENT)
 
 	type tmpResourceModel ResourceModel
 	return Unmarshal(data, (*tmpResourceModel)(r))
@@ -644,10 +644,10 @@ func LoadModel(reg *Registry) *Model {
 					Plural:       NotNilString(row[3]),
 					Singular:     NotNilString(row[4]),
 					Attributes:   attrs,
-					MaxVersions:  NotNilIntDef(row[6], VERSIONS),
-					SetVersionId: NotNilBoolDef(row[7], VERSIONID),
-					SetDefault:   NotNilBoolDef(row[8], SETDEFAULT),
-					HasDocument:  NotNilBoolDef(row[9], HASDOCUMENT),
+					MaxVersions:  NotNilIntDef(row[6], MAXVERSIONS),
+					SetVersionId: PtrBool(NotNilBoolDef(row[7], SETVERSIONID)),
+					SetDefault:   PtrBool(NotNilBoolDef(row[8], SETDEFAULT)),
+					HasDocument:  PtrBool(NotNilBoolDef(row[9], HASDOCUMENT)),
 					ReadOnly:     NotNilBoolDef(row[10], READONLY),
 				}
 
@@ -714,6 +714,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 	// Apply new stuff
 	newM.Registry = m.Registry
 	for _, newGM := range newM.Groups {
+		log.VPrintf(4, "Applying Group: %s", newGM.Plural)
 		newGM.Registry = m.Registry
 		oldGM := m.Groups[newGM.Plural]
 		if oldGM == nil {
@@ -727,6 +728,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 		oldGM.Attributes = newGM.Attributes
 
 		for _, newRM := range newGM.Resources {
+			log.VPrintf(4, "Applying Resource: %s", newRM.Plural)
 			oldRM := oldGM.Resources[newRM.Plural]
 			if oldRM == nil {
 				oldRM, err = oldGM.AddResourceModelFull(&ResourceModel{
@@ -738,6 +740,10 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 					HasDocument:  newRM.HasDocument,
 					ReadOnly:     newRM.ReadOnly,
 				})
+				if err != nil {
+					log.VPrintf(4, "Err: %s", err)
+					return err
+				}
 
 			} else {
 				oldRM.Singular = newRM.Singular
@@ -873,22 +879,22 @@ func (gm *GroupModel) AddResourceModelSimple(plural, singular string) (*Resource
 	return gm.AddResourceModelFull(&ResourceModel{
 		Plural:       plural,
 		Singular:     singular,
-		MaxVersions:  VERSIONS,
-		SetVersionId: VERSIONID,
-		SetDefault:   SETDEFAULT,
-		HasDocument:  HASDOCUMENT,
+		MaxVersions:  MAXVERSIONS,
+		SetVersionId: PtrBool(SETVERSIONID),
+		SetDefault:   PtrBool(SETDEFAULT),
+		HasDocument:  PtrBool(HASDOCUMENT),
 		ReadOnly:     READONLY,
 	})
 }
 
-func (gm *GroupModel) AddResourceModel(plural string, singular string, versions int, verId bool, isDefault bool, hasDocument bool) (*ResourceModel, error) {
+func (gm *GroupModel) AddResourceModel(plural string, singular string, maxVersions int, setVerId bool, setDefault bool, hasDocument bool) (*ResourceModel, error) {
 	return gm.AddResourceModelFull(&ResourceModel{
 		Plural:       plural,
 		Singular:     singular,
-		MaxVersions:  versions,
-		SetVersionId: verId,
-		SetDefault:   isDefault,
-		HasDocument:  hasDocument,
+		MaxVersions:  maxVersions,
+		SetVersionId: PtrBool(setVerId),
+		SetDefault:   PtrBool(setDefault),
+		HasDocument:  PtrBool(hasDocument),
 		ReadOnly:     READONLY,
 	})
 }
@@ -901,7 +907,11 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 		return nil, fmt.Errorf("Can't add a group with an empty sigular name")
 	}
 	if rm.MaxVersions < 0 {
-		return nil, fmt.Errorf("'versions'(%d) must be >= 0", rm.MaxVersions)
+		return nil, fmt.Errorf("'maxversions'(%d) must be >= 0", rm.MaxVersions)
+	}
+	if rm.MaxVersions == 1 && rm.GetSetDefault() != false {
+		return nil, fmt.Errorf("'setdefault' must be 'false' since " +
+			"'maxversions' is '1'")
 	}
 	if !IsValidAttributeName(rm.Plural) {
 		return nil, fmt.Errorf("ResourceModel plural name is not valid")
@@ -931,7 +941,7 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 			SetVersionId, SetDefault, HasDocument, ReadOnly)
 		VALUES(?,?,?,?,?,?,?,?,?,?)`,
 		rm.SID, gm.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.MaxVersions,
-		rm.SetVersionId, rm.SetDefault, rm.HasDocument, rm.ReadOnly)
+		rm.GetSetVersionId(), rm.GetSetDefault(), rm.GetHasDocument(), rm.ReadOnly)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", rm.Plural, err)
 		return nil, err
@@ -947,6 +957,18 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	}
 
 	return rm, nil
+}
+
+func (rm *ResourceModel) GetSetVersionId() bool {
+	return rm.SetVersionId == nil || *rm.SetVersionId == true
+}
+
+func (rm *ResourceModel) GetSetDefault() bool {
+	return rm.SetDefault == nil || *rm.SetDefault == true
+}
+
+func (rm *ResourceModel) GetHasDocument() bool {
+	return rm.HasDocument == nil || *rm.HasDocument == true
 }
 
 func (rm *ResourceModel) Delete() error {
@@ -987,11 +1009,11 @@ func (rm *ResourceModel) Save() error {
 		rm.SID, rm.GroupModel.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.MaxVersions,
 		attrs,
-		rm.SetVersionId, rm.SetDefault, rm.HasDocument, rm.ReadOnly,
+		rm.GetSetVersionId(), rm.GetSetDefault(), rm.GetHasDocument(), rm.ReadOnly,
 
 		rm.GroupModel.SID, rm.Plural, rm.Singular,
 		attrs,
-		rm.MaxVersions, rm.SetVersionId, rm.SetDefault, rm.HasDocument, rm.ReadOnly)
+		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetDefault(), rm.GetHasDocument(), rm.ReadOnly)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
 		return err
@@ -1024,7 +1046,7 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
 	}
 
-	if rm.HasDocument == true {
+	if rm.GetHasDocument() == true {
 		invalidNames := []string{
 			rm.Singular,
 			rm.Singular + "url",
@@ -1140,6 +1162,10 @@ func IsString(daType string) bool {
 	return daType == STRING || daType == TIMESTAMP ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
 		daType == URL
+}
+
+func (a *Attribute) GetStrict() bool {
+	return a.Strict == nil || *a.Strict == true
 }
 
 func (a *Attribute) InLevel(level int) bool {
@@ -1383,7 +1409,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 	}
 
 	if rm.MaxVersions < 0 {
-		return fmt.Errorf("Resource %q must have a 'versions' value >= 0",
+		return fmt.Errorf("Resource %q must have a 'maxversions' value >= 0",
 			rmName)
 	}
 
@@ -1420,7 +1446,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 
 	// Make a copy so we can add the RESOURCExxx attributes, if it has a doc
 	attrs := maps.Clone(rm.Attributes)
-	if rm.HasDocument == true {
+	if rm.GetHasDocument() == true {
 		// DUG TODO see if there's a better way to do this
 		attrs[rm.Singular] = &Attribute{Name: rm.Singular, Type: ANY}
 		attrs[rm.Singular+"url"] = &Attribute{Name: rm.Singular + "url", Type: URL}
@@ -1492,7 +1518,7 @@ func (rm *ResourceModel) SetMaxVersions(maxV int) error {
 }
 
 func (rm *ResourceModel) SetSetDefault(val bool) error {
-	rm.SetDefault = val
+	rm.SetDefault = PtrBool(val)
 	return rm.VerifyAndSave()
 }
 

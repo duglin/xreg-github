@@ -314,7 +314,12 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
 	}
 
-	err = reg.LoadModelFromFile("https://raw.githubusercontent.com/xregistry/spec/main/endpoint/model.json")
+	specPath := os.Getenv("XR_SPEC")
+	if specPath == "" {
+		specPath = "https://raw.githubusercontent.com/xregistry/spec/main"
+	}
+	fn := specPath + "/endpoint/model.json"
+	err = reg.LoadModelFromFile(fn)
 	ErrFatalf(err)
 
 	/*
@@ -431,11 +436,16 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 
 		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
 		reg.SetSave("name", "Messages Registry")
-		reg.SetSave("description", "An impl of the messages spec")
+		reg.SetSave("description", "An impl of the sages spec")
 		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
-	err = reg.LoadModelFromFile("https://raw.githubusercontent.com/xregistry/spec/main/message/model.json")
+	specPath := os.Getenv("XR_SPEC")
+	if specPath == "" {
+		specPath = "https://raw.githubusercontent.com/xregistry/spec/main"
+	}
+	fn := specPath + "/message/model.json"
+	err = reg.LoadModelFromFile(fn)
 	ErrFatalf(err)
 
 	/*

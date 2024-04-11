@@ -332,7 +332,9 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 		return err
 	}
 
-	reg.Model.ApplyNewModel(model)
+	if err := reg.Model.ApplyNewModel(model); err != nil {
+		return err
+	}
 
 	// reg.Model = model
 	// reg.Model.VerifyAndSave()

@@ -4448,7 +4448,7 @@ func TestHTTPResources(t *testing.T) {
 	xCheckErr(t, err, "Duplicate attribute name (file) at: resources.files.mystring.ifvalues.foo.xxx.ifvalues.5")
 
 	// "file" is ok this time because HasDocument=false
-	rm.HasDocument = false
+	rm.HasDocument = registry.PtrBool(false)
 	xNoErr(t, reg.Model.VerifyAndSave())
 	_, err = rm.AddAttribute(&registry.Attribute{
 		Name: "mystring",
@@ -6297,9 +6297,9 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 		Plural:       "files",
 		Singular:     "file",
 		MaxVersions:  0,
-		SetVersionId: true,
-		SetDefault:   true,
-		HasDocument:  true,
+		SetVersionId: registry.PtrBool(true),
+		SetDefault:   registry.PtrBool(true),
+		HasDocument:  registry.PtrBool(true),
 		ReadOnly:     true,
 	})
 	xNoErr(t, err)
