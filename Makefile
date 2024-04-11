@@ -25,9 +25,9 @@ test: .test .testimage
 	@for s in $(TESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
 	@# go test -failfast $(TESTDIRS)
 	@echo
-	@echo "# Run again w/o cache and w/o deleting the Registry after each one"
+	@echo "# Run again w/o deleting the Registry after each one"
 	@go clean -testcache
-	NO_CACHE=1 NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
+	NO_DELETE_REGISTRY=1 go test -failfast $(TESTDIRS)
 	@touch .test
 
 unittest:
@@ -114,7 +114,7 @@ k3dserver: k3d image
 
 prof: server qtest
 	@# May need to install: apt-get install graphviz
-	NO_CACHE=1 NO_DELETE_REGISTRY=1 \
+	NO_DELETE_REGISTRY=1 \
 		go test -cpuprofile cpu.prof -memprofile mem.prof -bench . \
 		github.com/duglin/xreg-github/tests
 	@# go tool pprof -http:0.0.0.0:9999 cpu.prof
