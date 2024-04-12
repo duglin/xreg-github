@@ -66,19 +66,19 @@ CREATE TABLE "Schemas" (
 );
 
 CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
-    SID         VARCHAR(64),        # my System ID
-    RegistrySID VARCHAR(64),
-    ParentSID   VARCHAR(64),        # ID of parent ModelEntity
+    SID               VARCHAR(64),        # my System ID
+    RegistrySID       VARCHAR(64),
+    ParentSID         VARCHAR(64),        # ID of parent ModelEntity
 
-    Singular    VARCHAR(64),
-    Plural      VARCHAR(64),
-    Attributes  JSON,               # Until we use the Attributes table
+    Singular          VARCHAR(64),
+    Plural            VARCHAR(64),
+    Attributes        JSON,               # Until we use the Attributes table
 
-    MaxVersions    INT NOT NULL,       # For Resources
-    SetVersionId   BOOL NOT NULL,      # For Resources
-    SetDefault     BOOL NOT NULL,      # For Resources
-    HasDocument    BOOL NOT NULL,      # For Resources
-    ReadOnly       BOOL NOT NULL,      # For Resources
+    MaxVersions       INT NOT NULL,       # For Resources
+    SetVersionId      BOOL NOT NULL,      # For Resources
+    SetStickyDefault  BOOL NOT NULL,      # For Resources
+    HasDocument       BOOL NOT NULL,      # For Resources
+    ReadOnly          BOOL NOT NULL,      # For Resources
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),

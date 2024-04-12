@@ -15,10 +15,10 @@ type Resource struct {
 // These attributes are on the Resource not the Version
 // We used to use a "." as a prefix to know - may still need to at some point
 var specialResourceAttrs = map[string]bool{
-	"id":               true,
-	"defaultversionid": true,
-	"setdefault":       true,
-	"#nextversionid":   true,
+	"id":                     true,
+	"defaultversionid":       true,
+	"stickydefaultversionid": true,
+	"#nextversionid":         true,
 }
 
 func (r *Resource) Get(name string) any {
@@ -118,14 +118,14 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 	// already set
 	if newDefault != nil && r.Get("defaultversionid") == newDefault.UID {
 		// But make sure we're sticky, could just be a coincidence
-		if r.Get("setdefault") != true {
-			return r.SetSave("setdefault", true)
+		if r.Get("stickydefaultversionid") != true {
+			return r.SetSave("stickydefaultversionid", true)
 		}
 		return nil
 	}
 
 	if newDefault == nil {
-		if err := r.JustSet("setdefault", nil); err != nil {
+		if err := r.JustSet("stickydefaultversionid", nil); err != nil {
 			return err
 		}
 
@@ -139,7 +139,7 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 		}
 		PanicIf(newDefault == nil, "No newest")
 	} else {
-		if err := r.JustSet("setdefault", true); err != nil {
+		if err := r.JustSet("stickydefaultversionid", true); err != nil {
 			return err
 		}
 	}
@@ -239,7 +239,7 @@ func (r *Resource) AddVersion(id string, objs ...Object) (*Version, error) {
 	// as the default.
 	// Also set it if we're not sticky w.r.t. default version
 	_, rm := r.GetModels()
-	if rm.MaxVersions == 1 || r.Get("setdefault") != true {
+	if rm.MaxVersions == 1 || r.Get("stickydefaultversionid") != true {
 		err = r.SetSave("defaultversionid", v.UID)
 		if err != nil {
 			return nil, err

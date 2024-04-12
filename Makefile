@@ -8,6 +8,10 @@ all: mysql cmds test image run
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
+ifdef XR_SPEC
+  # If pointing to local spec then make sure "docker run" uses it too
+  DOCKER_SPEC=/spec
+endif
 
 cmds: .cmds
 .cmds: server xr
@@ -47,14 +51,24 @@ image: .image
 .image: server misc/Dockerfile
 	@echo
 	@echo "# Building the container image"
+ifdef XR_SPEC
+	# Copy our local copy of the spec into the image
+	@rm -rf .spec
+	@mkdir -p .spec
+	cp -r $(XR_SPEC)/* .spec
+endif
 	@misc/errOutput docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
 	@touch .image
+ifdef XR_SPEC
+	@rm -rf .spec
+endif
 
 testimage: .testimage
 .testimage: .image
 	@echo
 	@echo "# Verifying the image"
-	@misc/errOutput docker run -ti --network host $(IMAGE) --recreate --verify
+	@misc/errOutput docker run -e XR_SPEC=$(DOCKER_SPEC) -ti --network host \
+		$(IMAGE) --recreate --verify
 	@touch .testimage
 
 push: .push

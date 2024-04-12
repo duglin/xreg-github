@@ -99,7 +99,7 @@ func TestCreateVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v3",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
@@ -155,7 +155,7 @@ func TestCreateVersion(t *testing.T) {
     "id": "f1",
     "epoch": 1,
     "self": "http://localhost:8181/dirs/d2/files/f1?meta",
-    "setdefault": true,
+    "stickydefaultversionid": true,
     "defaultversionid": "v3",
     "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/v3?meta",
 
@@ -200,7 +200,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v2",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
@@ -216,7 +216,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v2",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
@@ -249,7 +249,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v4",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
 
@@ -265,7 +265,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v4",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
 
@@ -283,7 +283,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v2",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
@@ -380,7 +380,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v4",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
 

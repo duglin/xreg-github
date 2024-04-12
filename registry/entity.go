@@ -809,7 +809,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "setdefault",
+		Name:     "stickydefaultversionid",
 		Type:     BOOLEAN,
 		ReadOnly: true,
 

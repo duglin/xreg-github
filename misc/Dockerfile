@@ -26,6 +26,9 @@ COPY --from=0 /go/src/server /server
 COPY --from=0 /go/src/xr /xr
 COPY misc/repo.tar /misc/repo.tar
 
+# If local copy of spec is found, copy it into the image so we can use it
+COPY .spec* /spec/
+
 ENTRYPOINT [ "/server" ]
 # ENTRYPOINT [ "/usr/bin/sh" ]
 # CMD [ "-c", "docker-entrypoint.sh mysqld & sleep 10 && /server" ]

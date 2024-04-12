@@ -376,7 +376,7 @@ func TestSetLabels(t *testing.T) {
           "id": "f1",
           "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-          "setdefault": true,
+          "stickydefaultversionid": true,
           "defaultversionid": "v1",
           "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
           "labels": {

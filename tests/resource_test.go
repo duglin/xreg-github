@@ -172,13 +172,13 @@ func TestResourceMaxVersions(t *testing.T) {
 		Singular:    "file",
 		MaxVersions: 1, // ONLY ALLOW 1 VERSION
 	})
-	xCheckErr(t, err, `'setdefault' must be 'false' since 'maxversions' is '1'`)
+	xCheckErr(t, err, `'setstickydefaultversionid' must be 'false' since 'maxversions' is '1'`)
 
 	rm, err = gm.AddResourceModelFull(&registry.ResourceModel{
-		Plural:      "files",
-		Singular:    "file",
-		MaxVersions: 1, // ONLY ALLOW 1 VERSION
-		SetDefault:  registry.PtrBool(false),
+		Plural:           "files",
+		Singular:         "file",
+		MaxVersions:      1, // ONLY ALLOW 1 VERSION
+		SetStickyDefault: registry.PtrBool(false),
 	})
 	xNoErr(t, err)
 

@@ -674,7 +674,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setdefault": true,
+          "setstickydefaultversionid": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -703,8 +703,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "setdefault": {
-              "name": "setdefault",
+            "stickydefaultversionid": {
+              "name": "stickydefaultversionid",
               "type": "boolean",
               "readonly": true
             },
@@ -789,7 +789,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setdefault": true,
+          "setstickydefaultversionid": true,
           "hasdocument": false
         }
       }
@@ -941,7 +941,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setdefault": true,
+          "setstickydefaultversionid": true,
           "hasdocument": false,
           "attributes": {
             "id": {
@@ -970,8 +970,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "setdefault": {
-              "name": "setdefault",
+            "stickydefaultversionid": {
+              "name": "stickydefaultversionid",
               "type": "boolean",
               "readonly": true
             },
@@ -1211,7 +1211,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setdefault": true,
+          "setstickydefaultversionid": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1240,8 +1240,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "setdefault": {
-              "name": "setdefault",
+            "stickydefaultversionid": {
+              "name": "stickydefaultversionid",
               "type": "boolean",
               "readonly": true
             },
@@ -4795,7 +4795,7 @@ func TestHTTPDefault(t *testing.T) {
 		ResBody: `hello`,
 	})
 
-	rm.SetSetDefault(false)
+	rm.SetSetStickyDefault(false)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:        "PUT file f1/2 - setdefault=2 - diff server",
@@ -4878,7 +4878,7 @@ func TestHTTPDefault(t *testing.T) {
 	})
 
 	// Enable client-side setting
-	rm.SetSetDefault(true)
+	rm.SetSetStickyDefault(true)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:    "POST file f1?setdefault - empty",
@@ -4949,7 +4949,7 @@ func TestHTTPDefault(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
@@ -4995,7 +4995,7 @@ func TestHTTPDefault(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
@@ -5409,7 +5409,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v5",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
@@ -5456,7 +5456,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v5",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
@@ -5511,7 +5511,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v3",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
@@ -5550,7 +5550,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v10",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
@@ -5583,7 +5583,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v10",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
@@ -5609,7 +5609,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "setdefault": true,
+  "stickydefaultversionid": true,
   "defaultversionid": "v1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
 
@@ -6296,13 +6296,13 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 	xNoErr(t, err)
 
 	_, err = gm.AddResourceModelFull(&registry.ResourceModel{
-		Plural:       "files",
-		Singular:     "file",
-		MaxVersions:  0,
-		SetVersionId: registry.PtrBool(true),
-		SetDefault:   registry.PtrBool(true),
-		HasDocument:  registry.PtrBool(true),
-		ReadOnly:     true,
+		Plural:           "files",
+		Singular:         "file",
+		MaxVersions:      0,
+		SetVersionId:     registry.PtrBool(true),
+		SetStickyDefault: registry.PtrBool(true),
+		HasDocument:      registry.PtrBool(true),
+		ReadOnly:         true,
 	})
 	xNoErr(t, err)
 

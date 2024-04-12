@@ -1,12 +1,13 @@
 package tests
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
 )
 
-var RepoBase = "https://raw.githubusercontent.com/xregistry/spec/main/"
+var RepoBase = "https://raw.githubusercontent.com/xregistry/spec/main"
 
 func TestXRBasic(t *testing.T) {
 	cmd := exec.Command("../xr")
@@ -17,12 +18,16 @@ func TestXRBasic(t *testing.T) {
 	// Just look for the first 3 lines
 	xCheckEqual(t, "", lines, "xRegistry CLI\n\nUsage")
 
+	if tmp := os.Getenv("XR_SPEC"); tmp != "" {
+		RepoBase = tmp
+	}
+
 	// Make sure we can validate the various spec owned model files
 	files := []string{
 		"sample-model.json",
-		RepoBase + "endpoint/model.json",
-		RepoBase + "message/model.json",
-		RepoBase + "schema/model.json",
+		RepoBase + "/endpoint/model.json",
+		RepoBase + "/message/model.json",
+		RepoBase + "/schema/model.json",
 	}
 
 	for _, file := range files {
