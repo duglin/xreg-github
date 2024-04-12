@@ -83,8 +83,3 @@ TODOs:
 - support non-string "RESOURCE" values (e.g. json)
 - add tests for immutable attributes
 - get rid of the "Error processing" part of the error msgs
-- support/test use of 'setversionid'
-- test for setting setdefaultversionid to different values
-  - in particular when creating a new version w/o an ID
-  - on an existing resource and on a new resource
-  - make sure setting it to null clears sticky and sets it to newest

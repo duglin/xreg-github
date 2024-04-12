@@ -6357,3 +6357,162 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1", "", 405,
 		"Write operations to read-only resources are not allowed\n")
 }
+
+func TestDefaultVersionThis(t *testing.T) {
+	reg := NewRegistry("TestDefaultVersionThis")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "create res?setdefault=this",
+		URL:    "/dirs/d1/files/f1?setdefaultversionid=this",
+		Method: "PUT",
+		Code:   201,
+		ResHeaders: []string{
+			"xRegistry-id: f1",
+			"xRegistry-epoch: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
+			"xRegistry-stickydefaultversionid: true",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
+			"Location: http://localhost:8181/dirs/d1/files/f1",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+		},
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "create v2 - no setdef flag",
+		URL:    "/dirs/d1/files/f1/versions/2",
+		Method: "PUT",
+		Code:   201,
+		ResHeaders: []string{
+			"xRegistry-id: 2",
+			"xRegistry-epoch: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
+		},
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "check v1",
+		URL:    "/dirs/d1/files/f1/versions/1",
+		Method: "GET",
+		Code:   200,
+		ResHeaders: []string{
+			"xRegistry-id: 1",
+			"xRegistry-epoch: 1",
+			"xRegistry-isdefault: true",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+		},
+	})
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?meta&setdefaultversionid", "", 400, `"setdefaultversionid" must not be empty`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?meta&setdefaultversionid=", "", 400, `"setdefaultversionid" must not be empty`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?meta&setdefaultversionid=this", "", 400, `Can't use 'this' if a version wasn't processed`+"\n")
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?setdefaultversionid", "", 400, `"setdefaultversionid" must not be empty`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?setdefaultversionid=", "", 400, `"setdefaultversionid" must not be empty`+"\n")
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/dirs/d1/files/f1?setdefaultversionid=this",
+		Method: "POST",
+		Code:   201,
+		ResHeaders: []string{
+			"xRegistry-id: 3",
+			"xRegistry-epoch: 1",
+			"xRegistry-isdefault: true",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/3",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/3",
+		},
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/dirs/d1/files/f1",
+		Method: "POST",
+		Code:   201,
+		ResHeaders: []string{
+			"xRegistry-id: 4",
+			"xRegistry-epoch: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/4",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/4",
+		},
+	})
+
+	// Just move sticky ptr
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/dirs/d1/files/f1?meta&setdefaultversionid=1",
+		Method: "POST",
+		Code:   200,
+		ResBody: `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "stickydefaultversionid": true,
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
+
+  "versionscount": 4,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`,
+	})
+
+	// delete version that's default
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:     "/dirs/d1/files/f1/versions/1",
+		Method:  "DELETE",
+		Code:    204,
+		ResBody: "",
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "check v1",
+		URL:    "/dirs/d1/files/f1?meta",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "defaultversionid": "4",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/4?meta",
+
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:     "/dirs/d1/files/f1/versions/4?setdefaultversionid=2",
+		Method:  "DELETE",
+		Code:    204,
+		ResBody: "",
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "check v1",
+		URL:    "/dirs/d1/files/f1?meta",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "stickydefaultversionid": true,
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`,
+	})
+}

@@ -1028,7 +1028,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	// Process any ?setdefaultversionid query parameter there might be
-	err = ProcessSetDefaultVersionIDFlag(info, resource)
+	err = ProcessSetDefaultVersionIDFlag(info, resource, version)
 	if err != nil {
 		return err
 	}
@@ -1096,7 +1096,10 @@ func HTTPPUTModel(info *RequestInfo) error {
 	return HTTPGETModel(info)
 }
 
-func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource) error {
+// Process the ?setdefaultversionid query parameter
+// "resource" is the resource we're processing
+// "version" is the version that was processed
+func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, version *Version) error {
 	vIDs, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]
 	if !ok {
 		return nil
@@ -1115,8 +1118,18 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource) error
 		return fmt.Errorf(`"setdefaultversionid" must not be empty`)
 	}
 
+	// "null" and "this" have special meaning
 	if vID == "null" {
+		// Unstick the default version and go back to newest=default
 		return resource.SetDefault(nil)
+	}
+
+	if vID == "this" {
+		if version == nil {
+			return fmt.Errorf("Can't use 'this' if a version wasn't processed")
+		}
+		// stick default version to current one we just processed
+		return resource.SetDefault(version)
 	}
 
 	version, err := resource.FindVersion(vID)
@@ -1160,7 +1173,7 @@ func HTTPSetDefaultVersionID(info *RequestInfo) error {
 		return fmt.Errorf("Resource %q not found", info.ResourceUID)
 	}
 
-	err = ProcessSetDefaultVersionIDFlag(info, resource)
+	err = ProcessSetDefaultVersionIDFlag(info, resource, nil)
 	if err != nil {
 		return err
 	}
