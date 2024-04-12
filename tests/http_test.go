@@ -5409,6 +5409,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v5",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
@@ -5455,6 +5456,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v5",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 

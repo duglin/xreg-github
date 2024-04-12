@@ -18,6 +18,7 @@ func TestMultiReg(t *testing.T) {
 	reg.Commit()
 
 	reg2, err := registry.NewRegistry(nil, "reg2")
+	defer PassDeleteReg(t, reg2)
 	xNoErr(t, err)
 	gm, err = reg2.Model.AddGroupModel("reg2_dirs", "reg2_dir")
 	xNoErr(t, err)

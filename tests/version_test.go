@@ -166,8 +166,8 @@ func TestCreateVersion(t *testing.T) {
 `)
 }
 
-func Testdefaultversion(t *testing.T) {
-	reg := NewRegistry("Testdefaultversion")
+func TestDefaultVersion(t *testing.T) {
+	reg := NewRegistry("TestDefaultVersion")
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
 
@@ -178,8 +178,68 @@ func Testdefaultversion(t *testing.T) {
 	f1, _ := d1.AddResource("files", "f1", "v1")
 	v1, _ := f1.FindVersion("v1")
 	v2, _ := f1.AddVersion("v2")
+
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	// Doesn't change much, but does make it sticky
 	xNoErr(t, f1.SetDefault(v2))
+
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+
+  "versionscount": 2,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
 	v3, _ := f1.AddVersion("v3")
+
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	// Now unstick it and it default should be v3 now
+	xNoErr(t, f1.SetDefault(nil))
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "defaultversionid": "v3",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
+
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
 	v4, _ := f1.AddVersion("v4")
 	xNoErr(t, f1.SetDefault(v4))
 	v5, _ := f1.AddVersion("v5")
@@ -189,6 +249,7 @@ func Testdefaultversion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v4",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
 
@@ -204,6 +265,7 @@ func Testdefaultversion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v4",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
 
@@ -221,6 +283,7 @@ func Testdefaultversion(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
   "defaultversionid": "v2",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
 
@@ -245,8 +308,105 @@ func Testdefaultversion(t *testing.T) {
 `)
 
 	xNoErr(t, v4.Delete(""))
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
 	xNoErr(t, v5.Delete(""))
 	xCheckGet(t, reg, "dirs/d1/files/f1?meta", "Not found\n")
+}
+
+func TestDefaultVersionMaxVersions(t *testing.T) {
+	reg := NewRegistry("TestDefaultVersionMaxVersions")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 3, true, true, true)
+
+	d1, _ := reg.AddGroup("dirs", "d1")
+	f1, _ := d1.AddResource("files", "f1", "v1")
+	f1.FindVersion("v1")
+	f1.AddVersion("v2")
+	f1.AddVersion("v3")
+
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "defaultversionid": "v3",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
+
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	v4, _ := f1.AddVersion("v4")
+
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "defaultversionid": "v4",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
+
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xNoErr(t, f1.SetDefault(v4))
+	f1.AddVersion("v5")
+	// check def = v4
+	f1.AddVersion("v6")
+	f1.AddVersion("v7")
+	f1.AddVersion("v8")
+	// check def = v4    v8, v7, v4
+
+	xCheckGet(t, reg, "dirs/d1/files/f1?meta&inline=versions",
+		`{
+  "id": "f1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "setdefault": true,
+  "defaultversionid": "v4",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
+
+  "versions": {
+    "v4": {
+      "id": "v4",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v4?meta",
+      "isdefault": true
+    },
+    "v7": {
+      "id": "v7",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v7?meta"
+    },
+    "v8": {
+      "id": "v8",
+      "epoch": 1,
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v8?meta"
+    }
+  },
+  "versionscount": 3,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
 }
 
 func TestVersionRequiredFields(t *testing.T) {

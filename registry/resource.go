@@ -119,7 +119,7 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 	if newDefault != nil && r.Get("defaultversionid") == newDefault.UID {
 		// But make sure we're sticky, could just be a coincidence
 		if r.Get("setdefault") != true {
-			return r.JustSet("setdefault", true)
+			return r.SetSave("setdefault", true)
 		}
 		return nil
 	}
@@ -138,10 +138,10 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 			return err
 		}
 		PanicIf(newDefault == nil, "No newest")
-	}
-
-	if err := r.JustSet("setdefault", true); err != nil {
-		return err
+	} else {
+		if err := r.JustSet("setdefault", true); err != nil {
+			return err
+		}
 	}
 
 	return r.SetSave("defaultversionid", newDefault.UID)

@@ -107,7 +107,8 @@ func (e *Entity) GetPP(pp *PropPath) any {
 		var ok bool
 		val, ok, _ = ObjectGetProp(e.NewObject, pp)
 		if !ok {
-			val, _, _ = ObjectGetProp(e.Object, pp)
+			// TODO: DUG - we should not need this
+			// val, _, _ = ObjectGetProp(e.Object, pp)
 		}
 	} else {
 		val, _, _ = ObjectGetProp(e.Object, pp)
@@ -326,7 +327,7 @@ func (e *Entity) SetSave(path string, val any) error {
 
 // Set the prop in the Entity but don't Validate or Save to the DB
 func (e *Entity) JustSet(pp *PropPath, val any) error {
-	log.VPrintf(3, ">Enter: JustSet(%s=%v)", pp.UI(), val)
+	log.VPrintf(3, ">Enter: JustSet(%s.%s=%v)", e.UID, pp.UI(), val)
 	defer log.VPrintf(3, "<Exit: JustSet")
 
 	// Assume no other edits are pending
@@ -1493,6 +1494,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 
 func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
 	// TODO see if we can move this into MaterializeProp
+	log.VPrintf(4, "ObjectSetProp(%s=%v)", pp.UI(), val)
 	if pp.Len() == 0 && IsNil(val) {
 		// A bit of a special case, not 100% sure if this is ok
 		for k, _ := range obj {
@@ -1999,13 +2001,15 @@ func PrepUpdateEntity(e *Entity) error {
 		// Any ReadOnly attribute in Object, but not in NewObject, must
 		// be one that we want to keep around. Note that a 'nil' in NewObject
 		// will not grab the one in Object - assumes we want to erase the val
-		if attr.ReadOnly {
-			oldVal, ok1 := e.Object[attr.Name]
-			_, ok2 := e.NewObject[attr.Name]
-			if ok1 && !ok2 {
-				e.NewObject[attr.Name] = oldVal
+		/*
+			if attr.ReadOnly {
+				oldVal, ok1 := e.Object[attr.Name]
+				_, ok2 := e.NewObject[attr.Name]
+				if ok1 && !ok2 {
+					e.NewObject[attr.Name] = oldVal
+				}
 			}
-		}
+		*/
 
 		if attr.internals.updateFn != nil {
 			if err := attr.internals.updateFn(e); err != nil {
