@@ -145,7 +145,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 		ErrFatalf(group.SetSave("name", group.UID))
 		ErrFatalf(group.SetSave("modifiedby", "me"))
-		ErrFatalf(group.SetSave("modifiedon", time.Now().Format(time.RFC3339)))
+		ErrFatalf(group.SetSave("modifiedat", time.Now().Format(time.RFC3339)))
 		ErrFatalf(group.SetSave("epoch", 5))
 
 		// group2 := reg.FindGroup("apiproviders", parts[0])

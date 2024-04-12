@@ -241,8 +241,8 @@ func TestHTTPModel(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "createdon": {
-        "name": "createdon",
+      "createdat": {
+        "name": "createdat",
         "type": "timestamp",
         "readonly": true
       },
@@ -251,8 +251,8 @@ func TestHTTPModel(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "modifiedon": {
-        "name": "modifiedon",
+      "modifiedat": {
+        "name": "modifiedat",
         "type": "timestamp",
         "readonly": true
       }
@@ -325,8 +325,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -335,8 +335,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -408,8 +408,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -418,8 +418,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -491,8 +491,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -501,8 +501,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -586,8 +586,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -596,8 +596,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -652,8 +652,8 @@ func TestHTTPModel(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -662,8 +662,8 @@ func TestHTTPModel(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -742,8 +742,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -752,8 +752,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -853,8 +853,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -863,8 +863,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -919,8 +919,8 @@ func TestHTTPModel(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -929,8 +929,8 @@ func TestHTTPModel(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1009,8 +1009,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1019,8 +1019,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1123,8 +1123,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -1133,8 +1133,8 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -1189,8 +1189,8 @@ func TestHTTPModel(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -1199,8 +1199,8 @@ func TestHTTPModel(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1279,8 +1279,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1289,8 +1289,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -6115,8 +6115,8 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -6125,8 +6125,8 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -6187,8 +6187,8 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -6197,8 +6197,8 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -6259,8 +6259,8 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -6269,8 +6269,8 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }

@@ -47,12 +47,12 @@ func TestTimestampRegistry(t *testing.T) {
   "id": "TestTimestampRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/",
-  "modifiedon": "2024-01-01T12:00:00Z"
+  "modifiedat": "2024-01-01T12:00:00Z"
 }
 `})
 
-	regCreate := reg.Get("createdon")
-	regMod := reg.Get("modifiedon")
+	regCreate := reg.Get("createdat")
+	regMod := reg.Get("modifiedat")
 
 	xCheck(t, regCreate == nil, "Should be nil")
 	xCheck(t, regMod != nil, "Should not be nil")
@@ -71,17 +71,17 @@ func TestTimestampRegistry(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "my docs",
-  "modifiedon": "2024-01-01T12:00:00Z"
+  "modifiedat": "2024-01-01T12:00:00Z"
 }
 `})
 
 	reg.Refresh()
 
-	xCheckEqual(t, "", reg.Get("createdon"), regCreate)
-	xCheck(t, regMod != reg.Get("modifiedon"), "should be new time")
+	xCheckEqual(t, "", reg.Get("createdat"), regCreate)
+	xCheck(t, regMod != reg.Get("modifiedat"), "should be new time")
 
-	regCreate = reg.Get("createdon")
-	regMod = reg.Get("modifiedon")
+	regCreate = reg.Get("createdat")
+	regMod = reg.Get("modifiedat")
 
 	// Now test with Groups and Resources
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
@@ -104,15 +104,15 @@ func TestTimestampRegistry(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "my docs",
-  "modifiedon": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z",
 
   "dirs": {
     "d1": {
       "id": "d1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1",
-      "createdon": "YYYY-MM-DDTHH:MM:SSZ",
-      "modifiedon": "YYYY-MM-DDTHH:MM:SSZ",
+      "createdat": "YYYY-MM-DDTHH:MM:SSZ",
+      "modifiedat": "YYYY-MM-DDTHH:MM:SSZ",
 
       "files": {
         "f1": {
@@ -121,8 +121,8 @@ func TestTimestampRegistry(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
           "defaultversionid": "v1",
           "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
-          "createdon": "YYYY-MM-DDTHH:MM:SSZ",
-          "modifiedon": "YYYY-MM-DDTHH:MM:SSZ",
+          "createdat": "YYYY-MM-DDTHH:MM:SSZ",
+          "modifiedat": "YYYY-MM-DDTHH:MM:SSZ",
 
           "versions": {
             "v1": {
@@ -130,8 +130,8 @@ func TestTimestampRegistry(t *testing.T) {
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
               "isdefault": true,
-              "createdon": "YYYY-MM-DDTHH:MM:SSZ",
-              "modifiedon": "YYYY-MM-DDTHH:MM:SSZ"
+              "createdat": "YYYY-MM-DDTHH:MM:SSZ",
+              "modifiedat": "YYYY-MM-DDTHH:MM:SSZ"
             }
           },
           "versionscount": 1,
@@ -146,20 +146,20 @@ func TestTimestampRegistry(t *testing.T) {
   "dirsurl": "http://localhost:8181/dirs"
 }
 `})
-	dCTime := d.Get("createdon")
-	dMTime := d.Get("modifiedon")
+	dCTime := d.Get("createdat")
+	dMTime := d.Get("modifiedat")
 
-	fCTime := f.Get("createdon")
-	fMTime := f.Get("modifiedon")
+	fCTime := f.Get("createdat")
+	fMTime := f.Get("modifiedat")
 
-	xCheckEqual(t, "", reg.Get("createdon"), regCreate)
-	xCheckEqual(t, "", reg.Get("modifiedon"), regMod)
+	xCheckEqual(t, "", reg.Get("createdat"), regCreate)
+	xCheckEqual(t, "", reg.Get("modifiedat"), regMod)
 
 	xNoErr(t, f.SetSave("description", "myfile"))
-	xCheckEqual(t, "", dCTime, d.Get("createdon"))
-	xCheckEqual(t, "", dMTime, d.Get("modifiedon"))
-	xCheckEqual(t, "", fCTime, f.Get("createdon"))
-	xCheck(t, fMTime != f.Get("modifiedon"), "Should not be the same")
+	xCheckEqual(t, "", dCTime, d.Get("createdat"))
+	xCheckEqual(t, "", dMTime, d.Get("modifiedat"))
+	xCheckEqual(t, "", fCTime, f.Get("createdat"))
+	xCheck(t, fMTime != f.Get("modifiedat"), "Should not be the same")
 
 	// Close out any lingering tx
 	xNoErr(t, reg.Commit())
@@ -181,8 +181,8 @@ func TestTimestampRegistry(t *testing.T) {
   "id": "TestTimestampRegistry2",
   "epoch": 1,
   "self": "http://localhost:8181/",
-  "createdon": "YYYY-MM-DDTHH:MM:SSZ",
-  "modifiedon": "YYYY-MM-DDTHH:MM:SSZ"
+  "createdat": "YYYY-MM-DDTHH:MM:SSZ",
+  "modifiedat": "YYYY-MM-DDTHH:MM:SSZ"
 }
 `})
 }

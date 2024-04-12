@@ -938,7 +938,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "createdon",
+		Name:     "createdat",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
 
@@ -948,11 +948,11 @@ var OrderedSpecProps = []*Attribute{
 			getFn:     nil,
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
-				ct := e.Object["createdon"]
+				ct := e.Object["createdat"]
 				isNew := IsNil(e.Object["epoch"])
 				if IsNil(ct) && isNew {
 					if e.Registry.Get("#tracktimestamps") == true {
-						e.NewObject["createdon"] = e.tx.CreateTime
+						e.NewObject["createdat"] = e.tx.CreateTime
 					}
 				}
 				return nil
@@ -973,7 +973,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "modifiedon",
+		Name:     "modifiedat",
 		Type:     TIMESTAMP,
 		ReadOnly: true,
 
@@ -984,7 +984,7 @@ var OrderedSpecProps = []*Attribute{
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
 				if e.Registry.Get("#tracktimestamps") == true {
-					e.NewObject["modifiedon"] = e.tx.CreateTime
+					e.NewObject["modifiedat"] = e.tx.CreateTime
 				}
 				return nil
 			},

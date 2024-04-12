@@ -51,8 +51,8 @@
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -61,8 +61,8 @@
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -118,8 +118,8 @@
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -128,8 +128,8 @@
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -198,8 +198,8 @@
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -208,8 +208,8 @@
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },

@@ -64,8 +64,8 @@ func TestNoModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -74,8 +74,8 @@ func TestNoModel(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -140,8 +140,8 @@ func TestNoModel(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "createdon": {
-        "name": "createdon",
+      "createdat": {
+        "name": "createdat",
         "type": "timestamp",
         "readonly": true
       },
@@ -150,8 +150,8 @@ func TestNoModel(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "modifiedon": {
-        "name": "modifiedon",
+      "modifiedat": {
+        "name": "modifiedat",
         "type": "timestamp",
         "readonly": true
       }
@@ -223,8 +223,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -233,8 +233,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -298,8 +298,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -308,8 +308,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -372,8 +372,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -382,8 +382,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -445,8 +445,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -455,8 +455,8 @@ func TestRegSchema(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -526,8 +526,8 @@ func TestGroupModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -536,8 +536,8 @@ func TestGroupModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -592,8 +592,8 @@ func TestGroupModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -602,8 +602,8 @@ func TestGroupModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -666,8 +666,8 @@ func TestGroupModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -676,8 +676,8 @@ func TestGroupModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -732,8 +732,8 @@ func TestGroupModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -742,8 +742,8 @@ func TestGroupModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -806,8 +806,8 @@ func TestGroupModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -816,8 +816,8 @@ func TestGroupModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -872,8 +872,8 @@ func TestGroupModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -882,8 +882,8 @@ func TestGroupModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1004,8 +1004,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -1014,8 +1014,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -1070,8 +1070,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -1080,8 +1080,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1160,8 +1160,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1170,8 +1170,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1232,8 +1232,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -1242,8 +1242,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1322,8 +1322,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1332,8 +1332,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1403,8 +1403,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -1413,8 +1413,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -1469,8 +1469,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -1479,8 +1479,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1559,8 +1559,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1569,8 +1569,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1631,8 +1631,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -1641,8 +1641,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1705,8 +1705,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -1715,8 +1715,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -1771,8 +1771,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -1781,8 +1781,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -1861,8 +1861,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1871,8 +1871,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -1933,8 +1933,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -1943,8 +1943,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -2008,8 +2008,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -2018,8 +2018,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -2074,8 +2074,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -2084,8 +2084,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -2164,8 +2164,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -2174,8 +2174,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -2244,8 +2244,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -2254,8 +2254,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -2310,8 +2310,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -2320,8 +2320,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -2400,8 +2400,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -2410,8 +2410,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -2506,8 +2506,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -2516,8 +2516,8 @@ func TestResourceModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     },
@@ -2576,8 +2576,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -2586,8 +2586,8 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -2666,8 +2666,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -2676,8 +2676,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -2771,8 +2771,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "createdon": {
-        "name": "createdon",
+      "createdat": {
+        "name": "createdat",
         "type": "timestamp",
         "readonly": true
       },
@@ -2781,8 +2781,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "modifiedon": {
-        "name": "modifiedon",
+      "modifiedat": {
+        "name": "modifiedat",
         "type": "timestamp",
         "readonly": true
       },
@@ -2841,8 +2841,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "createdon": {
-            "name": "createdon",
+          "createdat": {
+            "name": "createdat",
             "type": "timestamp",
             "readonly": true
           },
@@ -2851,8 +2851,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "modifiedon": {
-            "name": "modifiedon",
+          "modifiedat": {
+            "name": "modifiedat",
             "type": "timestamp",
             "readonly": true
           }
@@ -2931,8 +2931,8 @@ func TestResourceModelCreate(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "createdon": {
-                "name": "createdon",
+              "createdat": {
+                "name": "createdat",
                 "type": "timestamp",
                 "readonly": true
               },
@@ -2941,8 +2941,8 @@ func TestResourceModelCreate(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "modifiedon": {
-                "name": "modifiedon",
+              "modifiedat": {
+                "name": "modifiedat",
                 "type": "timestamp",
                 "readonly": true
               },
@@ -3062,8 +3062,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "createdon": {
-        "name": "createdon",
+      "createdat": {
+        "name": "createdat",
         "type": "timestamp",
         "readonly": true
       },
@@ -3072,8 +3072,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "modifiedon": {
-        "name": "modifiedon",
+      "modifiedat": {
+        "name": "modifiedat",
         "type": "timestamp",
         "readonly": true
       }
@@ -3128,8 +3128,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "createdon": {
-            "name": "createdon",
+          "createdat": {
+            "name": "createdat",
             "type": "timestamp",
             "readonly": true
           },
@@ -3138,8 +3138,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "modifiedon": {
-            "name": "modifiedon",
+          "modifiedat": {
+            "name": "modifiedat",
             "type": "timestamp",
             "readonly": true
           }
@@ -3218,8 +3218,8 @@ func TestResourceModelCreate(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "createdon": {
-                "name": "createdon",
+              "createdat": {
+                "name": "createdat",
                 "type": "timestamp",
                 "readonly": true
               },
@@ -3228,8 +3228,8 @@ func TestResourceModelCreate(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "modifiedon": {
-                "name": "modifiedon",
+              "modifiedat": {
+                "name": "modifiedat",
                 "type": "timestamp",
                 "readonly": true
               },
@@ -3327,8 +3327,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "createdon": {
-        "name": "createdon",
+      "createdat": {
+        "name": "createdat",
         "type": "timestamp",
         "readonly": true
       },
@@ -3337,8 +3337,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "modifiedon": {
-        "name": "modifiedon",
+      "modifiedat": {
+        "name": "modifiedat",
         "type": "timestamp",
         "readonly": true
       }
@@ -3393,8 +3393,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "createdon": {
-            "name": "createdon",
+          "createdat": {
+            "name": "createdat",
             "type": "timestamp",
             "readonly": true
           },
@@ -3403,8 +3403,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "modifiedon": {
-            "name": "modifiedon",
+          "modifiedat": {
+            "name": "modifiedat",
             "type": "timestamp",
             "readonly": true
           }
@@ -3492,8 +3492,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "createdon": {
-        "name": "createdon",
+      "createdat": {
+        "name": "createdat",
         "type": "timestamp",
         "readonly": true
       },
@@ -3502,8 +3502,8 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "modifiedon": {
-        "name": "modifiedon",
+      "modifiedat": {
+        "name": "modifiedat",
         "type": "timestamp",
         "readonly": true
       }
@@ -3558,8 +3558,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "createdon": {
-            "name": "createdon",
+          "createdat": {
+            "name": "createdat",
             "type": "timestamp",
             "readonly": true
           },
@@ -3568,8 +3568,8 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "modifiedon": {
-            "name": "modifiedon",
+          "modifiedat": {
+            "name": "modifiedat",
             "type": "timestamp",
             "readonly": true
           }
@@ -3661,8 +3661,8 @@ func TestMultModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "createdon": {
-      "name": "createdon",
+    "createdat": {
+      "name": "createdat",
       "type": "timestamp",
       "readonly": true
     },
@@ -3671,8 +3671,8 @@ func TestMultModelCreate(t *testing.T) {
       "type": "string",
       "readonly": true
     },
-    "modifiedon": {
-      "name": "modifiedon",
+    "modifiedat": {
+      "name": "modifiedat",
       "type": "timestamp",
       "readonly": true
     }
@@ -3727,8 +3727,8 @@ func TestMultModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -3737,8 +3737,8 @@ func TestMultModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -3817,8 +3817,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -3827,8 +3827,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -3911,8 +3911,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -3921,8 +3921,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -3983,8 +3983,8 @@ func TestMultModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "createdon": {
-          "name": "createdon",
+        "createdat": {
+          "name": "createdat",
           "type": "timestamp",
           "readonly": true
         },
@@ -3993,8 +3993,8 @@ func TestMultModelCreate(t *testing.T) {
           "type": "string",
           "readonly": true
         },
-        "modifiedon": {
-          "name": "modifiedon",
+        "modifiedat": {
+          "name": "modifiedat",
           "type": "timestamp",
           "readonly": true
         }
@@ -4073,8 +4073,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -4083,8 +4083,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -4167,8 +4167,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "createdon": {
-              "name": "createdon",
+            "createdat": {
+              "name": "createdat",
               "type": "timestamp",
               "readonly": true
             },
@@ -4177,8 +4177,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "string",
               "readonly": true
             },
-            "modifiedon": {
-              "name": "modifiedon",
+            "modifiedat": {
+              "name": "modifiedat",
               "type": "timestamp",
               "readonly": true
             },
@@ -4294,8 +4294,8 @@ func TestMultModel2Create(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "createdon": {
-        "name": "createdon",
+      "createdat": {
+        "name": "createdat",
         "type": "timestamp",
         "readonly": true
       },
@@ -4304,8 +4304,8 @@ func TestMultModel2Create(t *testing.T) {
         "type": "string",
         "readonly": true
       },
-      "modifiedon": {
-        "name": "modifiedon",
+      "modifiedat": {
+        "name": "modifiedat",
         "type": "timestamp",
         "readonly": true
       }
@@ -4360,8 +4360,8 @@ func TestMultModel2Create(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "createdon": {
-            "name": "createdon",
+          "createdat": {
+            "name": "createdat",
             "type": "timestamp",
             "readonly": true
           },
@@ -4370,8 +4370,8 @@ func TestMultModel2Create(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "modifiedon": {
-            "name": "modifiedon",
+          "modifiedat": {
+            "name": "modifiedat",
             "type": "timestamp",
             "readonly": true
           }
@@ -4450,8 +4450,8 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "createdon": {
-                "name": "createdon",
+              "createdat": {
+                "name": "createdat",
                 "type": "timestamp",
                 "readonly": true
               },
@@ -4460,8 +4460,8 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "modifiedon": {
-                "name": "modifiedon",
+              "modifiedat": {
+                "name": "modifiedat",
                 "type": "timestamp",
                 "readonly": true
               },
@@ -4522,8 +4522,8 @@ func TestMultModel2Create(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "createdon": {
-            "name": "createdon",
+          "createdat": {
+            "name": "createdat",
             "type": "timestamp",
             "readonly": true
           },
@@ -4532,8 +4532,8 @@ func TestMultModel2Create(t *testing.T) {
             "type": "string",
             "readonly": true
           },
-          "modifiedon": {
-            "name": "modifiedon",
+          "modifiedat": {
+            "name": "modifiedat",
             "type": "timestamp",
             "readonly": true
           }
@@ -4612,8 +4612,8 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "createdon": {
-                "name": "createdon",
+              "createdat": {
+                "name": "createdat",
                 "type": "timestamp",
                 "readonly": true
               },
@@ -4622,8 +4622,8 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "string",
                 "readonly": true
               },
-              "modifiedon": {
-                "name": "modifiedon",
+              "modifiedat": {
+                "name": "modifiedat",
                 "type": "timestamp",
                 "readonly": true
               },
