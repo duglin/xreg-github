@@ -78,8 +78,6 @@ TODOs:
 - support multiple resources/versions in POSTs
 - support overriding spec defined attributes - like "format"
 - support changing the model - test for invalid changes
-- support the create/modify by/on attributes
-- add support for resource vs resourcebase64 - return what was on the PUT
-- support non-string "RESOURCE" values (e.g. json)
+- support the create/modify by/at attributes
 - add tests for immutable attributes
 - get rid of the "Error processing" part of the error msgs

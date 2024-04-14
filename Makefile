@@ -76,7 +76,7 @@ push: .push
 	docker push $(IMAGE)
 	@touch .push
 
-notest run: mysql server image local
+notest run: mysql server local
 
 start: mysql server image
 	@echo

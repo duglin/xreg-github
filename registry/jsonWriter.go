@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -215,13 +216,26 @@ func (jw *JsonWriter) WriteEntity() error {
 				}
 
 				if len(data) > 0 {
-					tmp := map[string]any{}
-					// err = json.Unmarshal(data, tmp)
-					err = Unmarshal(data, tmp)
-
-					if err == nil {
+					// Try to write the body in either JSON (the current
+					// raw bytes stored in the DB), or if not valid JSON then
+					// base64 encode it.
+					// If #isString is set then we were given a JSON String
+					// when the entity was created/updated so just use that
+					// with quotes around it
+					if jw.Entity.Get("#isString") == true {
 						jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular,
 							string(data))
+					} else if data[0] != '"' && json.Valid(data) {
+						// Only write the data as raw JSON (with indents)
+						// if it doesn't start with quotes. For that case
+						// since we need to escape the quotes we're going to
+						// need to escape things, and in those cases
+						// we just base64 encode it (the 'else' clause)
+						pretty := bytes.Buffer{}
+						err = json.Indent(&pretty, data, jw.indent, "  ")
+						PanicIf(err != nil, "Bad JSON: %s", string(data))
+						jw.Printf("%s\n%s%q: %s", extra, jw.indent, singular,
+							pretty.String())
 					} else {
 						str := base64.StdEncoding.EncodeToString(data)
 						jw.Printf("%s\n%s\"%sbase64\": %q",

@@ -3,7 +3,7 @@ package registry
 import (
 	"bytes"
 	// "encoding/base64"
-	// "encoding/json"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -754,19 +754,13 @@ func HTTPPutPost(info *RequestInfo) error {
 	// Ok, now start to deal with the incoming request
 	//////////////////////////////////////////////////
 
-	// First lets get the Resource's model to get the RESOURCE 'singular'
-	resSingular := ""
-	if info.ResourceModel != nil {
-		resSingular = info.ResourceModel.Singular
-	}
-
 	// Get the incoming Object either from the body or from xRegistry headers
-	IncomingObj, err := ExtractIncomingObject(info, body, resSingular)
+	IncomingObj, err := ExtractIncomingObject(info, body)
 	if err != nil {
 		return err
 	}
 
-	// ID should be in the body so grab it for later use
+	// If ID is in the body, grab it for later use
 	propsID := ""
 	if v, ok := IncomingObj["id"]; ok {
 		if reflect.ValueOf(v).Kind() == reflect.String {
@@ -800,7 +794,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	groupUID := info.GroupUID
 	if len(info.Parts) == 1 {
 		// must be POST /GROUPs
-		// Use the ID from the body if present
+		// Use the ID from the body if present, else generate one
 		if groupUID = propsID; groupUID == "" {
 			groupUID = NewUUID()
 		}
@@ -1564,11 +1558,16 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 	return nil
 }
 
-func ExtractIncomingObject(info *RequestInfo, body []byte, resSingular string) (Object, error) {
+func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	IncomingObj := map[string]any{}
 
 	if len(body) == 0 {
 		body = nil
+	}
+
+	resSingular := ""
+	if info.ResourceModel != nil {
+		resSingular = info.ResourceModel.Singular
 	}
 
 	metaInBody := (info.ShowMeta ||
@@ -1599,6 +1598,37 @@ func ExtractIncomingObject(info *RequestInfo, body []byte, resSingular string) (
 			info.StatusCode = http.StatusBadRequest
 			return nil, err
 		}
+
+		if info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == true {
+			data, ok := IncomingObj[resSingular]
+			if ok {
+				// Get the raw bytes of the "resSingular" json attribute
+				buf := []byte(nil)
+				switch reflect.ValueOf(data).Kind() {
+				case reflect.Float64, reflect.Map, reflect.Slice:
+					buf, err = json.Marshal(data)
+					if err != nil {
+						return nil, err
+					}
+					delete(IncomingObj, "#isString")
+				case reflect.Invalid:
+					// I think this only happens when it's "null".
+					// just let 'buf' stay as nil
+					delete(IncomingObj, "#isString")
+				default:
+					str := fmt.Sprintf("%s", data)
+					buf = []byte(str)
+					IncomingObj["#isString"] = true
+				}
+				IncomingObj[resSingular] = buf
+			} else if _, ok = IncomingObj[resSingular+"base64"]; ok {
+				delete(IncomingObj, "#isString")
+			} else if _, ok = IncomingObj[resSingular+"url"]; ok {
+				delete(IncomingObj, "#isString")
+			} else if _, ok = IncomingObj[resSingular+"proxyurl"]; ok {
+				delete(IncomingObj, "#isString")
+			}
+		}
 	}
 
 	// xReg metadata are in headers, so move them into IncomingObj. We'll
@@ -1607,6 +1637,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte, resSingular string) (
 	if len(info.Parts) > 2 && !metaInBody {
 		// IncomingObj["#resource"] = body // save new body
 		IncomingObj[resSingular] = body // save new body
+		delete(IncomingObj, "#isString")
 
 		seenMaps := map[string]bool{}
 
@@ -1651,6 +1682,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte, resSingular string) (
 				delete(IncomingObj, "#resourceProxyURL")
 				delete(IncomingObj, "#resourceURL")
 				delete(IncomingObj, "#resource")
+				delete(IncomingObj, "#isString")
 			}
 
 			val := any(value[0])
