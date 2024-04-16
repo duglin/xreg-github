@@ -308,9 +308,9 @@ func TestProcessImports(t *testing.T) {
 
 		{"nest7", `{}`},
 
-		{"nest7.err1", `In "tmp/nest7.err1", $import isn't a string`},
-		{"nest7.err2", `In "tmp/nest7.err2", $imports contains a non-string value (1)`},
-		{"nest7.err3", `In "tmp/nest7.err3", both $import and $imports is not allowed`},
+		{"nest7.err1", `In "tmp/xreg1/nest7.err1", $import isn't a string`},
+		{"nest7.err2", `In "tmp/xreg1/nest7.err2", $imports contains a non-string value (1)`},
+		{"nest7.err3", `In "tmp/xreg1/nest7.err3", both $import and $imports is not allowed`},
 		{"http:/nest7.err1", `In "http://localhost:9999/nest7.err1", $import isn't a string`},
 
 		{"nest8", `{"foo":"bar","foo6":666}`},
@@ -318,7 +318,7 @@ func TestProcessImports(t *testing.T) {
 		{"nest10", `{"bar":"zzz","foo":"xxx","foo6":666}`},
 	}
 
-	mask := regexp.MustCompile("/tmp/xreg[^/]*")
+	mask := regexp.MustCompile(`".*/xreg[^/]*`)
 
 	for i, test := range tests {
 		t.Logf("Test #: %d", i)
@@ -348,9 +348,10 @@ func TestProcessImports(t *testing.T) {
 		if err != nil {
 			buf = []byte(err.Error())
 		}
+		exp := string(mask.ReplaceAll([]byte(test.Result), []byte("tmp")))
 		buf = mask.ReplaceAll(buf, []byte("tmp"))
-		if string(buf) != test.Result {
-			t.Fatalf("\nExp: %s\nGot: %s", test.Result, string(buf))
+		if string(buf) != exp {
+			t.Fatalf("\nExp: %s\nGot: %s", exp, string(buf))
 		}
 	}
 
