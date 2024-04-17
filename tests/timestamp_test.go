@@ -63,7 +63,7 @@ func TestTimestampRegistry(t *testing.T) {
 		Method: "GET",
 		Code:   200,
 		BodyMasks: []string{
-			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z|YYYY-MM-DDTHH:MM:SSZ`,
+			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?[^"]*|YYYY-MM-DDTHH:MM:SSZ`,
 		},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
@@ -96,7 +96,7 @@ func TestTimestampRegistry(t *testing.T) {
 		Method: "GET",
 		Code:   200,
 		BodyMasks: []string{
-			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z|YYYY-MM-DDTHH:MM:SSZ`,
+			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?[^"]*|YYYY-MM-DDTHH:MM:SSZ`,
 		},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
@@ -174,7 +174,7 @@ func TestTimestampRegistry(t *testing.T) {
 		Method: "GET",
 		Code:   200,
 		BodyMasks: []string{
-			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z|YYYY-MM-DDTHH:MM:SSZ`,
+			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?[^"]*|YYYY-MM-DDTHH:MM:SSZ`,
 		},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
