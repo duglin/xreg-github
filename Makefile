@@ -23,6 +23,7 @@ qtest: .test
 test: .test .testimage
 .test: export TESTING=1
 .test: .cmds */*test.go
+	@while ! nc -z localhost $(DBPORT) ; do echo "Wait for mysql";sleep 2; done
 	@echo
 	@echo "# Testing"
 	@go clean -testcache
