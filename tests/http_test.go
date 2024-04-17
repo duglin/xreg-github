@@ -674,7 +674,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -703,8 +703,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -789,7 +789,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": false
         }
       }
@@ -941,7 +941,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": false,
           "attributes": {
             "id": {
@@ -970,8 +970,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -1211,7 +1211,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1240,8 +1240,8 @@ func TestHTTPModel(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -4949,7 +4949,7 @@ func TestHTTPDefault(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
@@ -4995,7 +4995,7 @@ func TestHTTPDefault(t *testing.T) {
   "id": "f1",
   "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
@@ -5409,7 +5409,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "v5",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
@@ -5456,7 +5456,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "v5",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5?meta",
 
@@ -5511,7 +5511,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "v3",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3?meta",
 
@@ -5550,7 +5550,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "v10",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
@@ -5583,7 +5583,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "v10",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10?meta",
 
@@ -5609,7 +5609,7 @@ func TestHTTPDelete(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "v1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
 
@@ -6375,7 +6375,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-id: f1",
 			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-stickydefaultversionid: true",
+			"xRegistry-stickydefaultversion: true",
 			"xRegistry-defaultversionid: 1",
 			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionscount: 1",
@@ -6454,7 +6454,7 @@ func TestDefaultVersionThis(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
 
@@ -6506,7 +6506,7 @@ func TestDefaultVersionThis(t *testing.T) {
   "id": "f1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
-  "stickydefaultversionid": true,
+  "stickydefaultversion": true,
   "defaultversionid": "2",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2?meta",
 

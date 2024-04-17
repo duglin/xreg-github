@@ -109,10 +109,10 @@ type ResourceModel struct {
 
 	Plural           string     `json:"plural"`
 	Singular         string     `json:"singular"`
-	MaxVersions      int        `json:"maxversions"`               // do not include omitempty
-	SetVersionId     *bool      `json:"setversionid"`              // do not include omitempty
-	SetStickyDefault *bool      `json:"setstickydefaultversionid"` // do not include omitempty
-	HasDocument      *bool      `json:"hasdocument"`               // do not include omitempty
+	MaxVersions      int        `json:"maxversions"`             // do not include omitempty
+	SetVersionId     *bool      `json:"setversionid"`            // do not include omitempty
+	SetStickyDefault *bool      `json:"setstickydefaultversion"` // do not include omitempty
+	HasDocument      *bool      `json:"hasdocument"`             // do not include omitempty
 	ReadOnly         bool       `json:"readonly,omitempty"`
 	Attributes       Attributes `json:"attributes,omitempty"`
 }
@@ -910,7 +910,7 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 		return nil, fmt.Errorf("'maxversions'(%d) must be >= 0", rm.MaxVersions)
 	}
 	if rm.MaxVersions == 1 && rm.GetSetStickyDefault() != false {
-		return nil, fmt.Errorf("'setstickydefaultversionid' must be 'false' since " +
+		return nil, fmt.Errorf("'setstickydefaultversion' must be 'false' since " +
 			"'maxversions' is '1'")
 	}
 	if !IsValidAttributeName(rm.Plural) {

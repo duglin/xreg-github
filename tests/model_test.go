@@ -1092,7 +1092,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1121,8 +1121,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -1254,7 +1254,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1283,8 +1283,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -1491,7 +1491,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1520,8 +1520,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -1793,7 +1793,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -1822,8 +1822,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -2096,7 +2096,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -2125,8 +2125,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -2332,7 +2332,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 5,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -2361,8 +2361,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -2598,7 +2598,7 @@ func TestResourceModelCreate(t *testing.T) {
           "singular": "file",
           "maxversions": 6,
           "setversionid": false,
-          "setstickydefaultversionid": false,
+          "setstickydefaultversion": false,
           "hasdocument": false,
           "attributes": {
             "id": {
@@ -2627,8 +2627,8 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -2863,7 +2863,7 @@ func TestResourceModelCreate(t *testing.T) {
             "singular": "file",
             "maxversions": 6,
             "setversionid": false,
-            "setstickydefaultversionid": false,
+            "setstickydefaultversion": false,
             "hasdocument": false,
             "attributes": {
               "id": {
@@ -2892,8 +2892,8 @@ func TestResourceModelCreate(t *testing.T) {
                 "type": "boolean",
                 "readonly": true
               },
-              "stickydefaultversionid": {
-                "name": "stickydefaultversionid",
+              "stickydefaultversion": {
+                "name": "stickydefaultversion",
                 "type": "boolean",
                 "readonly": true
               },
@@ -3150,7 +3150,7 @@ func TestResourceModelCreate(t *testing.T) {
             "singular": "file",
             "maxversions": 6,
             "setversionid": false,
-            "setstickydefaultversionid": false,
+            "setstickydefaultversion": false,
             "hasdocument": false,
             "attributes": {
               "id": {
@@ -3179,8 +3179,8 @@ func TestResourceModelCreate(t *testing.T) {
                 "type": "boolean",
                 "readonly": true
               },
-              "stickydefaultversionid": {
-                "name": "stickydefaultversionid",
+              "stickydefaultversion": {
+                "name": "stickydefaultversion",
                 "type": "boolean",
                 "readonly": true
               },
@@ -3749,7 +3749,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm1",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -3778,8 +3778,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -3843,7 +3843,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm2",
           "maxversions": 1,
           "setversionid": true,
-          "setstickydefaultversionid": false,
+          "setstickydefaultversion": false,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -3872,8 +3872,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -4005,7 +4005,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm1",
           "maxversions": 2,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -4034,8 +4034,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -4099,7 +4099,7 @@ func TestMultModelCreate(t *testing.T) {
           "singular": "rm2",
           "maxversions": 3,
           "setversionid": true,
-          "setstickydefaultversionid": true,
+          "setstickydefaultversion": true,
           "hasdocument": true,
           "attributes": {
             "id": {
@@ -4128,8 +4128,8 @@ func TestMultModelCreate(t *testing.T) {
               "type": "boolean",
               "readonly": true
             },
-            "stickydefaultversionid": {
-              "name": "stickydefaultversionid",
+            "stickydefaultversion": {
+              "name": "stickydefaultversion",
               "type": "boolean",
               "readonly": true
             },
@@ -4382,7 +4382,7 @@ func TestMultModel2Create(t *testing.T) {
             "singular": "file",
             "maxversions": 2,
             "setversionid": true,
-            "setstickydefaultversionid": false,
+            "setstickydefaultversion": false,
             "hasdocument": true,
             "attributes": {
               "id": {
@@ -4411,8 +4411,8 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "boolean",
                 "readonly": true
               },
-              "stickydefaultversionid": {
-                "name": "stickydefaultversionid",
+              "stickydefaultversion": {
+                "name": "stickydefaultversion",
                 "type": "boolean",
                 "readonly": true
               },
@@ -4544,7 +4544,7 @@ func TestMultModel2Create(t *testing.T) {
             "singular": "file",
             "maxversions": 0,
             "setversionid": false,
-            "setstickydefaultversionid": true,
+            "setstickydefaultversion": true,
             "hasdocument": true,
             "attributes": {
               "id": {
@@ -4573,8 +4573,8 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "boolean",
                 "readonly": true
               },
-              "stickydefaultversionid": {
-                "name": "stickydefaultversionid",
+              "stickydefaultversion": {
+                "name": "stickydefaultversion",
                 "type": "boolean",
                 "readonly": true
               },
