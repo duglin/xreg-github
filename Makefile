@@ -4,10 +4,11 @@ all: mysql cmds test image run
 # export XR_SPEC=$HOME/go/src/github.com/xregistry/spec -> to load local models
 # export VERBOSE=x                                      -> control log verbosity
 # export DBHOST=localhost                               -> mySQL host
-# export DBPORT=3306                                    -> mySql port
+# export DBPORT=3306                                    -> mySQL port
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 IMAGE := duglin/xreg-server
+DBPORT ?= 3306
 ifdef XR_SPEC
   # If pointing to local spec then make sure "docker run" uses it too
   DOCKER_SPEC=/spec
@@ -97,23 +98,23 @@ docker: mysql image
 mysql:
 	@docker container inspect mysql > /dev/null 2>&1 || \
 	(echo "# Starting mysql" && \
-	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password --network host \
-		--name mysql mysql > /dev/null )
+	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password \
+		-p $(DBPORT):$(DBPORT) --name mysql mysql > /dev/null )
 
 mysql-client: mysql
-	@while ! nc -z localhost 3306 ; do echo "Waiting for mysql" ; sleep 2 ; done
+	@while ! nc -z localhost $(DBPORT) ; do echo "Wait for mysql";sleep 2; done
 	@(docker container inspect mysql-client > /dev/null 2>&1 && \
 		echo "Attaching to existing client... (press enter for prompt)" && \
 		docker attach mysql-client) || \
 	docker run -ti --rm --network host --name mysql-client mysql \
-		mysql --port 3306 --password=password --protocol tcp || \
+		mysql --port $(DBPORT) --password=password --protocol tcp || \
 		echo "If it failed, make sure mysql is ready"
 
 k3d: misc/mysql.yaml
 	@k3d cluster list | grep xreg > /dev/null || \
 		(creating k3d cluster || \
 		k3d cluster create xreg --wait \
-			-p 3306:32002@loadbalancer  \
+			-p $(DBPORT):32002@loadbalancer  \
 			-p 8080:32000@loadbalancer ; \
 		while ((kubectl get nodes 2>&1 || true ) | \
 		grep -e "E0727" -e "forbidden" > /dev/null 2>&1  ) ; \
