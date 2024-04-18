@@ -83,7 +83,7 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 
 		for _, mask := range test.HeaderMasks {
 			var re *regexp.Regexp
-			search, replace, _ := strings.Cut(mask, "|")
+			search, replace, _ := strings.Cut(mask, "||")
 			if re = savedREs[search]; re == nil {
 				re = regexp.MustCompile(search)
 				savedREs[search] = re
@@ -117,7 +117,7 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 
 	for _, mask := range test.BodyMasks {
 		var re *regexp.Regexp
-		search, replace, found := strings.Cut(mask, "|")
+		search, replace, found := strings.Cut(mask, "||")
 		if !found {
 			// Must be just a property name
 			search = fmt.Sprintf(`("%s": ")(.*)(")`, search)
@@ -1916,12 +1916,12 @@ func TestHTTPGroups(t *testing.T) {
 		ReqHeaders:  []string{},
 		ReqBody:     "",
 		Code:        201,
-		HeaderMasks: []string{"dirs/[a-zA-Z0-9]*|dirs/xxx"},
+		HeaderMasks: []string{"dirs/[a-zA-Z0-9]*||dirs/xxx"},
 		ResHeaders: []string{
 			"Content-Type:application/json",
 			"Location:http://localhost:8181/dirs/xxx",
 		},
-		BodyMasks: []string{"id", "dirs/[a-zA-Z0-9]*|dirs/xxx"},
+		BodyMasks: []string{"id", "dirs/[a-zA-Z0-9]*||dirs/xxx"},
 		ResBody: `{
   "id": "xxx",
   "epoch": 1,
@@ -1940,12 +1940,12 @@ func TestHTTPGroups(t *testing.T) {
 		ReqHeaders:  []string{},
 		ReqBody:     "{}",
 		Code:        201,
-		HeaderMasks: []string{"dirs/[a-zA-Z0-9]*|dirs/xxx"},
+		HeaderMasks: []string{"dirs/[a-zA-Z0-9]*||dirs/xxx"},
 		ResHeaders: []string{
 			"Content-Type:application/json",
 			"Location:http://localhost:8181/dirs/xxx",
 		},
-		BodyMasks: []string{"id", "dirs/[a-zA-Z0-9]*|dirs/xxx"},
+		BodyMasks: []string{"id", "dirs/[a-zA-Z0-9]*||dirs/xxx"},
 		ResBody: `{
   "id": "xxx",
   "epoch": 1,
@@ -2200,8 +2200,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ReqBody:    "",
 		Code:       201,
 		HeaderMasks: []string{
-			"^[a-z0-9]{8}$|xxx",
-			"files/[^/]+|files/xxx",
+			"^[a-z0-9]{8}$||xxx",
+			"files/[^/]+||files/xxx",
 		},
 		ResHeaders: []string{
 			"Content-Type: ",
@@ -2227,8 +2227,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ReqBody:    "My cool doc",
 		Code:       201,
 		HeaderMasks: []string{
-			"^[a-z0-9]{8}$|xxx",
-			"files/[^/]+|files/xxx",
+			"^[a-z0-9]{8}$||xxx",
+			"files/[^/]+||files/xxx",
 		},
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
@@ -5907,7 +5907,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 		ReqBody: `{"test":"foo"}`,
 
 		Code:      201,
-		BodyMasks: []string{"id", "files/[a-zA-Z0-9]*|files/xxx"},
+		BodyMasks: []string{"id", "files/[a-zA-Z0-9]*||files/xxx"},
 		ResBody: `{
   "id": "5bd549c7",
   "epoch": 1,
@@ -5929,9 +5929,9 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 
 		Code: 200,
 		BodyMasks: []string{
-			`"id": "[a-z0-9]{8}"|"id": "xxx"`,
-			`"[a-z0-9]{8}": {|"xxx": {"`,
-			`files/[a-z0-9]{8}|files/xxx`,
+			`"id": "[a-z0-9]{8}"||"id": "xxx"`,
+			`"[a-z0-9]{8}": {||"xxx": {"`,
+			`files/[a-z0-9]{8}||files/xxx`,
 		},
 		ResBody: `{
   "id": "d1",

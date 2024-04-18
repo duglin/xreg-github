@@ -6,6 +6,8 @@ import (
 	"github.com/duglin/xreg-github/registry"
 )
 
+var TSMASK = `\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[-+]\d{2}:\d{2})||YYYY-MM-DDTHH:MM:SSZ`
+
 func TestTimestampRegistry(t *testing.T) {
 	reg := NewRegistry("TestTimestampRegistry")
 	defer PassDeleteReg(t, reg)
@@ -36,12 +38,10 @@ func TestTimestampRegistry(t *testing.T) {
 	xNoErr(t, reg.TrackTimestamps(true))
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/",
-		Method: "GET",
-		Code:   200,
-		BodyMasks: []string{
-			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?[^"]*|YYYY-MM-DDTHH:MM:SSZ`,
-		},
+		URL:       "/",
+		Method:    "GET",
+		Code:      200,
+		BodyMasks: []string{TSMASK},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestTimestampRegistry",
@@ -59,19 +59,17 @@ func TestTimestampRegistry(t *testing.T) {
 
 	xNoErr(t, reg.SetSave("description", "my docs"))
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/",
-		Method: "GET",
-		Code:   200,
-		BodyMasks: []string{
-			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?[^"]*|YYYY-MM-DDTHH:MM:SSZ`,
-		},
+		URL:       "/",
+		Method:    "GET",
+		Code:      200,
+		BodyMasks: []string{TSMASK},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestTimestampRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "my docs",
-  "modifiedat": "2024-01-01T12:00:00Z"
+  "modifiedat": "2024-01-01T12:00:00+09:02"
 }
 `})
 
@@ -92,19 +90,17 @@ func TestTimestampRegistry(t *testing.T) {
 	f, _ := d.AddResource("files", "f1", "v1")
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/?inline",
-		Method: "GET",
-		Code:   200,
-		BodyMasks: []string{
-			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?[^"]*|YYYY-MM-DDTHH:MM:SSZ`,
-		},
+		URL:       "/?inline",
+		Method:    "GET",
+		Code:      200,
+		BodyMasks: []string{TSMASK},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestTimestampRegistry",
   "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "my docs",
-  "modifiedat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00-09:00",
 
   "dirs": {
     "d1": {
@@ -170,12 +166,10 @@ func TestTimestampRegistry(t *testing.T) {
 	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/",
-		Method: "GET",
-		Code:   200,
-		BodyMasks: []string{
-			`[0-4]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?[^"]*|YYYY-MM-DDTHH:MM:SSZ`,
-		},
+		URL:       "/",
+		Method:    "GET",
+		Code:      200,
+		BodyMasks: []string{TSMASK},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestTimestampRegistry2",
