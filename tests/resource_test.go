@@ -139,7 +139,7 @@ func TestResourceRequiredFields(t *testing.T) {
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 	reg.Rollback()
 
-	f1, err := group.AddResource("files", "f1", "v1",
+	f1, err := group.AddResourceWithObject("files", "f1", "v1",
 		registry.Object{"clireq": "test"})
 	xNoErr(t, err)
 	reg.Commit()

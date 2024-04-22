@@ -378,7 +378,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 
 	// End of model
 
-	g, err := reg.AddGroup("endpoints", "e1", registry.Object{
+	g, err := reg.AddGroupWithObject("endpoints", "e1", registry.Object{
 		"usage": "producer",
 	})
 	ErrFatalf(err)
@@ -407,7 +407,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(v.SetSave("name", "blobDeleted"))
 	ErrFatalf(v.SetSave("epoch", 3))
 
-	g, err = reg.AddGroup("endpoints", "e2", registry.Object{
+	g, err = reg.AddGroupWithObject("endpoints", "e2", registry.Object{
 		"usage": "consumer",
 	})
 	ErrFatalf(err)

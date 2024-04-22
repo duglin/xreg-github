@@ -80,4 +80,6 @@ TODOs:
 - support changing the model - test for invalid changes
 - support the create/modify by/at attributes
 - add tests for immutable attributes
-- get rid of the "Error processing" part of the error msgs
+- support ?inline on PUT/POST
+- process ?setdefaultversionid flag before we update things
+- make sure we don't let go http add "content-type" header for docs w/o a value

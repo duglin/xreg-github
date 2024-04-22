@@ -357,9 +357,13 @@ func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
 	return &Group{Entity: *ent, Registry: reg}, nil
 }
 
-func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, error) {
-	log.VPrintf(3, ">Enter AddGroup(%s,%s)", gType, id)
-	defer log.VPrintf(3, "<Exit AddGroup")
+func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
+	return reg.AddGroupWithObject(gType, id, nil)
+}
+
+func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object) (*Group, error) {
+	log.VPrintf(3, ">Enter AddGroupWithObject(%s,%s)", gType, id)
+	defer log.VPrintf(3, "<Exit AddGroupWithObject")
 
 	if reg.Model.Groups[gType] == nil {
 		return nil, fmt.Errorf("Error adding Group, unknown type: %s", gType)
@@ -412,15 +416,8 @@ func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, 
 		return nil, err
 	}
 
-	for _, obj := range objs {
-		for k, v := range obj {
-			if k == "id" && v != id {
-				return nil, fmt.Errorf("The IDs must match(%q vs %q)", id, v)
-			}
-			if err = g.JustSet(k, v); err != nil {
-				return nil, err
-			}
-		}
+	if obj != nil {
+		g.NewObject = obj
 	}
 
 	if err = g.SetSave("epoch", 1); err != nil {
@@ -431,55 +428,115 @@ func (reg *Registry) AddGroup(gType string, id string, objs ...Object) (*Group, 
 	return g, nil
 }
 
-func GenerateQuery(info *RequestInfo) (string, []interface{}, error) {
+func (reg *Registry) UpsertGroup(gType string, id string) (*Group, bool, error) {
+	return reg.UpsertGroupWithObject(gType, id, nil)
+}
+
+func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object) (*Group, bool, error) {
+	log.VPrintf(3, ">Enter UpsertGroupWithObject(%s,%s)", gType, id)
+	defer log.VPrintf(3, "<Exit UpsertGroupWithObject")
+
+	if reg.Model.Groups[gType] == nil {
+		return nil, false, fmt.Errorf("Error adding Group, unknown type: %s", gType)
+	}
+
+	if id == "" {
+		id = NewUUID()
+	}
+
+	g, err := reg.FindGroup(gType, id)
+	if err != nil {
+		return nil, false, fmt.Errorf("Error finding for Group(%s) %q: %s",
+			gType, id, err)
+	}
+
+	// Not found, so create a new one
+	isNew := (g == nil)
+	if g == nil {
+		g = &Group{
+			Entity: Entity{
+				tx: reg.tx,
+
+				Registry: reg,
+				DbSID:    NewUUID(),
+				Plural:   gType,
+				UID:      id,
+
+				Level:    1,
+				Path:     gType + "/" + id,
+				Abstract: gType,
+			},
+			Registry: reg,
+		}
+
+		err = DoOne(reg.tx, `
+			INSERT INTO "Groups"(SID,RegistrySID,UID,ModelSID,Path,Abstract)
+			SELECT ?,?,?,SID,?,?
+			FROM ModelEntities
+			WHERE RegistrySID=? AND Plural=? AND ParentSID IS NULL`,
+			g.DbSID, g.Registry.DbSID, g.UID, g.Path, g.Abstract,
+			g.Registry.DbSID, g.Plural)
+
+		if err != nil {
+			err = fmt.Errorf("Error adding Group: %s", err)
+			log.Print(err)
+			return nil, false, err
+		}
+
+		// Use the ID passed as an arg, not from the metadata, as the true
+		// ID. If the one in the metadata differs we'll flag it down below
+		if err = g.JustSet("id", g.UID); err != nil {
+			return nil, false, err
+		}
+	}
+
+	if isNew || obj != nil {
+		if obj != nil {
+			g.NewObject = obj
+		}
+
+		if err = g.ValidateAndSave(); err != nil {
+			return nil, false, err
+		}
+	}
+
+	return g, isNew, nil
+}
+
+func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*FilterExpr) (string, []interface{}, error) {
 	query := ""
 	args := []any{}
 
-	// Make sure we include the root entity even if the filter excludes it
-	rootEntityQuery := func() string {
-		return ""
-		res := ""
-
-		/*
-			if info.What != "Coll" {
-				args = append(args, strings.Join(info.Parts, "/"))
-				res = "Path=?\nOR  "
-			}
-		*/
-
-		return res
-	}
-
-	args = []interface{}{info.Registry.DbSID}
+	args = []interface{}{reg.DbSID}
 	query = `
 SELECT
   RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
 FROM FullTree WHERE RegSID=?`
 
 	// Remove entities that are higher than the GET PATH specified
-	if info.What != "Registry" {
-		p := strings.Join(info.Parts, "/")
-		query += "\nAND "
-		if info.What == "Coll" {
-			query += "Path LIKE ?"
-			args = append(args, p+"/%")
-		} else if info.What == "Entity" {
-			query += "(Path=? OR Path LIKE ?)"
+	if what != "Registry" && len(paths) > 0 {
+		query += "\nAND ("
+		for i, p := range paths {
+			if i > 0 {
+				query += " OR "
+			}
+			query += "Path=? OR Path LIKE ?"
 			args = append(args, p, p+"/%")
 		}
+		query += ")"
+
 	}
 
-	if len(info.Filters) != 0 {
+	if len(filters) != 0 {
 		query += `
 AND
 (
-` + rootEntityQuery() + `
 eSID IN ( -- eSID from query
   WITH RECURSIVE cte(eSID,ParentSID,Path) AS (
     SELECT eSID,ParentSID,Path FROM Entities
     WHERE eSID in ( -- start of the OR Filter groupings`
 		firstOr := true
-		for _, OrFilters := range info.Filters {
+		for _, OrFilters := range filters {
 			if !firstOr {
 				query += `
       UNION -- Adding another OR`
@@ -502,7 +559,7 @@ eSID IN ( -- eSID from query
 				}
 				firstAnd = false
 				check := ""
-				args = append(args, info.Registry.DbSID, filter.Path)
+				args = append(args, reg.DbSID, filter.Path)
 				if filter.HasEqual {
 					args = append(args, filter.Value)
 					check = "PropValue=?"

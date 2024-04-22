@@ -45,9 +45,13 @@ func (g *Group) FindResource(rType string, id string) (*Resource, error) {
 	return &Resource{Entity: *ent, Group: g}, nil
 }
 
-func (g *Group) AddResource(rType string, id string, vID string, objs ...Object) (*Resource, error) {
-	log.VPrintf(3, ">Enter: AddResource(%s,%s)", rType, id)
-	defer log.VPrintf(3, "<Exit: AddResource")
+func (g *Group) AddResource(rType string, id string, vID string) (*Resource, error) {
+	return g.AddResourceWithObject(rType, id, vID, nil)
+}
+
+func (g *Group) AddResourceWithObject(rType string, id string, vID string, obj Object) (*Resource, error) {
+	log.VPrintf(3, ">Enter: AddResourceWithObject(%s,%s)", rType, id)
+	defer log.VPrintf(3, "<Exit: AddResourceWithObject")
 
 	rModel := g.Registry.Model.Groups[g.Plural].Resources[rType]
 	if rModel == nil {
@@ -114,13 +118,109 @@ func (g *Group) AddResource(rType string, id string, vID string, objs ...Object)
 		return nil, err
 	}
 
-	_, err = r.AddVersion(vID, objs...)
+	_, err = r.AddVersionWithObject(vID, obj)
 	if err != nil {
 		return nil, err
 	}
 
 	log.VPrintf(3, "Created new one - dbSID: %s", r.DbSID)
 	return r, err
+}
+
+func (g *Group) UpsertResource(rType string, id string, vID string) (*Resource, bool, error) {
+	return g.UpsertResourceWithObject(rType, id, vID, nil)
+}
+
+func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, obj Object) (*Resource, bool, error) {
+	log.VPrintf(3, ">Enter: UpsertResourceWithObject(%s,%s)", rType, id)
+	defer log.VPrintf(3, "<Exit: UpsertResourceWithObject")
+
+	rModel := g.Registry.Model.Groups[g.Plural].Resources[rType]
+	if rModel == nil {
+		return nil, false, fmt.Errorf("Unknown Resource type (%s) for Group %q",
+			rType, g.Plural)
+	}
+
+	r, err := g.FindResource(rType, id)
+	if err != nil {
+		return nil, false, fmt.Errorf("Error checking for Resource(%s) %q: %s",
+			rType, id, err)
+	}
+
+	isNew := (r == nil)
+	if r == nil {
+		r = &Resource{
+			Entity: Entity{
+				tx: g.tx,
+
+				Registry: g.Registry,
+				DbSID:    NewUUID(),
+				Plural:   rType,
+				UID:      id,
+
+				Level:    2,
+				Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
+				Abstract: g.Plural + string(DB_IN) + rType,
+			},
+			Group: g,
+		}
+
+		err = DoOne(r.tx, `
+        INSERT INTO Resources(SID, UID, GroupSID, ModelSID, Path, Abstract)
+        SELECT ?,?,?,SID,?,?
+        FROM ModelEntities
+        WHERE RegistrySID=?
+          AND ParentSID IN (
+            SELECT SID FROM ModelEntities
+            WHERE RegistrySID=?
+            AND ParentSID IS NULL
+            AND Plural=?)
+            AND Plural=?`,
+			r.DbSID, r.UID, g.DbSID,
+			g.Plural+"/"+g.UID+"/"+rType+"/"+r.UID, g.Plural+string(DB_IN)+rType,
+			g.Registry.DbSID,
+			g.Registry.DbSID, g.Plural,
+			rType)
+		if err != nil {
+			err = fmt.Errorf("Error adding Resource: %s", err)
+			log.Print(err)
+			return nil, false, err
+		}
+
+		// Use the ID passed as an arg, not from the metadata, as the true
+		// ID. If the one in the metadata differs we'll flag it down below
+		err = r.JustSet("id", r.UID)
+		if err != nil {
+			return nil, false, err
+		}
+
+		err = r.SetSave("#nextversionid", 1)
+		if err != nil {
+			return nil, false, err
+		}
+
+		_, err = r.AddVersionWithObject(vID, obj)
+		if err != nil {
+			return nil, false, err
+		}
+	} else {
+		v, err := r.GetDefault()
+		if err != nil {
+			return nil, false, err
+		}
+
+		if obj != nil {
+			v.NewObject = obj
+			v.NewObject["id"] = v.UID // ID is Resource's switch to Version's
+
+			err = v.ValidateAndSave()
+			if err != nil {
+				return nil, false, err
+			}
+		}
+	}
+
+	return r, isNew, err
 }
 
 func (g *Group) Delete() error {

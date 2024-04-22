@@ -1308,7 +1308,7 @@ func TestHTTPModel(t *testing.T) {
 	})
 
 	xHTTP(t, reg, "PUT", "/", `{"description": "testing"}`, 400,
-		`Error processing registry: Attribute "description"(testing) must be one of the enum values: one, two`+"\n")
+		`Attribute "description"(testing) must be one of the enum values: one, two`+"\n")
 
 	xHTTP(t, reg, "PUT", "/", `{}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
@@ -1418,7 +1418,7 @@ func TestHTTPRegistry(t *testing.T) {
 		ReqBody:    "{ \"id\": \"\" }",
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody:    "Error processing registry: ID can't be an empty string\n",
+		ResBody:    "ID can't be an empty string\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -1484,7 +1484,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing registry: Attribute \"epoch\"(33) doesn't match existing value (4)\n",
+		ResBody:    "Attribute \"epoch\"(33) doesn't match existing value (4)\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -1598,7 +1598,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody: `Error processing registry: Attribute "mymapobj.mapobj_int" must be a map[string] or object
+		ResBody: `Attribute "mymapobj.mapobj_int" must be a map[string] or object
 `,
 	})
 
@@ -1743,7 +1743,7 @@ func TestHTTPRegistry(t *testing.T) {
 			ReqBody:    test.request,
 			Code:       400,
 			ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-			ResBody:    `Error processing registry: ` + test.response + "\n",
+			ResBody:    test.response + "\n",
 		})
 	}
 
@@ -1757,7 +1757,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody: `Error processing registry: Attribute "self" must be a url
+		ResBody: `Attribute "self" must be a url
 `,
 	})
 
@@ -1771,7 +1771,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody:    "Error processing registry: Attribute \"id\" must be a string\n",
+		ResBody:    "Attribute \"id\" must be a string\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -1784,7 +1784,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody:    "Error processing registry: Can't change the ID of an entity(TestHTTPRegistry->foo)\n",
+		ResBody:    "Can't change the ID of an entity(TestHTTPRegistry->foo)\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -1910,111 +1910,313 @@ func TestHTTPGroups(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "Create group - empty",
-		URL:         "/dirs",
-		Method:      "POST",
-		ReqHeaders:  []string{},
-		ReqBody:     "",
-		Code:        201,
-		HeaderMasks: []string{"dirs/[a-zA-Z0-9]*||dirs/xxx"},
+		Name:       "Create group - empty",
+		URL:        "/dirs",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    "",
+		Code:       200,
 		ResHeaders: []string{
 			"Content-Type:application/json",
-			"Location:http://localhost:8181/dirs/xxx",
 		},
-		BodyMasks: []string{"id", "dirs/[a-zA-Z0-9]*||dirs/xxx"},
-		ResBody: `{
-  "id": "xxx",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/xxx",
-
-  "filescount": 0,
-  "filesurl": "http://localhost:8181/dirs/xxx/files"
-}
+		ResBody: `{}
 `,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "Create group - {}",
-		URL:         "/dirs",
-		Method:      "POST",
-		ReqHeaders:  []string{},
-		ReqBody:     "{}",
-		Code:        201,
-		HeaderMasks: []string{"dirs/[a-zA-Z0-9]*||dirs/xxx"},
+		Name:       "Create group - {}",
+		URL:        "/dirs",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    "{}",
+		Code:       200,
 		ResHeaders: []string{
 			"Content-Type:application/json",
-			"Location:http://localhost:8181/dirs/xxx",
 		},
-		BodyMasks: []string{"id", "dirs/[a-zA-Z0-9]*||dirs/xxx"},
-		ResBody: `{
-  "id": "xxx",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/xxx",
-
-  "filescount": 0,
-  "filesurl": "http://localhost:8181/dirs/xxx/files"
-}
+		ResBody: `{}
 `,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST group - full",
+		Name:       "POST group - full, single",
 		URL:        "/dirs",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
-  "id":"dir1",
-  "name":"my group",
-  "description":"desc",
-  "documentation":"docs-url",
-  "labels": {
-    "label1": "value1",
-    "label2": "5",
-    "label3": "123.456",
-    "label4": "",
-    "label5": null
-  },
-  "format":"my group",
-  "myarray": [ "hello", 5 ],
-  "mymap": { "item1": 5.5 },
-  "myobj": { "item2": [ "hi" ] }
+  "dir1": {
+    "id":"dir1",
+    "name":"my group",
+    "description":"desc",
+    "documentation":"docs-url",
+    "labels": {
+      "label1": "value1",
+      "label2": "5",
+      "label3": "123.456",
+      "label4": "",
+      "label5": null
+    },
+    "format":"my group",
+    "myarray": [ "hello", 5 ],
+    "mymap": { "item1": 5.5 },
+    "myobj": { "item2": [ "hi" ] }
+  }
 }`,
-		Code: 201,
+		Code: 200,
 		ResHeaders: []string{
 			"Content-Type:application/json",
-			"Location:http://localhost:8181/dirs/dir1",
 		},
 		ResBody: `{
-  "id": "dir1",
-  "name": "my group",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/dir1",
-  "description": "desc",
-  "documentation": "docs-url",
-  "labels": {
-    "label1": "value1",
-    "label2": "5",
-    "label3": "123.456",
-    "label4": ""
-  },
-  "format": "my group",
-  "myarray": [
-    "hello",
-    5
-  ],
-  "mymap": {
-    "item1": 5.5
-  },
-  "myobj": {
-    "item2": [
-      "hi"
-    ]
-  },
+  "dir1": {
+    "id": "dir1",
+    "name": "my group",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1",
+    "description": "desc",
+    "documentation": "docs-url",
+    "labels": {
+      "label1": "value1",
+      "label2": "5",
+      "label3": "123.456",
+      "label4": ""
+    },
+    "format": "my group",
+    "myarray": [
+      "hello",
+      5
+    ],
+    "mymap": {
+      "item1": 5.5
+    },
+    "myobj": {
+      "item2": [
+        "hi"
+      ]
+    },
 
-  "filescount": 0,
-  "filesurl": "http://localhost:8181/dirs/dir1/files"
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir1/files"
+  }
 }
 `,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST group - full, multiple",
+		URL:        "/dirs",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "dir2": {
+    "id":"dir2",
+    "name":"my group",
+    "description":"desc",
+    "documentation":"docs-url",
+    "labels": {
+      "label1": "value1",
+      "label2": "5",
+      "label3": "123.456",
+      "label4": "",
+      "label5": null
+    },
+    "format":"my group",
+    "myarray": [ "hello", 5 ],
+    "mymap": { "item1": 5.5 },
+    "myobj": { "item2": [ "hi" ] }
+  },
+  "dir3": {}
+}`,
+		Code:       200,
+		ResHeaders: []string{},
+		ResBody: `{
+  "dir2": {
+    "id": "dir2",
+    "name": "my group",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir2",
+    "description": "desc",
+    "documentation": "docs-url",
+    "labels": {
+      "label1": "value1",
+      "label2": "5",
+      "label3": "123.456",
+      "label4": ""
+    },
+    "format": "my group",
+    "myarray": [
+      "hello",
+      5
+    ],
+    "mymap": {
+      "item1": 5.5
+    },
+    "myobj": {
+      "item2": [
+        "hi"
+      ]
+    },
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir2/files"
+  },
+  "dir3": {
+    "id": "dir3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir3",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir3/files"
+  }
+}
+`,
+	})
+
+	xHTTP(t, reg, "GET", "/dirs", "", 200, `{
+  "dir1": {
+    "id": "dir1",
+    "name": "my group",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1",
+    "description": "desc",
+    "documentation": "docs-url",
+    "labels": {
+      "label1": "value1",
+      "label2": "5",
+      "label3": "123.456",
+      "label4": ""
+    },
+    "format": "my group",
+    "myarray": [
+      "hello",
+      5
+    ],
+    "mymap": {
+      "item1": 5.5
+    },
+    "myobj": {
+      "item2": [
+        "hi"
+      ]
+    },
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir1/files"
+  },
+  "dir2": {
+    "id": "dir2",
+    "name": "my group",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir2",
+    "description": "desc",
+    "documentation": "docs-url",
+    "labels": {
+      "label1": "value1",
+      "label2": "5",
+      "label3": "123.456",
+      "label4": ""
+    },
+    "format": "my group",
+    "myarray": [
+      "hello",
+      5
+    ],
+    "mymap": {
+      "item1": 5.5
+    },
+    "myobj": {
+      "item2": [
+        "hi"
+      ]
+    },
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir2/files"
+  },
+  "dir3": {
+    "id": "dir3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir3",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir3/files"
+  }
+}
+`)
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST group - full, multiple - clear",
+		URL:        "/dirs",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "dir1": {},
+  "dir2": {},
+  "dir3": {
+    "description": "hello"
+  }
+}`,
+		Code:       200,
+		ResHeaders: []string{},
+		ResBody: `{
+  "dir1": {
+    "id": "dir1",
+    "epoch": 2,
+    "self": "http://localhost:8181/dirs/dir1",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir1/files"
+  },
+  "dir2": {
+    "id": "dir2",
+    "epoch": 2,
+    "self": "http://localhost:8181/dirs/dir2",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir2/files"
+  },
+  "dir3": {
+    "id": "dir3",
+    "epoch": 2,
+    "self": "http://localhost:8181/dirs/dir3",
+    "description": "hello",
+
+    "filescount": 0,
+    "filesurl": "http://localhost:8181/dirs/dir3/files"
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST group - full, multiple - err",
+		URL:        "/dirs",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+  "dir2": {
+    "id":"dir2",
+    "name":"my group",
+    "description":"desc",
+    "documentation":"docs-url",
+    "labels": {
+      "label1": "value1",
+      "label2": "5",
+      "label3": "123.456",
+      "label4": "",
+      "label5": null
+    },
+    "format":"my group",
+    "myarray": [ "hello", 5 ],
+    "mymap": { "item1": 5.5 },
+    "myobj": { "item2": [ "hi" ] }
+  },
+  "dir3": {},
+  "dir4": {
+    "id": "dir44"
+  }
+}`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody:    `Can't change the ID of an entity(dir4->dir44)` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2025,7 +2227,7 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody: `{
   "id":"dir1",
   "name":"my group new",
-  "epoch": 1,
+  "epoch": 2,
   "description":"desc new",
   "documentation":"docs-url-new",
   "labels": {
@@ -2041,7 +2243,7 @@ func TestHTTPGroups(t *testing.T) {
 		ResBody: `{
   "id": "dir1",
   "name": "my group new",
-  "epoch": 2,
+  "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1",
   "description": "desc new",
   "documentation": "docs-url-new",
@@ -2067,7 +2269,7 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody: `{
   "id":"dir1",
   "name":"my group new",
-  "epoch": 2,
+  "epoch": 3,
   "description":"desc new",
   "documentation":"docs-url-new",
   "labels": {
@@ -2083,7 +2285,7 @@ func TestHTTPGroups(t *testing.T) {
 		ResBody: `{
   "id": "dir1",
   "name": "my group new",
-  "epoch": 3,
+  "epoch": 4,
   "self": "http://localhost:8181/dirs/dir1",
   "description": "desc new",
   "documentation": "docs-url-new",
@@ -2116,7 +2318,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group: Attribute \"epoch\"(10) doesn't match existing value (3)\n",
+		ResBody:    "Attribute \"epoch\"(10) doesn't match existing value (4)\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2127,7 +2329,7 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody:    `{ "id":"dir2" }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group: Can't change the ID of an entity(dir1->dir2)\n",
+		ResBody:    "Can't change the ID of an entity(dir1->dir2)\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2140,7 +2342,7 @@ func TestHTTPGroups(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "id": "dir1",
-  "epoch": 4,
+  "epoch": 5,
   "self": "http://localhost:8181/dirs/dir1",
 
   "filescount": 0,
@@ -2157,7 +2359,6 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody: `{
   "id":"dir3",
   "name":"my group new",
-  "epoch": 1,
   "description":"desc new",
   "documentation":"docs-url-new",
   "labels": {
@@ -2167,7 +2368,7 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Error processing group(dir2): The IDs must match(\"dir2\" vs \"dir3\")\n",
+		ResBody:    "Can't change the ID of an entity(dir2->dir3)\n",
 	})
 
 }
@@ -2193,19 +2394,21 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources - empty",
-		URL:        "/dirs/dir1/files",
-		Method:     "POST",
-		ReqHeaders: []string{},
-		ReqBody:    "",
-		Code:       201,
+		Name:   "POST resources - empty",
+		URL:    "/dirs/dir1/files",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-id: ff1",
+		},
+		ReqBody: "",
+		Code:    201,
 		HeaderMasks: []string{
 			"^[a-z0-9]{8}$||xxx",
 			"files/[^/]+||files/xxx",
 		},
 		ResHeaders: []string{
 			"Content-Type: ",
-			"xRegistry-id: xxx",
+			"xRegistry-id: ff1",
 			"xRegistry-epoch: 1",
 			"xRegistry-defaultversionid: 1",
 			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
@@ -2220,19 +2423,21 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources - w/doc",
-		URL:        "/dirs/dir1/files",
-		Method:     "POST",
-		ReqHeaders: []string{},
-		ReqBody:    "My cool doc",
-		Code:       201,
+		Name:   "POST resources - w/doc",
+		URL:    "/dirs/dir1/files",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-id: ff2",
+		},
+		ReqBody: "My cool doc",
+		Code:    201,
 		HeaderMasks: []string{
 			"^[a-z0-9]{8}$||xxx",
 			"files/[^/]+||files/xxx",
 		},
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
-			"xRegistry-id: xxx",
+			"xRegistry-id: ff2",
 			"xRegistry-epoch: 1",
 			"xRegistry-defaultversionid: 1",
 			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/xxx/versions/1",
@@ -3055,19 +3260,21 @@ func TestHTTPVersions(t *testing.T) {
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
-		  "id": "v2",
-          "file": "Hello world! v2"
+		  "v2": {
+		    "id": "v2",
+            "file": "Hello world! v2"
+		  }
 		}`,
-		Code:        201,
+		Code:        200,
 		HeaderMasks: []string{},
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
-		},
+		ResHeaders:  []string{},
 		ResBody: `{
-  "id": "v2",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
-  "isdefault": true
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
+    "isdefault": true
+  }
 }
 `,
 	})
@@ -3106,7 +3313,7 @@ func TestHTTPVersions(t *testing.T) {
   "id": "v2",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2?meta",
-  "file": "Hello world! v2"
+  "filebase64": "SGVsbG8gd29ybGQhIHYy"
 }
 `,
 	})
@@ -3215,7 +3422,7 @@ func TestHTTPVersions(t *testing.T) {
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody: `Error processing resource: Only one of file,fileurl,filebase64 can be present at a time
+		ResBody: `Only one of file,fileurl,filebase64 can be present at a time
 `,
 	})
 
@@ -3232,7 +3439,7 @@ func TestHTTPVersions(t *testing.T) {
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody: `Error processing resource: Only one of file,fileurl,filebase64 can be present at a time
+		ResBody: `Only one of file,fileurl,filebase64 can be present at a time
 `,
 	})
 
@@ -3366,18 +3573,20 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff1-proxy?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v1",
-		  "file": "In resource ff1-proxy"
+		  "v1": {
+		    "id": "v1",
+		    "file": "In resource ff1-proxy"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v1?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v1",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v1?meta",
-  "isdefault": true
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v1?meta",
+    "isdefault": true
+  }
 }
 `,
 	})
@@ -3387,19 +3596,21 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff1-proxy?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v2",
-		  "fileurl": "http://localhost:8181/EMPTY-URL"
+		  "v2": {
+		    "id": "v2",
+		    "fileurl": "http://localhost:8181/EMPTY-URL"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v2?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v2",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v2?meta",
-  "isdefault": true,
-  "fileurl": "http://localhost:8181/EMPTY-URL"
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v2?meta",
+    "isdefault": true,
+    "fileurl": "http://localhost:8181/EMPTY-URL"
+  }
 }
 `,
 	})
@@ -3409,18 +3620,20 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff1-proxy?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v3",
-		  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
+		  "v3": {
+		    "id": "v3",
+		    "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v3",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3?meta",
-  "isdefault": true
+  "v3": {
+    "id": "v3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3?meta",
+    "isdefault": true
+  }
 }
 `,
 	})
@@ -3457,18 +3670,20 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff2-url?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v1",
-		  "file": "In resource ff2-url"
+		  "v1": {
+		    "id": "v1",
+		    "file": "In resource ff2-url"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff2-url/versions/v1?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v1",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v1?meta",
-  "isdefault": true
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v1?meta",
+    "isdefault": true
+  }
 }
 `,
 	})
@@ -3478,18 +3693,20 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff2-url?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v2",
-		  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
+		  "v2": {
+		    "id": "v2",
+		    "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff2-url/versions/v2?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v2",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v2?meta",
-  "isdefault": true
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v2?meta",
+    "isdefault": true
+  }
 }
 `,
 	})
@@ -3499,19 +3716,21 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff2-url?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v3",
-		  "fileurl": "http://localhost:8181/EMPTY-URL"
+		  "v3": {
+		    "id": "v3",
+		    "fileurl": "http://localhost:8181/EMPTY-URL"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff2-url/versions/v3?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v3",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v3?meta",
-  "isdefault": true,
-  "fileurl": "http://localhost:8181/EMPTY-URL"
+  "v3": {
+    "id": "v3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v3?meta",
+    "isdefault": true,
+    "fileurl": "http://localhost:8181/EMPTY-URL"
+  }
 }
 `,
 	})
@@ -3548,18 +3767,20 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff3-resource?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v1",
-		  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
+		  "v1": {
+		    "id": "v1",
+		    "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff3-resource/versions/v1?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v1",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v1?meta",
-  "isdefault": true
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v1?meta",
+    "isdefault": true
+  }
 }
 `,
 	})
@@ -3569,19 +3790,21 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff3-resource?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v2",
-		  "fileurl": "http://localhost:8181/EMPTY-URL"
+		  "v2": {
+		    "id": "v2",
+		    "fileurl": "http://localhost:8181/EMPTY-URL"
+	      }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff3-resource/versions/v2?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v2",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v2?meta",
-  "isdefault": true,
-  "fileurl": "http://localhost:8181/EMPTY-URL"
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v2?meta",
+    "isdefault": true,
+    "fileurl": "http://localhost:8181/EMPTY-URL"
+  }
 }
 `,
 	})
@@ -3591,18 +3814,20 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff3-resource?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "id": "v3",
-		  "file": "In resource ff3-resource"
+		  "v3": {
+		    "id": "v3",
+		    "file": "In resource ff3-resource"
+		  }
 		}`,
-		Code: 201,
-		ResHeaders: []string{
-			"Location:http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3?meta",
-		},
+		Code:       200,
+		ResHeaders: []string{},
 		ResBody: `{
-  "id": "v3",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3?meta",
-  "isdefault": true
+  "v3": {
+    "id": "v3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3?meta",
+    "isdefault": true
+  }
 }
 `,
 	})
@@ -3920,7 +4145,7 @@ func TestHTTPEnum(t *testing.T) {
   "myint": 4
 }`,
 		Code: 400,
-		ResBody: "Error processing registry: Attribute \"myint\"(4) must be " +
+		ResBody: "Attribute \"myint\"(4) must be " +
 			"one of the enum values: 1, 2, 3\n",
 	})
 
@@ -4082,7 +4307,7 @@ func TestHTTPIfValue(t *testing.T) {
 	     "myext": 5.5
 	   }`,
 		Code:    400,
-		ResBody: "Error processing registry: Invalid extension(s): myext\n",
+		ResBody: "Invalid extension(s): myext\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -4093,7 +4318,7 @@ func TestHTTPIfValue(t *testing.T) {
 	     "myint": 20
 	   }`,
 		Code:    400,
-		ResBody: "Error processing registry: Required property \"mystr\" is missing\n",
+		ResBody: "Required property \"mystr\" is missing\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -4128,7 +4353,7 @@ func TestHTTPIfValue(t *testing.T) {
 	     "myext": 5.5
 	   }`,
 		Code:    400,
-		ResBody: "Error processing registry: Invalid extension(s): myext\n",
+		ResBody: "Invalid extension(s): myext\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -4300,7 +4525,7 @@ func TestHTTPIfValue(t *testing.T) {
 	     "myint6": 2
 	   }`,
 		Code: 400,
-		ResBody: `Error processing registry: Required property "myint7" is missing
+		ResBody: `Required property "myint7" is missing
 `,
 	})
 
@@ -4314,7 +4539,7 @@ func TestHTTPIfValue(t *testing.T) {
 		 "myint7": 5
 	   }`,
 		Code: 400,
-		ResBody: `Error processing registry: Invalid extension(s): myint7
+		ResBody: `Invalid extension(s): myint7
 `,
 	})
 
@@ -4487,7 +4712,7 @@ func TestHTTPResources(t *testing.T) {
 	xNoErr(t, err)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/vx", `{"id":"x"}`, 400,
-		`Error processing resource(f1): The IDs must match("vx" vs "x")`+"\n")
+		`Can't change the ID of an entity(vx->x)`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", "{}", 201, `{
   "id": "v1",
@@ -4512,7 +4737,7 @@ func TestHTTPResources(t *testing.T) {
   "file": "fff",
   "mystring": "hello",
   "object": {}
-}`, 400, `Error processing resource: Invalid extension(s): file,object
+}`, 400, `Invalid extension(s): file,object
 `)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
@@ -4537,7 +4762,7 @@ func TestHTTPResources(t *testing.T) {
     "objstr": "ooo",
     "objint": 5
   }
-}`, 400, `Error processing resource: Invalid extension(s) in "object": objint
+}`, 400, `Invalid extension(s) in "object": objint
 `)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
@@ -4687,7 +4912,7 @@ func TestHTTPNonStrings(t *testing.T) {
 		},
 		ReqBody: `hello`,
 		Code:    400,
-		ResBody: `Error processing resource: Attribute "mystr" must be a string
+		ResBody: `Attribute "mystr" must be a string
 `,
 		ResHeaders: []string{},
 	})
@@ -4701,7 +4926,7 @@ func TestHTTPNonStrings(t *testing.T) {
 		},
 		ReqBody: `hello`,
 		Code:    400,
-		ResBody: `Error processing resource: Attribute "mystr" must be a string
+		ResBody: `Attribute "mystr" must be a string
 `,
 		ResHeaders: []string{},
 	})
@@ -5694,8 +5919,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 	// Groups
 	xHTTP(t, reg, "PUT", "/dirs/d1", `{"description": "testing"}`, 400,
-		`Error processing group(d1): `+
-			`Required property "clireq2" is missing`+"\n")
+		`Required property "clireq2" is missing`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1", `{
   "description": "testing",
@@ -5715,8 +5939,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 	// Resources
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta",
 		`{"description": "testing"}`, 400,
-		`Error processing resource(f1): `+
-			`Required property "clireq3" is missing`+"\n")
+		`Required property "clireq3" is missing`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta", `{
   "description": "testingdesc3",
@@ -5745,7 +5968,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Error processing resource(f2): Required property "clireq3" is missing
+		ResBody: `Required property "clireq3" is missing
 `,
 	})
 
@@ -5759,7 +5982,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Error processing resource(f2): Required property "clireq3" is missing
+		ResBody: `Required property "clireq3" is missing
 `,
 	})
 
@@ -5826,7 +6049,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 		},
 
 		Code:    400,
-		ResBody: "Error processing resource: Required property \"clireq3\" is missing\n",
+		ResBody: "Required property \"clireq3\" is missing\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -5840,7 +6063,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 		},
 
 		Code:    400,
-		ResBody: "Error processing resource: Required property \"clireq3\" is missing\n",
+		ResBody: "Required property \"clireq3\" is missing\n",
 	})
 }
 
@@ -5902,22 +6125,26 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:     "/dirs/d1/files",
-		Method:  "POST",
-		ReqBody: `{"test":"foo"}`,
-
-		Code:      201,
-		BodyMasks: []string{"id", "files/[a-zA-Z0-9]*||files/xxx"},
+		URL:    "/dirs/d1/files",
+		Method: "POST",
+		ReqBody: `{
+		  "ff1": {
+		    "test":"foo"
+		  }
+		}`,
+		Code: 200,
 		ResBody: `{
-  "id": "5bd549c7",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/5bd549c7",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/5bd549c7/versions/1",
-  "test": "foo",
+  "ff1": {
+    "id": "ff1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/ff1",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
+    "test": "foo",
 
-  "versionscount": 1,
-  "versionsurl": "http://localhost:8181/dirs/d1/files/5bd549c7/versions"
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/d1/files/ff1/versions"
+  }
 }
 `})
 
@@ -5928,11 +6155,6 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 		Method: "GET",
 
 		Code: 200,
-		BodyMasks: []string{
-			`"id": "[a-z0-9]{8}"||"id": "xxx"`,
-			`"[a-z0-9]{8}": {||"xxx": {"`,
-			`files/[a-z0-9]{8}||files/xxx`,
-		},
 		ResBody: `{
   "id": "d1",
   "epoch": 1,
@@ -5961,25 +6183,25 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "barscount": 1,
   "barsurl": "http://localhost:8181/dirs/d1/bars",
   "files": {
-    "de0fe3c9": {
-      "id": "de0fe3c9",
+    "ff1": {
+      "id": "ff1",
       "epoch": 1,
-      "self": "http://localhost:8181/dirs/d1/files/de0fe3c9",
+      "self": "http://localhost:8181/dirs/d1/files/ff1",
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions/1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
       "test": "foo",
 
       "versions": {
         "1": {
           "id": "1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions/1",
+          "self": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
           "isdefault": true,
           "test": "foo"
         }
       },
       "versionscount": 1,
-      "versionsurl": "http://localhost:8181/dirs/d1/files/de0fe3c9/versions"
+      "versionsurl": "http://localhost:8181/dirs/d1/files/ff1/versions"
     }
   },
   "filescount": 1,
@@ -6016,23 +6238,27 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1", `{"foo2":"test2"}`, 201,
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1", `{"2":{"id":"2","foo2":"test2"}}`, 200,
 		`{
-  "id": "2",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/2",
-  "isdefault": true,
-  "foo2": "test2"
+  "2": {
+    "id": "2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/2",
+    "isdefault": true,
+    "foo2": "test2"
+  }
 }
 `)
 
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"foo3":"test3"}`, 201,
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"3":{"id":"3","foo3":"test3"}}`, 200,
 		`{
-  "id": "3",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
-  "isdefault": true,
-  "foo3": "test3"
+  "3": {
+    "id": "3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
+    "isdefault": true,
+    "foo3": "test3"
+  }
 }
 `)
 
@@ -7044,6 +7270,811 @@ func TestHTTPContent(t *testing.T) {
 `,
 		Code: 400,
 		ResBody: `Syntax error at line 2: invalid character 'b' looking for beginning of object key string
+`,
+	})
+}
+
+func TestHTTPResourcesBulk(t *testing.T) {
+	reg := NewRegistry("TestHTTPResourcesBulk")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+	reg.AddGroup("dirs", "dir1")
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources - missing id",
+		URL:        "/dirs/dir1/files",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    ``,
+		Code:       400,
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
+		ResBody: `An "xRegistry-id" header must be provided
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources - with id",
+		URL:    "/dirs/dir1/files",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-id: f1",
+		},
+		ReqBody: ``,
+		Code:    201,
+		ResHeaders: []string{
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"xRegistry-id:f1",
+			"xRegistry-versionscount:1",
+			"xRegistry-versionsurl:http://localhost:8181/dirs/dir1/files/f1/versions",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f1",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Location:http://localhost:8181/dirs/dir1/files/f1",
+			"Content-Length:0",
+		},
+		ResBody: ``,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - empty",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    ``,
+		Code:       200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - {}",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `{}`,
+		Code:       200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - one, empty",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "f2": {}
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "f2": {
+    "id": "f2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f2?meta",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1?meta",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - one, update",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "f2": {
+            "description": "foo"
+          }
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "f2": {
+    "id": "f2",
+    "epoch": 2,
+    "self": "http://localhost:8181/dirs/dir1/files/f2?meta",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1?meta",
+    "description": "foo",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - two, update+create, bad ext",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "f2": {
+            "description": "hello"
+          },
+          "f3": {
+            "foo": "bar"
+          }
+        }`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Invalid extension(s): foo
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - two, update+create",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "f2": {
+            "description": "foo"
+          },
+		  "f3": {
+		    "labels": {
+			  "l1": "hello"
+			}
+          }
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "f2": {
+    "id": "f2",
+    "epoch": 3,
+    "self": "http://localhost:8181/dirs/dir1/files/f2?meta",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1?meta",
+    "description": "foo",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
+  },
+  "f3": {
+    "id": "f3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f3?meta",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f3/versions/1?meta",
+    "labels": {
+      "l1": "hello"
+    },
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f3/versions"
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f1?meta - two, bad metadata",
+		URL:        "/dirs/dir1/files/f1?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "f2": {
+            "description": "foo"
+          },
+		  "f3": {
+		    "labels": {
+			  "l1": "hello"
+			}
+          }
+        }`,
+		Code: 400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `Invalid extension(s): f2,f3
+`})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f4?meta - new resource - bad id",
+		URL:        "/dirs/dir1/files/f4?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "id": "f5",
+          "description": "my f5"
+        }`,
+		Code: 400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `Metadata id(f5) doesn't match ID in URL(f4)
+`})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f4?meta - new resource",
+		URL:        "/dirs/dir1/files/f4?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "id": "f4",
+          "description": "my f4",
+          "file": "hello"
+        }`,
+		Code: 201,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+			"Location:http://localhost:8181/dirs/dir1/files/f4?meta",
+		},
+		ResBody: `{
+  "id": "f4",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f4?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f4/versions/1?meta",
+  "description": "my f4",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f4/versions"
+}
+`})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "GET resources/f4 - check doc",
+		URL:        "/dirs/dir1/files/f4",
+		Method:     "GET",
+		ReqHeaders: []string{},
+		ReqBody:    ``,
+		Code:       200,
+		ResHeaders: []string{
+			"xRegistry-id:f4",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f4",
+			"xRegistry-description:my f4",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/dir1/files/f4/versions/1",
+			"xRegistry-versionscount:1",
+			"xRegistry-versionsurl:http://localhost:8181/dirs/dir1/files/f4/versions",
+			"Content-Length:5",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f4/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f4?meta - new resource - no id",
+		URL:        "/dirs/dir1/files/f5?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "description": "my f5"
+        }`,
+		Code: 201,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+			"Location:http://localhost:8181/dirs/dir1/files/f5?meta",
+		},
+		ResBody: `{
+  "id": "f5",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f5?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f5/versions/1?meta",
+  "description": "my f5",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f5/versions"
+}
+`})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources/f6 - new res,version - no id",
+		URL:    "/dirs/dir1/files/f6",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-description: my f6",
+		},
+		ReqBody: `hello`,
+		Code:    201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f6/versions/1",
+			"xRegistry-description:my f6",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f6/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources/f7 - new res,version - with id",
+		URL:    "/dirs/dir1/files/f7",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-description: my f7",
+			"xRegistry-id: v1",
+		},
+		ReqBody: `hello`,
+		Code:    201,
+		ResHeaders: []string{
+			"xRegistry-id:v1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f7/versions/v1",
+			"xRegistry-description:my f7",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f7/versions/v1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources/f8?meta - new res,version - extra headers",
+		URL:    "/dirs/dir1/files/f8?meta",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-description: my f8",
+		},
+		ReqBody:    `hello`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Including "xRegistry" headers when "?meta" is used is invalid
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f9?meta - new res,version - empty",
+		URL:        "/dirs/dir1/files/f9?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    ``,
+		Code:       400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `Set of Versions to add can't be empty
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f9?meta - new res,version - empty",
+		URL:        "/dirs/dir1/files/f9?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `{}`,
+		Code:       400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `Set of Versions to add can't be empty
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f9/versions?meta - new res,version - empty",
+		URL:        "/dirs/dir1/files/f9/versions?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    ``,
+		Code:       400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `Set of Versions to add can't be empty
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f9/versions?meta - new res,version - empty",
+		URL:        "/dirs/dir1/files/f9/versions?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `{}`,
+		Code:       400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `Set of Versions to add can't be empty
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f9/versions?meta - new res,version-1v",
+		URL:        "/dirs/dir1/files/f9/versions?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {}
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f9/versions/v1?meta",
+    "isdefault": true
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f10/versions?meta - new res,version-2v,err",
+		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=null",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {},
+          "v2": {}
+        }`,
+		Code: 400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `?setdefaultversionid can not be 'null'
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f10/versions?meta - new res,version-2v,err",
+		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=this",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {}
+        }`,
+		Code: 400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `?setdefaultversionid can not be 'this'
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f10/versions?meta - new res,version-2v",
+		URL:        "/dirs/dir1/files/f10/versions?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {},
+          "v2": {}
+        }`,
+		Code: 400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `?setdefaultversionid is required
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f10/versions?meta - new res,version-1v",
+		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=v2",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {}
+        }`,
+		Code: 400,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+		},
+		ResBody: `?setdefaultversionid points to a nonexistent version
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f10/versions?meta - new res,version-1v",
+		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=v1",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {}
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f10/versions/v1?meta",
+    "isdefault": true
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f11/versions?meta - new res,version-2v",
+		URL:        "/dirs/dir1/files/f11/versions?meta&setdefaultversionid=v1",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {},
+          "v2": {}
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v1?meta",
+    "isdefault": true
+  },
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v2?meta"
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f12/versions?meta - new res,version-2v",
+		URL:        "/dirs/dir1/files/f12/versions?meta&setdefaultversionid=v2",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {},
+          "v2": {}
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1?meta"
+  },
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2?meta",
+    "isdefault": true
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f12/versions?meta - update,add v",
+		URL:        "/dirs/dir1/files/f12/versions?meta&setdefaultversionid=v1",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v3": { "description": "my v3"},
+          "v1": { "description": "my v1"},
+          "v2": { "description": "my v2"}
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "v1": {
+    "id": "v1",
+    "epoch": 2,
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1?meta",
+    "isdefault": true,
+    "description": "my v1"
+  },
+  "v2": {
+    "id": "v2",
+    "epoch": 2,
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2?meta",
+    "description": "my v2"
+  },
+  "v3": {
+    "id": "v3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v3?meta",
+    "description": "my v3"
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f13/versions - new+doc",
+		URL:        "/dirs/dir1/files/f13/versions",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `hello`,
+		Code:       201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/1",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Location:http://localhost:8181/dirs/dir1/files/f13/versions/1",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f13/versions - new v+doc",
+		URL:        "/dirs/dir1/files/f13/versions",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `hello2`,
+		Code:       201,
+		ResHeaders: []string{
+			"xRegistry-id:2",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/2",
+			"xRegistry-isdefault:true",
+			"Content-Length:6",
+			"Location:http://localhost:8181/dirs/dir1/files/f13/versions/2",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/2",
+		},
+		ResBody: `hello2`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources/f13/versions - update+doc",
+		URL:    "/dirs/dir1/files/f13/versions",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-id: 1",
+		},
+		ReqBody: `bye`,
+		Code:    200,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:2",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/1",
+			"Content-Length:3",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/1",
+		},
+		ResBody: `bye`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "PUT resources/f13/versions - new v+doc, err",
+		URL:    "/dirs/dir1/files/f13/versions/3",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"xRegistry-id: 33",
+		},
+		ReqBody:    `v3`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Can't change the ID of an entity(3->33)
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "PUT resources/f13/versions - new v+doc+id",
+		URL:    "/dirs/dir1/files/f13/versions/3",
+		Method: "PUT",
+		ReqHeaders: []string{
+			"xRegistry-id: 3",
+		},
+		ReqBody: `v3`,
+		Code:    201,
+		ResHeaders: []string{
+			"xRegistry-id:3",
+			"xRegistry-epoch:1",
+			"xRegistry-isdefault:true",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/3",
+			"Content-Length:2",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/3",
+		},
+		ResBody: `v3`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f13/versions - new v+doc+no id",
+		URL:        "/dirs/dir1/files/f13/versions/4",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    `v4`,
+		Code:       201,
+		ResHeaders: []string{
+			"xRegistry-id:4",
+			"xRegistry-epoch:1",
+			"xRegistry-isdefault:true",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/4",
+			"Content-Length:2",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/4",
+		},
+		ResBody: `v4`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f13/versions + meta - empty",
+		URL:        "/dirs/dir1/files/f13/versions/5?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    ``,
+		Code:       201,
+		ResHeaders: []string{},
+		ResBody: `{
+  "id": "5",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/5?meta",
+  "isdefault": true
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f13/versions + meta - {}",
+		URL:        "/dirs/dir1/files/f13/versions/6?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    `{}`,
+		Code:       201,
+		ResHeaders: []string{},
+		ResBody: `{
+  "id": "6",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6?meta",
+  "isdefault": true
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f13/versions + meta - {} again",
+		URL:        "/dirs/dir1/files/f13/versions/6?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    `{}`,
+		Code:       200,
+		ResHeaders: []string{},
+		ResBody: `{
+  "id": "6",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6?meta",
+  "isdefault": true
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT resources/f13/versions + meta - bad id update",
+		URL:        "/dirs/dir1/files/f13/versions/7?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody:    `{ "id": "77" }`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Can't change the ID of an entity(7->77)
 `,
 	})
 }

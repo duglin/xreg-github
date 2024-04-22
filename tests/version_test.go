@@ -426,7 +426,7 @@ func TestVersionRequiredFields(t *testing.T) {
 	group, err := reg.AddGroup("dirs", "d1")
 	xNoErr(t, err)
 
-	f1, err := group.AddResource("files", "f1", "v1",
+	f1, err := group.AddResourceWithObject("files", "f1", "v1",
 		registry.Object{"clireq": "test"})
 	xNoErr(t, err)
 	reg.Commit()
@@ -435,7 +435,7 @@ func TestVersionRequiredFields(t *testing.T) {
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 	reg.Rollback()
 
-	v1, err := f1.AddVersion("v2", registry.Object{"clireq": "test"})
+	v1, err := f1.AddVersionWithObject("v2", registry.Object{"clireq": "test"})
 	xNoErr(t, err)
 	reg.Commit()
 

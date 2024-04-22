@@ -633,7 +633,15 @@ func HTTPGet(info *RequestInfo) error {
 		return HTTPGETContent(info)
 	}
 
-	query, args, err := GenerateQuery(info)
+	err := SerializeQuery(info, []string{strings.Join(info.Parts, "/")},
+		info.What, info.Filters)
+	return err
+}
+
+func SerializeQuery(info *RequestInfo, paths []string, what string,
+	filters [][]*FilterExpr) error {
+
+	query, args, err := GenerateQuery(info.Registry, what, paths, filters)
 	results, err := Query(info.tx, query, args...)
 	defer results.Close()
 
@@ -645,7 +653,7 @@ func HTTPGet(info *RequestInfo) error {
 	jw := NewJsonWriter(info, results)
 	jw.NextEntity()
 
-	if info.What != "Coll" {
+	if what != "Coll" {
 		// Collections will need to print the {}, so don't error for them
 		if jw.Entity == nil {
 			info.StatusCode = http.StatusNotFound
@@ -654,7 +662,7 @@ func HTTPGet(info *RequestInfo) error {
 	}
 
 	info.AddHeader("Content-Type", "application/json")
-	if info.What == "Coll" {
+	if what == "Coll" {
 		_, err = jw.WriteCollection()
 	} else {
 		err = jw.WriteEntity()
@@ -686,6 +694,8 @@ func init() {
 func HTTPPutPost(info *RequestInfo) error {
 	method := strings.ToUpper(info.OriginalRequest.Method)
 	isNew := false
+	paths := ([]string)(nil)
+	what := "Entity"
 
 	metaInBody := (info.ResourceModel == nil) ||
 		(info.ResourceModel.GetHasDocument() == false || info.ShowMeta)
@@ -710,7 +720,8 @@ func HTTPPutPost(info *RequestInfo) error {
 		body = nil
 	}
 
-	// POST /groups/gID/resources/rID?setdefaultversiond is special
+	// POST /groups/gID/resources/rID?setdefaultversiond is special in that
+	// it only moves the "default" point, nothing else is meant to be done
 	if metaInBody && len(info.Parts) == 4 && method == "POST" && body == nil {
 		if _, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]; ok {
 			return HTTPSetDefaultVersionID(info)
@@ -760,7 +771,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		return err
 	}
 
-	// If ID is in the body, grab it for later use
+	// If ID is in the incoming object, grab it for later use
 	propsID := ""
 	if v, ok := IncomingObj["id"]; ok {
 		if reflect.ValueOf(v).Kind() == reflect.String {
@@ -774,80 +785,76 @@ func HTTPPutPost(info *RequestInfo) error {
 	// URL: /
 	// ////////////////////////////////////////////////////////////////
 	if len(info.Parts) == 0 {
-		// MUST be PUT /
+		// PUT /
 
 		info.Registry.Entity.NewObject = IncomingObj
 
 		if err = info.Registry.Entity.ValidateAndSave(); err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Error processing registry: %s", err)
+			return err
 		}
 
-		info.Parts = []string{}
-		info.What = "Registry"
-		return HTTPGet(info)
+		// Return HTTP GET of Registry root
+		return SerializeQuery(info, []string{""}, "Registry", nil)
 	}
 
 	// URL: /GROUPs[/gID]...
 	// ////////////////////////////////////////////////////////////////
 	group := (*Group)(nil)
 	groupUID := info.GroupUID
+
 	if len(info.Parts) == 1 {
-		// must be POST /GROUPs
-		// Use the ID from the body if present, else generate one
-		if groupUID = propsID; groupUID == "" {
-			groupUID = NewUUID()
-		}
-	} else {
-		// must be PUT/POST /GROUPs/gID...
-		group, err = info.Registry.FindGroup(info.GroupType, groupUID)
+		// POST /GROUPs + body:map[id]Group
 
-		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
-		}
-	}
-
-	if group == nil {
-		// Group doesn't exist so create it
-		isNew = true
-		if len(info.Parts) > 2 {
-			// Incoming object isn't for the Group
-			group, err = info.Registry.AddGroup(info.GroupType, groupUID)
-		} else {
-			group, err = info.Registry.AddGroup(info.GroupType, groupUID,
-				IncomingObj)
-		}
-
+		objMap, err := IncomingObj2Map(IncomingObj)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Error processing group(%s): %s", groupUID, err)
+			return err
 		}
+
+		for id, obj := range objMap {
+			g, _, err := info.Registry.UpsertGroupWithObject(info.GroupType,
+				id, obj)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+			paths = append(paths, g.Path)
+		}
+
+		if len(paths) == 0 {
+			paths = []string{"!"} // Force an empty collection to be returned
+		}
+
+		// Return HTTP GET of Groups created or updated
+		return SerializeQuery(info, paths, "Coll", nil)
 	}
 
-	if len(info.Parts) < 3 {
-		// Either /GROUPs or /GROUPs/gID
-
-		if !isNew {
-			// Didn't create a new one, so update existing Group
-			group.NewObject = IncomingObj
-
-			if err = group.Entity.ValidateAndSave(); err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf("Error processing group: %s", err)
-			}
+	if len(info.Parts) == 2 {
+		// PUT /GROUPs/gID
+		group, isNew, err := info.Registry.UpsertGroupWithObject(info.GroupType,
+			info.GroupUID, IncomingObj)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
 		}
-
-		info.Parts = []string{info.Parts[0], groupUID}
-		info.What = "Entity"
-		info.GroupUID = groupUID
 
 		if isNew { // 201, else let it default to 200
 			info.AddHeader("Location", info.BaseURL+"/"+group.Path)
 			info.StatusCode = http.StatusCreated
 		}
 
-		return HTTPGet(info)
+		// Return HTTP GET of Group
+		return SerializeQuery(info, []string{group.Path}, "Entity", nil)
+	}
+
+	// Must be PUT/POST /GROUPs/gID/...
+
+	// This will either find or create an empty Group as needed
+	group, _, err = info.Registry.UpsertGroup(info.GroupType, groupUID)
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return err
 	}
 
 	// URL: /GROUPs/gID/RESOURCEs...
@@ -865,28 +872,61 @@ func HTTPPutPost(info *RequestInfo) error {
 	// URL: /GROUPs/gID/RESOURCEs/rID/versions[/vID]
 	// ////////////////////////////////////////////////////////////////
 
-	// This assumes that in the end we'll be dealing with a Version.
-	// If it's new then IncomingObj will be used during the create(), else
-	// IncomingObj will be used for an update in common code after all of the
-	// "if" statements
+	// If there isn't an explicit "return" when this assumes we're left with
+	// a version and will return that back to the client
 
-	if len(info.Parts) == 3 {
-		// GROUPs/gID/RESOURCEs - must be POST
+	if len(info.Parts) == 3 && metaInBody {
+		// POST GROUPs/gID/RESOURCEs?meta + body:map[id]Resource
 
-		// No ID provided so generate one
-		if resourceUID = propsID; resourceUID == "" {
-			resourceUID = NewUUID()
+		objMap, err := IncomingObj2Map(IncomingObj)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
 		}
 
-		isNew = true
+		// For each Resource in the map, upsert it and add it's path to result
+		for id, obj := range objMap {
+			r, _, err := group.UpsertResourceWithObject(info.ResourceType,
+				id, "", obj)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+			paths = append(paths, r.Path)
+		}
 
-		delete(IncomingObj, "id") // id is for Res not Version so remove it
+		if len(paths) == 0 {
+			paths = []string{"!"} // Force an empty collection to be returned
+		}
 
-		// Create a new Resource and it's first/only/default Version
-		resource, err = group.AddResource(info.ResourceType, resourceUID,
-			versionUID, IncomingObj) // vID should be ""
-		if err == nil {
-			version, err = resource.GetDefault()
+		// Return HTTP GET of Resources created or modified
+		return SerializeQuery(info, paths, "Coll", nil)
+	}
+
+	if len(info.Parts) == 3 {
+		// POST GROUPS/gID/RESOURCEs  - no "?meta" + body=doc
+
+		// If xReg data are in HTTP headers then we require an ID
+		if resourceUID = propsID; resourceUID == "" {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf("An \"xRegistry-id\" header must be provided")
+		}
+
+		// Any ID provided is the Resource's not the Version's, so remove it
+		// and then the UpsertResource code will generate a new version ID
+		delete(IncomingObj, "id")
+
+		// Upsert the Resource and (if needed) it's first/default Version
+		resource, isNew, err = group.UpsertResourceWithObject(info.ResourceType,
+			resourceUID, versionUID, IncomingObj) // vID should be ""
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
+		}
+		version, err = resource.GetDefault()
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
 		}
 	}
 
@@ -896,12 +936,13 @@ func HTTPPutPost(info *RequestInfo) error {
 		resource, err = group.FindResource(info.ResourceType, resourceUID)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf("Error finding resource(%s): %s", resourceUID, err)
+			return fmt.Errorf("Error finding resource(%s): %s", resourceUID,
+				err)
 		}
 	}
 
 	if len(info.Parts) == 4 && method == "PUT" {
-		// PUT GROUPs/gID/RESOURCEs/rID
+		// PUT GROUPs/gID/RESOURCEs/rID [?meta]
 
 		if propsID != "" && propsID != resourceUID {
 			info.StatusCode = http.StatusBadRequest
@@ -919,119 +960,195 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			// They passed in a Resource, but we're going to use the data
 			// to create a Versions so we need to delete the new collections
+			// from the Version, but the collections are Resource-based colls
+			resource.RemoveCollections(IncomingObj)
+
+			// ID needs to be the version's ID, not the Resources
+			IncomingObj["id"] = version.UID
+
+			// Create a new Resource and it's first/only/default Version
+			version, _, err = resource.UpsertVersionWithObject(version.UID,
+				IncomingObj)
+		} else {
+			// Upsert resource's default version
+			delete(IncomingObj, "id") // ID is the Resource's delete it
+			resource, isNew, err = group.UpsertResourceWithObject(
+				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+
+			version, err = resource.GetDefault()
+		}
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
+		}
+	}
+
+	if metaInBody && method == "POST" &&
+		(len(info.Parts) == 4 || len(info.Parts) == 5) {
+		// POST GROUPs/gID/RESOURCEs/rID[/versions]?meta, body=map[id]->doc
+
+		// Convert IncomingObj to an map of Objects
+		objMap, err := IncomingObj2Map(IncomingObj)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
+		}
+
+		if resource == nil {
+			// Implicitly create the resource
+			if len(objMap) == 0 {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("Set of Versions to add can't be empty")
+			}
+
+			vID := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
+			if vID == "" {
+				if len(objMap) > 1 {
+					info.StatusCode = http.StatusBadRequest
+					return fmt.Errorf("?setdefaultversionid is required")
+				}
+				// Only one Version so use its ID as the default version
+				for k, _ := range objMap {
+					vID = k
+					break
+				}
+			}
+
+			if vID == "null" {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("?setdefaultversionid can not be 'null'")
+			}
+
+			if vID == "this" {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("?setdefaultversionid can not be 'this'")
+			}
+
+			if IncomingObj, _ = objMap[vID]; IncomingObj == nil {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("?setdefaultversionid points to a " +
+					"nonexistent version")
+			}
+
+			resource, err = group.AddResourceWithObject(info.ResourceType,
+				resourceUID, vID, IncomingObj)
+
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+
+			v, err := resource.GetDefault()
+			Must(err)
+
+			// Remove the newly created default version from objMap so we
+			// won't process it again, but add it to the reuslts collection
+			paths = append(paths, v.Path)
+			delete(objMap, vID)
+		}
+
+		// Process the remaining versions
+		for id, obj := range objMap {
+			v, _, err := resource.UpsertVersionWithObject(id, obj)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+			paths = append(paths, v.Path)
+		}
+
+		err = ProcessSetDefaultVersionIDFlag(info, resource, nil)
+		if err != nil {
+			return err
+		}
+
+		if len(paths) == 0 {
+			paths = []string{"!"} // Force an empty collection to be returned
+		}
+		return SerializeQuery(info, paths, "Coll", nil)
+	}
+
+	if !metaInBody && method == "POST" &&
+		(len(info.Parts) == 4 || len(info.Parts) == 5) {
+		// POST GROUPs/gID/RESOURCEs/rID[/versions] body=doc
+
+		if resource == nil {
+			// Implicitly create the resource, and first version
+			versionUID = propsID
+			resource, err = group.AddResourceWithObject(info.ResourceType,
+				resourceUID, versionUID, IncomingObj)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+
+			isNew = true
+			version, err = resource.GetDefault()
+		} else {
+			// Resource already there, so update or create the Version
+			versionUID = propsID
+			version, isNew, err = resource.UpsertVersionWithObject(versionUID,
+				IncomingObj)
+		}
+
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
+		}
+	}
+
+	if len(info.Parts) == 6 {
+		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [?meta]
+
+		if resource == nil {
+			// Implicitly create the resource
+			resource, err = group.AddResourceWithObject(info.ResourceType,
+				resourceUID, versionUID, IncomingObj)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+
+			isNew = true
+		}
+
+		version, err = resource.FindVersion(versionUID)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error finding version(%s): %s", versionUID,
+				err)
+		}
+
+		if version == nil {
+			// We have a Resource, so add a new Version based on IncomingObj
+			version, err = resource.AddVersionWithObject(versionUID,
+				IncomingObj)
+			isNew = true
+		} else if !isNew {
+			if !metaInBody {
+				CopyNewProps(IncomingObj, version.Object)
+			}
+
+			// They passed in a Resource, but we're going to use the data
+			// to create a Versions so we need to delete the new collections
 			// from the Version,but the collections are Resource-based colls
 			resource.RemoveCollections(IncomingObj)
 
 			IncomingObj["id"] = version.UID
-			attrs := info.ResourceModel.GetBaseAttributes()
-			attrs.AddIfValuesAttributes(IncomingObj)
-			attrs.ConvertStrings(IncomingObj)
-			version.NewObject = IncomingObj
-
-			err = version.ValidateAndSave()
-		} else {
-			// Create a new Resource and it's first/only/default Version
-			attrs := info.ResourceModel.GetBaseAttributes()
-			attrs.AddIfValuesAttributes(IncomingObj)
-			attrs.ConvertStrings(IncomingObj)
-			resource, err = group.AddResource(info.ResourceType, resourceUID,
-				versionUID, IncomingObj) // vID is ""
-			if err == nil {
-				version, err = resource.GetDefault()
-			}
-
-			isNew = true
+			version, _, err = resource.UpsertVersionWithObject(version.UID,
+				IncomingObj)
 		}
-
-		// Fall thru-we'll update the version with IncomingObj below & check err
-	}
-
-	if (len(info.Parts) == 4 && method == "POST") || len(info.Parts) == 5 {
-		// POST GROUPs/gID/RESOURCEs/rID, POST GROUPs/gID/RESOURCEs/rID/versions
-
-		if resource == nil {
-			// Implicitly create the resource
-			versionUID = propsID
-
-			resource, err = group.AddResource(info.ResourceType, resourceUID,
-				versionUID, IncomingObj) // no IncomingObj
-			isNew = true
-			if err == nil {
-				version, err = resource.GetDefault()
-			}
-		} else {
-			isNew = true
-			versionUID = propsID
-			attrs := info.ResourceModel.GetBaseAttributes()
-			attrs.AddIfValuesAttributes(IncomingObj)
-			attrs.ConvertStrings(IncomingObj)
-			version, err = resource.AddVersion(versionUID, IncomingObj)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
 		}
-
-		// Fall thru and check err
 	}
 
-	if len(info.Parts) == 6 {
-		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID
-
-		if resource == nil {
-			// Implicitly create the resource
-			resource, err = group.AddResource(info.ResourceType, resourceUID,
-				versionUID, IncomingObj)
-			isNew = true
-		}
-
-		if err == nil {
-			version, err = resource.FindVersion(versionUID)
-			if err != nil {
-				info.StatusCode = http.StatusInternalServerError
-				return fmt.Errorf("Error finding version(%s): %s", versionUID,
-					err)
-			}
-
-			if version == nil {
-				// We have a Resource, so add a new Version based on IncomingObj
-				attrs := info.ResourceModel.GetBaseAttributes()
-				attrs.AddIfValuesAttributes(IncomingObj)
-				attrs.ConvertStrings(IncomingObj)
-				version, err = resource.AddVersion(versionUID, IncomingObj)
-				isNew = true
-			} else if !isNew {
-				if !metaInBody {
-					CopyNewProps(IncomingObj, version.Object)
-				}
-
-				// They passed in a Resource, but we're going to use the data
-				// to create a Versions so we need to delete the new collections
-				// from the Version,but the collections are Resource-based colls
-				resource.RemoveCollections(IncomingObj)
-
-				IncomingObj["id"] = version.UID
-				attrs := info.ResourceModel.GetBaseAttributes()
-				attrs.AddIfValuesAttributes(IncomingObj)
-				attrs.ConvertStrings(IncomingObj)
-				version.NewObject = IncomingObj
-				err = version.ValidateAndSave()
-			}
-		}
-
-		// Fall thru and check err
-	}
-
-	if err != nil && resource == nil {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Error processing resource(%s): %s", resourceUID, err)
-	}
-
-	if err != nil && version == nil {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Error processing version(%s): %s", versionUID, err)
-	}
-
-	if err != nil {
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Error processing resource: %s", err)
-	}
+	PanicIf(err != nil, "err should be nil")
 
 	// Process any ?setdefaultversionid query parameter there might be
 	err = ProcessSetDefaultVersionIDFlag(info, resource, version)
@@ -1041,19 +1158,18 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	originalLen := len(info.Parts)
 
+	// Need to setup info stuff in case we call HTTPGetContent
 	info.Parts = []string{info.Parts[0], groupUID,
 		info.Parts[2], resourceUID}
 	info.What = "Entity"
 	info.GroupUID = groupUID
-	info.ResourceUID = resourceUID
+	info.ResourceUID = resourceUID // needed for ?meta in URLs
 
 	location := info.BaseURL + "/" + resource.Path
-	// location := resource.Path
 	if originalLen > 4 || (originalLen == 4 && method == "POST") {
 		info.Parts = append(info.Parts, "versions", version.UID)
 		info.VersionUID = version.UID
-		location += "/versions/" + info.VersionUID
-		// location = version.Path
+		location += "/versions/" + version.UID
 	}
 
 	if info.ShowMeta { // not 100% sure this the right way/spot
@@ -1065,7 +1181,17 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.StatusCode = http.StatusCreated
 	}
 
-	return HTTPGet(info)
+	// Return the contents of the entity instead of the xReg metadata
+	if !metaInBody {
+		return HTTPGETContent(info)
+	}
+
+	// Return the xReg metadata of the entity processed
+	if paths == nil {
+		paths = []string{strings.Join(info.Parts, "/")}
+	}
+
+	return SerializeQuery(info, paths, what, nil)
 }
 
 func HTTPPUTModel(info *RequestInfo) error {
@@ -1184,7 +1310,7 @@ func HTTPSetDefaultVersionID(info *RequestInfo) error {
 		return err
 	}
 
-	return HTTPGet(info)
+	return SerializeQuery(info, []string{resource.Path}, "Entity", nil)
 }
 
 func HTTPDelete(info *RequestInfo) error {
@@ -1760,6 +1886,14 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 				}
 			}
 		}
+	}
+
+	// Convert all HTTP header values into their proper data types since
+	// as of now they're all just strings
+	if !metaInBody && info.ResourceModel != nil {
+		attrs := info.ResourceModel.GetBaseAttributes()
+		attrs.AddIfValuesAttributes(IncomingObj)
+		attrs.ConvertStrings(IncomingObj)
 	}
 
 	return IncomingObj, nil

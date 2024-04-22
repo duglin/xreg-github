@@ -147,9 +147,119 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 	return r.SetSave("defaultversionid", newDefault.UID)
 }
 
-func (r *Resource) AddVersion(id string, objs ...Object) (*Version, error) {
-	log.VPrintf(3, ">Enter: AddVersion%s)", id)
-	defer log.VPrintf(3, "<Exit: AddVersion")
+func (r *Resource) UpsertVersion(id string) (*Version, bool, error) {
+	return r.UpsertVersionWithObject(id, nil)
+}
+
+func (r *Resource) UpsertVersionWithObject(id string, obj Object) (*Version, bool, error) {
+	log.VPrintf(3, ">Enter: UpsertVersion%s)", id)
+	defer log.VPrintf(3, "<Exit: UpsertVersion")
+
+	var v *Version
+	var err error
+
+	if id == "" {
+		// No versionID provided so grab the next available one
+		tmp := r.Get("#nextversionid")
+		nextID := NotNilInt(&tmp)
+		for {
+			id = strconv.Itoa(nextID)
+			v, err = r.FindVersion(id)
+			if err != nil {
+				return nil, false,
+					fmt.Errorf("Error checking for Version %q: %s", id, err)
+			}
+
+			// Increment no matter what since it's "next" not "default"
+			nextID++
+
+			if v == nil {
+				r.JustSet("#nextversionid", nextID)
+				break
+			}
+		}
+	} else {
+		v, err = r.FindVersion(id)
+
+		if err != nil {
+			return nil, false,
+				fmt.Errorf("Error checking for Version %q: %s", id, err)
+		}
+	}
+
+	// If Verson doesn't exist, create it
+	isNew := (v == nil)
+	if v == nil {
+		v = &Version{
+			Entity: Entity{
+				tx: r.tx,
+
+				Registry: r.Registry,
+				DbSID:    NewUUID(),
+				Plural:   "versions",
+				UID:      id,
+
+				Level:    3,
+				Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
+				Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
+			},
+			Resource: r,
+		}
+
+		err = DoOne(r.tx, `
+        INSERT INTO Versions(SID, UID, ResourceSID, Path, Abstract)
+        VALUES(?,?,?,?,?)`,
+			v.DbSID, id, r.DbSID,
+			r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+v.UID,
+			r.Group.Plural+string(DB_IN)+r.Plural+string(DB_IN)+"versions")
+		if err != nil {
+			err = fmt.Errorf("Error adding Version: %s", err)
+			log.Print(err)
+			return nil, false, err
+		}
+
+		v.tx.AddVersion(v)
+
+		if err = v.JustSet("id", id); err != nil {
+			return nil, false, err
+		}
+	}
+
+	// Apply properties
+	if obj != nil {
+		v.NewObject = obj
+	}
+
+	if err = v.ValidateAndSave(); err != nil {
+		return nil, false, err
+	}
+
+	// If we can only have one Version, then set the one we just created
+	// as the default.
+	// Also set it if we're not sticky w.r.t. default version
+	_, rm := r.GetModels()
+	if rm.MaxVersions == 1 || (isNew && r.Get("stickydefaultversion") != true) {
+		err = r.SetSave("defaultversionid", v.UID)
+		if err != nil {
+			return nil, false, err
+		}
+	}
+
+	// If we've reached the maximum # of Versions, then delete oldest
+	if err = r.EnsureMaxVersions(); err != nil {
+		return nil, false, err
+	}
+
+	return v, isNew, nil
+}
+
+func (r *Resource) AddVersion(id string) (*Version, error) {
+	return r.AddVersionWithObject(id, nil)
+}
+
+func (r *Resource) AddVersionWithObject(id string, obj Object) (*Version, error) {
+	log.VPrintf(3, ">Enter: AddVersionWithObject: %s)", id)
+	defer log.VPrintf(3, "<Exit: AddVersionWithObject")
 
 	var v *Version
 	var err error
@@ -219,16 +329,8 @@ func (r *Resource) AddVersion(id string, objs ...Object) (*Version, error) {
 		return nil, err
 	}
 
-	for _, obj := range objs {
-		// v.ConvertStrings(obj)
-		for key, val := range obj {
-			if key == "id" && val != id {
-				return nil, fmt.Errorf("The IDs must match(%q vs %q)", id, val)
-			}
-			if err = v.JustSet(key, val); err != nil {
-				return nil, err
-			}
-		}
+	if obj != nil {
+		v.NewObject = obj
 	}
 
 	if err = v.ValidateAndSave(); err != nil {

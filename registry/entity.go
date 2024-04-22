@@ -381,7 +381,8 @@ func (e *Entity) ValidateAndSave() error {
 	// return nil
 	// }
 
-	log.VPrintf(3, "Validating e.NewObject:\n%s", ToJSON(e.NewObject))
+	log.VPrintf(3, "Validating %s/%s e.Object:\n%s\n\ne.NewObject:\n%s",
+		e.Abstract, e.UID, ToJSON(e.Object), ToJSON(e.NewObject))
 
 	if err := e.Validate(); err != nil {
 		return err
@@ -1042,7 +1043,12 @@ func init() {
 	}
 }
 
-// This is used to serialize Prop regardless of the format.
+// This is used to serialize an Entity regardless of the format.
+// This will:
+//   - Use Materialize() to fill in any missing props (eg Entity's getFn())
+//     as well as fully materialize a Resource from its default Version
+//   - Call that passed-in 'fn' to serialize each prop but in the right order
+//     as defined by OrderedSpecProps
 func (e *Entity) SerializeProps(info *RequestInfo,
 	fn func(*Entity, *RequestInfo, string, any, *Attribute) error) error {
 
@@ -1235,7 +1241,7 @@ func (e *Entity) Materialize(info *RequestInfo) map[string]any {
 // data to use instead of the e.Object/NewObject so that we'll use this
 // Entity's Level (which tells us which collections it has), on the 'obj'.
 // This is handy for cases where we need to remove the Resource's collections
-// from a Version's Object - like ona PUT to /GROUPs/gID/RESOURECEs/rID
+// from a Version's Object - like on  a PUT to /GROUPs/gID/RESOURECEs/rID
 // where we're passing in what looks like a Resource entity, but we're
 // really using it to create a Version
 func (e *Entity) RemoveCollections(obj Object) {
@@ -1251,18 +1257,19 @@ func (e *Entity) RemoveCollections(obj Object) {
 }
 
 func (e *Entity) GetCollections() []string {
-	if e.Level == 0 {
+	switch e.Level {
+	case 0:
 		return SortedKeys(e.Registry.Model.Groups)
-	}
-	if e.Level == 3 {
+	case 1:
+		gm, _ := e.GetModels()
+		return SortedKeys(gm.Resources)
+	case 2:
+		return []string{"versions"}
+	case 3:
 		return nil
 	}
-	if e.Level == 2 {
-		return []string{"versions"}
-	}
-
-	gm, _ := e.GetModels()
-	return SortedKeys(gm.Resources)
+	panic(fmt.Sprintf("bad level: %d", e.Level))
+	return nil
 }
 
 func (e *Entity) GetAttributes(obj Object) Attributes {

@@ -637,3 +637,23 @@ func ResetMap[M ~map[K]V, K comparable, V any](m M, key K, oldVal V) {
 		m[key] = oldVal
 	}
 }
+
+func IncomingObj2Map(incomingObj Object) (map[string]Object, error) {
+	result := map[string]Object{}
+	for id, obj := range incomingObj {
+		oV := reflect.ValueOf(obj)
+		if oV.Kind() != reflect.Map ||
+			oV.Type().Key().Kind() != reflect.String {
+
+			return nil, fmt.Errorf("Body must be a map of id->Entity")
+		}
+		newObj := Object{}
+		for _, keyVal := range oV.MapKeys() {
+			newObj[keyVal.Interface().(string)] =
+				oV.MapIndex(keyVal).Interface()
+		}
+		result[id] = newObj
+	}
+
+	return result, nil
+}
