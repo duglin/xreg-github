@@ -923,12 +923,17 @@ func HTTPPutPost(info *RequestInfo) error {
 			resource.RemoveCollections(IncomingObj)
 
 			IncomingObj["id"] = version.UID
+			attrs := info.ResourceModel.GetBaseAttributes()
+			attrs.AddIfValuesAttributes(IncomingObj)
+			attrs.ConvertStrings(IncomingObj)
 			version.NewObject = IncomingObj
-			version.ConvertStrings(nil)
 
 			err = version.ValidateAndSave()
 		} else {
 			// Create a new Resource and it's first/only/default Version
+			attrs := info.ResourceModel.GetBaseAttributes()
+			attrs.AddIfValuesAttributes(IncomingObj)
+			attrs.ConvertStrings(IncomingObj)
 			resource, err = group.AddResource(info.ResourceType, resourceUID,
 				versionUID, IncomingObj) // vID is ""
 			if err == nil {
@@ -957,6 +962,9 @@ func HTTPPutPost(info *RequestInfo) error {
 		} else {
 			isNew = true
 			versionUID = propsID
+			attrs := info.ResourceModel.GetBaseAttributes()
+			attrs.AddIfValuesAttributes(IncomingObj)
+			attrs.ConvertStrings(IncomingObj)
 			version, err = resource.AddVersion(versionUID, IncomingObj)
 		}
 
@@ -983,6 +991,9 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			if version == nil {
 				// We have a Resource, so add a new Version based on IncomingObj
+				attrs := info.ResourceModel.GetBaseAttributes()
+				attrs.AddIfValuesAttributes(IncomingObj)
+				attrs.ConvertStrings(IncomingObj)
 				version, err = resource.AddVersion(versionUID, IncomingObj)
 				isNew = true
 			} else if !isNew {
@@ -996,9 +1007,10 @@ func HTTPPutPost(info *RequestInfo) error {
 				resource.RemoveCollections(IncomingObj)
 
 				IncomingObj["id"] = version.UID
+				attrs := info.ResourceModel.GetBaseAttributes()
+				attrs.AddIfValuesAttributes(IncomingObj)
+				attrs.ConvertStrings(IncomingObj)
 				version.NewObject = IncomingObj
-				version.ConvertStrings(nil)
-
 				err = version.ValidateAndSave()
 			}
 		}

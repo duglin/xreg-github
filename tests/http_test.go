@@ -23,7 +23,7 @@ type HTTPTest struct {
 	Code        int
 	HeaderMasks []string
 	ResHeaders  []string // name:value
-	BodyMasks   []string // "PROPNAME" or "SEARCH|REPLACE"
+	BodyMasks   []string // "PROPNAME" or "SEARCH||REPLACE"
 	ResBody     string
 }
 

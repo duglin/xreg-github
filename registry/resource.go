@@ -220,7 +220,7 @@ func (r *Resource) AddVersion(id string, objs ...Object) (*Version, error) {
 	}
 
 	for _, obj := range objs {
-		v.ConvertStrings(obj)
+		// v.ConvertStrings(obj)
 		for key, val := range obj {
 			if key == "id" && val != id {
 				return nil, fmt.Errorf("The IDs must match(%q vs %q)", id, val)

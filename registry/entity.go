@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"encoding/base64"
 	"fmt"
 	"maps"
 	"reflect"
@@ -1277,219 +1276,18 @@ func (e *Entity) GetAttributes(obj Object) Attributes {
 	return attrs
 }
 
-// Used to convert top level (or one level maps) from strings to the right
-// scalar types. Used in cases like values coming in a HTTP headers and
-// we're assuming they're all strings, at first.
-// Assume that if anything is wrong that it'll be flagged later by the
-// verfication checks
-func (e *Entity) ConvertStrings(obj Object) {
-	if obj == nil {
-		obj = e.NewObject
-	}
-
-	attrs := e.GetAttributes(obj) // Use e.NewObject
-
-	for key, val := range obj {
-		attr := attrs[key]
-		if attr == nil {
-			attr = attrs["*"]
-			if attr == nil {
-				// Can't find it, so it must be an error.
-				// Assume we'll catch it during the normal verification checks
-				continue
-			}
-		}
-
-		// We'll only try to convert strings and one-level-scalar maps
-		valValue := reflect.ValueOf(val)
-		if valValue.Kind() != reflect.String && valValue.Kind() != reflect.Map {
-			continue
-		}
-		valStr := fmt.Sprintf("%v", val)
-
-		// If not one of these, just skip it
-		switch attr.Type {
-		case BOOLEAN, DECIMAL, INTEGER, UINTEGER:
-			if newVal, ok := ConvertString(valStr, attr.Type); ok {
-				// Replace the string with the non-string value
-				obj[key] = newVal
-			}
-		case MAP:
-			if valValue.Kind() == reflect.Map {
-				valMap := val.(map[string]any)
-				for k, v := range valMap {
-					vStr := fmt.Sprintf("%v", v)
-					// Only saved the converted string if we did a conversion
-					if nV, ok := ConvertString(vStr, attr.Item.Type); ok {
-						valMap[k] = nV
-					}
-				}
-			}
-		}
-	}
-}
-
-func ConvertString(val string, toType string) (any, bool) {
-	switch toType {
-	case BOOLEAN:
-		if val == "true" {
-			return true, true
-		} else if val == "false" {
-			return false, true
-		}
-	case DECIMAL:
-		tmpFloat, err := strconv.ParseFloat(val, 64)
-		if err == nil {
-			return tmpFloat, true
-		}
-	case INTEGER, UINTEGER:
-		tmpInt, err := strconv.Atoi(val)
-		if err == nil {
-			return tmpInt, true
-		}
-	}
-	return nil, false
-}
-
-// Returns the initial set of attributes defined for the entity. So
-// no IfValues attributes yet as we need the current set of properties
-// to calculate that
+// Returns the initial set of attributes defined for the entity.
 func (e *Entity) GetBaseAttributes() Attributes {
-	attrs := Attributes{}
-	// level := 0
-	singular := ""
-	hasDoc := true
-
 	// Add attributes from the model (core and user-defined)
 	gm, rm := e.GetModels()
+
 	if gm == nil {
-		maps.Copy(attrs, e.Registry.Model.Attributes)
-	} else {
-		if rm == nil {
-			maps.Copy(attrs, gm.Attributes)
-		} else {
-			maps.Copy(attrs, rm.Attributes)
-			singular = rm.Singular
-			hasDoc = rm.GetHasDocument() == true
-		}
+		return e.Registry.Model.GetBaseAttributes()
 	}
-
-	// Add xReg defied attributes
-	// TODO Check for conflicts
-	/*
-		for _, specProp := range OrderedSpecProps {
-			if specProp.InLevel(level) {
-				attrs[specProp.Name] = specProp
-			}
-		}
-	*/
-
-	// Add the RESOURCExxx attributes (for resources and versions)
-	if hasDoc && singular != "" {
-		checkFn := func(e *Entity) error {
-			list := []string{
-				singular,
-				singular + "url",
-				singular + "base64",
-				singular + "proxyurl",
-			}
-			count := 0
-			for _, name := range list {
-				if v, ok := e.NewObject[name]; ok && !IsNil(v) {
-					count++
-				}
-			}
-			if count > 1 {
-				return fmt.Errorf("Only one of %s can be present at a time",
-					strings.Join(list[:3], ",")) // exclude proxy
-			}
-			return nil
-		}
-
-		// Add resource content attributes
-		attrs[singular] = &Attribute{
-			Name: singular,
-			Type: ANY,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular]
-					if ok {
-						e.NewObject["#resource"] = v
-						// e.NewObject["#resourceURL"] = nil
-						delete(e.NewObject, singular)
-					}
-					return nil
-				},
-			},
-		}
-		attrs[singular+"url"] = &Attribute{
-			Name: singular + "url",
-			Type: URL,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular+"url"]
-					if !ok {
-						return nil
-					}
-					e.NewObject["#resource"] = nil
-					e.NewObject["#resourceURL"] = v
-					delete(e.NewObject, singular+"url")
-					return nil
-				},
-			},
-		}
-		attrs[singular+"proxyurl"] = &Attribute{
-			Name: singular + "proxyurl",
-			Type: URL,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular+"proxyurl"]
-					if !ok {
-						return nil
-					}
-					e.NewObject["#resource"] = nil
-					e.NewObject["#resourceProxyURL"] = v
-					delete(e.NewObject, singular+"proxyurl")
-					return nil
-				},
-			},
-		}
-		attrs[singular+"base64"] = &Attribute{
-			Name: singular + "base64",
-			Type: STRING,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular+"base64"]
-					if !ok {
-						return nil
-					}
-					if !IsNil(v) {
-						data := v.(string)
-						content, err := base64.StdEncoding.DecodeString(data)
-						if err != nil {
-							return fmt.Errorf("Error decoding \"%sbase64\" "+
-								"attribute: "+"%s", singular, err)
-						}
-						v = any(content)
-					}
-					e.NewObject["#resource"] = v
-					// e.NewObject["#resourceURL"] = nil
-					delete(e.NewObject, singular+"base64")
-					return nil
-				},
-			},
-		}
+	if rm == nil {
+		return gm.GetBaseAttributes()
 	}
-
-	return attrs
+	return rm.GetBaseAttributes()
 }
 
 func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
