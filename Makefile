@@ -22,8 +22,8 @@ qtest: .test
 
 test: .test .testimage
 .test: export TESTING=1
-.test: .cmds */*test.go mysql
-	@while ! nc -z localhost $(DBPORT) ; do echo "Wait for mysql";sleep 2; done
+.test: .cmds */*test.go
+	@make --no-print-directory mysql waitformysql
 	@echo
 	@echo "# Testing"
 	@go clean -testcache
@@ -69,6 +69,7 @@ testimage: .testimage
 .testimage: .image
 	@echo
 	@echo "# Verifying the image"
+	@make --no-print-directory mysql waitformysql
 	@misc/errOutput docker run -e XR_SPEC=$(DOCKER_SPEC) -ti --network host \
 		$(IMAGE) --recreate --verify
 	@touch .testimage
@@ -80,18 +81,18 @@ push: .push
 
 notest run: mysql server local
 
-start: mysql server image
+start: mysql server image waitformysql
 	@echo
 	@echo "# Starting server"
 	./server
 	@#docker run -ti --network host $(IMAGE)
 
-local: mysql server
+local: mysql server waitformysql
 	@echo
 	@echo "# Starting server locally from scratch"
 	./server --recreate
 
-docker: mysql image
+docker: mysql image waitformysql
 	@echo
 	@echo "# Starting server in Docker from scratch"
 	docker run -ti --network host $(IMAGE) --recreate
@@ -102,8 +103,15 @@ mysql:
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password \
 		-p $(DBPORT):$(DBPORT) --name mysql mysql > /dev/null )
 
-mysql-client: mysql
-	@while ! nc -z localhost $(DBPORT) ; do echo "Wait for mysql";sleep 2; done
+waitformysql:
+	@while ! docker run -ti --network host mysql mysqladmin \
+		-h 127.0.0.1 -P $(DBPORT) -s ping ;\
+	do \
+		echo "Wait for mysql" ; \
+		sleep 1 ; \
+	done
+
+mysql-client: mysql waitformysql
 	@(docker container inspect mysql-client > /dev/null 2>&1 && \
 		echo "Attaching to existing client... (press enter for prompt)" && \
 		docker attach mysql-client) || \
