@@ -909,7 +909,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		// If xReg data are in HTTP headers then we require an ID
 		if resourceUID = propsID; resourceUID == "" {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("An \"xRegistry-id\" header must be provided")
+			return fmt.Errorf(`A "xRegistry-id" header must be provided`)
 		}
 
 		// Any ID provided is the Resource's not the Version's, so remove it
@@ -1095,6 +1095,11 @@ func HTTPPutPost(info *RequestInfo) error {
 				IncomingObj)
 		}
 
+		err = ProcessSetDefaultVersionIDFlag(info, resource, version)
+		if err != nil {
+			return err
+		}
+
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1258,6 +1263,7 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 
 	if vID == "this" {
 		if version == nil {
+			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Can't use 'this' if a version wasn't processed")
 		}
 		// stick default version to current one we just processed
@@ -1270,7 +1276,7 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 		return fmt.Errorf("Error finding version(%s): %s", vID, err)
 	}
 	if version == nil {
-		info.StatusCode = http.StatusNotFound
+		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("Version %q not found", vID)
 	}
 

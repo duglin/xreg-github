@@ -5276,7 +5276,7 @@ func TestHTTPDefault(t *testing.T) {
 		URL:        "/dirs/d1/files/f1?meta&setdefaultversionid=3",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-id: bogus`},
-		Code:       404,
+		Code:       400,
 		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
 		ResBody:    `Version "3" not found` + "\n",
 	})
@@ -7291,7 +7291,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ReqBody:    ``,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody: `An "xRegistry-id" header must be provided
+		ResBody: `A "xRegistry-id" header must be provided
 `,
 	})
 
@@ -7602,6 +7602,69 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-isdefault:true",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f6/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources/f61 - new res,version - no id+setdef=null",
+		URL:    "/dirs/dir1/files/f61?setdefaultversionid=null",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-description: my f61",
+		},
+		ReqBody: `hello`,
+		Code:    201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f61/versions/1",
+			"xRegistry-description:my f61",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f61/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources/f62 - new res,version - no id+setdef=this",
+		URL:    "/dirs/dir1/files/f62?setdefaultversionid=this",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-description: my f62",
+		},
+		ReqBody: `hello`,
+		Code:    201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f62/versions/1",
+			"xRegistry-description:my f62",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f62/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST resources/f63 - new res,version - no id+setdef=1",
+		URL:    "/dirs/dir1/files/f63?setdefaultversionid=1",
+		Method: "POST",
+		ReqHeaders: []string{
+			"xRegistry-description: my f63",
+		},
+		ReqBody: `hello`,
+		Code:    201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f63/versions/1",
+			"xRegistry-description:my f63",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f63/versions/1",
 		},
 		ResBody: `hello`,
 	})
@@ -8077,4 +8140,76 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `Can't change the ID of an entity(7->77)
 `,
 	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f14/versions - new+doc+setdef=null",
+		URL:        "/dirs/dir1/files/f14/versions?setdefaultversionid=null",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `hello`,
+		Code:       201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f14/versions/1",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Location:http://localhost:8181/dirs/dir1/files/f14/versions/1",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f14/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f141/versions - new+doc+setdef=this",
+		URL:        "/dirs/dir1/files/f141/versions?setdefaultversionid=this",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `hello`,
+		Code:       201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f141/versions/1",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Location:http://localhost:8181/dirs/dir1/files/f141/versions/1",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f141/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f142/versions - new+doc+setdef=1",
+		URL:        "/dirs/dir1/files/f142/versions?setdefaultversionid=1",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `hello`,
+		Code:       201,
+		ResHeaders: []string{
+			"xRegistry-id:1",
+			"xRegistry-epoch:1",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f142/versions/1",
+			"xRegistry-isdefault:true",
+			"Content-Length:5",
+			"Location:http://localhost:8181/dirs/dir1/files/f142/versions/1",
+			"Content-Location:http://localhost:8181/dirs/dir1/files/f142/versions/1",
+		},
+		ResBody: `hello`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f143/versions - new+doc+setdef=bad",
+		URL:        "/dirs/dir1/files/f143/versions?setdefaultversionid=2",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody:    `hello`,
+		Code:       400,
+		ResHeaders: []string{
+			"Content-Type: text/plain; charset=utf-8",
+		},
+		ResBody: `Version "2" not found
+`,
+	})
+
 }
