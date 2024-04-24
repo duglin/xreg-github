@@ -7807,13 +7807,35 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
-          "v1": {}
+          "v1": {},
+          "v2": {}
         }`,
 		Code: 400,
 		ResHeaders: []string{
 			"Content-Type:text/plain; charset=utf-8",
 		},
 		ResBody: `?setdefaultversionid can not be 'this'
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources/f10a/versions?meta - new res,version-2v,err",
+		URL:        "/dirs/dir1/files/f10a/versions?meta&setdefaultversionid=this",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "v1": {}
+        }`,
+		Code:       200,
+		ResHeaders: []string{},
+		ResBody: `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f10a/versions/v1?meta",
+    "isdefault": true
+  }
+}
 `,
 	})
 
@@ -7846,7 +7868,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type:text/plain; charset=utf-8",
 		},
-		ResBody: `?setdefaultversionid points to a nonexistent version
+		ResBody: `Version "v2" not found
 `,
 	})
 

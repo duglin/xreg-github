@@ -998,6 +998,8 @@ func HTTPPutPost(info *RequestInfo) error {
 			return err
 		}
 
+		thisVersion := (*Version)(nil)
+
 		if resource == nil {
 			// Implicitly create the resource
 			if len(objMap) == 0 {
@@ -1006,10 +1008,13 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			vID := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
-			if vID == "" {
+			if vID == "" || vID == "this" {
 				if len(objMap) > 1 {
 					info.StatusCode = http.StatusBadRequest
-					return fmt.Errorf("?setdefaultversionid is required")
+					if vID == "" {
+						return fmt.Errorf("?setdefaultversionid is required")
+					}
+					return fmt.Errorf("?setdefaultversionid can not be 'this'")
 				}
 				// Only one Version so use its ID as the default version
 				for k, _ := range objMap {
@@ -1023,15 +1028,9 @@ func HTTPPutPost(info *RequestInfo) error {
 				return fmt.Errorf("?setdefaultversionid can not be 'null'")
 			}
 
-			if vID == "this" {
-				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf("?setdefaultversionid can not be 'this'")
-			}
-
 			if IncomingObj, _ = objMap[vID]; IncomingObj == nil {
 				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf("?setdefaultversionid points to a " +
-					"nonexistent version")
+				return fmt.Errorf("Version %q not found", vID)
 			}
 
 			resource, err = group.AddResourceWithObject(info.ResourceType,
@@ -1044,6 +1043,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			v, err := resource.GetDefault()
 			Must(err)
+			thisVersion = v
 
 			// Remove the newly created default version from objMap so we
 			// won't process it again, but add it to the reuslts collection
@@ -1061,7 +1061,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			paths = append(paths, v.Path)
 		}
 
-		err = ProcessSetDefaultVersionIDFlag(info, resource, nil)
+		err = ProcessSetDefaultVersionIDFlag(info, resource, thisVersion)
 		if err != nil {
 			return err
 		}
