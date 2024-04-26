@@ -22,8 +22,11 @@ import (
 	"github.com/google/uuid"
 )
 
+var count = 0
+
 func NewUUID() string {
-	return uuid.NewString()[:8]
+	count++ // Help keep it unique w/o using the entire UUID string
+	return fmt.Sprintf("%s%d", uuid.NewString()[:8], count)
 }
 
 func Must(err error) {

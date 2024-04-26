@@ -2,13 +2,16 @@ all: mysql cmds test image run
 
 # Notes:
 # export XR_SPEC=$HOME/go/src/github.com/xregistry/spec -> to load local models
-# export VERBOSE=x                                      -> control log verbosity
-# export DBHOST=localhost                               -> mySQL host
-# export DBPORT=3306                                    -> mySQL port
+# export VERBOSE=[0-9]                                  -> control log verbosity
+# Override these env vars as needed:
+DBHOST     ?= 127.0.0.1
+DBPORT     ?= 3306
+DBUSER     ?= root
+DBPASSWORD ?= password
+IMAGE      ?= duglin/xreg-server
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
-IMAGE := duglin/xreg-server
-DBPORT ?= 3306
+
 ifdef XR_SPEC
   # If pointing to local spec then make sure "docker run" uses it too
   DOCKER_SPEC=/spec
@@ -54,23 +57,26 @@ image: .image
 	@echo
 	@echo "# Building the container image"
 ifdef XR_SPEC
-	# Copy our local copy of the spec into the image
+	# Copy local xReg spec files into tmp dir that "docker build" looks for
 	@rm -rf .spec
 	@mkdir -p .spec
 	cp -r $(XR_SPEC)/* .spec
 endif
 	@misc/errOutput docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
-	@touch .image
 ifdef XR_SPEC
 	@rm -rf .spec
 endif
+	@touch .image
 
 testimage: .testimage
 .testimage: .image
 	@echo
 	@echo "# Verifying the image"
 	@make --no-print-directory mysql waitformysql
-	@misc/errOutput docker run -e XR_SPEC=$(DOCKER_SPEC) -ti --network host \
+	@misc/errOutput docker run -ti \
+		-e DBHOST=$(DBHOST) -e DBPORT=$(DBPORT) -e DBUSER=$(DBUSER) \
+		-e XR_SPEC=$(DOCKER_SPEC) \
+		--network host \
 		$(IMAGE) --recreate --verify
 	@touch .testimage
 
@@ -81,7 +87,7 @@ push: .push
 
 notest run: mysql server local
 
-start: mysql server image waitformysql
+start: mysql server waitformysql #image
 	@echo
 	@echo "# Starting server"
 	./server
@@ -92,6 +98,9 @@ local: mysql server waitformysql
 	@echo "# Starting server locally from scratch"
 	./server --recreate
 
+large:
+	@XR_LOAD_LARGE=1 make --no-print-directory run
+
 docker: mysql image waitformysql
 	@echo
 	@echo "# Starting server in Docker from scratch"
@@ -100,15 +109,16 @@ docker: mysql image waitformysql
 mysql:
 	@docker container inspect mysql > /dev/null 2>&1 || \
 	(echo "# Starting mysql" && \
-	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD=password \
+	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD="$(DBPASSWORD)" \
 		-p $(DBPORT):$(DBPORT) --name mysql mysql > /dev/null )
+		@ # -e MYSQL_USER=$(DBUSER) \
 
 waitformysql:
 	@while ! docker run -ti --network host mysql mysqladmin \
-		-h 127.0.0.1 -P $(DBPORT) -s ping ;\
+		-h $(DBHOST) -P $(DBPORT) -s ping ;\
 	do \
-		echo "Wait for mysql" ; \
-		sleep 1 ; \
+		echo "Waiting for mysql" ; \
+		sleep 2 ; \
 	done
 
 mysql-client: mysql waitformysql
@@ -116,7 +126,9 @@ mysql-client: mysql waitformysql
 		echo "Attaching to existing client... (press enter for prompt)" && \
 		docker attach mysql-client) || \
 	docker run -ti --rm --network host --name mysql-client mysql \
-		mysql --port $(DBPORT) --password=password --protocol tcp || \
+		mysql --host $(DBHOST) --port $(DBPORT) \
+		--user $(DBUSER) --password="$(DBPASSWORD)" \
+		--protocol tcp || \
 		echo "If it failed, make sure mysql is ready"
 
 k3d: misc/mysql.yaml

@@ -3,6 +3,11 @@
 -- USE registry ;
 -- ^^ OLD STUF
 
+-- MySQL config requirements:
+-- sql_mode:
+--   ANSI_QUOTES        <- enabled
+--   ONLY_FULL_GROUP_BY <- disabled
+
 /*
 Notes:
 SID -> System generated ID, usually primary key. Assumed to be globally
@@ -74,11 +79,11 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     Plural            VARCHAR(64),
     Attributes        JSON,               # Until we use the Attributes table
 
-    MaxVersions       INT NOT NULL,       # For Resources
-    SetVersionId      BOOL NOT NULL,      # For Resources
-    SetStickyDefault  BOOL NOT NULL,      # For Resources
-    HasDocument       BOOL NOT NULL,      # For Resources
-    ReadOnly          BOOL NOT NULL,      # For Resources
+    MaxVersions       INT,      # For Resources
+    SetVersionId      BOOL,     # For Resources
+    SetStickyDefault  BOOL,     # For Resources
+    HasDocument       BOOL,     # For Resources
+    ReadOnly          BOOL,     # For Resources
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),

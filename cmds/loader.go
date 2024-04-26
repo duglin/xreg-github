@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -517,5 +518,62 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 
 	ErrFatalf(reg.Model.Verify())
 	reg.Commit()
+	return reg
+}
+
+func LoadLargeSample(reg *registry.Registry) *registry.Registry {
+	var err error
+	start := time.Now()
+	log.VPrintf(1, "Loading registry '%s'...", "Large")
+	if reg == nil {
+		reg, err = registry.FindRegistry(nil, "Large")
+		ErrFatalf(err)
+		if reg != nil {
+			reg.Rollback()
+			return reg
+		}
+
+		reg, err = registry.NewRegistry(nil, "Large")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+		defer reg.Rollback()
+
+		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
+		reg.SetSave("name", "Large Registry")
+		reg.SetSave("description", "A large Registry")
+		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+	}
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	maxD, maxF, maxV := 10, 50, 5
+	dirs, files, vers := 0, 0, 0
+	for dcount := 0; dcount < maxD; dcount++ {
+		dName := fmt.Sprintf("dir%d", dcount)
+		d, err := reg.AddGroup("dirs", dName)
+		ErrFatalf(err)
+		dirs++
+		for fcount := 0; fcount < maxF; fcount++ {
+			fName := fmt.Sprintf("file%d", fcount)
+			f, err := d.AddResource("files", fName, "v0")
+			ErrFatalf(err)
+			files++
+			vers++
+			for vcount := 1; vcount < maxV; vcount++ {
+				_, err = f.AddVersion(fmt.Sprintf("v%d", vcount))
+				vers++
+				ErrFatalf(err)
+				ErrFatalf(reg.Commit())
+			}
+		}
+	}
+
+	// End of model
+
+	ErrFatalf(reg.Model.Verify())
+	reg.Commit()
+	dur := time.Now().Sub(start).Round(time.Second)
+	log.VPrintf(1, "Done loading registry '%s' (time: %s)", "Large", dur)
+	log.VPrintf(1, "Dirs: %d  Files: %d  Versions: %d", dirs, files, vers)
 	return reg
 }

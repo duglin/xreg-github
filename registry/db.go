@@ -19,10 +19,19 @@ import (
 
 var DB *sql.DB
 
+var DBUSER = "root"
 var DBHOST = "localhost"
 var DBPORT = "3306"
+var DBPASSWORD = "password"
 
+// TODO load these from a config file
 func init() {
+	if tmp := os.Getenv("DBUSER"); tmp != "" {
+		DBUSER = tmp
+	}
+	if tmp := os.Getenv("DBPASSWORD"); tmp != "" {
+		DBPASSWORD = tmp
+	}
 	if tmp := os.Getenv("DBHOST"); tmp != "" {
 		DBHOST = tmp
 	}
@@ -427,10 +436,11 @@ func Query(tx *Tx, cmd string, args ...interface{}) (*Result, error) {
 }
 
 func doCount(tx *Tx, cmd string, args ...interface{}) (int, error) {
-	log.VPrintf(4, "doCount: %q arg: %v", cmd, args)
+	log.VPrintf(4, "doCount: %q args: %v", cmd, args)
 	ps, err := tx.Prepare(cmd)
 	if err != nil {
 		ShowStack()
+		log.VPrintf(0, "CMD: %q args: %v", cmd, args)
 		return 0, err
 	}
 	defer ps.Close()
@@ -440,6 +450,7 @@ func doCount(tx *Tx, cmd string, args ...interface{}) (int, error) {
 		query := SubQuery(cmd, args)
 		log.Printf("doCount:Error DB(%s)->%s\n", query, err)
 		ShowStack()
+		log.VPrintf(0, "CMD: %q args: %v", cmd, args)
 		return 0, err
 	}
 
@@ -546,7 +557,8 @@ func DoCount(tx *Tx, num int, cmd string, args ...interface{}) error {
 func DBExists(name string) bool {
 	log.VPrintf(3, ">Enter: DBExists %q", name)
 	defer log.VPrintf(3, "<Exit: DBExists")
-	db, err := sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/")
+	db, err := sql.Open("mysql",
+		DBUSER+":"+DBPASSWORD+"@tcp("+DBHOST+":"+DBPORT+")/")
 	if err != nil {
 		panic(err)
 	}
@@ -577,10 +589,12 @@ func OpenDB(name string) {
 	log.VPrintf(3, ">Enter: OpenDB %q", name)
 	defer log.VPrintf(3, "<Exit: OpenDB")
 
-	// DB, err := sql.Open("mysql", "root:password@tcp(localhost:3306)/")
+	// DB, err := sql.Open("mysql",
+	// DBUSER + ":"+DBPASSWORD+"@tcp(localhost:3306)/")
 	var err error
 
-	DB, err = sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/"+name)
+	DB, err = sql.Open("mysql",
+		DBUSER+":"+DBPASSWORD+"@tcp("+DBHOST+":"+DBPORT+")/"+name)
 	if err != nil {
 		err = fmt.Errorf("Error talking to SQL: %s\n", err)
 		log.Print(err)
@@ -596,7 +610,8 @@ func CreateDB(name string) error {
 	log.VPrintf(3, ">Enter: CreateDB %q", name)
 	defer log.VPrintf(3, "<Exit: CreateDB")
 
-	db, err := sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/")
+	db, err := sql.Open("mysql",
+		DBUSER+":"+DBPASSWORD+"@tcp("+DBHOST+":"+DBPORT+")/")
 	if err != nil {
 		panic(err)
 	}
@@ -631,7 +646,8 @@ func CreateDB(name string) error {
 func DeleteDB(name string) error {
 	log.VPrintf(3, "Deleting DB %q", name)
 
-	db, err := sql.Open("mysql", "root:password@tcp("+DBHOST+":"+DBPORT+")/")
+	db, err := sql.Open("mysql",
+		DBUSER+":"+DBPASSWORD+"@tcp("+DBHOST+":"+DBPORT+")/")
 	if err != nil {
 		panic(err)
 	}
