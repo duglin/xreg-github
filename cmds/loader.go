@@ -546,7 +546,7 @@ func LoadLargeSample(reg *registry.Registry) *registry.Registry {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
-	maxD, maxF, maxV := 10, 50, 5
+	maxD, maxF, maxV := 10, 150, 5
 	dirs, files, vers := 0, 0, 0
 	for dcount := 0; dcount < maxD; dcount++ {
 		dName := fmt.Sprintf("dir%d", dcount)
