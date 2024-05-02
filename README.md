@@ -83,3 +83,4 @@ TODOs:
 - support ?inline on PUT/POST
 - process ?setdefaultversionid flag before we update things
 - make sure we don't let go http add "content-type" header for docs w/o a value
+- test for 'null' for epoch being the same as no epoch at all
