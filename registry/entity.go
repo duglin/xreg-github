@@ -923,9 +923,8 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "createdby",
-		Type:     STRING,
-		ReadOnly: true,
+		Name: "createdat",
+		Type: TIMESTAMP,
 
 		internals: AttrInternals{
 			levels:    "",
@@ -933,49 +932,26 @@ var OrderedSpecProps = []*Attribute{
 			getFn:     nil,
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
-				return nil
-			},
-		},
-	},
-	{
-		Name:     "createdat",
-		Type:     TIMESTAMP,
-		ReadOnly: true,
+				// ca := e.Object["createdat"]
+				// isNew := IsNil(e.Object["epoch"])
 
-		internals: AttrInternals{
-			levels:    "",
-			dontStore: false,
-			getFn:     nil,
-			checkFn:   nil,
-			updateFn: func(e *Entity) error {
-				ct := e.Object["createdat"]
-				isNew := IsNil(e.Object["epoch"])
-				if IsNil(ct) && isNew {
-					if e.Registry.Get("#tracktimestamps") == true {
-						e.NewObject["createdat"] = e.tx.CreateTime
-					}
+				ca := e.NewObject["createdat"]
+				// Note that 'nil' isn't the same as IsNil.
+				// 'nil' means they explicitly set it, so use 'now' below
+				if ca == nil {
+					ca = e.Object["createdat"]
+					e.NewObject["createdat"] = ca
+				}
+				if IsNil(ca) { // && isNew
+					e.NewObject["createdat"] = e.tx.CreateTime
 				}
 				return nil
 			},
 		},
 	},
 	{
-		Name:     "modifiedby",
-		Type:     STRING,
-		ReadOnly: true,
-
-		internals: AttrInternals{
-			levels:    "",
-			dontStore: false,
-			getFn:     nil,
-			checkFn:   nil,
-			updateFn:  nil,
-		},
-	},
-	{
-		Name:     "modifiedat",
-		Type:     TIMESTAMP,
-		ReadOnly: true,
+		Name: "modifiedat",
+		Type: TIMESTAMP,
 
 		internals: AttrInternals{
 			levels:    "",
@@ -983,7 +959,10 @@ var OrderedSpecProps = []*Attribute{
 			getFn:     nil,
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
-				if e.Registry.Get("#tracktimestamps") == true {
+				ma := e.NewObject["modifiedat"]
+				// If there's no value, or it's the same as the existing
+				// value, set to "now"
+				if IsNil(ma) || ma == e.Object["modifiedat"] {
 					e.NewObject["modifiedat"] = e.tx.CreateTime
 				}
 				return nil

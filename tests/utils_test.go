@@ -190,8 +190,8 @@ func xCheckEqual(t *testing.T, extra string, gotAny any, expAny any) {
 	t.Helper()
 	pos := 0
 
-	got := fmt.Sprintf("%v", gotAny)
-	exp := fmt.Sprintf("%v", expAny)
+	got := MaskTimestamps(fmt.Sprintf("%v", gotAny))
+	exp := MaskTimestamps(fmt.Sprintf("%v", expAny))
 
 	for pos < len(got) && pos < len(exp) && got[pos] == exp[pos] {
 		pos++

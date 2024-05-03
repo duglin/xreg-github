@@ -33,6 +33,8 @@ func TestMultiReg(t *testing.T) {
   "id": "TestMultiReg",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "dirscount": 0,
   "dirsurl": "http://localhost:8181/dirs"
@@ -45,6 +47,8 @@ func TestMultiReg(t *testing.T) {
   "id": "reg2",
   "epoch": 1,
   "self": "http://localhost:8181/reg-reg2/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "reg2_dirscount": 0,
   "reg2_dirsurl": "http://localhost:8181/reg-reg2/reg2_dirs"
@@ -57,6 +61,8 @@ func TestMultiReg(t *testing.T) {
   "id": "d2",
   "epoch": 1,
   "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "reg2_filescount": 0,
   "reg2_filesurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files"
@@ -69,6 +75,8 @@ func TestMultiReg(t *testing.T) {
   "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2?meta",
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2/versions/1?meta",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2/versions"

@@ -48,6 +48,8 @@ func TestBasicInline(t *testing.T) {
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "dirscount": 2,
   "dirsurl": "http://localhost:8181/dirs",
@@ -64,12 +66,16 @@ func TestBasicInline(t *testing.T) {
   "id": "TestBasicInline",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "dirs": {
     "d1": {
       "id": "d1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f1": {
@@ -78,18 +84,24 @@ func TestBasicInline(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
           "defaultversionid": "v2",
           "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta"
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
               "id": "v2",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
-              "isdefault": true
+              "isdefault": true,
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 2,
@@ -103,6 +115,8 @@ func TestBasicInline(t *testing.T) {
       "id": "d2",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f2": {
@@ -111,18 +125,24 @@ func TestBasicInline(t *testing.T) {
           "self": "http://localhost:8181/dirs/d2/files/f2?meta",
           "defaultversionid": "v1.1",
           "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta"
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
-              "isdefault": true
+              "isdefault": true,
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 2,
@@ -140,6 +160,8 @@ func TestBasicInline(t *testing.T) {
       "id": "d2",
       "epoch": 1,
       "self": "http://localhost:8181/dirs2/d2",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f2": {
@@ -148,13 +170,17 @@ func TestBasicInline(t *testing.T) {
           "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
           "defaultversionid": "v1",
           "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
-              "isdefault": true
+              "isdefault": true,
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 1,
@@ -548,6 +574,8 @@ func TestResourceInline(t *testing.T) {
 			`"self"`,
 			`"isdefault"`,
 			`"defaultversionurl"`,
+			`"createdat"`,
+			`"modifiedat"`,
 			`"versionsurl"`,
 			`"dirsurl"`,
 		}

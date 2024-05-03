@@ -45,6 +45,8 @@ func TestCreateGroup(t *testing.T) {
   "id": "d1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "filescount": 1,
   "filesurl": "http://localhost:8181/dirs/d1/files"

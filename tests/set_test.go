@@ -156,6 +156,8 @@ func TestSetDots(t *testing.T) {
   "labels": {
     "abc.def": "ABC"
   },
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "filescount": 0,
   "filesurl": "http://localhost:8181/dirs/d1/files"
@@ -168,6 +170,8 @@ func TestSetDots(t *testing.T) {
   "id": "d1",
   "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "filescount": 0,
   "filesurl": "http://localhost:8181/dirs/d1/files"
@@ -289,6 +293,8 @@ func TestSetLabels(t *testing.T) {
   "labels": {
     "r2": "123.234"
   },
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirs": {
     "d1": {
@@ -298,6 +304,8 @@ func TestSetLabels(t *testing.T) {
       "labels": {
         "dd": "dd.foo"
       },
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f1": {
@@ -314,6 +322,8 @@ func TestSetLabels(t *testing.T) {
             "dd_ff": "under",
             "ff": "ff.bar"
           },
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
@@ -322,7 +332,9 @@ func TestSetLabels(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
               "labels": {
                 "vv2": "v11"
-              }
+              },
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
               "id": "v2",
@@ -336,7 +348,9 @@ func TestSetLabels(t *testing.T) {
                 "dd.ff": "dot",
                 "dd_ff": "under",
                 "ff": "ff.bar"
-              }
+              },
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 2,
@@ -361,6 +375,8 @@ func TestSetLabels(t *testing.T) {
   "labels": {
     "r2": "123.234"
   },
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirs": {
     "d1": {
@@ -370,6 +386,8 @@ func TestSetLabels(t *testing.T) {
       "labels": {
         "dd": "dd.foo"
       },
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f1": {
@@ -382,6 +400,8 @@ func TestSetLabels(t *testing.T) {
           "labels": {
             "vv2": "v11"
           },
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
@@ -391,7 +411,9 @@ func TestSetLabels(t *testing.T) {
               "isdefault": true,
               "labels": {
                 "vv2": "v11"
-              }
+              },
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
               "id": "v2",
@@ -404,7 +426,9 @@ func TestSetLabels(t *testing.T) {
                 "dd.ff": "dot",
                 "dd_ff": "under",
                 "ff": "ff.bar"
-              }
+              },
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 2,

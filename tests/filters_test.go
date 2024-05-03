@@ -45,6 +45,8 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
+  "createdat": "2024-12-01T12:00:00Z",
+  "modifiedat": "2024-12-01T12:00:01Z",
 
   "dirscount": 2,
   "dirsurl": "http://localhost:8181/dirs"
@@ -151,7 +153,9 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "id": "v1",
   "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta"
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+  "createdat": "2024-12-01T12:00:00Z",
+  "modifiedat": "2024-12-01T12:00:00Z"
 }
 `,
 		},
@@ -180,6 +184,8 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
+  "createdat": "2024-12-01T12:00:00Z",
+  "modifiedat": "2024-12-01T12:00:01Z",
 
   "dirscount": 2,
   "dirsurl": "http://localhost:8181/dirs"
@@ -197,6 +203,8 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
+  "createdat": "2024-12-01T12:00:00Z",
+  "modifiedat": "2024-12-01T12:00:01Z",
 
   "dirscount": 1,
   "dirsurl": "http://localhost:8181/dirs"
@@ -214,12 +222,16 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
+  "createdat": "2024-12-01T12:00:01Z",
+  "modifiedat": "2024-12-01T12:00:02Z",
 
   "dirs": {
     "d2": {
       "id": "d2",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
+      "createdat": "2024-12-01T12:00:02Z",
+      "modifiedat": "2024-12-01T12:00:02Z",
 
       "files": {
         "f2": {
@@ -231,12 +243,16 @@ func TestBasicFilters(t *testing.T) {
           "labels": {
             "file1": "1elif"
           },
+          "createdat": "2024-12-01T12:00:02Z",
+          "modifiedat": "2024-12-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta"
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta",
+              "createdat": "2024-12-01T12:00:02Z",
+              "modifiedat": "2024-12-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
@@ -245,7 +261,9 @@ func TestBasicFilters(t *testing.T) {
               "isdefault": true,
               "labels": {
                 "file1": "1elif"
-              }
+              },
+              "createdat": "2024-12-01T12:00:02Z",
+              "modifiedat": "2024-12-01T12:00:02Z"
             }
           },
           "versionscount": 2,
@@ -287,12 +305,16 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirs": {
     "d2": {
       "id": "d2",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f2": {
@@ -304,12 +326,16 @@ func TestBasicFilters(t *testing.T) {
           "labels": {
             "file1": "1elif"
           },
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta"
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
@@ -318,7 +344,9 @@ func TestBasicFilters(t *testing.T) {
               "isdefault": true,
               "labels": {
                 "file1": "1elif"
-              }
+              },
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 2,

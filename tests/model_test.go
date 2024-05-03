@@ -59,25 +59,13 @@ func TestNoModel(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   }
 }
@@ -87,6 +75,8 @@ func TestNoModel(t *testing.T) {
   "id": "TestNoModel",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -135,25 +125,13 @@ func TestNoModel(t *testing.T) {
           "type": "string"
         }
       },
-      "createdby": {
-        "name": "createdby",
-        "type": "string",
-        "readonly": true
-      },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp",
-        "readonly": true
-      },
-      "modifiedby": {
-        "name": "modifiedby",
-        "type": "string",
-        "readonly": true
+        "type": "timestamp"
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp",
-        "readonly": true
+        "type": "timestamp"
       }
     }
   }
@@ -218,25 +196,13 @@ func TestRegSchema(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   }
 }
@@ -293,25 +259,13 @@ func TestRegSchema(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   }
 }
@@ -367,25 +321,13 @@ func TestRegSchema(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   }
 }
@@ -440,25 +382,13 @@ func TestRegSchema(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   }
 }
@@ -521,25 +451,13 @@ func TestGroupModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -587,25 +505,13 @@ func TestGroupModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       }
     }
@@ -661,25 +567,13 @@ func TestGroupModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -727,25 +621,13 @@ func TestGroupModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       }
     }
@@ -801,25 +683,13 @@ func TestGroupModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -867,25 +737,13 @@ func TestGroupModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       }
     }
@@ -999,25 +857,13 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -1065,25 +911,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -1155,25 +989,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -1227,25 +1049,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -1317,25 +1127,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -1398,25 +1196,13 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -1464,25 +1250,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -1554,25 +1328,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -1626,25 +1388,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       }
     }
@@ -1700,25 +1450,13 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -1766,25 +1504,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -1856,25 +1582,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -1928,25 +1642,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       }
     }
@@ -2003,25 +1705,13 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -2069,25 +1759,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -2159,25 +1837,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -2239,25 +1905,13 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -2305,25 +1959,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -2395,25 +2037,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -2501,25 +2131,13 @@ func TestResourceModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     },
     "mystr": {
       "name": "mystr",
@@ -2571,25 +2189,13 @@ func TestResourceModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -2661,25 +2267,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -2718,6 +2312,8 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -2766,25 +2362,13 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string"
         }
       },
-      "createdby": {
-        "name": "createdby",
-        "type": "string",
-        "readonly": true
-      },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp",
-        "readonly": true
-      },
-      "modifiedby": {
-        "name": "modifiedby",
-        "type": "string",
-        "readonly": true
+        "type": "timestamp"
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp",
-        "readonly": true
+        "type": "timestamp"
       },
       "mystr": {
         "name": "mystr",
@@ -2836,25 +2420,13 @@ func TestResourceModelCreate(t *testing.T) {
             "name": "origin",
             "type": "uri"
           },
-          "createdby": {
-            "name": "createdby",
-            "type": "string",
-            "readonly": true
-          },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp",
-            "readonly": true
-          },
-          "modifiedby": {
-            "name": "modifiedby",
-            "type": "string",
-            "readonly": true
+            "type": "timestamp"
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp",
-            "readonly": true
+            "type": "timestamp"
           }
         },
         "resources": {
@@ -2926,25 +2498,13 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "origin",
                 "type": "uri"
               },
-              "createdby": {
-                "name": "createdby",
-                "type": "string",
-                "readonly": true
-              },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp",
-                "readonly": true
-              },
-              "modifiedby": {
-                "name": "modifiedby",
-                "type": "string",
-                "readonly": true
+                "type": "timestamp"
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp",
-                "readonly": true
+                "type": "timestamp"
               },
               "contenttype": {
                 "name": "contenttype",
@@ -2962,6 +2522,8 @@ func TestResourceModelCreate(t *testing.T) {
       "id": "dir1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/dir1",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f1": {
@@ -2970,6 +2532,8 @@ func TestResourceModelCreate(t *testing.T) {
           "self": "http://localhost:8181/dirs/dir1/files/f1",
           "defaultversionid": "v1",
           "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versionscount": 1,
           "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -3009,6 +2573,8 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -3057,25 +2623,13 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string"
         }
       },
-      "createdby": {
-        "name": "createdby",
-        "type": "string",
-        "readonly": true
-      },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp",
-        "readonly": true
-      },
-      "modifiedby": {
-        "name": "modifiedby",
-        "type": "string",
-        "readonly": true
+        "type": "timestamp"
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp",
-        "readonly": true
+        "type": "timestamp"
       }
     },
     "groups": {
@@ -3123,25 +2677,13 @@ func TestResourceModelCreate(t *testing.T) {
             "name": "origin",
             "type": "uri"
           },
-          "createdby": {
-            "name": "createdby",
-            "type": "string",
-            "readonly": true
-          },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp",
-            "readonly": true
-          },
-          "modifiedby": {
-            "name": "modifiedby",
-            "type": "string",
-            "readonly": true
+            "type": "timestamp"
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp",
-            "readonly": true
+            "type": "timestamp"
           }
         },
         "resources": {
@@ -3213,25 +2755,13 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "origin",
                 "type": "uri"
               },
-              "createdby": {
-                "name": "createdby",
-                "type": "string",
-                "readonly": true
-              },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp",
-                "readonly": true
-              },
-              "modifiedby": {
-                "name": "modifiedby",
-                "type": "string",
-                "readonly": true
+                "type": "timestamp"
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp",
-                "readonly": true
+                "type": "timestamp"
               },
               "contenttype": {
                 "name": "contenttype",
@@ -3249,6 +2779,8 @@ func TestResourceModelCreate(t *testing.T) {
       "id": "dir1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/dir1",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files2count": 0,
       "files2url": "http://localhost:8181/dirs/dir1/files2"
@@ -3274,6 +2806,8 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -3322,25 +2856,13 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string"
         }
       },
-      "createdby": {
-        "name": "createdby",
-        "type": "string",
-        "readonly": true
-      },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp",
-        "readonly": true
-      },
-      "modifiedby": {
-        "name": "modifiedby",
-        "type": "string",
-        "readonly": true
+        "type": "timestamp"
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp",
-        "readonly": true
+        "type": "timestamp"
       }
     },
     "groups": {
@@ -3388,25 +2910,13 @@ func TestResourceModelCreate(t *testing.T) {
             "name": "origin",
             "type": "uri"
           },
-          "createdby": {
-            "name": "createdby",
-            "type": "string",
-            "readonly": true
-          },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp",
-            "readonly": true
-          },
-          "modifiedby": {
-            "name": "modifiedby",
-            "type": "string",
-            "readonly": true
+            "type": "timestamp"
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp",
-            "readonly": true
+            "type": "timestamp"
           }
         }
       }
@@ -3417,7 +2927,9 @@ func TestResourceModelCreate(t *testing.T) {
     "dir1": {
       "id": "dir1",
       "epoch": 1,
-      "self": "http://localhost:8181/dirs/dir1"
+      "self": "http://localhost:8181/dirs/dir1",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z"
     }
   },
   "dirscount": 1,
@@ -3439,6 +2951,8 @@ func TestResourceModelCreate(t *testing.T) {
   "id": "TestResourceModels",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -3487,25 +3001,13 @@ func TestResourceModelCreate(t *testing.T) {
           "type": "string"
         }
       },
-      "createdby": {
-        "name": "createdby",
-        "type": "string",
-        "readonly": true
-      },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp",
-        "readonly": true
-      },
-      "modifiedby": {
-        "name": "modifiedby",
-        "type": "string",
-        "readonly": true
+        "type": "timestamp"
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp",
-        "readonly": true
+        "type": "timestamp"
       }
     },
     "groups": {
@@ -3553,25 +3055,13 @@ func TestResourceModelCreate(t *testing.T) {
             "name": "origin",
             "type": "uri"
           },
-          "createdby": {
-            "name": "createdby",
-            "type": "string",
-            "readonly": true
-          },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp",
-            "readonly": true
-          },
-          "modifiedby": {
-            "name": "modifiedby",
-            "type": "string",
-            "readonly": true
+            "type": "timestamp"
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp",
-            "readonly": true
+            "type": "timestamp"
           }
         }
       }
@@ -3656,25 +3146,13 @@ func TestMultModelCreate(t *testing.T) {
         "type": "string"
       }
     },
-    "createdby": {
-      "name": "createdby",
-      "type": "string",
-      "readonly": true
-    },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp",
-      "readonly": true
-    },
-    "modifiedby": {
-      "name": "modifiedby",
-      "type": "string",
-      "readonly": true
+      "type": "timestamp"
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp",
-      "readonly": true
+      "type": "timestamp"
     }
   },
   "groups": {
@@ -3722,25 +3200,13 @@ func TestMultModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -3812,25 +3278,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -3906,25 +3360,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -3978,25 +3420,13 @@ func TestMultModelCreate(t *testing.T) {
           "name": "origin",
           "type": "uri"
         },
-        "createdby": {
-          "name": "createdby",
-          "type": "string",
-          "readonly": true
-        },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp",
-          "readonly": true
-        },
-        "modifiedby": {
-          "name": "modifiedby",
-          "type": "string",
-          "readonly": true
+          "type": "timestamp"
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp",
-          "readonly": true
+          "type": "timestamp"
         }
       },
       "resources": {
@@ -4068,25 +3498,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -4162,25 +3580,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "origin",
               "type": "uri"
             },
-            "createdby": {
-              "name": "createdby",
-              "type": "string",
-              "readonly": true
-            },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp",
-              "readonly": true
-            },
-            "modifiedby": {
-              "name": "modifiedby",
-              "type": "string",
-              "readonly": true
+              "type": "timestamp"
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp",
-              "readonly": true
+              "type": "timestamp"
             },
             "contenttype": {
               "name": "contenttype",
@@ -4241,6 +3647,8 @@ func TestMultModel2Create(t *testing.T) {
   "id": "TestMultModel2Create",
   "epoch": 1,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -4289,25 +3697,13 @@ func TestMultModel2Create(t *testing.T) {
           "type": "string"
         }
       },
-      "createdby": {
-        "name": "createdby",
-        "type": "string",
-        "readonly": true
-      },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp",
-        "readonly": true
-      },
-      "modifiedby": {
-        "name": "modifiedby",
-        "type": "string",
-        "readonly": true
+        "type": "timestamp"
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp",
-        "readonly": true
+        "type": "timestamp"
       }
     },
     "groups": {
@@ -4355,25 +3751,13 @@ func TestMultModel2Create(t *testing.T) {
             "name": "origin",
             "type": "uri"
           },
-          "createdby": {
-            "name": "createdby",
-            "type": "string",
-            "readonly": true
-          },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp",
-            "readonly": true
-          },
-          "modifiedby": {
-            "name": "modifiedby",
-            "type": "string",
-            "readonly": true
+            "type": "timestamp"
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp",
-            "readonly": true
+            "type": "timestamp"
           }
         },
         "resources": {
@@ -4445,25 +3829,13 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "origin",
                 "type": "uri"
               },
-              "createdby": {
-                "name": "createdby",
-                "type": "string",
-                "readonly": true
-              },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp",
-                "readonly": true
-              },
-              "modifiedby": {
-                "name": "modifiedby",
-                "type": "string",
-                "readonly": true
+                "type": "timestamp"
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp",
-                "readonly": true
+                "type": "timestamp"
               },
               "contenttype": {
                 "name": "contenttype",
@@ -4517,25 +3889,13 @@ func TestMultModel2Create(t *testing.T) {
             "name": "origin",
             "type": "uri"
           },
-          "createdby": {
-            "name": "createdby",
-            "type": "string",
-            "readonly": true
-          },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp",
-            "readonly": true
-          },
-          "modifiedby": {
-            "name": "modifiedby",
-            "type": "string",
-            "readonly": true
+            "type": "timestamp"
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp",
-            "readonly": true
+            "type": "timestamp"
           }
         },
         "resources": {
@@ -4607,25 +3967,13 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "origin",
                 "type": "uri"
               },
-              "createdby": {
-                "name": "createdby",
-                "type": "string",
-                "readonly": true
-              },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp",
-                "readonly": true
-              },
-              "modifiedby": {
-                "name": "modifiedby",
-                "type": "string",
-                "readonly": true
+                "type": "timestamp"
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp",
-                "readonly": true
+                "type": "timestamp"
               },
               "contenttype": {
                 "name": "contenttype",
@@ -4643,6 +3991,8 @@ func TestMultModel2Create(t *testing.T) {
       "id": "d1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs1/d1",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f1": {
@@ -4651,18 +4001,24 @@ func TestMultModel2Create(t *testing.T) {
           "self": "http://localhost:8181/dirs1/d1/files/f1?meta",
           "defaultversionid": "v2",
           "defaultversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1?meta"
+              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1?meta",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
               "id": "v2",
               "epoch": 1,
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
-              "isdefault": true
+              "isdefault": true,
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 2,
@@ -4676,6 +4032,8 @@ func TestMultModel2Create(t *testing.T) {
       "id": "d2",
       "epoch": 1,
       "self": "http://localhost:8181/dirs1/d2",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f2": {
@@ -4684,18 +4042,24 @@ func TestMultModel2Create(t *testing.T) {
           "self": "http://localhost:8181/dirs1/d2/files/f2?meta",
           "defaultversionid": "v1.1",
           "defaultversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1?meta"
+              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1?meta",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
-              "isdefault": true
+              "isdefault": true,
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 2,
@@ -4713,6 +4077,8 @@ func TestMultModel2Create(t *testing.T) {
       "id": "d2",
       "epoch": 1,
       "self": "http://localhost:8181/dirs2/d2",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f2": {
@@ -4721,13 +4087,17 @@ func TestMultModel2Create(t *testing.T) {
           "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
           "defaultversionid": "v1",
           "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "versions": {
             "v1": {
               "id": "v1",
               "epoch": 1,
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
-              "isdefault": true
+              "isdefault": true,
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 1,

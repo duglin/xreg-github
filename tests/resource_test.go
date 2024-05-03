@@ -48,6 +48,8 @@ func TestCreateResource(t *testing.T) {
   "self": "http://localhost:8181/dirs/d1/files/f1?meta",
   "defaultversionid": "v2",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"

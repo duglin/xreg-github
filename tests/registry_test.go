@@ -17,7 +17,9 @@ func TestCreateRegistry(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestCreateRegistry",
   "epoch": 1,
-  "self": "http://localhost:8181/"
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `)
 	xCheckGet(t, reg, "/xxx", "Unknown Group type: xxx\n")
@@ -48,7 +50,9 @@ func TestCreateRegistry(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestCreateRegistry",
   "epoch": 1,
-  "self": "http://localhost:8181/"
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `)
 }
@@ -123,7 +127,9 @@ func TestRegistryProps(t *testing.T) {
   "documentation": "https://docs.com",
   "labels": {
     "stage": "dev"
-  }
+  },
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z"
 }
 `)
 }
@@ -155,6 +161,8 @@ func TestRegistryRequiredFields(t *testing.T) {
   "epoch": 1,
   "self": "http://localhost:8181/",
   "description": "testing",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "clireq": "testing2"
 }
 `)
@@ -248,7 +256,9 @@ func TestRegistryDefaultFields(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 1,
-  "self": "http://localhost:8181/"
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `)
 
@@ -258,7 +268,9 @@ func TestRegistryDefaultFields(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestRegistryDefaultFields",
   "epoch": 1,
-  "self": "http://localhost:8181/"
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `)
 
@@ -269,6 +281,8 @@ func TestRegistryDefaultFields(t *testing.T) {
   "id": "TestRegistryDefaultFields",
   "epoch": 2,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello"
 }
 `)
@@ -281,6 +295,8 @@ func TestRegistryDefaultFields(t *testing.T) {
   "id": "TestRegistryDefaultFields",
   "epoch": 3,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "updated hello",
   "myobj": {
     "defint": 123
@@ -297,6 +313,8 @@ func TestRegistryDefaultFields(t *testing.T) {
   "id": "TestRegistryDefaultFields",
   "epoch": 4,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello",
   "myobj": {
     "defint": 666
@@ -310,6 +328,8 @@ func TestRegistryDefaultFields(t *testing.T) {
   "id": "TestRegistryDefaultFields",
   "epoch": 5,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello"
 }
 `)
@@ -321,6 +341,8 @@ func TestRegistryDefaultFields(t *testing.T) {
   "id": "TestRegistryDefaultFields",
   "epoch": 6,
   "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello"
 }
 `)
