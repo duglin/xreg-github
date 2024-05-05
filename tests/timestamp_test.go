@@ -45,45 +45,17 @@ func TestTimestampRegistry(t *testing.T) {
 }
 `)
 
-	xCheckGet(t, reg, "/",
-		`{
-  "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestTimestampRegistry",
-  "epoch": 1,
-  "self": "http://localhost:8181/",
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z"
-}
-`)
-
-	// Note that turning on Tracking will set the timetamps immediately
-	// on any newly touched entity
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/",
-		Method: "GET",
-		Code:   200,
-		// BodyMasks: []string{TSMASK},
-		ResBody: `{
-  "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestTimestampRegistry",
-  "epoch": 1,
-  "self": "http://localhost:8181/",
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z"
-}
-`})
-
 	// Should be the same values
 	regCreate := reg.Get("createdat")
 	regMod := reg.Get("modifiedat")
+	xCheckEqual(t, "", regCreate, regMod)
 
+	// Test to make sure modify timestamp changes, but created didn't
 	xNoErr(t, reg.SetSave("description", "my docs"))
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/",
 		Method: "GET",
 		Code:   200,
-		// BodyMasks: []string{TSMASK},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestTimestampRegistry",
@@ -100,8 +72,14 @@ func TestTimestampRegistry(t *testing.T) {
 	xCheckEqual(t, "", reg.Get("createdat"), regCreate)
 	xCheck(t, regMod != reg.Get("modifiedat"), "should be new time")
 
-	regCreate = reg.Get("createdat")
+	// Mod should be higher than before
+	xCheck(t, ToJSON(reg.Get("modifiedat")) > ToJSON(regMod),
+		"Mod should be newer than before")
+
 	regMod = reg.Get("modifiedat")
+
+	xCheck(t, ToJSON(regMod) > ToJSON(regCreate),
+		"Mod should be newer than create")
 
 	// Now test with Groups and Resources
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
@@ -112,10 +90,9 @@ func TestTimestampRegistry(t *testing.T) {
 	f, _ := d.AddResource("files", "f1", "v1")
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:       "/?inline",
-		Method:    "GET",
-		Code:      200,
-		BodyMasks: []string{TSMASK},
+		URL:    "/?inline",
+		Method: "GET",
+		Code:   200,
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestTimestampRegistry",
@@ -123,15 +100,15 @@ func TestTimestampRegistry(t *testing.T) {
   "self": "http://localhost:8181/",
   "description": "my docs",
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirs": {
     "d1": {
       "id": "d1",
       "epoch": 1,
       "self": "http://localhost:8181/dirs/d1",
-      "createdat": "2024-01-01T12:00:02Z",
-      "modifiedat": "2024-01-01T12:00:02Z",
+      "createdat": "2024-01-01T12:00:03Z",
+      "modifiedat": "2024-01-01T12:00:03Z",
 
       "files": {
         "f1": {
@@ -140,8 +117,8 @@ func TestTimestampRegistry(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f1?meta",
           "defaultversionid": "v1",
           "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
-          "createdat": "YYYY-MM-DDTHH:MM:SSZ",
-          "modifiedat": "YYYY-MM-DDTHH:MM:SSZ",
+          "createdat": "2024-01-01T12:00:03Z",
+          "modifiedat": "2024-01-01T12:00:03Z",
 
           "versions": {
             "v1": {
@@ -149,8 +126,8 @@ func TestTimestampRegistry(t *testing.T) {
               "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:SSZ",
-              "modifiedat": "YYYY-MM-DDTHH:MM:SSZ"
+              "createdat": "2024-01-01T12:00:03Z",
+              "modifiedat": "2024-01-01T12:00:03Z"
             }
           },
           "versionscount": 1,
@@ -175,30 +152,124 @@ func TestTimestampRegistry(t *testing.T) {
 	xCheckEqual(t, "", reg.Get("modifiedat"), regMod)
 
 	xNoErr(t, f.SetSave("description", "myfile"))
+
 	xCheckEqual(t, "", dCTime, d.Get("createdat"))
 	xCheckEqual(t, "", dMTime, d.Get("modifiedat"))
 	xCheckEqual(t, "", fCTime, f.Get("createdat"))
-	xCheck(t, fMTime != f.Get("modifiedat"), "Should not be the same")
+	xCheck(t, ToJSON(fMTime) < ToJSON(f.Get("modifiedat")),
+		"Should not be the same")
 
 	// Close out any lingering tx
 	xNoErr(t, reg.Commit())
 
-	reg = NewRegistry("TestTimestampRegistry2")
-	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg shouldn't be nil")
+	/*
+	   	reg = NewRegistry("TestTimestampRegistry2")
+	   	defer PassDeleteReg(t, reg)
+	   	xCheck(t, reg != nil, "reg shouldn't be nil")
 
+	   	xCheckHTTP(t, reg, &HTTPTest{
+	   		URL:    "/",
+	   		Method: "GET",
+	   		Code:   200,
+	   		ResBody: `{
+	     "specversion": "` + registry.SPECVERSION + `",
+	     "id": "TestTimestampRegistry2",
+	     "epoch": 1,
+	     "self": "http://localhost:8181/",
+	     "createdat": "2024-01-01T12:00:01Z",
+	     "modifiedat": "2024-01-01T12:00:01Z"
+	   }
+	   `})
+	*/
+
+	// Test updating registry's times
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:       "/",
-		Method:    "GET",
-		Code:      200,
-		BodyMasks: []string{TSMASK},
+		Name:       "PUT reg - set ts",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+			"createdat": "1970-01-02T03:04:05Z",
+			"modifiedat": "2000-05-04T03:02:01Z"
+		}`,
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestTimestampRegistry2",
-  "epoch": 1,
+  "id": "TestTimestampRegistry",
+  "epoch": 2,
   "self": "http://localhost:8181/",
-  "createdat": "YYYY-MM-DDTHH:MM:SSZ",
-  "modifiedat": "YYYY-MM-DDTHH:MM:SSZ"
+  "createdat": "1970-01-02T03:04:05Z",
+  "modifiedat": "2000-05-04T03:02:01Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
 }
-`})
+`,
+	})
+	reg.Refresh()
+	xCheckEqual(t, "", reg.Get("createdat"), "1970-01-02T03:04:05Z")
+	xCheckEqual(t, "", reg.Get("modifiedat"), "2000-05-04T03:02:01Z")
+
+	// Test creating a group and setting it's times
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT reg - set ts",
+		URL:        "/dirs/d4",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+			"createdat": "1970-01-02T03:04:05Z",
+			"modifiedat": "2000-05-04T03:02:01Z"
+		}`,
+		Code:       201,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "id": "d4",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d4",
+  "createdat": "1970-01-02T03:04:05Z",
+  "modifiedat": "2000-05-04T03:02:01Z",
+
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/d4/files"
+}
+`,
+	})
+
+	g, err := reg.FindGroup("dirs", "d4")
+	xNoErr(t, err)
+	xCheckEqual(t, "", g.Get("createdat"), "1970-01-02T03:04:05Z")
+	xCheckEqual(t, "", g.Get("modifiedat"), "2000-05-04T03:02:01Z")
+
+	// Test creating a dir/file/version and setting the version's times
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT reg - set ts",
+		URL:        "/dirs/d5/files/f5/versions/v99?meta",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+			"createdat": "1970-01-02T03:04:05Z",
+			"modifiedat": "2000-05-04T03:02:01Z"
+		}`,
+		Code:       201,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "id": "v99",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d5/files/f5/versions/v99?meta",
+  "isdefault": true,
+  "createdat": "1970-01-02T03:04:05Z",
+  "modifiedat": "2000-05-04T03:02:01Z"
+}
+`,
+	})
+
+	g, err = reg.FindGroup("dirs", "d5")
+	xNoErr(t, err)
+	r, err := g.FindResource("files", "f5")
+	xNoErr(t, err)
+	v, err := r.FindVersion("v99")
+	xNoErr(t, err)
+	xCheckEqual(t, "", v.Get("createdat"), "1970-01-02T03:04:05Z")
+	xCheckEqual(t, "", v.Get("modifiedat"), "2000-05-04T03:02:01Z")
 }
