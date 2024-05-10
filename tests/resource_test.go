@@ -103,7 +103,7 @@ func TestResourceSet(t *testing.T) {
 
 	// Make sure the props on the resource weren't set
 	xCheck(t, f1.Entity.Get("name") == nil, "name should be nil")
-	xCheck(t, f1.Entity.Get("epoch") == 1, "epoch should be 1")
+	xCheck(t, f1.Entity.Get("epoch") == nil, "epoch should be nil")
 	xCheck(t, f1.Entity.Get("ext1") == nil, "ext1 should be nil")
 	xCheck(t, f1.Entity.Get("ext2") == nil, "ext2 should be nil")
 

@@ -128,10 +128,10 @@ func (g *Group) AddResourceWithObject(rType string, id string, vID string, obj O
 }
 
 func (g *Group) UpsertResource(rType string, id string, vID string) (*Resource, bool, error) {
-	return g.UpsertResourceWithObject(rType, id, vID, nil)
+	return g.UpsertResourceWithObject(rType, id, vID, nil, false)
 }
 
-func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, obj Object) (*Resource, bool, error) {
+func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, obj Object, isPatch bool) (*Resource, bool, error) {
 	log.VPrintf(3, ">Enter: UpsertResourceWithObject(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: UpsertResourceWithObject")
 
@@ -212,6 +212,15 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		if obj != nil {
 			v.NewObject = obj
 			v.NewObject["id"] = v.UID // ID is Resource's switch to Version's
+
+			if isPatch {
+				// Copy existing props over if the incoming obj doesn't set them
+				for k, val := range v.Object {
+					if _, ok := v.NewObject[k]; !ok {
+						v.NewObject[k] = val
+					}
+				}
+			}
 
 			err = v.ValidateAndSave()
 			if err != nil {

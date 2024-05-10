@@ -329,6 +329,21 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 	return nil
 }
 
+func (reg *Registry) Update(obj Object, isPatch bool) error {
+	reg.NewObject = obj
+
+	if isPatch {
+		// Copy existing props over if the incoming obj doesn't set them
+		for k, val := range reg.Object {
+			if _, ok := reg.NewObject[k]; !ok {
+				reg.NewObject[k] = val
+			}
+		}
+	}
+
+	return reg.ValidateAndSave()
+}
+
 func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
 	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gType, id)
 	defer log.VPrintf(3, "<Exit: FindGroup")
@@ -417,10 +432,10 @@ func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object) (*G
 }
 
 func (reg *Registry) UpsertGroup(gType string, id string) (*Group, bool, error) {
-	return reg.UpsertGroupWithObject(gType, id, nil)
+	return reg.UpsertGroupWithObject(gType, id, nil, false)
 }
 
-func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object) (*Group, bool, error) {
+func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, isPatch bool) (*Group, bool, error) {
 	log.VPrintf(3, ">Enter UpsertGroupWithObject(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit UpsertGroupWithObject")
 
@@ -481,6 +496,15 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object) 
 	if isNew || obj != nil {
 		if obj != nil {
 			g.NewObject = obj
+		}
+
+		if isPatch {
+			// Copy existing props over if the incoming obj doesn't set them
+			for k, v := range g.Object {
+				if _, ok := g.NewObject[k]; !ok {
+					g.NewObject[k] = v
+				}
+			}
 		}
 
 		if err = g.ValidateAndSave(); err != nil {

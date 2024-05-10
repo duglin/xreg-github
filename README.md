@@ -69,7 +69,7 @@ TODOs:
   unique within the scope of their parent
 - make sure we throw an error if ?specversion on HTTP requests specifies the
   wrong version
-- make sure we have tests for resoucre.readonly - in particular DELETE
+- make sure we have tests for resource.readonly - in particular DELETE
 
 - pagination
 - have DB generate the COLLECTIONcount attributes so people can query over
@@ -81,6 +81,11 @@ TODOs:
 - support the create/modify by/at attributes
 - add tests for immutable attributes
 - support ?inline on PUT/POST
-- process ?setdefaultversionid flag before we update things
+- support the resource sticky/default attributes
+  - remove ?setdefault.. for some apis
+  - process ?setdefaultversionid flag before we update things
 - make sure we don't let go http add "content-type" header for docs w/o a value
-- test for 'null' for epoch being the same as no epoch at all
+- add support for typemap
+- add support for PUT / to update the model
+- fix it so that e.Materialize doesn't hit the DB in cases where we've already
+  queried the DB and have the entire sub-tree

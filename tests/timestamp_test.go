@@ -194,7 +194,7 @@ func TestTimestampRegistry(t *testing.T) {
 		}`,
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
-		ResBody: `{
+		ResBody: `--{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestTimestampRegistry",
   "epoch": 2,
@@ -208,8 +208,33 @@ func TestTimestampRegistry(t *testing.T) {
 `,
 	})
 	reg.Refresh()
+	// Shouldn't need these, but do it anyway
 	xCheckEqual(t, "", reg.Get("createdat"), "1970-01-02T03:04:05Z")
 	xCheckEqual(t, "", reg.Get("modifiedat"), "2000-05-04T03:02:01Z")
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT reg - set ts",
+		URL:        "/",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+			"createdat": null
+		}`,
+		Code:       200,
+		ResHeaders: []string{"Content-Type:application/json"},
+		ResBody: `{
+  "specversion": "` + registry.SPECVERSION + `",
+  "id": "TestTimestampRegistry",
+  "epoch": 3,
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`,
+	})
 
 	// Test creating a group and setting it's times
 	xCheckHTTP(t, reg, &HTTPTest{

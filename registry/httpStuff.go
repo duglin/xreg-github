@@ -160,6 +160,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			err = HTTPPutPost(info)
 		case "POST":
 			err = HTTPPutPost(info)
+		case "PATCH":
+			err = HTTPPutPost(info)
 		case "DELETE":
 			err = HTTPDelete(info)
 		default:
@@ -740,6 +742,11 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("PUT not allowed on collections")
 	}
 
+	if info.What == "Coll" && method == "PATCH" {
+		info.StatusCode = http.StatusMethodNotAllowed
+		return fmt.Errorf("PATCH not allowed on collections")
+	}
+
 	if len(info.Parts) == 2 && method == "POST" {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("POST not allowed on a group")
@@ -748,6 +755,11 @@ func HTTPPutPost(info *RequestInfo) error {
 	if len(info.Parts) == 6 && method == "POST" {
 		info.StatusCode = http.StatusMethodNotAllowed
 		return fmt.Errorf("POST not allowed on a version")
+	}
+
+	if !metaInBody && method == "PATCH" {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("PATCH is not allowed on Resource documents")
 	}
 
 	// PUT/POST /GROUPs/gID/RESOURCEs... + ReadOnly Resource
@@ -787,9 +799,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	if len(info.Parts) == 0 {
 		// PUT /
 
-		info.Registry.Entity.NewObject = IncomingObj
-
-		if err = info.Registry.Entity.ValidateAndSave(); err != nil {
+		err = info.Registry.Update(IncomingObj, method == "PATCH")
+		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
 		}
@@ -814,7 +825,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		for id, obj := range objMap {
 			g, _, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-				id, obj)
+				id, obj, method == "PATCH")
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -833,7 +844,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	if len(info.Parts) == 2 {
 		// PUT /GROUPs/gID
 		group, isNew, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-			info.GroupUID, IncomingObj)
+			info.GroupUID, IncomingObj, method == "PATCH")
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -887,7 +898,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		// For each Resource in the map, upsert it and add it's path to result
 		for id, obj := range objMap {
 			r, _, err := group.UpsertResourceWithObject(info.ResourceType,
-				id, "", obj)
+				id, "", obj, method == "PATCH")
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -916,9 +927,10 @@ func HTTPPutPost(info *RequestInfo) error {
 		// and then the UpsertResource code will generate a new version ID
 		delete(IncomingObj, "id")
 
-		// Upsert the Resource and (if needed) it's first/default Version
+		// Upsert the Resource and (if needed) it's first/default Version.
+		// vID should be ""
 		resource, isNew, err = group.UpsertResourceWithObject(info.ResourceType,
-			resourceUID, versionUID, IncomingObj) // vID should be ""
+			resourceUID, versionUID, IncomingObj, method == "PATCH")
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -941,7 +953,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 	}
 
-	if len(info.Parts) == 4 && method == "PUT" {
+	if len(info.Parts) == 4 && (method == "PUT" || method == "PATCH") {
 		// PUT GROUPs/gID/RESOURCEs/rID [?meta]
 
 		if propsID != "" && propsID != resourceUID {
@@ -953,11 +965,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		if resource != nil {
 			version, err = resource.GetDefault()
 
-			if !metaInBody {
-				// Copy existing props into IncomingObj w/o overwriting
-				CopyNewProps(IncomingObj, version.Object)
-			}
-
 			// They passed in a Resource, but we're going to use the data
 			// to create a Versions so we need to delete the new collections
 			// from the Version, but the collections are Resource-based colls
@@ -968,12 +975,13 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			// Create a new Resource and it's first/only/default Version
 			version, _, err = resource.UpsertVersionWithObject(version.UID,
-				IncomingObj)
+				IncomingObj, (!metaInBody) || (method == "PATCH"))
 		} else {
 			// Upsert resource's default version
 			delete(IncomingObj, "id") // ID is the Resource's delete it
 			resource, isNew, err = group.UpsertResourceWithObject(
-				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj)
+				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
+				method == "PATCH")
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1053,7 +1061,8 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		// Process the remaining versions
 		for id, obj := range objMap {
-			v, _, err := resource.UpsertVersionWithObject(id, obj)
+			v, _, err := resource.UpsertVersionWithObject(id, obj,
+				method == "PATCH")
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1092,7 +1101,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			// Resource already there, so update or create the Version
 			versionUID = propsID
 			version, isNew, err = resource.UpsertVersionWithObject(versionUID,
-				IncomingObj)
+				IncomingObj, method == "PATCH")
 		}
 
 		err = ProcessSetDefaultVersionIDFlag(info, resource, version)
@@ -1134,10 +1143,6 @@ func HTTPPutPost(info *RequestInfo) error {
 				IncomingObj)
 			isNew = true
 		} else if !isNew {
-			if !metaInBody {
-				CopyNewProps(IncomingObj, version.Object)
-			}
-
 			// They passed in a Resource, but we're going to use the data
 			// to create a Versions so we need to delete the new collections
 			// from the Version,but the collections are Resource-based colls
@@ -1145,7 +1150,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			IncomingObj["id"] = version.UID
 			version, _, err = resource.UpsertVersionWithObject(version.UID,
-				IncomingObj)
+				IncomingObj, !metaInBody || method == "PATCH")
 		}
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
@@ -1903,28 +1908,4 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	}
 
 	return IncomingObj, nil
-}
-
-func CopyNewProps(tgt Object, from Object) {
-	// Copy all keys from "from" if there isn't that key in "tgt" already
-	for k, v := range from {
-		if _, ok := tgt[k]; !ok {
-			tgt[k] = v
-		}
-	}
-
-	/*
-		// for each key in tgt that has a value of "nil" delete it
-		nilKeys := []string{}
-
-		for k, v := range tgt {
-			if IsNil(v) {
-				nilKeys = append(nilKeys, k)
-			}
-		}
-
-		for _, k := range nilKeys {
-			delete(tgt, k)
-		}
-	*/
 }

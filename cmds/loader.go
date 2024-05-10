@@ -268,9 +268,11 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	ErrFatalf(err)
-	_, err = gm.AddResourceModel("files", "file", 2, true, true, true)
+	rm, err := gm.AddResourceModel("files", "file", 2, true, true, true)
+	_, err = rm.AddAttr("rext", registry.STRING)
 	ErrFatalf(err)
-	rm, err := gm.AddResourceModel("datas", "data", 2, true, true, false)
+	rm, err = gm.AddResourceModel("datas", "data", 2, true, true, false)
+	ErrFatalf(err)
 	_, err = rm.AddAttr("*", registry.STRING)
 	ErrFatalf(err)
 
@@ -286,6 +288,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	ErrFatalf(r.SetSave("labels.stage", "dev"))
 	ErrFatalf(r.SetSave("labels.none", ""))
+	ErrFatalf(r.SetSave("rext", "a string"))
 
 	_, err = g.AddResource("datas", "d1", "v1")
 

@@ -190,8 +190,16 @@ func xCheckEqual(t *testing.T, extra string, gotAny any, expAny any) {
 	t.Helper()
 	pos := 0
 
-	got := MaskTimestamps(fmt.Sprintf("%v", gotAny))
-	exp := MaskTimestamps(fmt.Sprintf("%v", expAny))
+	exp := fmt.Sprintf("%v", expAny)
+	got := fmt.Sprintf("%v", gotAny)
+
+	// expected output starting with "--" means "skip timestamp masking"
+	if len(exp) > 2 && exp[0:2] == "--" {
+		exp = exp[2:]
+	} else {
+		got = MaskTimestamps(got)
+		exp = MaskTimestamps(exp)
+	}
 
 	for pos < len(got) && pos < len(exp) && got[pos] == exp[pos] {
 		pos++

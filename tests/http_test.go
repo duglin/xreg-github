@@ -4865,6 +4865,34 @@ func TestHTTPResources(t *testing.T) {
 }
 `)
 
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", `{
+  "mystring": null
+}`, 200, `{
+  "id": "f1",
+  "epoch": 5,
+  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "mystring": null
+}`, 200, `{
+  "id": "v1",
+  "epoch": 6,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z"
+}
+`)
+
 }
 
 func TestHTTPNonStrings(t *testing.T) {
@@ -8548,5 +8576,706 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `Version "2" not found
 `,
 	})
+
+}
+
+func TestHTTPRegistryPatch(t *testing.T) {
+	reg := NewRegistry("TestHTTPRegistryPatch")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	reg.Model.AddAttr("regext", registry.STRING)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddAttr("gext", registry.STRING)
+
+	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
+	rm.AddAttr("rext", registry.STRING)
+
+	g, _ := reg.AddGroup("dirs", "dir1")
+	f, err := g.AddResource("files", "f1", "v1")
+
+	xNoErr(t, err)
+
+	reg.Commit()
+	reg.Refresh()
+	regMod := reg.GetAsString("modifiedat")
+
+	// Test PATCHing the Registry
+
+	// skip timestamp masking (the "--")
+	xHTTP(t, reg, "GET", "/", ``, 200, `--{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 1,
+  "self": "http://localhost:8181/",
+  "createdat": "`+regMod+`",
+  "modifiedat": "`+regMod+`",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 2,
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	reg.Refresh()
+	xCheck(t, reg.GetAsString("modifiedat") != regMod, "Should be diff")
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "description": "testing"
+	}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 3,
+  "self": "http://localhost:8181/",
+  "description": "testing",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "description": null
+	}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 4,
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "labels": {
+	    "foo": "bar"
+	  },
+	  "createdat": null
+	}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 5,
+  "self": "http://localhost:8181/",
+  "labels": {
+    "foo": "bar"
+  },
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "labels": {}
+	}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 6,
+  "self": "http://localhost:8181/",
+  "labels": {},
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "labels": null
+	}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 7,
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "regext": "str"
+	}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 8,
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "regext": "str",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "regext": null
+	}`, 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "id": "TestHTTPRegistryPatch",
+  "epoch": 9,
+  "self": "http://localhost:8181/",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/", `{
+	  "badext": "str"
+	}`, 400, `Invalid extension(s): badext
+`)
+
+	// Test PATCHing a Group
+	// //////////////////////////////////////////////////////
+
+	gmod := g.GetAsString("modifiedat")
+
+	xHTTP(t, reg, "PATCH", "/dirs", `{}`, 405,
+		`PATCH not allowed on collections
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{}`, 200, `{
+  "id": "dir1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	g.Refresh()
+	xCheck(t, g.GetAsString("modifiedat") != gmod, "Should be diff")
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "description": "testing"
+	}`, 200, `{
+  "id": "dir1",
+  "epoch": 3,
+  "self": "http://localhost:8181/dirs/dir1",
+  "description": "testing",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "description": null
+	}`, 200, `{
+  "id": "dir1",
+  "epoch": 4,
+  "self": "http://localhost:8181/dirs/dir1",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "labels": {
+	    "foo": "bar"
+	  },
+	  "createdat": null
+	}`, 200, `{
+  "id": "dir1",
+  "epoch": 5,
+  "self": "http://localhost:8181/dirs/dir1",
+  "labels": {
+    "foo": "bar"
+  },
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "labels": {}
+	}`, 200, `{
+  "id": "dir1",
+  "epoch": 6,
+  "self": "http://localhost:8181/dirs/dir1",
+  "labels": {},
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "labels": null
+	}`, 200, `{
+  "id": "dir1",
+  "epoch": 7,
+  "self": "http://localhost:8181/dirs/dir1",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "gext": "str"
+	}`, 200, `{
+  "id": "dir1",
+  "epoch": 8,
+  "self": "http://localhost:8181/dirs/dir1",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "gext": "str",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "gext": null
+	}`, 200, `{
+  "id": "dir1",
+  "epoch": 9,
+  "self": "http://localhost:8181/dirs/dir1",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{
+	  "badext": "str"
+	}`, 400, `Invalid extension(s): badext
+`)
+
+	// Test PATCHing a Resource
+	// //////////////////////////////////////////////////////
+
+	f.Refresh()
+	v, _ := f.GetDefault()
+	vmod := v.GetAsString("modifiedat")
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files", `{}`, 405,
+		`PATCH not allowed on collections
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1", ``, 400,
+		`PATCH is not allowed on Resource documents
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{}`, 200, `{
+  "id": "f1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	v.Refresh()
+	xCheck(t, v.GetAsString("modifiedat") != vmod, "Should be diff")
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "description": "testing"
+	}`, 200, `{
+  "id": "f1",
+  "epoch": 3,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "description": "testing",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "description": null
+	}`, 200, `{
+  "id": "f1",
+  "epoch": 4,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "labels": {
+	    "foo": "bar"
+	  },
+	  "createdat": null
+	}`, 200, `{
+  "id": "f1",
+  "epoch": 5,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "labels": {
+    "foo": "bar"
+  },
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "labels": {}
+	}`, 200, `{
+  "id": "f1",
+  "epoch": 6,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "labels": {},
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "labels": null
+	}`, 200, `{
+  "id": "f1",
+  "epoch": 7,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "rext": "str"
+	}`, 200, `{
+  "id": "f1",
+  "epoch": 8,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "rext": "str",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "rext": null
+	}`, 200, `{
+  "id": "f1",
+  "epoch": 9,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta", `{
+	  "badext": "str"
+	}`, 400, `Invalid extension(s): badext
+`)
+
+	// Test PATCHing a Version
+	// //////////////////////////////////////////////////////
+
+	f.Refresh()
+	v, _ = f.GetDefault()
+	vmod = v.GetAsString("modifiedat")
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions", `{}`, 405,
+		`PATCH not allowed on collections
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1", ``, 400,
+		`PATCH is not allowed on Resource documents
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{}`, 200, `{
+  "id": "v1",
+  "epoch": 10,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	v.Refresh()
+	xCheck(t, v.GetAsString("modifiedat") != vmod, "Should be diff")
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "description": "testing"
+	}`, 200, `{
+  "id": "v1",
+  "epoch": 11,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "description": "testing",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "description": null
+	}`, 200, `{
+  "id": "v1",
+  "epoch": 12,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "labels": {
+	    "foo": "bar"
+	  },
+	  "createdat": null
+	}`, 200, `{
+  "id": "v1",
+  "epoch": 13,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "labels": {
+    "foo": "bar"
+  },
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "labels": {}
+	}`, 200, `{
+  "id": "v1",
+  "epoch": 14,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "labels": {},
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "labels": null
+	}`, 200, `{
+  "id": "v1",
+  "epoch": 15,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "rext": "str"
+	}`, 200, `{
+  "id": "v1",
+  "epoch": 16,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "rext": "str"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "rext": null
+	}`, 200, `{
+  "id": "v1",
+  "epoch": 17,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{
+	  "badext": "str"
+	}`, 400, `Invalid extension(s): badext
+`)
+
+	// Test that PATCH can be used to create stuff too
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir2", `{}`, 201, `{
+  "id": "dir2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir2",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z",
+
+  "filescount": 0,
+  "filesurl": "http://localhost:8181/dirs/dir2/files"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2?meta", `{}`, 201, `{
+  "id": "f2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir2/files/f2?meta",
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir2/files/f2/versions/1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir2/files/f2/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2/versions/v2?meta", `{}`, 201, `{
+  "id": "v2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir2/files/f2/versions/v2?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir3/files/f3/versions/v3?meta", `{}`, 201, `{
+  "id": "v3",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir3/files/f3/versions/v3?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z"
+}
+`)
+
+}
+
+func TestHTTPEpoch(t *testing.T) {
+	reg := NewRegistry("TestHTTPRegistryPatch")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta", `{}`,
+		201, `{
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1",
+		`{"epoch":null}`, 200, `{
+  "id": "dir1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/dir1/files"
+}
+`)
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta",
+		`{"epoch":null}`, 200, `{
+  "id": "f1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta",
+		`{"epoch":null}`, 200, `{
+  "id": "v1",
+  "epoch": 3,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
 
 }

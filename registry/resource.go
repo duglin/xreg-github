@@ -148,11 +148,11 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 }
 
 func (r *Resource) UpsertVersion(id string) (*Version, bool, error) {
-	return r.UpsertVersionWithObject(id, nil)
+	return r.UpsertVersionWithObject(id, nil, false)
 }
 
-func (r *Resource) UpsertVersionWithObject(id string, obj Object) (*Version, bool, error) {
-	log.VPrintf(3, ">Enter: UpsertVersion%s)", id)
+func (r *Resource) UpsertVersionWithObject(id string, obj Object, isPatch bool) (*Version, bool, error) {
+	log.VPrintf(3, ">Enter: UpsertVersion(%s,ispatch:%v)", id, isPatch)
 	defer log.VPrintf(3, "<Exit: UpsertVersion")
 
 	var v *Version
@@ -228,6 +228,15 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object) (*Version, boo
 	// Apply properties
 	if obj != nil {
 		v.NewObject = obj
+
+		if isPatch {
+			// Copy existing props over if the incoming obj doesn't set them
+			for k, val := range v.Object {
+				if _, ok := v.NewObject[k]; !ok {
+					v.NewObject[k] = val
+				}
+			}
+		}
 	}
 
 	if err = v.ValidateAndSave(); err != nil {

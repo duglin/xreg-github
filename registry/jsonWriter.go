@@ -160,8 +160,12 @@ func (jw *JsonWriter) WriteEntity() error {
 
 	extra := ""
 	myLevel := jw.Entity.Level
-	log.VPrintf(4, "Level: %d", myLevel)
-	log.VPrintf(4, "JW:\n%s\n", ToJSON(jw))
+	if log.GetVerbose() > 3 {
+		log.VPrintf(4, "Level: %d", myLevel)
+		log.VPrintf(4, "JW:\n%s\n", ToJSON(jw))
+		log.VPrintf(4, "JW.Obj:\n%s\n", ToJSON(jw.Entity.Object))
+		log.VPrintf(4, "JW.NObj:\n%s\n", ToJSON(jw.Entity.NewObject))
+	}
 
 	jw.Printf("{")
 	jw.Indent()
