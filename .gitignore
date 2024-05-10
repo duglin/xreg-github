@@ -6,5 +6,6 @@ xr
 .image
 .testimage
 .spec
+.push
 
 amysql

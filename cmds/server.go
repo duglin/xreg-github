@@ -77,6 +77,7 @@ func main() {
 		LoadMessagesSample(nil)
 		LoadSchemasSample(nil)
 		LoadAPIGuru(nil, "APIs-guru", "openapi-directory")
+		LoadDocStore(nil)
 		if os.Getenv("XR_LOAD_LARGE") != "" {
 			go LoadLargeSample(nil)
 		}

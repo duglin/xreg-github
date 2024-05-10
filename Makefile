@@ -53,7 +53,8 @@ xr: cmds/xr*.go registry/*
 	go build $(BUILDFLAGS) -o $@ cmds/xr*.go
 
 image: .image
-.image: server misc/Dockerfile
+.image: server misc/Dockerfile misc/waitformysql misc/Dockerfile-all \
+		misc/startall
 	@echo
 	@echo "# Building the container image"
 ifdef XR_SPEC
@@ -63,6 +64,8 @@ ifdef XR_SPEC
 	cp -r $(XR_SPEC)/* .spec
 endif
 	@misc/errOutput docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
+	@misc/errOutput docker build -f misc/Dockerfile-all -t $(IMAGE)-all \
+		--no-cache .
 ifdef XR_SPEC
 	@rm -rf .spec
 endif
@@ -83,6 +86,7 @@ testimage: .testimage
 push: .push
 .push: .image
 	docker push $(IMAGE)
+	docker push $(IMAGE)-all
 	@touch .push
 
 notest run: mysql server local
@@ -97,6 +101,9 @@ local: mysql server waitformysql
 	@echo
 	@echo "# Starting server locally from scratch"
 	./server --recreate
+
+docker-all: image
+	docker run -ti -p 8080:8080 $(IMAGE)-all --recreate
 
 large:
 	@XR_LOAD_LARGE=1 make --no-print-directory run

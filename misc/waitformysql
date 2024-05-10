@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -ex
+
+DBHOST=${DBHOST:-127.0.0.1}
+DBPORT=${DBPORT:-3306}
+
+while ! mysqladmin -h $DBHOST -P $DBPORT -s ping; do
+  echo Waiting for mysql
+  sleep 2
+done

@@ -579,3 +579,55 @@ func LoadLargeSample(reg *registry.Registry) *registry.Registry {
 	log.VPrintf(1, "Dirs: %d  Files: %d  Versions: %d", dirs, files, vers)
 	return reg
 }
+
+func LoadDocStore(reg *registry.Registry) *registry.Registry {
+	var err error
+	log.VPrintf(1, "Loading registry '%s'...", "DocStore")
+	if reg == nil {
+		reg, err = registry.FindRegistry(nil, "DocStore")
+		ErrFatalf(err)
+		if reg != nil {
+			reg.Rollback()
+			return reg
+		}
+
+		reg, err = registry.NewRegistry(nil, "DocStore")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+		defer reg.Rollback()
+
+		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
+		reg.SetSave("name", "DocStore Registry")
+		reg.SetSave("description", "A doc store Registry")
+		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+	}
+
+	gm, _ := reg.Model.AddGroupModel("documents", "document")
+	gm.AddResourceModel("formats", "format", 0, true, true, true)
+
+	g, _ := reg.AddGroup("documents", "mydoc1")
+	g.SetSave("labels.group", "g1")
+
+	r, _ := g.AddResource("formats", "json", "v1")
+	r.SetSave("contenttype", "application/json")
+	r.SetSave("format", `{"prop": "A document 1"}`)
+
+	r, _ = g.AddResource("formats", "xml", "v1")
+	r.SetSave("contenttype", "application/xml")
+	r.SetSave("format", `<elem title="A document 1"/>`)
+
+	g, _ = reg.AddGroup("documents", "mydoc2")
+
+	r, _ = g.AddResource("formats", "json", "v1")
+	r.SetSave("contenttype", "application/json")
+	r.SetSave("format", `{"prop": "A document 2"}`)
+
+	r, _ = g.AddResource("formats", "xml", "v1")
+	r.SetSave("contenttype", "application/xml")
+	r.SetSave("format", `<elem title="A document 2"/>`)
+
+	// End of model
+
+	ErrFatalf(reg.Model.Verify())
+	reg.Commit()
+	return reg
+}
