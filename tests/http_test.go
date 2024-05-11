@@ -9279,3 +9279,80 @@ func TestHTTPEpoch(t *testing.T) {
 `)
 
 }
+
+func TestHTTPRegistryPatchNoDoc(t *testing.T) {
+	reg := NewRegistry("TestHTTPRegistryPatchNoDoc")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, false)
+
+	g, _ := reg.AddGroup("dirs", "dir1")
+	_, err := g.AddResource("files", "f1", "v1")
+
+	xNoErr(t, err)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1?meta",
+		`{}`, 400, `Specifying "?meta" for a Resource that has the model "hasdocument" value set to "false" is invalid
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1",
+		`{"description": "desc"}`, 200, `{
+  "id": "f1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1/files/f1",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "description": "desc",
+  "createdat": "YYYY-MM-DDTHH:MM:1Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:2Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1",
+		`{"description": null}`, 200, `{
+  "id": "f1",
+  "epoch": 3,
+  "self": "http://localhost:8181/dirs/dir1/files/f1",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "createdat": "YYYY-MM-DDTHH:MM:1Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:2Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1?meta",
+		`{}`, 400, `Specifying "?meta" for a Resource that has the model "hasdocument" value set to "false" is invalid
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1",
+		`{"description": "desc"}`, 200, `{
+  "id": "v1",
+  "epoch": 4,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "isdefault": true,
+  "description": "desc",
+  "createdat": "YYYY-MM-DDTHH:MM:1Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:2Z"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1",
+		`{"description": null}`, 200, `{
+  "id": "v1",
+  "epoch": 5,
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "isdefault": true,
+  "createdat": "YYYY-MM-DDTHH:MM:1Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:2Z"
+}
+`)
+
+}
