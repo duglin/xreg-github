@@ -1043,14 +1043,13 @@ func init() {
 
 // This is used to serialize an Entity regardless of the format.
 // This will:
-//   - Use Materialize() to fill in any missing props (eg Entity's getFn())
-//     as well as fully materialize a Resource from its default Version
+//   - Use AddCalcProps() to fill in any missing props (eg Entity's getFn())
 //   - Call that passed-in 'fn' to serialize each prop but in the right order
 //     as defined by OrderedSpecProps
 func (e *Entity) SerializeProps(info *RequestInfo,
 	fn func(*Entity, *RequestInfo, string, any, *Attribute) error) error {
 
-	daObj := e.Materialize(info)
+	daObj := e.AddCalcProps(info)
 	attrs := e.GetAttributes(e.Object)
 
 	if log.GetVerbose() > 3 {
@@ -1192,44 +1191,14 @@ func (e *Entity) Save() error {
 	return err
 }
 
-// Note that this will copy the default version props to the resource.
-// This is mainly used for end-user facing serialization of the entity
-func (e *Entity) Materialize(info *RequestInfo) map[string]any {
+// This will add in the calculated properties into the entity. This will
+// normally be called after a query using FullTree view and before we serialize
+// the entity we need to add the non-DB-stored properties (meaning, the
+// calculated ones.
+// Note that we make a copy and don't touch the entity itself. Serializing
+// an entity shouldn't have side-effects.
+func (e *Entity) AddCalcProps(info *RequestInfo) map[string]any {
 	mat := maps.Clone(e.Object)
-
-	// Copy all Version props into the Resource (except for a few)
-	if e.Level == 2 {
-		// On Resource grab default Version attrs
-		// TODO optimize this in cases where we have the entire tree already
-		// due to a query
-		paths := strings.Split(e.Path, "/")
-		group, _ := e.Registry.FindGroup(paths[0], paths[1])
-		resource, _ := group.FindResource(paths[2], paths[3])
-		ver, _ := resource.GetDefault()
-
-		if ver != nil { // can be nil during resource.create()
-			// Copy version specific attributes not found in Resources
-			for k, v := range ver.Object {
-				if k == "id" { // Retain Resource ID
-					continue
-				}
-				// exclude props that only appear in vers, eg. ver.isdefault
-				if prop, ok := SpecProps[k]; ok {
-					if prop.InLevel(3) && !prop.InLevel(2) {
-						continue
-					}
-				}
-
-				// Shouldn't really happen but as long as we're using
-				// the FindXXX stuff above we might find it in our cache
-				// instead of a query result, which means the atribute
-				// might be in there with a value of 'nil'
-				if !IsNil(v) {
-					mat[k] = v
-				}
-			}
-		}
-	}
 
 	// Regardless of the type of entity, set the generated properties
 	for _, prop := range OrderedSpecProps {
@@ -1311,11 +1280,15 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	return rm.GetBaseAttributes()
 }
 
+// Given a PropPath and a value this will add the necessary golang data
+// structures to 'obj' to materialize PropPath and set the appropriate
+// fields to 'val'
 func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
-	// TODO see if we can move this into MaterializeProp
 	log.VPrintf(4, "ObjectSetProp(%s=%v)", pp.UI(), val)
 	if pp.Len() == 0 && IsNil(val) {
-		// A bit of a special case, not 100% sure if this is ok
+		// A bit of a special case, not 100% sure if this is ok.
+		// Treat nil val as a request to delete all properties.
+		// e.g. obj={}
 		for k, _ := range obj {
 			delete(obj, k)
 		}
@@ -1324,10 +1297,7 @@ func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
 	PanicIf(pp.Len() == 0, "Can't be zero w/non-nil val")
 
 	_, err := MaterializeProp(obj, pp, val, NewPP())
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, error) {
@@ -1461,7 +1431,8 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 		collections = e.GetCollections()
 	}
 
-	// Don't touch what was passed in
+	// Don't touch what was passed in by just saving the keys and then
+	// removing the ones we don't want from it (ie. the collections ones)
 	objKeys := map[string]bool{}
 	for k, _ := range newObj {
 		// Skip collection related attributes

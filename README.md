@@ -73,12 +73,10 @@ TODOs:
 
 - pagination
 - have DB generate the COLLECTIONcount attributes so people can query over
-  them and we don't need the code to calculate them
+  them and we don't need the code to calculate them (can we due to filters?)
 - add checks for valid obj/map key names in new validation funcs ****
-- support multiple resources/versions in POSTs
 - support overriding spec defined attributes - like "format"
 - support changing the model - test for invalid changes
-- support the create/modify by/at attributes
 - add tests for immutable attributes
 - support ?inline on PUT/POST
 - support the resource sticky/default attributes
@@ -87,5 +85,3 @@ TODOs:
 - make sure we don't let go http add "content-type" header for docs w/o a value
 - add support for typemap
 - add support for PUT / to update the model
-- fix it so that e.Materialize doesn't hit the DB in cases where we've already
-  queried the DB and have the entire sub-tree

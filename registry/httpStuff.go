@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/duglin/dlog"
 )
@@ -642,6 +643,14 @@ func HTTPGet(info *RequestInfo) error {
 
 func SerializeQuery(info *RequestInfo, paths []string, what string,
 	filters [][]*FilterExpr) error {
+	start := time.Now()
+
+	defer func() {
+		if log.GetVerbose() > 3 {
+			diff := time.Now().Sub(start).Truncate(time.Millisecond)
+			log.Printf("  Total Time: %s", diff)
+		}
+	}()
 
 	query, args, err := GenerateQuery(info.Registry, what, paths, filters)
 	results, err := Query(info.tx, query, args...)
@@ -650,6 +659,13 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return err
+	}
+
+	if log.GetVerbose() > 3 {
+		log.Printf("SerializeQuery: %s", SubQuery(query, args))
+		diff := time.Now().Sub(start).Truncate(time.Millisecond)
+		log.Printf("  Query: # results: %d (time: %s)",
+			len(results.AllRows), diff)
 	}
 
 	jw := NewJsonWriter(info, results)
