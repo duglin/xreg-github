@@ -256,6 +256,10 @@ func RegHTMLify(r *http.Request, buf []byte) []byte {
 	re := regexp.MustCompile(str)
 	repl := fmt.Sprintf(`"<a href='$1?reg&$3'>$1$2$3</a>"`)
 
+	// Escape < and >
+	buf = []byte(strings.ReplaceAll(string(buf), "<", "&lt;"))
+	buf = []byte(strings.ReplaceAll(string(buf), ">", "&gt;"))
+
 	return re.ReplaceAll(buf, []byte(repl))
 }
 
@@ -659,4 +663,41 @@ func IncomingObj2Map(incomingObj Object) (map[string]Object, error) {
 	}
 
 	return result, nil
+}
+
+func Match(pattern string, str string) bool {
+	ip, is := 0, 0                   // index of pattern or string
+	lp, ls := len(pattern), len(str) // len of pattern or string
+
+	for {
+		// log.Printf("Check: %q  vs  %q", pattern[ip:], str[is:])
+		// If pattern is empty then result is "is string empty?"
+		if ip == lp {
+			return is == ls
+		}
+
+		p := pattern[ip]
+		if p == '*' {
+			// DUG todo, remove the resursiveness of this
+			for i := 0; i+is <= ls; i++ {
+				if Match(pattern[ip+1:], str[is+i:]) {
+					return true
+				}
+			}
+			return false
+		}
+
+		// If we have a 'p' but string is empty, then false
+		if is == ls {
+			return false
+		}
+		s := str[ip]
+
+		if p != s {
+			return false
+		}
+		ip++
+		is++
+	}
+	return false
 }

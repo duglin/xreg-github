@@ -47,7 +47,7 @@ func (info *RequestInfo) AddInline(path string) error {
 
 	for _, group := range info.Registry.Model.Groups {
 		if pp.Equals(NewPPP(group.Plural)) {
-			info.Inlines = append(info.Inlines, path)
+			info.Inlines = append(info.Inlines, NewPPP(path).DB())
 			return nil
 		}
 		for _, res := range group.Resources {
@@ -71,6 +71,18 @@ func (info *RequestInfo) AddInline(path string) error {
 	}
 
 	return fmt.Errorf("Invalid 'inline' value: %s", path)
+}
+
+func (info *RequestInfo) IsInlineSet(entityPath string) bool {
+	if entityPath == "" {
+		entityPath = "*"
+	}
+	for _, path := range info.Inlines {
+		if path == entityPath {
+			return true
+		}
+	}
+	return false
 }
 
 func (info *RequestInfo) ShouldInline(entityPath string) bool {

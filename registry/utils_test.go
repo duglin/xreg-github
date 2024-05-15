@@ -357,3 +357,45 @@ func TestProcessImports(t *testing.T) {
 
 	server.Shutdown(context.Background())
 }
+
+// Testing a match for "*" wildcard
+func TestMatch(t *testing.T) {
+	type Test struct {
+		Pattern string
+		String  string
+		Pass    bool
+	}
+
+	tests := []Test{
+		// Lots of dups but that's ok, it feels more complex this way :-)
+		{"", "", true},
+		{"*", "", true},
+		{"text/plain", "text/plain", true},
+		{"*", "text/plain", true},
+		{"**", "text/plain", true},
+		{"text/*", "text/plain", true},
+		{"text/**", "text/plain", true},
+		{"*/plain", "text/plain", true},
+		{"**/plain", "text/plain", true},
+		{"text/*plain", "text/plain", true},
+		{"text/*lain", "text/plain", true},
+		{"*/plain", "text/plain", true},
+		{"*t/*lain", "text/plain", true},
+		{"*t*e*x*t*/*p*l*a*i*n*", "text/plain", true},
+
+		{"", "t", false},
+		{"t", "", false},
+		{"*x/*lain", "text/plain", false},
+		{"text/html", "text/plain", false},
+		{"/", "text/plain", false},
+		{" ", "", false},
+		{"", " ", false},
+	}
+
+	for _, test := range tests {
+		if Match(test.Pattern, test.String) != test.Pass {
+			t.Fatalf("P: %q vs S: %q Got: %v",
+				test.Pattern, test.String, !test.Pass)
+		}
+	}
+}

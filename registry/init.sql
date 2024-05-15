@@ -84,6 +84,7 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     SetStickyDefault  BOOL,     # For Resources
     HasDocument       BOOL,     # For Resources
     ReadOnly          BOOL,     # For Resources
+    TypeMap           JSON,
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),

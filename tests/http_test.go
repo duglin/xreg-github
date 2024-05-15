@@ -7097,6 +7097,7 @@ func TestHTTPContent(t *testing.T) {
 		URL:    "/dirs/d1/files/f1?meta",
 		Method: "PUT",
 		ReqBody: `{
+	"contenttype": "application/json",
 	"file": { "foo": "bar" }
 }
 `,
@@ -7109,6 +7110,7 @@ func TestHTTPContent(t *testing.T) {
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "contenttype": "application/json",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7130,7 +7132,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
-			"Content-Type:text/plain; charset=utf-8",
+			"Content-Type:application/json",
 			"Content-Length:13",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
 		},
@@ -7144,6 +7146,7 @@ func TestHTTPContent(t *testing.T) {
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "contenttype": "application/json",
   "file": {
     "foo": "bar"
   },
@@ -7158,6 +7161,7 @@ func TestHTTPContent(t *testing.T) {
 		URL:    "/dirs/d1/files/f1?meta",
 		Method: "PUT",
 		ReqBody: `{
+	"contenttype": "application/json",
 	"file": [ "hello", null, 5 ]
 }
 `,
@@ -7170,6 +7174,7 @@ func TestHTTPContent(t *testing.T) {
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "contenttype": "application/json",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7191,7 +7196,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
-			"Content-Type:text/plain; charset=utf-8",
+			"Content-Type:application/json",
 			"Content-Length:16",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
 		},
@@ -7205,6 +7210,7 @@ func TestHTTPContent(t *testing.T) {
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "contenttype": "application/json",
   "file": [
     "hello",
     null,
@@ -7221,6 +7227,7 @@ func TestHTTPContent(t *testing.T) {
 		URL:    "/dirs/d1/files/f1?meta",
 		Method: "PUT",
 		ReqBody: `{
+	"contenttype": "application/json",
 	"file": 123
 }
 `,
@@ -7233,6 +7240,7 @@ func TestHTTPContent(t *testing.T) {
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "contenttype": "application/json",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7254,7 +7262,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
-			"Content-Type:text/plain; charset=utf-8",
+			"Content-Type:application/json",
 			"Content-Length:3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
 		},
@@ -7268,6 +7276,7 @@ func TestHTTPContent(t *testing.T) {
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1?meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "contenttype": "application/json",
   "file": 123,
 
   "versionscount": 1,

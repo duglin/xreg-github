@@ -65,8 +65,16 @@ func (pp *PropPath) Next() *PropPath {
 	}
 }
 
+func MustPropPathFromPath(str string) *PropPath {
+	pp, _ := PropPathFromPath(str)
+	return pp
+}
+
 func PropPathFromPath(str string) (*PropPath, error) {
 	str = strings.Trim(str, "/")
+	if str == "" {
+		return &PropPath{}, nil
+	}
 	parts := strings.Split(str, "/")
 	res := &PropPath{}
 	for _, p := range parts {
@@ -199,6 +207,11 @@ func init() {
 	ch2Col[']'] = 6
 	ch2Col['\''] = 7
 	ch2Col[0] = 8
+}
+
+func MustPropPathFromUI(str string) *PropPath {
+	pp, _ := PropPathFromUI(str)
+	return pp
 }
 
 func PropPathFromUI(str string) (*PropPath, error) {

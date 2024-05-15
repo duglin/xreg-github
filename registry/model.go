@@ -109,14 +109,15 @@ type ResourceModel struct {
 	SID        string      `json:"-"`
 	GroupModel *GroupModel `json:"-"`
 
-	Plural           string     `json:"plural"`
-	Singular         string     `json:"singular"`
-	MaxVersions      int        `json:"maxversions"`             // do not include omitempty
-	SetVersionId     *bool      `json:"setversionid"`            // do not include omitempty
-	SetStickyDefault *bool      `json:"setstickydefaultversion"` // do not include omitempty
-	HasDocument      *bool      `json:"hasdocument"`             // do not include omitempty
-	ReadOnly         bool       `json:"readonly,omitempty"`
-	Attributes       Attributes `json:"attributes,omitempty"`
+	Plural           string            `json:"plural"`
+	Singular         string            `json:"singular"`
+	MaxVersions      int               `json:"maxversions"`             // do not include omitempty
+	SetVersionId     *bool             `json:"setversionid"`            // do not include omitempty
+	SetStickyDefault *bool             `json:"setstickydefaultversion"` // do not include omitempty
+	HasDocument      *bool             `json:"hasdocument"`             // do not include omitempty
+	ReadOnly         bool              `json:"readonly,omitempty"`
+	TypeMap          map[string]string `json:"typemap,omitempty"`
+	Attributes       Attributes        `json:"attributes,omitempty"`
 }
 
 // To be picky, let's Marshal the list of attributes with Spec defined ones
@@ -602,7 +603,8 @@ func LoadModel(reg *Registry) *Model {
 	results, err = Query(reg.tx, `
         SELECT
             SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
-			MaxVersions, SetVersionId, SetStickyDefault, HasDocument, ReadOnly
+			MaxVersions, SetVersionId, SetStickyDefault, HasDocument, ReadOnly,
+			TypeMap
         FROM ModelEntities
         WHERE RegistrySID=?
         ORDER BY ParentSID ASC`, reg.DbSID)
@@ -618,6 +620,10 @@ func LoadModel(reg *Registry) *Model {
 		if row[5] != nil {
 			// json.Unmarshal([]byte(NotNilString(row[5])), &attrs)
 			Unmarshal([]byte(NotNilString(row[5])), &attrs)
+		}
+		typemap := map[string]string(nil)
+		if row[11] != nil {
+			Unmarshal([]byte(NotNilString(row[11])), &typemap)
 		}
 
 		if *row[2] == nil { // ParentSID nil -> new Group
@@ -651,6 +657,7 @@ func LoadModel(reg *Registry) *Model {
 					SetStickyDefault: PtrBool(NotNilBoolDef(row[8], SETSTICKYDEFAULT)),
 					HasDocument:      PtrBool(NotNilBoolDef(row[9], HASDOCUMENT)),
 					ReadOnly:         NotNilBoolDef(row[10], READONLY),
+					TypeMap:          typemap,
 				}
 
 				r.Attributes.SetSpecPropsFields()
@@ -756,6 +763,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 				oldRM.ReadOnly = newRM.ReadOnly
 			}
 			oldRM.Attributes = newRM.Attributes
+			oldRM.TypeMap = newRM.TypeMap
 		}
 	}
 
@@ -937,13 +945,16 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	rm.SID = NewUUID()
 	rm.GroupModel = gm
 
+	buf, _ := json.Marshal(rm.TypeMap)
+	typemap := string(buf)
+
 	err := DoOne(gm.Registry.tx, `
 		INSERT INTO ModelEntities(
 			SID, RegistrySID, ParentSID, Plural, Singular, MaxVersions,
-			SetVersionId, SetStickyDefault, HasDocument, ReadOnly)
-		VALUES(?,?,?,?,?,?,?,?,?,?)`,
+			SetVersionId, SetStickyDefault, HasDocument, ReadOnly, TypeMap)
+		VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 		rm.SID, gm.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.MaxVersions,
-		rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly)
+		rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly, typemap)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", rm.Plural, err)
 		return nil, err
@@ -996,26 +1007,28 @@ func (rm *ResourceModel) Save() error {
 
 	buf, _ := json.Marshal(rm.Attributes)
 	attrs := string(buf)
+	buf, _ = json.Marshal(rm.TypeMap)
+	typemap := string(buf)
 
 	err := DoZeroTwo(rm.GroupModel.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, MaxVersions,
 			Attributes,
-			SetVersionId, SetStickyDefault, HasDocument, ReadOnly)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?)
+			SetVersionId, SetStickyDefault, HasDocument, ReadOnly, TypeMap)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
             ParentSID=?, Plural=?, Singular=?,
 			Attributes=?,
-            MaxVersions=?, SetVersionId=?, SetStickyDefault=?, HasDocument=?, ReadOnly=?`,
+            MaxVersions=?, SetVersionId=?, SetStickyDefault=?, HasDocument=?, ReadOnly=?, TypeMap=?`,
 		rm.SID, rm.GroupModel.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.MaxVersions,
 		attrs,
-		rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly,
+		rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly, typemap,
 
 		rm.GroupModel.SID, rm.Plural, rm.Singular,
 		attrs,
-		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly)
+		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly, typemap)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
 		return err
@@ -1503,6 +1516,14 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		}
 	}
 
+	// Make sure the typemap's values are just certain strings
+	for _, v := range rm.TypeMap {
+		if v != "string" && v != "json" && v != "binary" {
+			return fmt.Errorf("Resource %q has an invalid 'typemap' value "+
+				"(%s). Must be one of 'string', 'json' or 'binary'", rmName, v)
+		}
+	}
+
 	return nil
 }
 
@@ -1688,6 +1709,45 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 	}
 
 	return attrs
+}
+
+// Map incoming "contentType" (ct) to its typemap value.
+// If there is no match (or more than one match with a different type)
+// then default to "binary"
+func (rm *ResourceModel) MapContentType(ct string) string {
+	result := ""
+
+	ct, _ = strings.CutSuffix(ct, ";")
+	ct = strings.ToLower(strings.TrimSpace(ct))
+	if ct == "" {
+		return "binary"
+	}
+
+	for k, v := range rm.TypeMap {
+		k = strings.ToLower(k)
+		if Match(k, ct) {
+			// We got another match but it's a different value, so "binary"
+			if result != "" && result != v {
+				return "binary"
+			}
+			// Save result so we can check to see if there's another match
+			result = v
+		}
+	}
+	// If we have at least one match, with the same value, return the value
+	if result != "" {
+		return result
+	}
+
+	// Check our implied/default typemaps before we give up
+	if Match("application/json", ct) || Match("*+json", ct) {
+		return "json"
+	}
+	if Match("text/plain", ct) {
+		return "string"
+	}
+
+	return "binary"
 }
 
 type LevelData struct {

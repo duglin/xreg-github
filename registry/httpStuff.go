@@ -325,8 +325,86 @@ func (pw *PageWriter) Done() {
 	list := ""
 	list += fmt.Sprintf("<li><a href='/?reg'>Default</a></li>\n")
 	for _, name := range GetRegistryNames() {
-		list += fmt.Sprintf("<li><a href='/reg-%s?reg'>%s</a></li>\n",
+		list += fmt.Sprintf("  <li><a href='/reg-%s?reg'>%s</a></li>\n",
 			name, name)
+	}
+
+	metaswitch := ""
+	metatext := ""
+	metaButton := ""
+	if pw.Info.ShowMeta {
+		metaswitch = "true"
+		metatext = "Show document"
+	} else {
+		metaswitch = "false"
+		metatext = "Show metadata"
+	}
+	if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
+		metaButton = fmt.Sprintf(`
+    <div><button id=meta onclick='metaswitch=!metaswitch ; apply()'>%s</button></div>
+`, metatext)
+	}
+
+	filters := ""
+	prefix := MustPropPathFromPath(pw.Info.Abstract).UI()
+	if prefix != "" {
+		prefix += string(UX_IN)
+	}
+	for _, arrayF := range pw.Info.Filters {
+		subF := ""
+		for _, FE := range arrayF {
+			if subF != "" {
+				subF += ","
+			}
+			next := MustPropPathFromDB(FE.Path).UI()
+			next, _ = strings.CutPrefix(next, prefix)
+			subF += next
+			if FE.HasEqual {
+				subF += "="
+				subF += FE.Value
+			}
+		}
+		filters += subF + "\n"
+	}
+
+	inlineOptions := []string{}
+	if len(pw.Info.Parts) == 0 {
+		inlineOptions = GetModelInlines(pw.Info.Registry.Model)
+	} else if len(pw.Info.Parts) <= 2 {
+		inlineOptions = GetGroupModelInlines(pw.Info.GroupModel)
+	} else if len(pw.Info.Parts) <= 4 {
+		inlineOptions = GetResourceModelInlines(pw.Info.ResourceModel)
+	} else {
+		inlineOptions = GetVersionModelInlines(pw.Info.ResourceModel)
+	}
+
+	checked := ""
+	if pw.Info.IsInlineSet("*") {
+		checked = " checked"
+	}
+	inlines := `
+    <div class=inlines>
+      <input id=inline0 type='checkbox' value='*'` + checked + `/>* (all)
+    </div>`
+	pp, _ := PropPathFromPath(pw.Info.Abstract)
+	for i, inline := range inlineOptions {
+		checked = ""
+		pInline := MustPropPathFromUI(inline)
+		fullInline := pp.Append(pInline).DB()
+		if pw.Info.IsInlineSet(fullInline) {
+			checked = " checked"
+		}
+		inlines += fmt.Sprintf(`
+    <div class=inlines>
+      <input id=inline%d type='checkbox' value='%s'%s/>%s
+    </div>`, i+1, inline, checked, inline)
+	}
+
+	tmp := pw.Info.BaseURL
+	urlPath := fmt.Sprintf(`<a href="%s?reg">%s</a>`, tmp, tmp)
+	for _, p := range pw.Info.Parts {
+		tmp += "/" + p
+		urlPath += fmt.Sprintf(`/<a href="%s?reg">%s</a>`, tmp, p)
 	}
 
 	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
@@ -346,6 +424,8 @@ func (pw *PageWriter) Done() {
     padding: 8 20 8 8 ;
     background-color: lightsteelblue;
     white-space: nowrap ;
+    overflow-y: auto ;
+    min-width: 15em ;
   }
   #right {
     display: flex ;
@@ -368,14 +448,51 @@ func (pw *PageWriter) Done() {
     width: 40em ;
   }
   button {
-    margin-left: 5px ;
+    // margin-left: 5px ;
+  }
+  #buttonList {
+    display: flex ;
+    flex-direction: column ;
+    align-items: start ;
+  }
+  #buttonBar {
+    background-color: lightsteelblue;
+    display: flex ;
+    flex-direction: column ;
+    align-items: start ;
+    padding: 2px ;
+  }
+  #meta {
+    display: inline ;
+    margin-bottom: 10px ;
+  }
+  textarea {
+    margin-bottom: 10px ;
+  }
+  #filters {
+    display: block ;
+    min-height: 8em ;
+    font-size: 12px ;
+    font-family: courier ;
+    width: 100%%
+  }
+  .inlines {
+    font-size: 13px ;
+    font-family: courier ;
+  }
+  #urlPath {
+    background-color: lightgray ;
+    padding: 3px ;
+    font-size: 14px ;
+    font-family: courier ;
+    border-bottom: 4px solid lightsteelblue ;
   }
   #myOutput {
     background-color: ghostwhite;
     border: 0px ;
-	padding: 5px ;
+    padding: 5px ;
     flex: 1 ;
-	overflow: auto ;
+    overflow: auto ;
   }
   pre {
     margin: 0px ;
@@ -389,23 +506,110 @@ func (pw *PageWriter) Done() {
   <b>Choose a registry:</b>
   <br><br>
   `+list+`
+  <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
+  <div id=buttonList>
+    <b><u>Filters:</u></b>
+    <textarea id=filters>`+filters+`</textarea>
+    <b><u>Inlines:</u></b>`+inlines+`
+    <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
+    <div style="display:ruby">
+      <button onclick="apply()">Apply</button>`+
+		metaButton+`
+    </div>
+  </div>
 </div>
 
+<script>
+
+var metaswitch = `+metaswitch+`;
+
+function apply() {
+  var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`?reg"
+
+  if (metaswitch) loc += "&meta"
+
+  var filters = document.getElementById("filters").value
+  var lines = filters.split("\n")
+  for (var i = 0 ; i < lines.length ; i++ ) {
+    if (lines[i] != "") {
+      loc += "&filter=" + lines[i]
+    }
+  }
+
+  for (var i = 0 ; ; i++ ) {
+    var box = document.getElementById("inline"+i)
+    if (box == null) { break }
+    if (box.checked) {
+      loc += "&inline=" + box.value
+    }
+  }
+
+  window.location = loc
+}
+</script>
+
 <div id=right>
-	<!--
+    <!--
     <form id=url onsubmit="go();return false;">
       <div style="margin:0 5 0 10">URL:</div>
       <input id=myURL type=text>
       <button type=submit> Go! </button>
     </form>
-	-->
+    -->
+  <div id=urlPath>
+  <b>Path:</b> `+urlPath+`
+  </div>
   <div id=myOutput>
     <pre>%s</pre>
   </div>
+  <!-- <div id=buttonBar>%s</div> -->
 </div>
 `, RegHTMLify(pw.Info.OriginalRequest, buf))))
 
 	pw.OldWriter.Done()
+}
+
+func GetModelInlines(m *Model) []string {
+	res := []string{}
+
+	for _, gm := range m.Groups {
+		res = append(res, gm.Plural)
+		for _, inline := range GetGroupModelInlines(gm) {
+			res = append(res, gm.Plural+"."+inline)
+		}
+	}
+	return res
+}
+
+func GetGroupModelInlines(gm *GroupModel) []string {
+	res := []string{}
+
+	for _, rm := range gm.Resources {
+		res = append(res, rm.Plural)
+		for _, inline := range GetResourceModelInlines(rm) {
+			res = append(res, rm.Plural+"."+inline)
+		}
+	}
+	return res
+}
+
+func GetResourceModelInlines(rm *ResourceModel) []string {
+	res := []string{}
+
+	if rm.GetHasDocument() {
+		res = append(res, rm.Singular)
+	}
+
+	res = append(res, "versions")
+	for _, inline := range GetVersionModelInlines(rm) {
+		res = append(res, "versions."+inline)
+	}
+
+	return res
+}
+
+func GetVersionModelInlines(rm *ResourceModel) []string {
+	return []string{rm.Singular}
 }
 
 func HTTPGETModel(info *RequestInfo) error {

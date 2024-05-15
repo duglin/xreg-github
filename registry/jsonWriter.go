@@ -204,6 +204,7 @@ func (jw *JsonWriter) WriteEntity() error {
 					data, ok = val.([]byte)
 					PanicIf(!ok, "Can't convert to []byte: %s", val)
 				}
+
 				if val := jw.Entity.Get("#resourceProxyURL"); val != nil {
 					url := val.(string)
 					resp, err := http.Get(url)
@@ -220,6 +221,9 @@ func (jw *JsonWriter) WriteEntity() error {
 				}
 
 				if len(data) > 0 {
+					ct := jw.Entity.GetAsString("contenttype")
+					ct = rm.MapContentType(ct)
+
 					// Try to write the body in either JSON (the current
 					// raw bytes stored in the DB), or if not valid JSON then
 					// base64 encode it.
@@ -229,7 +233,7 @@ func (jw *JsonWriter) WriteEntity() error {
 					if jw.Entity.Get("#isString") == true {
 						jw.Printf("%s\n%s%q: %q", extra, jw.indent, singular,
 							string(data))
-					} else if data[0] != '"' && json.Valid(data) {
+					} else if data[0] != '"' && ct == "json" && json.Valid(data) {
 						// Only write the data as raw JSON (with indents)
 						// if it doesn't start with quotes. For that case
 						// since we need to escape the quotes we're going to
