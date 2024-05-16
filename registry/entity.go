@@ -704,8 +704,8 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if oldID != "" && newID != oldID {
-					return fmt.Errorf("Can't change the ID of an "+
-						"entity(%s->%s)", oldID, newID)
+					return fmt.Errorf(`The "id" attribute must be set to `+
+						`%q, not %q`, oldID, newID)
 				}
 				return nil
 			},

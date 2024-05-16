@@ -84,3 +84,4 @@ TODOs:
   - process ?setdefaultversionid flag before we update things
 - make sure we don't let go http add "content-type" header for docs w/o a value
 - add support for PUT / to update the model
+- add model tests for typemap - just that we can set via full model updates

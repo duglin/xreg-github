@@ -137,8 +137,9 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 	if obj != nil && !IsNil(obj["id"]) {
 		if id != obj["id"] {
-			return nil, false, fmt.Errorf("Can't change the ID of an "+
-				"entity(%s->%s)", id, obj["id"])
+			return nil, false,
+				fmt.Errorf(`The "id" attribute must be set `+
+					`to %q, not %q`, id, obj["id"])
 		}
 	}
 

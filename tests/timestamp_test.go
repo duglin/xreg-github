@@ -19,7 +19,7 @@ func MaskTimestamps(input string) string {
 		if val, ok := seenTS[input]; ok {
 			return val
 		}
-		val := fmt.Sprintf("YYYY-MM-DDTHH:MM:%dZ", len(seenTS)+1)
+		val := fmt.Sprintf("YYYY-MM-DDTHH:MM:%02dZ", len(seenTS)+1)
 		seenTS[input] = val
 		return val
 	}

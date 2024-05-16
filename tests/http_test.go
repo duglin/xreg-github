@@ -79,7 +79,7 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 		if val, ok := seenTS[input]; ok {
 			return val
 		}
-		val := fmt.Sprintf("YYYY-MM-DDTHH:MM:%dZ", len(seenTS)+1)
+		val := fmt.Sprintf("YYYY-MM-DDTHH:MM:%02dZ", len(seenTS)+1)
 		seenTS[input] = val
 		return val
 	}
@@ -1676,7 +1676,8 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"application/json"},
-		ResBody:    "Can't change the ID of an entity(TestHTTPRegistry->foo)\n",
+		ResBody: `The "id" attribute must be set to "TestHTTPRegistry", not "foo"
+`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2134,7 +2135,8 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody:    `Can't change the ID of an entity(dir4->dir44)` + "\n",
+		ResBody: `The "id" attribute must be set to "dir4", not "dir44"
+`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2251,7 +2253,8 @@ func TestHTTPGroups(t *testing.T) {
 		ReqBody:    `{ "id":"dir2" }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Can't change the ID of an entity(dir1->dir2)\n",
+		ResBody: `The "id" attribute must be set to "dir1", not "dir2"
+`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2292,7 +2295,8 @@ func TestHTTPGroups(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody:    "Can't change the ID of an entity(dir2->dir3)\n",
+		ResBody: `The "id" attribute must be set to "dir2", not "dir3"
+`,
 	})
 
 }
@@ -4787,7 +4791,8 @@ func TestHTTPResources(t *testing.T) {
 	xNoErr(t, err)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/vx", `{"id":"x"}`, 400,
-		`Can't change the ID of an entity(vx->x)`+"\n")
+		`The "id" attribute must be set to "vx", not "x"
+`)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", "{}", 201, `{
   "id": "v1",
@@ -8331,7 +8336,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		  }
         }`,
 		Code: 400,
-		ResBody: `Can't change the ID of an entity(f23->bad f23)
+		ResBody: `The "id" attribute must be set to "f23", not "bad f23"
 `})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -9097,7 +9102,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ReqBody:    `v3`,
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Can't change the ID of an entity(3->33)
+		ResBody: `The "id" attribute must be set to "3", not "33"
 `,
 	})
 
@@ -9208,7 +9213,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ReqBody:    `{ "id": "77" }`,
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Can't change the ID of an entity(7->77)
+		ResBody: `The "id" attribute must be set to "7", not "77"
 `,
 	})
 
@@ -10017,8 +10022,8 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
   "defaultversionid": "v1",
   "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
   "description": "desc",
-  "createdat": "YYYY-MM-DDTHH:MM:1Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:2Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -10032,8 +10037,8 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
   "self": "http://localhost:8181/dirs/dir1/files/f1",
   "defaultversionid": "v1",
   "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
-  "createdat": "YYYY-MM-DDTHH:MM:1Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:2Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -10051,8 +10056,8 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
   "isdefault": true,
   "description": "desc",
-  "createdat": "YYYY-MM-DDTHH:MM:1Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:2Z"
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z"
 }
 `)
 
@@ -10062,9 +10067,202 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
   "epoch": 5,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
   "isdefault": true,
-  "createdat": "YYYY-MM-DDTHH:MM:1Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:2Z"
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z"
 }
 `)
 
+}
+
+func TestHTTPResourceCollections(t *testing.T) {
+	reg := NewRegistry("TestHTTPResourceCollections")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, false)
+
+	// Files + empty
+	xHTTP(t, reg, "POST", "/dirs/dir1/files", `{
+	  "f1": {},
+	  "f2": {}
+	}`, 200, `{
+  "f1": {
+    "id": "f1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f1",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
+  },
+  "f2": {
+    "id": "f2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f2",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
+  }
+}
+`)
+
+	// Files + IDs
+	xHTTP(t, reg, "POST", "/dirs/dir1/files", `{
+	  "f3": { "id": "f3" },
+	  "f4": { "id": "f4" }
+	}`, 200, `{
+  "f3": {
+    "id": "f3",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f3",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f3/versions/1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f3/versions"
+  },
+  "f4": {
+    "id": "f4",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f4",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f4/versions/1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f4/versions"
+  }
+}
+`)
+
+	// Files + Bad IDs
+	xHTTP(t, reg, "POST", "/dirs/dir1/files", `{
+	  "f5": { "id": "f5" },
+	  "f6": { "id": "ef6" }
+	}`, 400, `The "id" attribute must be set to "f6", not "ef6"
+`)
+
+	// via file, Versions + empty - no ?setdefaultversionid
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7", `{
+	  "v1": {  },
+	  "v2": {  }
+	}`, 400, `?setdefaultversionid is required
+`)
+
+	// via file, Versions + empty
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7?setdefaultversionid=v2", `{
+	  "v1": {  },
+	  "v2": {  }
+	}`, 200, `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  },
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v2",
+    "isdefault": true,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  }
+}
+`)
+
+	// via file,Versions + IDs
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f8?setdefaultversionid=v2", `{
+	  "v1": { "id": "v1" },
+	  "v2": { "id": "v2" }}
+	}`, 200, `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f8/versions/v1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  },
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f8/versions/v2",
+    "isdefault": true,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  }
+}
+`)
+
+	// via file, Versions + bad IDs
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f9?setdefaultversionid=v2", `{
+	  "v1": { "id": "v1" },
+	  "v2": { "id": "ev2" }}
+	}`, 400, `The "id" attribute must be set to "v2", not "ev2"
+`)
+
+	// Versions + empty
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/ff1/versions?setdefaultversionid=v2", `{
+	  "v1": {  },
+	  "v2": {  }
+	}`, 200, `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/ff1/versions/v1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  },
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/ff1/versions/v2",
+    "isdefault": true,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  }
+}
+`)
+
+	// Versions + IDs
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/ff8/versions?setdefaultversionid=v2", `{
+	  "v1": { "id": "v1" },
+	  "v2": { "id": "v2" }}
+	}`, 200, `{
+  "v1": {
+    "id": "v1",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/ff8/versions/v1",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  },
+  "v2": {
+    "id": "v2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/ff8/versions/v2",
+    "isdefault": true,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  }
+}
+`)
+
+	// Versions + bad IDs
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/ff9/versions?setdefaultversionid=v2", `{
+	  "v1": { "id": "v1" },
+	  "v2": { "id": "ev2" }}
+	}`, 400, `The "id" attribute must be set to "v2", not "ev2"
+`)
 }
