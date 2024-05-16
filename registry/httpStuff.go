@@ -1974,28 +1974,20 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 				// Get the raw bytes of the "resSingular" json attribute
 				buf := []byte(nil)
 				switch reflect.ValueOf(data).Kind() {
-				case reflect.Float64, reflect.Map, reflect.Slice:
+				case reflect.Float64, reflect.Map, reflect.Slice, reflect.Bool:
 					buf, err = json.Marshal(data)
 					if err != nil {
 						return nil, err
 					}
-					delete(IncomingObj, "#isString")
 				case reflect.Invalid:
 					// I think this only happens when it's "null".
 					// just let 'buf' stay as nil
-					delete(IncomingObj, "#isString")
 				default:
 					str := fmt.Sprintf("%s", data)
 					buf = []byte(str)
-					IncomingObj["#isString"] = true
 				}
 				IncomingObj[resSingular] = buf
-			} else if _, ok = IncomingObj[resSingular+"base64"]; ok {
-				delete(IncomingObj, "#isString")
-			} else if _, ok = IncomingObj[resSingular+"url"]; ok {
-				delete(IncomingObj, "#isString")
-			} else if _, ok = IncomingObj[resSingular+"proxyurl"]; ok {
-				delete(IncomingObj, "#isString")
+				IncomingObj["#-contenttype"] = "application/json"
 			}
 		}
 	}
@@ -2004,9 +1996,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	// copy over the existing properties later once we know what entity
 	// we're dealing with
 	if len(info.Parts) > 2 && !metaInBody {
-		// IncomingObj["#resource"] = body // save new body
 		IncomingObj[resSingular] = body // save new body
-		delete(IncomingObj, "#isString")
 
 		seenMaps := map[string]bool{}
 
@@ -2047,11 +2037,6 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 					return nil, fmt.Errorf("'xRegistry-%s' isn't allowed "+
 						"if there's a body", key)
 				}
-
-				delete(IncomingObj, "#resourceProxyURL")
-				delete(IncomingObj, "#resourceURL")
-				delete(IncomingObj, "#resource")
-				delete(IncomingObj, "#isString")
 			}
 
 			val := any(value[0])

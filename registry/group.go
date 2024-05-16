@@ -210,6 +210,18 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 
 		if obj != nil {
+			// If there's a doc but no "contenttype" value then:
+			// - if existing entity doesn't have one, set it
+			// - if existing entity does have one then only override it
+			//   if we're not doing PATCH (PUT/POST are compelte overrides)
+			if eval, ok := obj["#-contenttype"]; ok && !IsNil(eval) {
+				if _, ok = obj["contenttype"]; !ok {
+					if val := v.Get("contenttype"); IsNil(val) || !isPatch {
+						obj["contenttype"] = eval
+					}
+				}
+			}
+
 			v.NewObject = obj
 			v.NewObject["id"] = v.UID // ID is Resource's switch to Version's
 

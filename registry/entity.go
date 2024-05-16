@@ -461,6 +461,11 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 		return nil
 	}
 
+	// Must be a private/temporary prop used internally - don't save it
+	if strings.HasPrefix(pp.Top(), "#-") {
+		return nil
+	}
+
 	PanicIf(e.DbSID == "", "DbSID should not be empty")
 	PanicIf(e.Registry == nil, "Registry should not be nil")
 

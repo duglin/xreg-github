@@ -1711,12 +1711,51 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 	return attrs
 }
 
+func (rm *ResourceModel) AddTypeMap(ct string, format string) error {
+	oldMap := maps.Clone(rm.TypeMap)
+
+	if format != "binary" && format != "json" && format != "string" {
+		return fmt.Errorf("Invalid typemap format: %q", format)
+	}
+	if rm.TypeMap == nil {
+		rm.TypeMap = map[string]string{}
+	}
+	rm.TypeMap[ct] = format
+
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		rm.TypeMap = oldMap
+		return err
+	}
+	return nil
+}
+
+func (rm *ResourceModel) RemoveTypeMap(ct string) error {
+	oldMap := maps.Clone(rm.TypeMap)
+
+	if rm.TypeMap == nil {
+		return nil
+	}
+	delete(rm.TypeMap, ct)
+	if len(rm.TypeMap) == 0 {
+		rm.TypeMap = nil
+	}
+
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		rm.TypeMap = oldMap
+		return err
+	}
+	return nil
+}
+
 // Map incoming "contentType" (ct) to its typemap value.
 // If there is no match (or more than one match with a different type)
 // then default to "binary"
 func (rm *ResourceModel) MapContentType(ct string) string {
 	result := ""
 
+	// Strip all parameters
 	ct, _ = strings.CutSuffix(ct, ";")
 	ct = strings.ToLower(strings.TrimSpace(ct))
 	if ct == "" {
