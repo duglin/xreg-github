@@ -8290,6 +8290,51 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - one, just id",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "f22": {
+		    "id": "f22"
+		  }
+        }`,
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:application/json",
+		},
+		ResBody: `{
+  "f22": {
+    "id": "f22",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f22?meta",
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f22/versions/1?meta",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/dir1/files/f22/versions"
+  }
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST resources?meta - one, just id",
+		URL:        "/dirs/dir1/files?meta",
+		Method:     "POST",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		  "f23": {
+		    "id": "bad f23"
+		  }
+        }`,
+		Code: 400,
+		ResBody: `Can't change the ID of an entity(f23->bad f23)
+`})
+
+	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "POST resources?meta - one, empty",
 		URL:        "/dirs/dir1/files?meta",
 		Method:     "POST",

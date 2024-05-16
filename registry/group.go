@@ -135,6 +135,13 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	log.VPrintf(3, ">Enter: UpsertResourceWithObject(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: UpsertResourceWithObject")
 
+	if obj != nil && !IsNil(obj["id"]) {
+		if id != obj["id"] {
+			return nil, false, fmt.Errorf("Can't change the ID of an "+
+				"entity(%s->%s)", id, obj["id"])
+		}
+	}
+
 	rModel := g.Registry.Model.Groups[g.Plural].Resources[rType]
 	if rModel == nil {
 		return nil, false, fmt.Errorf("Unknown Resource type (%s) for Group %q",
@@ -199,6 +206,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			return nil, false, err
 		}
 
+		delete(obj, "id") // Clear any ID there since it's the Resource's
 		_, err = r.AddVersionWithObject(vID, obj)
 		if err != nil {
 			return nil, false, err
@@ -223,7 +231,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			}
 
 			v.NewObject = obj
-			v.NewObject["id"] = v.UID // ID is Resource's switch to Version's
+			v.NewObject["id"] = v.UID // ID is Resource's, switch to Version's
 
 			if isPatch {
 				// Copy existing props over if the incoming obj doesn't set them
