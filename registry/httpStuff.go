@@ -329,22 +329,6 @@ func (pw *PageWriter) Done() {
 			name, name)
 	}
 
-	metaswitch := ""
-	metatext := ""
-	metaButton := ""
-	if pw.Info.ShowMeta {
-		metaswitch = "true"
-		metatext = "Show document"
-	} else {
-		metaswitch = "false"
-		metatext = "Show metadata"
-	}
-	if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
-		metaButton = fmt.Sprintf(`
-    <div><button id=meta onclick='metaswitch=!metaswitch ; apply()'>%s</button></div>
-`, metatext)
-	}
-
 	filters := ""
 	prefix := MustPropPathFromPath(pw.Info.Abstract).UI()
 	if prefix != "" {
@@ -405,6 +389,23 @@ func (pw *PageWriter) Done() {
 	for _, p := range pw.Info.Parts {
 		tmp += "/" + p
 		urlPath += fmt.Sprintf(`/<a href="%s?reg">%s</a>`, tmp, p)
+	}
+
+	metaswitch := ""
+	metatext := ""
+	metaButton := ""
+	if pw.Info.ShowMeta {
+		metaswitch = "true"
+		metatext = "Show document"
+		urlPath += fmt.Sprintf(`?<a href="%s?reg&meta">meta</a>`, tmp)
+	} else {
+		metaswitch = "false"
+		metatext = "Show metadata"
+	}
+	if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
+		metaButton = fmt.Sprintf(`
+    <div><button id=meta onclick='metaswitch=!metaswitch ; apply()'>%s</button></div>
+`, metatext)
 	}
 
 	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
@@ -483,7 +484,7 @@ func (pw *PageWriter) Done() {
   #urlPath {
     background-color: lightgray ;
     padding: 3px ;
-    font-size: 14px ;
+    font-size: 16px ;
     font-family: courier ;
     border-bottom: 4px solid lightsteelblue ;
   }
@@ -503,14 +504,14 @@ func (pw *PageWriter) Done() {
   }
 </style>
 <div id=left>
-  <b>Choose a registry:</b>
-  <br><br>
+  <b>Registries:</b>
+  <br>
   `+list+`
   <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
   <div id=buttonList>
-    <b><u>Filters:</u></b>
+    <b>Filters:</b>
     <textarea id=filters>`+filters+`</textarea>
-    <b><u>Inlines:</u></b>`+inlines+`
+    <b>Inlines:</b>`+inlines+`
     <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
     <div style="display:ruby">
       <button onclick="apply()">Apply</button>`+
