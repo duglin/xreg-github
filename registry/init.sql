@@ -157,8 +157,8 @@ CREATE TABLE "Groups" (
     UID             VARCHAR(64) NOT NULL,   # User defined
     RegistrySID     VARCHAR(64) NOT NULL,
     ModelSID        VARCHAR(64) NOT NULL,
-    Path            VARCHAR(255) NOT NULL,
-    Abstract        VARCHAR(255) NOT NULL,
+    Path            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
+    Abstract        VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
 
     PRIMARY KEY (SID),
     INDEX(RegistrySID, UID),
@@ -177,8 +177,8 @@ CREATE TABLE Resources (
     UID             VARCHAR(64) NOT NULL,   # User defined
     GroupSID        VARCHAR(64) NOT NULL,   # System ID
     ModelSID        VARCHAR(64) NOT NULL,
-    Path            VARCHAR(255) NOT NULL,
-    Abstract        VARCHAR(255) NOT NULL,
+    Path            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
+    Abstract        VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
 
     PRIMARY KEY (SID),
     INDEX(GroupSID, UID),
@@ -196,8 +196,8 @@ CREATE TABLE Versions (
     SID                 VARCHAR(64) NOT NULL,   # System ID
     UID                 VARCHAR(64) NOT NULL,   # User defined
     ResourceSID         VARCHAR(64) NOT NULL,   # System ID
-    Path                VARCHAR(255) NOT NULL,
-    Abstract            VARCHAR(255) NOT NULL,
+    Path                VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
+    Abstract            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
     Counter             SERIAL,                 # Counter, auto-increments
 
     ResourceURL         VARCHAR(255),

@@ -82,7 +82,14 @@ TODOs:
 - support the resource sticky/default attributes
   - remove ?setdefault.. for some apis
   - process ?setdefaultversionid flag before we update things
+  - make sure we support them as http headers too
+- support createdat and modifiedat as http headers
 - make sure we don't let go http add "content-type" header for docs w/o a value
 - add support for PUT / to update the model
 - add model tests for typemap - just that we can set via full model updates
 - support the DB vanishing for a while
+- support $meta
+- ensure the groups and resources (plural and singular) are case sensitive
+  for compare, but case-insensistive unique within their scope
+- test that PATCH on ../rID and .../vID verifies the `id` in the header
+  or body matches the URL

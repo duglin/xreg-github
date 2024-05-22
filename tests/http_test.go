@@ -2942,6 +2942,61 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 }
 
+func testHTTPCases(t *testing.T) {
+	reg := NewRegistry("TestHTTPCases")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+	d, _ := reg.AddGroup("dirs", "d1")
+	d.AddResource("files", "f1", "v1")
+
+	xHTTP(t, reg, "GET", "/Dirs", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1", "", 404, "Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/Files", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/Files", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/files", "", 404, "Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/F1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/F1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/F1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/F1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/files/f1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/Files/f1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/files/F1", "", 404, "Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/Versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/files/f1/Versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/Files/f1/Versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions", "", 404, "Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/V1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions/V1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/Versions/V1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions/V1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions/V1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions/v1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/versions/V1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions/v1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/versions/v1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/versions/v1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/files/f1/versions/v1", "", 404, "Not found\n")
+
+	// Just to make sure we didn't have a typo above
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1", "", 200, "")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1", "", 200, "")
+}
+
 func TestHTTPResourcesContentHeaders(t *testing.T) {
 	reg := NewRegistry("TestHTTPResourcesContentHeaders")
 	defer PassDeleteReg(t, reg)
@@ -6065,7 +6120,7 @@ func TestHTTPDelete(t *testing.T) {
 `)
 
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions", ``, 204, "")
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions", "", 200, "{}\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions", "", 404, "Not found\n")
 
 	// TODO
 	// DEL /..versions/ [ v2,v4 ] - bad epoch on 2nd,verify v2 is still there

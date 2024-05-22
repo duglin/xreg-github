@@ -876,9 +876,25 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 	jw := NewJsonWriter(info, results)
 	jw.NextEntity()
 
+	// Collections will need to print the {}, so don't error for them
 	if what != "Coll" {
-		// Collections will need to print the {}, so don't error for them
 		if jw.Entity == nil {
+			info.StatusCode = http.StatusNotFound
+			return fmt.Errorf("Not found")
+		}
+	}
+
+	// Special case, if we're doing a collection, let's make sure we didn't
+	// get an empty result due to it's parent not even existing - for example
+	// the user used the wrong case (or even name) in the parent's Path
+	if jw.Entity == nil && len(info.Parts) > 1 {
+		path := strings.Join(info.Parts[:len(info.Parts)-1], "/")
+		entity, err := RawEntityFromPath(info.tx, info.Registry.DbSID, path)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error finding parent(%s): %s", path, err)
+		}
+		if IsNil(entity) {
 			info.StatusCode = http.StatusNotFound
 			return fmt.Errorf("Not found")
 		}
