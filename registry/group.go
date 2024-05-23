@@ -27,12 +27,12 @@ func (g *Group) SetSave(name string, val any) error {
 	return g.Entity.SetSave(name, val)
 }
 
-func (g *Group) FindResource(rType string, id string) (*Resource, error) {
-	log.VPrintf(3, ">Enter: FindResource(%s,%s)", rType, id)
+func (g *Group) FindResource(rType string, id string, anyCase bool) (*Resource, error) {
+	log.VPrintf(3, ">Enter: FindResource(%s,%s,%v)", rType, id, anyCase)
 	defer log.VPrintf(3, "<Exit: FindResource")
 
 	ent, err := RawEntityFromPath(g.tx, g.Registry.DbSID,
-		g.Plural+"/"+g.UID+"/"+rType+"/"+id)
+		g.Plural+"/"+g.UID+"/"+rType+"/"+id, anyCase)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Resource %q(%s): %s",
 			id, rType, err)
@@ -59,11 +59,17 @@ func (g *Group) AddResourceWithObject(rType string, id string, vID string, obj O
 			rType, g.Plural)
 	}
 
-	r, err := g.FindResource(rType, id)
+	r, err := g.FindResource(rType, id, true)
 	if err != nil {
 		return nil, fmt.Errorf("Error checking for Resource(%s) %q: %s",
 			rType, id, err)
 	}
+
+	if r != nil && r.UID != id {
+		return nil, fmt.Errorf("Attempting to create a Resource with "+
+			"an \"id\" of %q, when one already exists as %q", id, r.UID)
+	}
+
 	if r != nil {
 		return nil, fmt.Errorf("Resource %q of type %q already exists",
 			id, rType)
@@ -131,17 +137,10 @@ func (g *Group) UpsertResource(rType string, id string, vID string) (*Resource, 
 	return g.UpsertResourceWithObject(rType, id, vID, nil, false)
 }
 
+// *Resource, isNew, error
 func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, obj Object, isPatch bool) (*Resource, bool, error) {
 	log.VPrintf(3, ">Enter: UpsertResourceWithObject(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: UpsertResourceWithObject")
-
-	if obj != nil && !IsNil(obj["id"]) {
-		if id != obj["id"] {
-			return nil, false,
-				fmt.Errorf(`The "id" attribute must be set `+
-					`to %q, not %q`, id, obj["id"])
-		}
-	}
 
 	rModel := g.Registry.Model.Groups[g.Plural].Resources[rType]
 	if rModel == nil {
@@ -149,10 +148,23 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			rType, g.Plural)
 	}
 
-	r, err := g.FindResource(rType, id)
+	r, err := g.FindResource(rType, id, true)
 	if err != nil {
 		return nil, false, fmt.Errorf("Error checking for Resource(%s) %q: %s",
 			rType, id, err)
+	}
+
+	if r != nil && r.UID != id {
+		return nil, false, fmt.Errorf("Attempting to create a Resource with "+
+			"an \"id\" of %q, when one already exists as %q", id, r.UID)
+	}
+
+	if obj != nil && !IsNil(obj["id"]) {
+		if id != obj["id"] {
+			return nil, false,
+				fmt.Errorf(`The "id" attribute must be set `+
+					`to %q, not %q`, id, obj["id"])
+		}
 	}
 
 	isNew := (r == nil)

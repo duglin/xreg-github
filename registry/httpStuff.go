@@ -25,7 +25,9 @@ var DefaultRegDbSID string
 
 func GetDefaultReg(tx *Tx) *Registry {
 	if tx == nil {
-		tx = NewTx()
+		var err error
+		tx, err = NewTx()
+		Must(err)
 	}
 
 	reg, err := FindRegistryBySID(tx, DefaultRegDbSID)
@@ -85,7 +87,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := NewTx()
+	tx, err := NewTx()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Error talking to DB, try again later\n"))
+		return
+	}
 
 	defer func() {
 		// As of now we should never have more than one active Tx during
@@ -136,7 +143,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		info.HTTPWriter.Done()
 	}()
 
-	if r.URL.Query().Has("reg") { // Wrap in html page
+	if r.URL.Query().Has("ui") { // Wrap in html page
 		info.HTTPWriter = NewPageWriter(info)
 	}
 
@@ -323,9 +330,9 @@ func (pw *PageWriter) Done() {
 	buf := pw.Buffer.Bytes()
 
 	list := ""
-	list += fmt.Sprintf("<li><a href='/?reg'>Default</a></li>\n")
+	list += fmt.Sprintf("<li><a href='/?ui'>Default</a></li>\n")
 	for _, name := range GetRegistryNames() {
-		list += fmt.Sprintf("  <li><a href='/reg-%s?reg'>%s</a></li>\n",
+		list += fmt.Sprintf("  <li><a href='/reg-%s?ui'>%s</a></li>\n",
 			name, name)
 	}
 
@@ -385,10 +392,10 @@ func (pw *PageWriter) Done() {
 	}
 
 	tmp := pw.Info.BaseURL
-	urlPath := fmt.Sprintf(`<a href="%s?reg">%s</a>`, tmp, tmp)
+	urlPath := fmt.Sprintf(`<a href="%s?ui">%s</a>`, tmp, tmp)
 	for _, p := range pw.Info.Parts {
 		tmp += "/" + p
-		urlPath += fmt.Sprintf(`/<a href="%s?reg">%s</a>`, tmp, p)
+		urlPath += fmt.Sprintf(`/<a href="%s?ui">%s</a>`, tmp, p)
 	}
 
 	metaswitch := ""
@@ -397,7 +404,7 @@ func (pw *PageWriter) Done() {
 	if pw.Info.ShowMeta {
 		metaswitch = "true"
 		metatext = "Show document"
-		urlPath += fmt.Sprintf(`?<a href="%s?reg&meta">meta</a>`, tmp)
+		urlPath += fmt.Sprintf(`?<a href="%s?ui&meta">meta</a>`, tmp)
 	} else {
 		metaswitch = "false"
 		metatext = "Show metadata"
@@ -525,7 +532,7 @@ func (pw *PageWriter) Done() {
 var metaswitch = `+metaswitch+`;
 
 function apply() {
-  var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`?reg"
+  var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`?ui"
 
   if (metaswitch) loc += "&meta"
 
@@ -889,7 +896,8 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 	// the user used the wrong case (or even name) in the parent's Path
 	if jw.Entity == nil && len(info.Parts) > 1 {
 		path := strings.Join(info.Parts[:len(info.Parts)-1], "/")
-		entity, err := RawEntityFromPath(info.tx, info.Registry.DbSID, path)
+		entity, err := RawEntityFromPath(info.tx, info.Registry.DbSID, path,
+			false)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error finding parent(%s): %s", path, err)
@@ -1182,7 +1190,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	if len(info.Parts) > 3 {
 		// GROUPs/gID/RESOURCEs/rID...
 
-		resource, err = group.FindResource(info.ResourceType, resourceUID)
+		resource, err = group.FindResource(info.ResourceType, resourceUID, false)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error finding resource(%s): %s", resourceUID,
@@ -1195,16 +1203,16 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		if propsID != "" && propsID != resourceUID {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Metadata id(%s) doesn't match ID in "+
-				"URL(%s)", propsID, resourceUID)
+			return fmt.Errorf("The \"id\" attribute must be set to %q, not %q",
+				resourceUID, propsID)
 		}
 
 		if resource != nil {
 			version, err = resource.GetDefault()
 
 			// They passed in a Resource, but we're going to use the data
-			// to create a Versions so we need to delete the new collections
-			// from the Version, but the collections are Resource-based colls
+			// to update the current Version, so we need to delete the
+			// collections since they're technically Resource-based colls
 			resource.RemoveCollections(IncomingObj)
 
 			// ID needs to be the version's ID, not the Resources
@@ -1367,7 +1375,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			isNew = true
 		}
 
-		version, err = resource.FindVersion(versionUID)
+		version, err = resource.FindVersion(versionUID, false)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error finding version(%s): %s", versionUID,
@@ -1384,6 +1392,12 @@ func HTTPPutPost(info *RequestInfo) error {
 			// to create a Versions so we need to delete the new collections
 			// from the Version,but the collections are Resource-based colls
 			resource.RemoveCollections(IncomingObj)
+
+			if propsID != "" && propsID != version.UID {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("The \"id\" attribute must be set to %q, not %q",
+					version.UID, propsID)
+			}
 
 			IncomingObj["id"] = version.UID
 			version, _, err = resource.UpsertVersionWithObject(version.UID,
@@ -1512,7 +1526,7 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 		return resource.SetDefault(version)
 	}
 
-	version, err := resource.FindVersion(vID)
+	version, err := resource.FindVersion(vID, false)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf("Error finding version(%s): %s", vID, err)
@@ -1532,7 +1546,7 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 }
 
 func HTTPSetDefaultVersionID(info *RequestInfo) error {
-	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
+	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf("Error finding group(%s): %s", info.GroupUID, err)
@@ -1542,7 +1556,7 @@ func HTTPSetDefaultVersionID(info *RequestInfo) error {
 		return fmt.Errorf("Group %q not found", info.GroupUID)
 	}
 
-	resource, err := group.FindResource(info.ResourceType, info.ResourceUID)
+	resource, err := group.FindResource(info.ResourceType, info.ResourceUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf("Error finding resource(%s): %s",
@@ -1593,7 +1607,7 @@ func HTTPDelete(info *RequestInfo) error {
 	}
 
 	// DELETE /GROUPs/gID...
-	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
+	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf(`Error finding Group %q: %s`, info.GroupUID, err)
@@ -1632,7 +1646,7 @@ func HTTPDelete(info *RequestInfo) error {
 	}
 
 	// DELETE /GROUPs/gID/RESOURCEs/rID...
-	resource, err := group.FindResource(info.ResourceType, info.ResourceUID)
+	resource, err := group.FindResource(info.ResourceType, info.ResourceUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf(`Error finding resource %q`, info.ResourceUID)
@@ -1668,7 +1682,7 @@ func HTTPDelete(info *RequestInfo) error {
 	}
 
 	// DELETE /GROUPs/gID/RESOURCEs/rID/versions/vID...
-	version, err := resource.FindVersion(info.VersionUID)
+	version, err := resource.FindVersion(info.VersionUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusInternalServerError
 		return fmt.Errorf(`Error finding version %q`, info.VersionUID)
@@ -1757,7 +1771,7 @@ func HTTPDeleteGroups(info *RequestInfo) error {
 
 	// Delete each Group, checking epoch first if provided
 	for _, entry := range list {
-		group, err := info.Registry.FindGroup(info.GroupType, entry.ID)
+		group, err := info.Registry.FindGroup(info.GroupType, entry.ID, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf(`Error getting Group /%q`, entry.ID)
@@ -1815,7 +1829,7 @@ func HTTPDeleteResources(info *RequestInfo) error {
 		defer results.Close()
 	}
 
-	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
+	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Error getting Group %q`, info.GroupUID)
@@ -1823,7 +1837,7 @@ func HTTPDeleteResources(info *RequestInfo) error {
 
 	// Delete each Resource, checking epoch first if provided
 	for _, entry := range list {
-		resource, err := group.FindResource(info.ResourceType, entry.ID)
+		resource, err := group.FindResource(info.ResourceType, entry.ID, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf(`Error getting Resource %q`, entry.ID)
@@ -1883,13 +1897,13 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 		defer results.Close()
 	}
 
-	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID)
+	group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Error getting Group %q: %s`, info.GroupUID, err)
 	}
 
-	resource, err := group.FindResource(info.ResourceType, info.ResourceUID)
+	resource, err := group.FindResource(info.ResourceType, info.ResourceUID, false)
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Error getting Resource %q: %s`,
@@ -1898,7 +1912,7 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 
 	// Delete each Version, checking epoch first if provided
 	for _, entry := range list {
-		version, err := resource.FindVersion(entry.ID)
+		version, err := resource.FindVersion(entry.ID, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf(`Error getting Version %q: %s`, entry.ID, err)
@@ -1928,7 +1942,7 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 	}
 
 	if nextDefault != "" {
-		version, err := resource.FindVersion(nextDefault)
+		version, err := resource.FindVersion(nextDefault, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf(`Error getting Version %q: %s`, nextDefault, err)

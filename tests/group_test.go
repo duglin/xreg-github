@@ -57,30 +57,30 @@ func TestCreateGroup(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/xxx/yyy", "Unknown Resource type: yyy\n")
 	xCheckGet(t, reg, "dirs/xxx/yyy", "Unknown Resource type: yyy\n")
 
-	g, err := reg.FindGroup("dirs", "d1")
+	g, err := reg.FindGroup("dirs", "d1", false)
 	xNoErr(t, err)
 	xJSONCheck(t, g, d1)
 
-	g, err = reg.FindGroup("xxx", "d1")
+	g, err = reg.FindGroup("xxx", "d1", false)
 	xCheck(t, err == nil && g == nil, "Finding xxx/d1 should have failed")
 
-	g, err = reg.FindGroup("dirs", "xx")
+	g, err = reg.FindGroup("dirs", "xx", false)
 	xCheck(t, err == nil && g == nil, "Finding dirs/xxx should have failed")
 
-	r, err := d1.FindResource("files", "f1")
+	r, err := d1.FindResource("files", "f1", false)
 	xCheck(t, err == nil && r != nil, "Finding resource failed")
 	xJSONCheck(t, r, f1)
 
-	r2, err := d1.FindResource("files", "xxx")
+	r2, err := d1.FindResource("files", "xxx", false)
 	xCheck(t, err == nil && r2 == nil, "Finding files/xxx didn't work")
 
-	r2, err = d1.FindResource("xxx", "f1")
+	r2, err = d1.FindResource("xxx", "f1", false)
 	xCheck(t, err == nil && r2 == nil, "Finding xxx/f1 didn't work")
 
 	err = d1.Delete()
 	xNoErr(t, err)
 
-	g, err = reg.FindGroup("dirs", "d1")
+	g, err = reg.FindGroup("dirs", "d1", false)
 	xCheck(t, err == nil && g == nil, "Finding delete group failed")
 }
 

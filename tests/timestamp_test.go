@@ -261,7 +261,7 @@ func TestTimestampRegistry(t *testing.T) {
 `,
 	})
 
-	g, err := reg.FindGroup("dirs", "d4")
+	g, err := reg.FindGroup("dirs", "d4", false)
 	xNoErr(t, err)
 	xCheckEqual(t, "", g.Get("createdat"), "1970-01-02T03:04:05Z")
 	xCheckEqual(t, "", g.Get("modifiedat"), "2000-05-04T03:02:01Z")
@@ -289,11 +289,11 @@ func TestTimestampRegistry(t *testing.T) {
 `,
 	})
 
-	g, err = reg.FindGroup("dirs", "d5")
+	g, err = reg.FindGroup("dirs", "d5", false)
 	xNoErr(t, err)
-	r, err := g.FindResource("files", "f5")
+	r, err := g.FindResource("files", "f5", false)
 	xNoErr(t, err)
-	v, err := r.FindVersion("v99")
+	v, err := r.FindVersion("v99", false)
 	xNoErr(t, err)
 	xCheckEqual(t, "", v.Get("createdat"), "1970-01-02T03:04:05Z")
 	xCheckEqual(t, "", v.Get("modifiedat"), "2000-05-04T03:02:01Z")

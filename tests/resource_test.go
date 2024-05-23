@@ -60,24 +60,24 @@ func TestCreateResource(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1/files/xxx/yyy", "Expected \"versions\", got: yyy\n")
 	xCheckGet(t, reg, "dirs/d1/files/xxx/yyy", "Expected \"versions\", got: yyy\n")
 
-	ft, err = d1.FindResource("files", "f1")
+	ft, err = d1.FindResource("files", "f1", false)
 	xNoErr(t, err)
 	xCheck(t, ft != nil && err == nil, "Finding f1 failed")
 	xJSONCheck(t, ft, f1)
 
-	ft, err = d1.FindResource("files", "xxx")
+	ft, err = d1.FindResource("files", "xxx", false)
 	xCheck(t, ft == nil && err == nil, "Find files/xxx should have failed")
 
-	ft, err = d1.FindResource("xxx", "xxx")
+	ft, err = d1.FindResource("xxx", "xxx", false)
 	xCheck(t, ft == nil && err == nil, "Find xxx/xxx should have failed")
 
-	ft, err = d1.FindResource("xxx", "f1")
+	ft, err = d1.FindResource("xxx", "f1", false)
 	xCheck(t, ft == nil && err == nil, "Find xxx/f1 should have failed")
 
 	err = f1.Delete()
 	xNoErr(t, err)
 
-	ft, err = d1.FindResource("files", "f1")
+	ft, err = d1.FindResource("files", "f1", false)
 	xCheck(t, err == nil && ft == nil, "Finding delete resource failed")
 }
 
@@ -107,7 +107,7 @@ func TestResourceSet(t *testing.T) {
 	xCheck(t, f1.Entity.Get("ext1") == nil, "ext1 should be nil")
 	xCheck(t, f1.Entity.Get("ext2") == nil, "ext2 should be nil")
 
-	ft, _ := d1.FindResource("files", "f1")
+	ft, _ := d1.FindResource("files", "f1", false)
 
 	xJSONCheck(t, ft, f1)
 

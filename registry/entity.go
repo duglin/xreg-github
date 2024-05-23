@@ -202,12 +202,17 @@ func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, bool, error) {
 	return NestedGetProp(obj, pp.Next(), prev.Append(pp.First()))
 }
 
-func RawEntityFromPath(tx *Tx, regID string, path string) (*Entity, error) {
+func RawEntityFromPath(tx *Tx, regID string, path string, anyCase bool) (*Entity, error) {
 	log.VPrintf(3, ">Enter: RawEntityFromPath(%s)", path)
 	defer log.VPrintf(3, "<Exit: RawEntityFromPath")
 
 	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
 	//   0     1      2     3    4     5         6         7     8      9
+
+	caseExpr := ""
+	if anyCase {
+		caseExpr = " COLLATE utf8mb4_0900_ai_ci"
+	}
 
 	results, err := Query(tx, `
 		SELECT
@@ -223,7 +228,8 @@ func RawEntityFromPath(tx *Tx, regID string, path string) (*Entity, error) {
             e.Abstract as Abstract
         FROM Entities AS e
         LEFT JOIN Props AS p ON (e.eSID=p.EntitySID)
-        WHERE e.RegSID=? AND e.Path=? ORDER BY Path`, regID, path)
+        WHERE e.RegSID=? AND e.Path`+caseExpr+`=? ORDER BY Path`,
+		regID, path)
 	defer results.Close()
 
 	if err != nil {

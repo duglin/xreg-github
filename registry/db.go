@@ -18,6 +18,8 @@ import (
 )
 
 var DB *sql.DB
+var DB_Name = ""
+var DB_InitFunc func()
 
 var DBUSER = "root"
 var DBHOST = "localhost"
@@ -149,28 +151,46 @@ func (tx *Tx) String() string {
 	return fmt.Sprintf("Tx: sql.tx: %s, Registry: %s", txStr, regStr)
 }
 
-func NewTx() *Tx {
+func NewTx() (*Tx, error) {
 	log.VPrintf(4, ">Enter: NewTx")
 	defer log.VPrintf(4, "<exit: NewTx")
 
 	tx := &Tx{}
-	tx.NewTx()
-	return tx
+	err := tx.NewTx()
+	if err != nil {
+		log.Printf("NewTx error: %s", err)
+		return nil, err
+	}
+	return tx, nil
 }
 
 // It's ok for this to be called multiple times for the same Tx just to
 // make sure we have an active transaction - it's a no-op at that point
-func (tx *Tx) NewTx() {
+func (tx *Tx) NewTx() error {
 	log.VPrintf(4, ">Enter: tx.NewTx")
 	defer log.VPrintf(4, "<Exit: tx.NewTx")
 
+	if DB == nil {
+		if DB_Name == "" {
+			return fmt.Errorf("No DB_Name set")
+		}
+		err := OpenDB(DB_Name)
+		if err != nil {
+			return err
+		}
+	}
+
 	if tx.tx != nil {
-		return
+		return nil
 	}
 
 	t, err := DB.BeginTx(context.Background(),
 		&sql.TxOptions{sql.LevelReadCommitted, false})
-	Must(err)
+	if err != nil {
+		DB = nil
+		return err
+		// panic("Error talking to the DB: %s", err)
+	}
 
 	tx.tx = t
 	// if TESTING {
@@ -182,6 +202,7 @@ func (tx *Tx) NewTx() {
 	tx.uuid = NewUUID()
 	tx.stack = GetStack()
 	TXs[tx.uuid] = tx
+	return nil
 }
 
 func (tx *Tx) Commit() error {
@@ -232,7 +253,10 @@ func (tx *Tx) Conditional(err error) error {
 func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
 	// If the current Tx is closed, create a new one
 	if tx.tx == nil {
-		tx.NewTx()
+		err := tx.NewTx()
+		if err != nil {
+			return nil, err
+		}
 	}
 	ps, err := tx.tx.Prepare(query)
 
@@ -580,7 +604,7 @@ func DBExists(name string) bool {
 var initDB string
 var firstTime = true
 
-func OpenDB(name string) {
+func OpenDB(name string) error {
 	if firstTime {
 		log.VPrintf(1, "DB: %s:%s", DBHOST, DBPORT)
 		firstTime = false
@@ -595,15 +619,23 @@ func OpenDB(name string) {
 
 	DB, err = sql.Open("mysql",
 		DBUSER+":"+DBPASSWORD+"@tcp("+DBHOST+":"+DBPORT+")/"+name)
+
 	if err != nil {
+		DB = nil
 		err = fmt.Errorf("Error talking to SQL: %s\n", err)
 		log.Print(err)
-		panic(err)
-		// return err
+		return err
 	}
 
+	DB_Name = name
 	DB.SetMaxOpenConns(5)
 	DB.SetMaxIdleConns(5)
+
+	if DB_InitFunc != nil {
+		DB_InitFunc()
+	}
+
+	return nil
 }
 
 func CreateDB(name string) error {

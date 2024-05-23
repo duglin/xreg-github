@@ -89,7 +89,4 @@ TODOs:
 - add model tests for typemap - just that we can set via full model updates
 - support the DB vanishing for a while
 - support $meta
-- ensure the groups and resources (plural and singular) are case sensitive
-  for compare, but case-insensistive unique within their scope
-- test that PATCH on ../rID and .../vID verifies the `id` in the header
-  or body matches the URL
+- create an UpdateDefaultVersion func in resource.go to move it from http logic

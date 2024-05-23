@@ -254,7 +254,7 @@ func HTMLify(r *http.Request, buf []byte) []byte {
 func RegHTMLify(r *http.Request, buf []byte) []byte {
 	str := fmt.Sprintf(`"(https?://[^?"\n]*)(\??)([^"\n]*)"`)
 	re := regexp.MustCompile(str)
-	repl := fmt.Sprintf(`"<a href='$1?reg&$3'>$1$2$3</a>"`)
+	repl := fmt.Sprintf(`"<a href='$1?ui&$3'>$1$2$3</a>"`)
 
 	// Escape < and >
 	buf = []byte(strings.ReplaceAll(string(buf), "<", "&lt;"))

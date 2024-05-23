@@ -63,12 +63,12 @@ func TestCreateVersion(t *testing.T) {
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
 
-	vt, err = f1.FindVersion("v2")
+	vt, err = f1.FindVersion("v2", false)
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "Didn't find v2")
 	xJSONCheck(t, vt, v2)
 
-	vt, err = f1.FindVersion("xxx")
+	vt, err = f1.FindVersion("xxx", false)
 	xNoErr(t, err)
 	xCheck(t, vt == nil, "Find version xxx should have failed")
 
@@ -77,7 +77,7 @@ func TestCreateVersion(t *testing.T) {
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
 
-	vt, err = f1.FindVersion("v2")
+	vt, err = f1.FindVersion("v2", false)
 	xCheck(t, err == nil && vt == nil, "Finding delete version failed")
 
 	// check that default == v1 now
@@ -111,25 +111,25 @@ func TestCreateVersion(t *testing.T) {
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
-	vt, err = f1.FindVersion("v2")
+	vt, err = f1.FindVersion("v2", false)
 	xNoErr(t, err)
 	err = vt.Delete("")
 	xNoErr(t, err)
 	xJSONCheck(t, f1.Get("defaultversionid"), "v3")
 
-	vt, err = f1.FindVersion("v3")
+	vt, err = f1.FindVersion("v3", false)
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "Can't be nil")
 	err = vt.Delete("")
 	xNoErr(t, err)
 	xJSONCheck(t, f1.Get("defaultversionid"), "v1")
 
-	f1, err = d2.FindResource("files", "f1")
+	f1, err = d2.FindResource("files", "f1", false)
 	xNoErr(t, err)
 	xNoErr(t, f1.SetDefault(v2))
 	_, err = f1.AddVersion("v3")
 	xNoErr(t, err)
-	vt, err = f1.FindVersion("v1")
+	vt, err = f1.FindVersion("v1", false)
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "should not be nil")
 	err = vt.Delete("")
@@ -140,7 +140,7 @@ func TestCreateVersion(t *testing.T) {
 	err = vt.Delete("v2")
 	xCheckErr(t, err, `Can't find next default Version "v2"`)
 
-	vt, err = f1.FindVersion("v1.1")
+	vt, err = f1.FindVersion("v1.1", false)
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "should not be nil")
 
@@ -182,7 +182,7 @@ func TestDefaultVersion(t *testing.T) {
 
 	d1, _ := reg.AddGroup("dirs", "d1")
 	f1, _ := d1.AddResource("files", "f1", "v1")
-	v1, _ := f1.FindVersion("v1")
+	v1, _ := f1.FindVersion("v1", false)
 	v2, _ := f1.AddVersion("v2")
 
 	xCheckGet(t, reg, "dirs/d1/files/f1?meta",
@@ -359,7 +359,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
 
 	d1, _ := reg.AddGroup("dirs", "d1")
 	f1, _ := d1.AddResource("files", "f1", "v1")
-	f1.FindVersion("v1")
+	f1.FindVersion("v1", false)
 	f1.AddVersion("v2")
 	f1.AddVersion("v3")
 

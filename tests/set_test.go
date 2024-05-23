@@ -62,7 +62,7 @@ func TestSetResource(t *testing.T) {
 	// Make sure setting it on the version is seen by res.Default and res
 	namePP := NewPP().P("name").UI()
 	file.SetSave(namePP, "myName")
-	ver, _ := file.FindVersion("v1")
+	ver, _ := file.FindVersion("v1", false)
 	val := ver.Get(namePP)
 	if val != "myName" {
 		t.Errorf("ver.Name is %q, should be 'myName'", val)
@@ -73,13 +73,13 @@ func TestSetResource(t *testing.T) {
 
 	// Verify that nil and "" are treated differently
 	ver.SetSave(namePP, nil)
-	ver2, _ := file.FindVersion(ver.UID)
+	ver2, _ := file.FindVersion(ver.UID, false)
 	xJSONCheck(t, ver2, ver)
 	val = ver.Get(namePP)
 	xCheck(t, val == nil, "Setting to nil should return nil")
 
 	ver.SetSave(namePP, "")
-	ver2, _ = file.FindVersion(ver.UID)
+	ver2, _ = file.FindVersion(ver.UID, false)
 	xJSONCheck(t, ver2, ver)
 	val = ver.Get(namePP)
 	xCheck(t, val == "", "Setting to '' should return ''")
@@ -94,14 +94,14 @@ func TestSetVersion(t *testing.T) {
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
-	ver, _ := file.FindVersion("v1")
+	ver, _ := file.FindVersion("v1", false)
 
 	// /dirs/d1/f1/v1
 
 	// Make sure setting it on the version is seen by res.Default and res
 	namePP := NewPP().P("name").UI()
 	ver.SetSave(namePP, "myName")
-	file, _ = dir.FindResource("files", "f1")
+	file, _ = dir.FindResource("files", "f1", false)
 	l, err := file.GetDefault()
 	xNoErr(t, err)
 	xCheck(t, l != nil, "default is nil")
@@ -115,7 +115,7 @@ func TestSetVersion(t *testing.T) {
 	}
 
 	// Make sure we can also still see it from the version itself
-	ver, _ = file.FindVersion("v1")
+	ver, _ = file.FindVersion("v1", false)
 	val = ver.Get(namePP)
 	if val != "myName" {
 		t.Errorf("version.Name is %q, should be 'myName'", val)
@@ -208,7 +208,7 @@ func TestSetLabels(t *testing.T) {
 
 	dir, _ := reg.AddGroup("dirs", "d1")
 	file, _ := dir.AddResource("files", "f1", "v1")
-	ver, _ := file.FindVersion("v1")
+	ver, _ := file.FindVersion("v1", false)
 	ver2, _ := file.AddVersion("v2")
 
 	// /dirs/d1/f1/v1

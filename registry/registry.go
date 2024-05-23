@@ -46,7 +46,10 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 	}()
 
 	if tx == nil {
-		tx = NewTx()
+		tx, err = NewTx()
+		if err != nil {
+			return nil, err
+		}
 		newTx = true
 	}
 
@@ -130,7 +133,10 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 }
 
 func GetRegistryNames() []string {
-	tx := NewTx()
+	tx, err := NewTx()
+	if err != nil {
+		return []string{} // error!
+	}
 	defer tx.Rollback()
 
 	results, err := Query(tx, ` SELECT UID FROM Registries`)
@@ -180,7 +186,7 @@ func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
 		return tx.Registry, nil
 	}
 
-	ent, err := RawEntityFromPath(tx, sid, "")
+	ent, err := RawEntityFromPath(tx, sid, "", false)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Registry %q: %s", sid, err)
 	}
@@ -210,7 +216,11 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 
 	newTx := false
 	if tx == nil {
-		tx = NewTx()
+		var err error
+		tx, err = NewTx()
+		if err != nil {
+			return nil, err
+		}
 		newTx = true
 
 		defer func() {
@@ -248,7 +258,7 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	id = NotNilString(row[0])
 	results.Close()
 
-	ent, err := RawEntityFromPath(tx, id, "")
+	ent, err := RawEntityFromPath(tx, id, "", false)
 
 	if err != nil {
 		if newTx {
@@ -344,11 +354,11 @@ func (reg *Registry) Update(obj Object, isPatch bool) error {
 	return reg.ValidateAndSave()
 }
 
-func (reg *Registry) FindGroup(gType string, id string) (*Group, error) {
-	log.VPrintf(3, ">Enter: FindGroup(%s/%s)", gType, id)
+func (reg *Registry) FindGroup(gType string, id string, anyCase bool) (*Group, error) {
+	log.VPrintf(3, ">Enter: FindGroup(%s,%s,%v)", gType, id, anyCase)
 	defer log.VPrintf(3, "<Exit: FindGroup")
 
-	ent, err := RawEntityFromPath(reg.tx, reg.DbSID, gType+"/"+id)
+	ent, err := RawEntityFromPath(reg.tx, reg.DbSID, gType+"/"+id, anyCase)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Group %q(%s): %s", id, gType, err)
 	}
@@ -376,10 +386,15 @@ func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object) (*G
 		id = NewUUID()
 	}
 
-	g, err := reg.FindGroup(gType, id)
+	g, err := reg.FindGroup(gType, id, true)
 	if err != nil {
 		return nil, fmt.Errorf("Error checking for Group(%s) %q: %s",
 			gType, id, err)
+	}
+	if g != nil && g.UID != id {
+		return nil, fmt.Errorf("Attempting to create a Group "+
+			"with an \"id\" of %q, when one already exists as %q",
+			id, g.UID)
 	}
 	if g != nil {
 		return nil, fmt.Errorf("Group %q of type %q already exists", id, gType)
@@ -431,6 +446,7 @@ func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object) (*G
 	return g, nil
 }
 
+// *Group, isNew, error
 func (reg *Registry) UpsertGroup(gType string, id string) (*Group, bool, error) {
 	return reg.UpsertGroupWithObject(gType, id, nil, false)
 }
@@ -447,10 +463,16 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 		id = NewUUID()
 	}
 
-	g, err := reg.FindGroup(gType, id)
+	g, err := reg.FindGroup(gType, id, true)
 	if err != nil {
 		return nil, false, fmt.Errorf("Error finding for Group(%s) %q: %s",
 			gType, id, err)
+	}
+
+	if g != nil && g.UID != id {
+		return nil, false, fmt.Errorf("Attempting to create a Group "+
+			"with an \"id\" of %q, when one already exists as %q",
+			id, g.UID)
 	}
 
 	// Not found, so create a new one

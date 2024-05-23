@@ -78,8 +78,8 @@ func (r *Resource) SetSave(name string, val any) error {
 }
 
 // Maybe replace error with a panic? same for other finds??
-func (r *Resource) FindVersion(id string) (*Version, error) {
-	log.VPrintf(3, ">Enter: FindVersion(%s)", id)
+func (r *Resource) FindVersion(id string, anyCase bool) (*Version, error) {
+	log.VPrintf(3, ">Enter: FindVersion(%s,%v)", id, anyCase)
 	defer log.VPrintf(3, "<Exit: FindVersion")
 
 	if v := r.tx.GetVersion(r, id); v != nil {
@@ -87,7 +87,8 @@ func (r *Resource) FindVersion(id string) (*Version, error) {
 	}
 
 	ent, err := RawEntityFromPath(r.tx, r.Group.Registry.DbSID,
-		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+id)
+		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+id,
+		anyCase)
 	if err != nil {
 		return nil, fmt.Errorf("Error finding Version %q: %s", id, err)
 	}
@@ -109,7 +110,7 @@ func (r *Resource) GetDefault() (*Version, error) {
 		// panic("No default is set")
 	}
 
-	return r.FindVersion(val.(string))
+	return r.FindVersion(val.(string), false)
 }
 
 // Only call this if you want things to be sticky (when not nil).
@@ -133,7 +134,7 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 		if err != nil {
 			return err
 		}
-		newDefault, err = r.FindVersion(vIDs[len(vIDs)-1])
+		newDefault, err = r.FindVersion(vIDs[len(vIDs)-1], false)
 		if err != nil {
 			return err
 		}
@@ -151,6 +152,7 @@ func (r *Resource) UpsertVersion(id string) (*Version, bool, error) {
 	return r.UpsertVersionWithObject(id, nil, false)
 }
 
+// *Version, isNew, error
 func (r *Resource) UpsertVersionWithObject(id string, obj Object, isPatch bool) (*Version, bool, error) {
 	log.VPrintf(3, ">Enter: UpsertVersion(%s,ispatch:%v)", id, isPatch)
 	defer log.VPrintf(3, "<Exit: UpsertVersion")
@@ -164,7 +166,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, isPatch bool) 
 		nextID := NotNilInt(&tmp)
 		for {
 			id = strconv.Itoa(nextID)
-			v, err = r.FindVersion(id)
+			v, err = r.FindVersion(id, false)
 			if err != nil {
 				return nil, false,
 					fmt.Errorf("Error checking for Version %q: %s", id, err)
@@ -179,7 +181,13 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, isPatch bool) 
 			}
 		}
 	} else {
-		v, err = r.FindVersion(id)
+		v, err = r.FindVersion(id, true)
+
+		if v != nil && v.UID != id {
+			return nil, false,
+				fmt.Errorf("Attempting to create a Version with "+
+					"an \"id\" of %q, when one already exists as %q", id, v.UID)
+		}
 
 		if err != nil {
 			return nil, false,
@@ -291,7 +299,7 @@ func (r *Resource) AddVersionWithObject(id string, obj Object) (*Version, error)
 		nextID := NotNilInt(&tmp)
 		for {
 			id = strconv.Itoa(nextID)
-			v, err = r.FindVersion(id)
+			v, err = r.FindVersion(id, false)
 			if err != nil {
 				return nil, fmt.Errorf("Error checking for Version %q: %s",
 					id, err)
@@ -306,10 +314,14 @@ func (r *Resource) AddVersionWithObject(id string, obj Object) (*Version, error)
 			}
 		}
 	} else {
-		v, err = r.FindVersion(id)
+		v, err = r.FindVersion(id, true)
 
 		if err != nil {
 			return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)
+		}
+		if v != nil && v.UID != id {
+			return nil, fmt.Errorf("Attempting to create a Version with "+
+				"an \"id\" of %q, when one already exists as %q", id, v.UID)
 		}
 		if v != nil {
 			return nil, fmt.Errorf("Version %q already exists", id)

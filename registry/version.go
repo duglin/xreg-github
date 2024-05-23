@@ -63,7 +63,7 @@ func (v *Version) Delete(nextVersionID string) error {
 	if (nextVersionID == "" && mustChange) || nextVersionID == "null" {
 		v.Resource.SetDefault(nil)
 	} else if nextVersionID != "" {
-		nextVersion, err = v.Resource.FindVersion(nextVersionID)
+		nextVersion, err = v.Resource.FindVersion(nextVersionID, false)
 		if err != nil {
 			return err
 		}

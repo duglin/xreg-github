@@ -2494,7 +2494,8 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
 		},
-		ResBody: "Metadata id(f2) doesn't match ID in URL(f1)\n",
+		ResBody: `The "id" attribute must be set to "f1", not "f2"
+`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -2942,7 +2943,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 	})
 }
 
-func testHTTPCases(t *testing.T) {
+func TestHTTPCases(t *testing.T) {
 	reg := NewRegistry("TestHTTPCases")
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "can't create reg")
@@ -2952,49 +2953,182 @@ func testHTTPCases(t *testing.T) {
 	d, _ := reg.AddGroup("dirs", "d1")
 	d.AddResource("files", "f1", "v1")
 
-	xHTTP(t, reg, "GET", "/Dirs", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/Dirs", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1", "", 404, "Unknown Group type: Dirs\n")
 	xHTTP(t, reg, "GET", "/dirs/D1", "", 404, "Not found\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/Files", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/D1/Files", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/d1/Files", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/d1/files", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/Files", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/files", "", 404, "Unknown Group type: Dirs\n")
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/F1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/d1/Files/F1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/D1/Files/F1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files/F1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/files/f1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/d1/Files/f1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/F1", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/F1", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/F1", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/files/f1", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/Files/f1", "", 404, "Unknown Group type: Dirs\n")
 	xHTTP(t, reg, "GET", "/dirs/D1/files/F1", "", 404, "Not found\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/Versions", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/versions", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/files/f1/Versions", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/d1/Files/f1/Versions", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions", "", 404, "Expected \"versions\", got: Versions\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/Versions", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/versions", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/files/f1/Versions", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/Files/f1/Versions", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions", "", 404, "Unknown Resource type: Files\n")
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/V1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions/V1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/Versions/V1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions/V1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions/V1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions/v1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/versions/V1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions/v1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/versions/v1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/versions/v1", "", 404, "Not found\n")
-	xHTTP(t, reg, "GET", "/Dirs/d1/files/f1/versions/v1", "", 404, "Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions/V1", "", 404, "Expected \"versions\", got: Versions\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/Versions/V1", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/Versions/V1", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions/V1", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/Versions/v1", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/Dirs/D1/Files/f1/versions/V1", "", 404, "Unknown Group type: Dirs\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/Versions/v1", "", 404, "Expected \"versions\", got: Versions\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/Files/f1/versions/v1", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/dirs/D1/Files/f1/versions/v1", "", 404, "Unknown Resource type: Files\n")
+	xHTTP(t, reg, "GET", "/Dirs/d1/files/f1/versions/v1", "", 404, "Unknown Group type: Dirs\n")
 
 	// Just to make sure we didn't have a typo above
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1", "", 200, "")
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1", "", 200, "")
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:         "/dirs/d1/files/f1/versions/v1",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"xRegistry-id: v1",
+			"xRegistry-epoch: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/v1",
+			"xRegistry-isdefault: true",
+			"xRegistry-createdat: 2024-01-01T12:00:01Z",
+			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+		},
+		ResBody: "",
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:         "/dirs/d1/files/f1",
+		Method:      "GET",
+		ReqHeaders:  []string{},
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"xRegistry-id: f1",
+			"xRegistry-epoch: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
+			"xRegistry-defaultversionid: v1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/v1",
+			"xRegistry-createdat: 2024-01-01T12:00:01Z",
+			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
+		},
+		ResBody: "",
+	})
+
+	// Test the ID in the body too (PUT and PATCH)
+
+	// Group
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{ "id": "d1" }`, 200, `{
+  "id": "d1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "filescount": 1,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/D1", `{ "id": "D1" }`, 400, `Attempting to create a Group with an "id" of "D1", when one already exists as "d1"
+`)
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{ "id": "D1" }`, 400, `The "id" attribute must be set to "d1", not "D1"
+`)
+	xHTTP(t, reg, "PATCH", "/dirs/d1", `{ "id": "D1" }`, 400, `The "id" attribute must be set to "d1", not "D1"
+`)
+
+	// Resource
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta", `{ "id": "f1" }`, 200, `{
+  "id": "f1",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/F1?meta", `{ "id": "F1" }`, 400, `Attempting to create a Resource with an "id" of "F1", when one already exists as "f1"
+`)
+	xHTTP(t, reg, "PUT", "/dirs/D1/files/f1?meta", `{ "id": "f1" }`, 400, `Attempting to create a Group with an "id" of "D1", when one already exists as "d1"
+`)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta", `{ "id": "F1" }`, 400, `The "id" attribute must be set to "f1", not "F1"
+`)
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/F1?meta", `{ "id": "F1" }`, 400, `Attempting to create a Resource with an "id" of "F1", when one already exists as "f1"
+`)
+	xHTTP(t, reg, "PATCH", "/dirs/D1/files/f1?meta", `{ "id": "f1" }`, 400, `Attempting to create a Group with an "id" of "D1", when one already exists as "d1"
+`)
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1?meta", `{ "id": "F1" }`, 400, `The "id" attribute must be set to "f1", not "F1"
+`)
+
+	// Version
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1?meta", `{ "id": "v1" }`, 200, `{
+  "id": "v1",
+  "epoch": 3,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/V1?meta", `{ "id": "V1" }`, 400, `Attempting to create a Version with an "id" of "V1", when one already exists as "v1"
+`)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/F1/versions/v1?meta", `{ "id": "V1" }`, 400, `Attempting to create a Resource with an "id" of "F1", when one already exists as "f1"
+`)
+	xHTTP(t, reg, "PUT", "/dirs/D1/files/f1/versions/v1?meta", `{ "id": "V1" }`, 400, `Attempting to create a Group with an "id" of "D1", when one already exists as "d1"
+`)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1?meta", `{ "id": "V1" }`, 400, `The "id" attribute must be set to "v1", not "V1"
+`)
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1/versions/v1?meta", `{ "id": "V1" }`, 400, `The "id" attribute must be set to "v1", not "V1"
+`)
+
+	// Test the ID in the body too (POST)
+
+	// Group
+	xHTTP(t, reg, "POST", "/dirs", `{"D1":{"id":"D1"}}`, 400, `Attempting to create a Group with an "id" of "D1", when one already exists as "d1"
+`)
+	xHTTP(t, reg, "POST", "/dirs", `{"d1":{"id":"D1"}}`, 400, `The "id" attribute must be set to "d1", not "D1"
+`)
+	xHTTP(t, reg, "POST", "/dirs", `{"D1":{"id":"d1"}}`, 400, `Attempting to create a Group with an "id" of "D1", when one already exists as "d1"
+`)
+
+	// Resource
+	xHTTP(t, reg, "POST", "/dirs/d1/files?meta", `{"F1":{"id":"F1"}}`, 400, `Attempting to create a Resource with an "id" of "F1", when one already exists as "f1"
+`)
+	xHTTP(t, reg, "POST", "/dirs/d1/files?meta", `{"f1":{"id":"F1"}}`, 400, `The "id" attribute must be set to "f1", not "F1"
+`)
+	xHTTP(t, reg, "POST", "/dirs/d1/files?meta", `{"F1":{"id":"f1"}}`, 400, `Attempting to create a Resource with an "id" of "F1", when one already exists as "f1"
+`)
+
+	// Version
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"V1":{"id":"V1"}}`, 400, `Attempting to create a Version with an "id" of "V1", when one already exists as "v1"
+`)
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"v1":{"id":"V1"}}`, 400, `The "id" attribute must be set to "v1", not "V1"
+`)
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"V1":{"id":"v1"}}`, 400, `Attempting to create a Version with an "id" of "V1", when one already exists as "v1"
+`)
+
 }
 
 func TestHTTPResourcesContentHeaders(t *testing.T) {
@@ -6807,7 +6941,7 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 }
 `)
 
-	d1, err := reg.FindGroup("dirs", "dir1")
+	d1, err := reg.FindGroup("dirs", "dir1", false)
 	xNoErr(t, err)
 	xCheck(t, d1 != nil, "d1 should not be nil")
 
@@ -8561,7 +8695,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type:text/plain; charset=utf-8",
 		},
-		ResBody: `Metadata id(f5) doesn't match ID in URL(f4)
+		ResBody: `The "id" attribute must be set to "f4", not "f5"
 `})
 
 	xCheckHTTP(t, reg, &HTTPTest{
