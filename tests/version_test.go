@@ -463,7 +463,7 @@ func TestVersionRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 
 	f1, err := group.AddResourceWithObject("files", "f1", "v1",
-		registry.Object{"clireq": "test"})
+		registry.Object{"clireq": "test"}, false, false)
 	xNoErr(t, err)
 	reg.Commit()
 

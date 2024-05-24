@@ -1244,21 +1244,34 @@ func (e *Entity) RemoveCollections(obj Object) {
 	}
 
 	for _, coll := range e.GetCollections() {
-		delete(obj, coll)
-		delete(obj, coll+"count")
-		delete(obj, coll+"url")
+		delete(obj, coll[0])
+		delete(obj, coll[0]+"count")
+		delete(obj, coll[0]+"url")
 	}
 }
 
-func (e *Entity) GetCollections() []string {
+// Array of plural/singular pairs
+func (e *Entity) GetCollections() [][2]string {
+	result := [][2]string{}
 	switch e.Level {
 	case 0:
-		return SortedKeys(e.Registry.Model.Groups)
+		gs := e.Registry.Model.Groups
+		keys := SortedKeys(gs)
+		for _, k := range keys {
+			result = append(result, [2]string{gs[k].Plural, gs[k].Singular})
+		}
+		return result
 	case 1:
 		gm, _ := e.GetModels()
-		return SortedKeys(gm.Resources)
+		rs := gm.Resources
+		keys := SortedKeys(rs)
+		for _, k := range keys {
+			result = append(result, [2]string{rs[k].Plural, rs[k].Singular})
+		}
+		return result
 	case 2:
-		return []string{"versions"}
+		result = append(result, [2]string{"versions", "version"})
+		return result
 	case 3:
 		return nil
 	}
@@ -1437,7 +1450,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 	}
 
 	// For top-level entities, get the list of possible collections
-	collections := []string{}
+	collections := [][2]string{}
 	if path.Len() == 0 {
 		collections = e.GetCollections()
 	}
@@ -1449,7 +1462,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 		// Skip collection related attributes
 		isColl := false
 		for _, coll := range collections {
-			if k == coll || k == coll+"count" || k == coll+"url" {
+			if k == coll[0] || k == coll[0]+"count" || k == coll[0]+"url" {
 				isColl = true
 				break
 			}

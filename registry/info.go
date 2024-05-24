@@ -25,7 +25,8 @@ type RequestInfo struct {
 	ResourceUID      string
 	ResourceModel    *ResourceModel
 	VersionUID       string
-	What             string          // Registry, Coll, Entity
+	What             string // Registry, Coll, Entity
+	HasInline        bool
 	Inlines          []string        // TODO store a PropPaths instead
 	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
 	ShowModel        bool
@@ -146,38 +147,42 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 	}
 
 	if r.URL.Query().Has("inline") {
-		stopInline := false
-		for _, value := range r.URL.Query()["inline"] {
-			for _, p := range strings.Split(value, ",") {
-				if p == "" || p == "*" {
-					info.Inlines = []string{"*"}
-					stopInline = true
-					break
-				} else {
-					// if we're not at the root then we need to twiddle
-					// the inline path to add the HTTP Path as a prefix
-					if info.Abstract != "" {
-						// want: p = info.Abstract + "." + p  in UI format
-						absPP, err := PropPathFromPath(info.Abstract)
-						if err != nil {
+		info.HasInline = true
+		// Only pick up inlining values if we're doing a GET, not write ops
+		if strings.EqualFold(r.Method, "GET") {
+			stopInline := false
+			for _, value := range r.URL.Query()["inline"] {
+				for _, p := range strings.Split(value, ",") {
+					if p == "" || p == "*" {
+						info.Inlines = []string{"*"}
+						stopInline = true
+						break
+					} else {
+						// if we're not at the root then we need to twiddle
+						// the inline path to add the HTTP Path as a prefix
+						if info.Abstract != "" {
+							// want: p = info.Abstract + "." + p  in UI format
+							absPP, err := PropPathFromPath(info.Abstract)
+							if err != nil {
+								info.StatusCode = http.StatusBadRequest
+								return info, err
+							}
+							pPP, err := PropPathFromUI(p)
+							if err != nil {
+								info.StatusCode = http.StatusBadRequest
+								return info, err
+							}
+							p = absPP.Append(pPP).UI()
+						}
+						if err := info.AddInline(p); err != nil {
 							info.StatusCode = http.StatusBadRequest
 							return info, err
 						}
-						pPP, err := PropPathFromUI(p)
-						if err != nil {
-							info.StatusCode = http.StatusBadRequest
-							return info, err
-						}
-						p = absPP.Append(pPP).UI()
-					}
-					if err := info.AddInline(p); err != nil {
-						info.StatusCode = http.StatusBadRequest
-						return info, err
 					}
 				}
-			}
-			if stopInline {
-				break
+				if stopInline {
+					break
+				}
 			}
 		}
 	}

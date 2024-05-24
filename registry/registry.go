@@ -339,10 +339,40 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 	return nil
 }
 
-func (reg *Registry) Update(obj Object, isPatch bool) error {
+func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error {
 	reg.NewObject = obj
 
-	if isPatch {
+	if doChildren {
+		colls := reg.GetCollections()
+		for _, coll := range colls {
+			plural := coll[0]
+			singular := coll[1]
+
+			collVal := obj[plural]
+			if IsNil(collVal) {
+				continue
+			}
+			collMap, ok := collVal.(map[string]any)
+			if !ok {
+				return fmt.Errorf("Attribute %q doesn't appear to be of a "+
+					"map of %q", plural, plural)
+			}
+			for key, val := range collMap {
+				valObj, ok := val.(map[string]any)
+				if !ok {
+					return fmt.Errorf("Key %q in attribute %q doesn't "+
+						"appear to be of type %q", key, plural, singular)
+				}
+				_, _, err := reg.UpsertGroupWithObject(plural, key, valObj,
+					addType, doChildren)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	if addType == ADD_PATCH {
 		// Copy existing props over if the incoming obj doesn't set them
 		for k, val := range reg.Object {
 			if _, ok := reg.NewObject[k]; !ok {
@@ -371,92 +401,27 @@ func (reg *Registry) FindGroup(gType string, id string, anyCase bool) (*Group, e
 }
 
 func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
-	return reg.AddGroupWithObject(gType, id, nil)
+	g, _, err := reg.UpsertGroupWithObject(gType, id, nil, ADD_ADD, false)
+	return g, err
 }
 
-func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object) (*Group, error) {
-	log.VPrintf(3, ">Enter AddGroupWithObject(%s,%s)", gType, id)
-	defer log.VPrintf(3, "<Exit AddGroupWithObject")
-
-	if reg.Model.Groups[gType] == nil {
-		return nil, fmt.Errorf("Error adding Group, unknown type: %s", gType)
-	}
-
-	if id == "" {
-		id = NewUUID()
-	}
-
-	g, err := reg.FindGroup(gType, id, true)
-	if err != nil {
-		return nil, fmt.Errorf("Error checking for Group(%s) %q: %s",
-			gType, id, err)
-	}
-	if g != nil && g.UID != id {
-		return nil, fmt.Errorf("Attempting to create a Group "+
-			"with an \"id\" of %q, when one already exists as %q",
-			id, g.UID)
-	}
-	if g != nil {
-		return nil, fmt.Errorf("Group %q of type %q already exists", id, gType)
-	}
-
-	g = &Group{
-		Entity: Entity{
-			tx: reg.tx,
-
-			Registry: reg,
-			DbSID:    NewUUID(),
-			Plural:   gType,
-			UID:      id,
-
-			Level:    1,
-			Path:     gType + "/" + id,
-			Abstract: gType,
-		},
-		Registry: reg,
-	}
-
-	err = DoOne(reg.tx, `
-			INSERT INTO "Groups"(SID,RegistrySID,UID,ModelSID,Path,Abstract)
-			SELECT ?,?,?,SID,?,?
-			FROM ModelEntities
-			WHERE RegistrySID=? AND Plural=? AND ParentSID IS NULL`,
-		g.DbSID, g.Registry.DbSID, g.UID, g.Path, g.Abstract,
-		g.Registry.DbSID, g.Plural)
-
-	if err != nil {
-		err = fmt.Errorf("Error adding Group: %s", err)
-		log.Print(err)
-		return nil, err
-	}
-
-	if err = g.JustSet("id", g.UID); err != nil {
-		return nil, err
-	}
-
-	if obj != nil {
-		g.NewObject = obj
-	}
-
-	if err = g.SetSave("epoch", 1); err != nil {
-		return nil, err
-	}
-
-	log.VPrintf(3, "Created new one - DbSID: %s", g.DbSID)
-	return g, nil
+func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object, doChildren bool) (*Group, error) {
+	g, _, err := reg.UpsertGroupWithObject(gType, id, obj, ADD_ADD, doChildren)
+	return g, err
 }
 
 // *Group, isNew, error
 func (reg *Registry) UpsertGroup(gType string, id string) (*Group, bool, error) {
-	return reg.UpsertGroupWithObject(gType, id, nil, false)
+	return reg.UpsertGroupWithObject(gType, id, nil, ADD_UPSERT, false)
 }
 
-func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, isPatch bool) (*Group, bool, error) {
+func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, addType AddType, doChildren bool) (*Group, bool, error) {
 	log.VPrintf(3, ">Enter UpsertGroupWithObject(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit UpsertGroupWithObject")
 
 	if reg.Model.Groups[gType] == nil {
-		return nil, false, fmt.Errorf("Error adding Group, unknown type: %s", gType)
+		return nil, false, fmt.Errorf("Error adding Group, unknown type: %s",
+			gType)
 	}
 
 	if id == "" {
@@ -465,7 +430,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 
 	g, err := reg.FindGroup(gType, id, true)
 	if err != nil {
-		return nil, false, fmt.Errorf("Error finding for Group(%s) %q: %s",
+		return nil, false, fmt.Errorf("Error finding Group(%s) %q: %s",
 			gType, id, err)
 	}
 
@@ -474,10 +439,14 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 			"with an \"id\" of %q, when one already exists as %q",
 			id, g.UID)
 	}
+	if addType == ADD_ADD && g != nil {
+		return nil, false, fmt.Errorf("Group %q of type %q already exists",
+			id, gType)
+	}
 
-	// Not found, so create a new one
 	isNew := (g == nil)
 	if g == nil {
+		// Not found, so create a new one
 		g = &Group{
 			Entity: Entity{
 				tx: reg.tx,
@@ -520,7 +489,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 			g.NewObject = obj
 		}
 
-		if isPatch {
+		if addType == ADD_PATCH {
 			// Copy existing props over if the incoming obj doesn't set them
 			for k, v := range g.Object {
 				if _, ok := g.NewObject[k]; !ok {
@@ -531,6 +500,38 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 
 		if err = g.ValidateAndSave(); err != nil {
 			return nil, false, err
+		}
+	}
+
+	if doChildren {
+		colls := g.GetCollections()
+		for _, coll := range colls {
+			plural := coll[0]
+			singular := coll[1]
+
+			collVal := obj[plural]
+			if IsNil(collVal) {
+				continue
+			}
+			collMap, ok := collVal.(map[string]any)
+			if !ok {
+				return nil, false,
+					fmt.Errorf("Attribute %q doesn't appear to be of a "+
+						"map of %q", plural, plural)
+			}
+			for key, val := range collMap {
+				valObj, ok := val.(map[string]any)
+				if !ok {
+					return nil, false,
+						fmt.Errorf("Key %q in attribute %q doesn't "+
+							"appear to be of type %q", key, plural, singular)
+				}
+				_, _, err := g.UpsertResourceWithObject(plural, key, "",
+					valObj, addType, doChildren, false)
+				if err != nil {
+					return nil, false, err
+				}
+			}
 		}
 	}
 

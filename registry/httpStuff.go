@@ -161,6 +161,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		// These should only return an error if they didn't already
 		// send a response back to the client.
+		ShowStack()
 		switch strings.ToUpper(r.Method) {
 		case "GET":
 			err = HTTPGet(info)
@@ -1044,7 +1045,11 @@ func HTTPPutPost(info *RequestInfo) error {
 	if len(info.Parts) == 0 {
 		// PUT /
 
-		err = info.Registry.Update(IncomingObj, method == "PATCH")
+		addType := ADD_UPDATE
+		if method == "PATCH" {
+			addType = ADD_PATCH
+		}
+		err = info.Registry.Update(IncomingObj, addType, info.HasInline)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1068,9 +1073,14 @@ func HTTPPutPost(info *RequestInfo) error {
 			return err
 		}
 
+		addType := ADD_UPSERT
+		if method == "PATCH" {
+			addType = ADD_PATCH
+		}
+
 		for id, obj := range objMap {
 			g, _, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-				id, obj, method == "PATCH")
+				id, obj, addType, info.HasInline)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1088,8 +1098,13 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	if len(info.Parts) == 2 {
 		// PUT /GROUPs/gID
+		addType := ADD_UPSERT
+		if method == "PATCH" {
+			addType = ADD_PATCH
+		}
+
 		group, isNew, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-			info.GroupUID, IncomingObj, method == "PATCH")
+			info.GroupUID, IncomingObj, addType, info.HasInline)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1141,9 +1156,14 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// For each Resource in the map, upsert it and add it's path to result
+		addType := ADD_UPSERT
+		if method == "PATCH" {
+			addType = ADD_PATCH
+		}
+
 		for id, obj := range objMap {
 			r, _, err := group.UpsertResourceWithObject(info.ResourceType,
-				id, "", obj, method == "PATCH")
+				id, "", obj, addType, info.HasInline, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1174,8 +1194,12 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		// Upsert the Resource and (if needed) it's first/default Version.
 		// vID should be ""
+		addType := ADD_UPSERT
+		if method == "PATCH" {
+			addType = ADD_PATCH
+		}
 		resource, isNew, err = group.UpsertResourceWithObject(info.ResourceType,
-			resourceUID, versionUID, IncomingObj, method == "PATCH")
+			resourceUID, versionUID, IncomingObj, addType, info.HasInline, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1219,14 +1243,22 @@ func HTTPPutPost(info *RequestInfo) error {
 			IncomingObj["id"] = version.UID
 
 			// Create a new Resource and it's first/only/default Version
+			addType := ADD_UPSERT
+			if method == "PATCH" || !metaInBody {
+				addType = ADD_PATCH
+			}
 			version, _, err = resource.UpsertVersionWithObject(version.UID,
-				IncomingObj, (!metaInBody) || (method == "PATCH"))
+				IncomingObj, addType)
 		} else {
 			// Upsert resource's default version
 			delete(IncomingObj, "id") // ID is the Resource's delete it
+			addType := ADD_UPSERT
+			if method == "PATCH" {
+				addType = ADD_PATCH
+			}
 			resource, isNew, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
-				method == "PATCH")
+				addType, info.HasInline, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1287,7 +1319,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, vID, IncomingObj)
+				resourceUID, vID, IncomingObj, info.HasInline, true)
 
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
@@ -1306,8 +1338,11 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		// Process the remaining versions
 		for id, obj := range objMap {
-			v, _, err := resource.UpsertVersionWithObject(id, obj,
-				method == "PATCH")
+			addType := ADD_UPSERT
+			if method == "PATCH" {
+				addType = ADD_PATCH
+			}
+			v, _, err := resource.UpsertVersionWithObject(id, obj, addType)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1334,7 +1369,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			// Implicitly create the resource, and first version
 			versionUID = propsID
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, versionUID, IncomingObj)
+				resourceUID, versionUID, IncomingObj, info.HasInline, true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1345,8 +1380,12 @@ func HTTPPutPost(info *RequestInfo) error {
 		} else {
 			// Resource already there, so update or create the Version
 			versionUID = propsID
+			addType := ADD_UPSERT
+			if method == "PATCH" {
+				addType = ADD_PATCH
+			}
 			version, isNew, err = resource.UpsertVersionWithObject(versionUID,
-				IncomingObj, method == "PATCH")
+				IncomingObj, addType)
 		}
 
 		err = ProcessSetDefaultVersionIDFlag(info, resource, version)
@@ -1366,7 +1405,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if resource == nil {
 			// Implicitly create the resource
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, versionUID, IncomingObj)
+				resourceUID, versionUID, IncomingObj, info.HasInline, true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1400,8 +1439,12 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			IncomingObj["id"] = version.UID
+			addType := ADD_UPSERT
+			if method == "PATCH" || !metaInBody {
+				addType = ADD_PATCH
+			}
 			version, _, err = resource.UpsertVersionWithObject(version.UID,
-				IncomingObj, !metaInBody || method == "PATCH")
+				IncomingObj, addType)
 		}
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest

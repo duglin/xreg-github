@@ -33,3 +33,13 @@ const URL = "url"
 
 const IN_CHAR = '.'
 const IN_STR = string(IN_CHAR)
+
+// Entity "add" options
+type AddType int
+
+const (
+	ADD_ADD AddType = iota + 1
+	ADD_UPDATE
+	ADD_UPSERT
+	ADD_PATCH // includes UPSERT
+)

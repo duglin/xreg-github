@@ -149,12 +149,12 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 }
 
 func (r *Resource) UpsertVersion(id string) (*Version, bool, error) {
-	return r.UpsertVersionWithObject(id, nil, false)
+	return r.UpsertVersionWithObject(id, nil, ADD_UPSERT)
 }
 
 // *Version, isNew, error
-func (r *Resource) UpsertVersionWithObject(id string, obj Object, isPatch bool) (*Version, bool, error) {
-	log.VPrintf(3, ">Enter: UpsertVersion(%s,ispatch:%v)", id, isPatch)
+func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddType) (*Version, bool, error) {
+	log.VPrintf(3, ">Enter: UpsertVersion(%s,%v)", id, addType)
 	defer log.VPrintf(3, "<Exit: UpsertVersion")
 
 	var v *Version
@@ -241,7 +241,8 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, isPatch bool) 
 		//   if we're not doing PATCH (PUT/POST are compelte overrides)
 		if eval, ok := obj["#-contenttype"]; ok && !IsNil(eval) {
 			if _, ok = obj["contenttype"]; !ok {
-				if val := v.Get("contenttype"); IsNil(val) || !isPatch {
+				val := v.Get("contenttype")
+				if IsNil(val) || addType != ADD_PATCH {
 					obj["contenttype"] = eval
 				}
 			}
@@ -249,7 +250,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, isPatch bool) 
 
 		v.NewObject = obj
 
-		if isPatch {
+		if addType == ADD_PATCH {
 			// Copy existing props over if the incoming obj doesn't set them
 			for k, val := range v.Object {
 				if _, ok := v.NewObject[k]; !ok {

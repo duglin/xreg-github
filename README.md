@@ -90,3 +90,6 @@ TODOs:
 - support the DB vanishing for a while
 - support $meta
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
+- test to make sure PATCH+INLINE of a Resource+versions uses the version in the
+  versions collection instead of the Resource. Prop in Res, but not in Ver,
+  is ignored
