@@ -805,7 +805,7 @@ var OrderedSpecProps = []*Attribute{
 					base = info.BaseURL
 				}
 				if e.Level > 1 {
-					meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
+					meta := info != nil && (info.ShowMeta || info.ResourceUID == "" || len(info.Parts) == 5)
 					_, rm := e.GetModels()
 					if rm.GetHasDocument() == false {
 						meta = false

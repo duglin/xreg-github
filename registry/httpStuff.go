@@ -1294,8 +1294,14 @@ func HTTPPutPost(info *RequestInfo) error {
 		// Default to just returning the version
 	}
 
-	if metaInBody && method == "POST" && len(info.Parts) == 5 {
-		// POST GROUPs/gID/RESOURCEs/rID/versions?meta, body=map[id]->Version
+	if info.ShowMeta && method == "POST" && len(info.Parts) == 5 {
+		// POST GROUPs/gID/RESOURCEs/rID/versions?meta - error
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("Use of \"?meta\" on the \"versions\" collection is not allowed")
+	}
+
+	if method == "POST" && len(info.Parts) == 5 {
+		// POST GROUPs/gID/RESOURCEs/rID/versions, body=map[id]->Version
 
 		// Convert IncomingObj to a map of Objects
 		objMap, err := IncomingObj2Map(IncomingObj)
@@ -1380,43 +1386,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			paths = []string{"!"} // Force an empty collection to be returned
 		}
 		return SerializeQuery(info, paths, "Coll", nil)
-	}
-
-	if !metaInBody && method == "POST" && len(info.Parts) == 5 {
-		// POST GROUPs/gID/RESOURCEs/rID[/versions] body=doc
-
-		if resource == nil {
-			// Implicitly create the resource, and first version
-			versionUID = propsID
-			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, versionUID, IncomingObj, info.HasInline, true)
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return err
-			}
-
-			isNew = true
-			version, err = resource.GetDefault()
-		} else {
-			// Resource already there, so update or create the Version
-			versionUID = propsID
-			addType := ADD_UPSERT
-			if method == "PATCH" {
-				addType = ADD_PATCH
-			}
-			version, isNew, err = resource.UpsertVersionWithObject(versionUID,
-				IncomingObj, addType)
-		}
-
-		err = ProcessSetDefaultVersionIDFlag(info, resource, version)
-		if err != nil {
-			return err
-		}
-
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
-		}
 	}
 
 	if len(info.Parts) == 6 {
@@ -2033,7 +2002,11 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 		resSingular = info.ResourceModel.Singular
 	}
 
+	// len=5 is a special case where we know .../versions always has the
+	// metadata in the body so ?meta isn't needed, and in fact an error
+
 	metaInBody := (info.ShowMeta ||
+		len(info.Parts) == 5 ||
 		(info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false))
 
 	if len(info.Parts) < 3 || metaInBody {

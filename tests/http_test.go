@@ -3122,11 +3122,15 @@ func TestHTTPCases(t *testing.T) {
 `)
 
 	// Version
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"V1":{"id":"V1"}}`, 400, `Attempting to create a Version with an "id" of "V1", when one already exists as "v1"
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"vv":{"id":"vv}}`, 400, `Error parsing json: unexpected EOF
+`) // just a typo first
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"vv":{"id":"vv"}}`, 400, `Use of "?meta" on the "versions" collection is not allowed
 `)
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"v1":{"id":"V1"}}`, 400, `The "id" attribute must be set to "v1", not "V1"
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"V1":{"id":"V1"}}`, 400, `Attempting to create a Version with an "id" of "V1", when one already exists as "v1"
 `)
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?meta", `{"V1":{"id":"v1"}}`, 400, `Attempting to create a Version with an "id" of "V1", when one already exists as "v1"
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"v1":{"id":"V1"}}`, 400, `The "id" attribute must be set to "v1", not "V1"
+`)
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"V1":{"id":"v1"}}`, 400, `Attempting to create a Version with an "id" of "V1", when one already exists as "v1"
 `)
 
 }
@@ -3440,8 +3444,8 @@ func TestHTTPVersions(t *testing.T) {
 
 	// add new version via POST to "versions" collection
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST file f1-proxy - create v2?meta",
-		URL:        "/dirs/d1/files/f1-proxy/versions?meta",
+		Name:       "POST file f1-proxy - create v2",
+		URL:        "/dirs/d1/files/f1-proxy/versions",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -3466,27 +3470,40 @@ func TestHTTPVersions(t *testing.T) {
 `,
 	})
 
-	// add new version via POST to "versions" collection
+	// Error on non-metadata body
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:        "POST file f1-proxy - create 2 - no meta",
 		URL:         "/dirs/d1/files/f1-proxy/versions",
 		Method:      "POST",
 		ReqHeaders:  []string{},
 		ReqBody:     `this is v3`,
-		Code:        201,
+		Code:        400,
 		HeaderMasks: []string{},
-		ResHeaders: []string{
-			"xRegistry-id:2",
-			"xRegistry-epoch:1",
-			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
-			"xRegistry-isdefault:true",
-			"xRegistry-createdat: 2024-01-01T12:00:01Z",
-			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"Location:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
-			"Content-Location:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
-			"Content-Length:10",
-		},
-		ResBody: `this is v3`,
+		ResHeaders:  []string{},
+		ResBody: `Syntax error at line 1: invalid character 'h' in literal true (expecting 'r')
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:        "POST file f1-proxy - create 2 - empty",
+		URL:         "/dirs/d1/files/f1-proxy/versions",
+		Method:      "POST",
+		ReqHeaders:  []string{},
+		ReqBody:     `{"2":{}}`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders:  []string{},
+		ResBody: `{
+  "2": {
+    "id": "2",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2?meta",
+    "isdefault": true,
+    "createdat": "2024-01-01T12:00:00Z",
+    "modifiedat": "2024-01-01T12:00:00Z"
+  }
+}
+`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -8921,8 +8938,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f99/versions?meta - new res,version - empty",
-		URL:        "/dirs/dir1/files/f99/versions?meta",
+		Name:       "POST resources/f99/versions - new res,version - empty",
+		URL:        "/dirs/dir1/files/f99/versions",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
@@ -8935,22 +8952,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f99/versions?meta - new res,version - empty",
-		URL:        "/dirs/dir1/files/f99/versions?meta",
-		Method:     "POST",
-		ReqHeaders: []string{},
-		ReqBody:    `{}`,
-		Code:       400,
-		ResHeaders: []string{
-			"Content-Type:text/plain; charset=utf-8",
-		},
-		ResBody: `Set of Versions to add can't be empty
-`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f9/versions?meta - new res,version-1v",
-		URL:        "/dirs/dir1/files/f9/versions?meta",
+		Name:       "POST resources/f9/versions - new res,version-v1",
+		URL:        "/dirs/dir1/files/f9/versions",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -8974,8 +8977,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f10/versions?meta - new res,version-2v,err",
-		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=null",
+		Name:       "POST resources/f10/versions - new res,version-2v,err",
+		URL:        "/dirs/dir1/files/f10/versions?setdefaultversionid=null",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -8991,8 +8994,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f10/versions?meta - new res,version-2v,err",
-		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=this",
+		Name:       "POST resources/f10/versions - new res,version-2v,err",
+		URL:        "/dirs/dir1/files/f10/versions?setdefaultversionid=this",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9008,8 +9011,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f10a/versions?meta - new res,version-2v,err",
-		URL:        "/dirs/dir1/files/f10a/versions?meta&setdefaultversionid=this",
+		Name:       "POST resources/f10a/versions - new res,version-2v,err",
+		URL:        "/dirs/dir1/files/f10a/versions?setdefaultversionid=this",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9031,8 +9034,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f10/versions?meta - new res,version-2v",
-		URL:        "/dirs/dir1/files/f10/versions?meta",
+		Name:       "POST resources/f10/versions - new res,version-2v",
+		URL:        "/dirs/dir1/files/f10/versions",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9048,8 +9051,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f10/versions?meta - new res,version-1v",
-		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=v2",
+		Name:       "POST resources/f10/versions - new res,version-1v",
+		URL:        "/dirs/dir1/files/f10/versions?setdefaultversionid=v2",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9064,8 +9067,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f10/versions?meta - new res,version-1v",
-		URL:        "/dirs/dir1/files/f10/versions?meta&setdefaultversionid=v1",
+		Name:       "POST resources/f10/versions - new res,version-1v",
+		URL:        "/dirs/dir1/files/f10/versions?setdefaultversionid=v1",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9089,8 +9092,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f11/versions?meta - new res,version-2v",
-		URL:        "/dirs/dir1/files/f11/versions?meta&setdefaultversionid=v1",
+		Name:       "POST resources/f11/versions - new res,version-2v",
+		URL:        "/dirs/dir1/files/f11/versions?setdefaultversionid=v1",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9122,8 +9125,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f12/versions?meta - new res,version-2v",
-		URL:        "/dirs/dir1/files/f12/versions?meta&setdefaultversionid=v2",
+		Name:       "POST resources/f12/versions - new res,version-2v",
+		URL:        "/dirs/dir1/files/f12/versions?setdefaultversionid=v2",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9155,8 +9158,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f12/versions?meta - update,add v",
-		URL:        "/dirs/dir1/files/f12/versions?meta&setdefaultversionid=v1",
+		Name:       "POST resources/f12/versions - update,add v",
+		URL:        "/dirs/dir1/files/f12/versions?setdefaultversionid=v1",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -9198,67 +9201,45 @@ func TestHTTPResourcesBulk(t *testing.T) {
 `,
 	})
 
+	// Make sure you can point to an existing version
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f13/versions - new+doc",
-		URL:        "/dirs/dir1/files/f13/versions",
+		Name:       "POST resources/f12/versions - default=existing",
+		URL:        "/dirs/dir1/files/f12/versions?setdefaultversionid=v2",
 		Method:     "POST",
 		ReqHeaders: []string{},
-		ReqBody:    `hello`,
-		Code:       201,
+		ReqBody: `{
+          "v4": { "description": "my v4"}
+        }`,
+		Code: 200,
 		ResHeaders: []string{
-			"xRegistry-id:1",
-			"xRegistry-epoch:1",
-			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/1",
-			"xRegistry-isdefault:true",
-			"xRegistry-createdat: 2024-01-01T12:00:01Z",
-			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"Content-Length:5",
-			"Location:http://localhost:8181/dirs/dir1/files/f13/versions/1",
-			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/1",
+			"Content-Type:application/json",
 		},
-		ResBody: `hello`,
+		ResBody: `{
+  "v4": {
+    "id": "v4",
+    "epoch": 1,
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v4?meta",
+    "description": "my v4",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z"
+  }
+}
+`,
 	})
 
+	// Make sure we error if versionid isn't there
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f13/versions - new v+doc",
-		URL:        "/dirs/dir1/files/f13/versions",
+		Name:       "POST resources/f12/versions - default=bad",
+		URL:        "/dirs/dir1/files/f12/versions?setdefaultversionid=vx",
 		Method:     "POST",
 		ReqHeaders: []string{},
-		ReqBody:    `hello2`,
-		Code:       201,
-		ResHeaders: []string{
-			"xRegistry-id:2",
-			"xRegistry-epoch:1",
-			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/2",
-			"xRegistry-isdefault:true",
-			"xRegistry-createdat: 2024-01-01T12:00:01Z",
-			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"Content-Length:6",
-			"Location:http://localhost:8181/dirs/dir1/files/f13/versions/2",
-			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/2",
-		},
-		ResBody: `hello2`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST resources/f13/versions - update+doc",
-		URL:    "/dirs/dir1/files/f13/versions",
-		Method: "POST",
-		ReqHeaders: []string{
-			"xRegistry-id: 1",
-		},
-		ReqBody: `bye`,
-		Code:    200,
-		ResHeaders: []string{
-			"xRegistry-id:1",
-			"xRegistry-epoch:2",
-			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/1",
-			"xRegistry-createdat: 2024-01-01T12:00:01Z",
-			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
-			"Content-Length:3",
-			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/1",
-		},
-		ResBody: `bye`,
+		ReqBody: `{
+          "v4": { "description": "my v4"}
+        }`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Version "vx" not found
+`,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -9383,83 +9364,6 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:       400,
 		ResHeaders: []string{},
 		ResBody: `The "id" attribute must be set to "7", not "77"
-`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f14/versions - new+doc+setdef=null",
-		URL:        "/dirs/dir1/files/f14/versions?setdefaultversionid=null",
-		Method:     "POST",
-		ReqHeaders: []string{},
-		ReqBody:    `hello`,
-		Code:       201,
-		ResHeaders: []string{
-			"xRegistry-id:1",
-			"xRegistry-epoch:1",
-			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f14/versions/1",
-			"xRegistry-isdefault:true",
-			"xRegistry-createdat: 2024-01-01T12:00:01Z",
-			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"Content-Length:5",
-			"Location:http://localhost:8181/dirs/dir1/files/f14/versions/1",
-			"Content-Location:http://localhost:8181/dirs/dir1/files/f14/versions/1",
-		},
-		ResBody: `hello`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f141/versions - new+doc+setdef=this",
-		URL:        "/dirs/dir1/files/f141/versions?setdefaultversionid=this",
-		Method:     "POST",
-		ReqHeaders: []string{},
-		ReqBody:    `hello`,
-		Code:       201,
-		ResHeaders: []string{
-			"xRegistry-id:1",
-			"xRegistry-epoch:1",
-			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f141/versions/1",
-			"xRegistry-isdefault:true",
-			"xRegistry-createdat: 2024-01-01T12:00:01Z",
-			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"Content-Length:5",
-			"Location:http://localhost:8181/dirs/dir1/files/f141/versions/1",
-			"Content-Location:http://localhost:8181/dirs/dir1/files/f141/versions/1",
-		},
-		ResBody: `hello`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f142/versions - new+doc+setdef=1",
-		URL:        "/dirs/dir1/files/f142/versions?setdefaultversionid=1",
-		Method:     "POST",
-		ReqHeaders: []string{},
-		ReqBody:    `hello`,
-		Code:       201,
-		ResHeaders: []string{
-			"xRegistry-id:1",
-			"xRegistry-epoch:1",
-			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f142/versions/1",
-			"xRegistry-isdefault:true",
-			"xRegistry-createdat: 2024-01-01T12:00:01Z",
-			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"Content-Length:5",
-			"Location:http://localhost:8181/dirs/dir1/files/f142/versions/1",
-			"Content-Location:http://localhost:8181/dirs/dir1/files/f142/versions/1",
-		},
-		ResBody: `hello`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f143/versions - new+doc+setdef=bad",
-		URL:        "/dirs/dir1/files/f143/versions?setdefaultversionid=2",
-		Method:     "POST",
-		ReqHeaders: []string{},
-		ReqBody:    `hello`,
-		Code:       400,
-		ResHeaders: []string{
-			"Content-Type: text/plain; charset=utf-8",
-		},
-		ResBody: `Version "2" not found
 `,
 	})
 

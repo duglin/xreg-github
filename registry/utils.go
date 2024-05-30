@@ -296,6 +296,10 @@ func Unmarshal(buf []byte, v any) error {
 		} else if jerr, ok := err.(*json.SyntaxError); ok {
 			msg = fmt.Sprintf("Syntax error at line %d: %s",
 				LineNum(buf, int(jerr.Offset)), msg)
+		} else {
+			if msg == "unexpected EOF" {
+				msg = "Error parsing json: " + msg
+			}
 		}
 		msg, _ = strings.CutPrefix(msg, "json: ")
 		return errors.New(msg)
