@@ -199,6 +199,16 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 	for name, value := range res.Header {
 		name = strings.ToLower(name)
 		// t.Logf("Header: %s", name)
+
+		// Special!  TODO make this less special
+		if strings.ToLower(name) == "content-type" {
+			// Only check if metaProps has it
+			if metaProps["contenttype"] == nil {
+				continue
+			}
+			name = "xregistry-contenttype"
+		}
+
 		if !strings.HasPrefix(name, "xregistry-") {
 			continue
 		}
@@ -208,6 +218,8 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 			headerLabels[name[7:]] = value[0]
 			continue
 		}
+
+		// t.Logf("metaProps:\n%s\n", ToJSON(metaProps))
 
 		foundIt := false
 		for propName, propValue := range metaProps {

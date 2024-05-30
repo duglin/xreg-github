@@ -161,7 +161,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		// These should only return an error if they didn't already
 		// send a response back to the client.
-		ShowStack()
 		switch strings.ToUpper(r.Method) {
 		case "GET":
 			err = HTTPGet(info)
@@ -1272,11 +1271,33 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 	}
 
-	if metaInBody && method == "POST" &&
-		(len(info.Parts) == 4 || len(info.Parts) == 5) {
-		// POST GROUPs/gID/RESOURCEs/rID[/versions]?meta, body=map[id]->doc
+	if method == "POST" && len(info.Parts) == 4 {
+		// POST GROUPs/gID/RESOURCEs/rID[?meta], body=obj or doc
+		if resource == nil {
+			// Implicitly create the resource
+			resource, isNew, err = group.UpsertResourceWithObject(
+				info.ResourceType, resourceUID, propsID, IncomingObj,
+				ADD_ADD, info.HasInline, true)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+			version, err = resource.GetDefault()
+		} else {
+			version, isNew, err = resource.UpsertVersionWithObject(propsID,
+				IncomingObj, ADD_UPSERT)
+		}
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
+		}
+		// Default to just returning the version
+	}
 
-		// Convert IncomingObj to an map of Objects
+	if metaInBody && method == "POST" && len(info.Parts) == 5 {
+		// POST GROUPs/gID/RESOURCEs/rID/versions?meta, body=map[id]->Version
+
+		// Convert IncomingObj to a map of Objects
 		objMap, err := IncomingObj2Map(IncomingObj)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
@@ -1361,8 +1382,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		return SerializeQuery(info, paths, "Coll", nil)
 	}
 
-	if !metaInBody && method == "POST" &&
-		(len(info.Parts) == 4 || len(info.Parts) == 5) {
+	if !metaInBody && method == "POST" && len(info.Parts) == 5 {
 		// POST GROUPs/gID/RESOURCEs/rID[/versions] body=doc
 
 		if resource == nil {
@@ -2076,7 +2096,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 
 		for name, attr := range attrHeaders {
 			// TODO we may need some kind of "delete if missing" flag on
-			// each httpHeader attribute since some may want to have an
+			// each HttpHeader attribute since some may want to have an
 			// explicit 'null' to be erased instead of just missing (eg patch)
 			vals, ok := info.OriginalRequest.Header[http.CanonicalHeaderKey(name)]
 			if ok {

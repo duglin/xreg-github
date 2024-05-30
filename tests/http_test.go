@@ -3327,6 +3327,11 @@ func TestHTTPVersions(t *testing.T) {
 
 	reg.AddGroup("dirs", "d1")
 
+	// Quick test to make sure body is a Resource and not a collection
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?meta", `{ "x": {"id":"x"}}`, 400,
+		`Invalid extension(s): x
+`)
+
 	// ProxyURL
 	// f, _ := d.AddResource("files", "f1-proxy", "v1")
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -3777,22 +3782,19 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff1-proxy?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v1": {
-		    "id": "v1",
-		    "file": "In resource ff1-proxy"
-		  }
+		  "id": "v1",
+		  "file": "In resource ff1-proxy"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v1": {
-    "id": "v1",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v1?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "contenttype": "application/json"
 }
 `,
 	})
@@ -3802,23 +3804,19 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff1-proxy?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v2": {
-		    "id": "v2",
-		    "fileurl": "http://localhost:8181/EMPTY-URL"
-		  }
+	      "id": "v2",
+	      "fileurl": "http://localhost:8181/EMPTY-URL"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v2": {
-    "id": "v2",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v2?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z",
-    "fileurl": "http://localhost:8181/EMPTY-URL"
-  }
+  "id": "v2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v2?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "fileurl": "http://localhost:8181/EMPTY-URL"
 }
 `,
 	})
@@ -3828,22 +3826,18 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff1-proxy?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v3": {
-		    "id": "v3",
-		    "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
-		  }
+		  "id": "v3",
+		  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v3": {
-    "id": "v3",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+  "id": "v3",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `,
 	})
@@ -3880,22 +3874,19 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff2-url?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v1": {
-		    "id": "v1",
-		    "file": "In resource ff2-url"
-		  }
+		  "id": "v1",
+		  "file": "In resource ff2-url"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v1": {
-    "id": "v1",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v1?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "contenttype": "application/json"
 }
 `,
 	})
@@ -3905,22 +3896,18 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff2-url?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v2": {
-		    "id": "v2",
-		    "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
-		  }
+		  "id": "v2",
+		  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v2": {
-    "id": "v2",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v2?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+  "id": "v2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v2?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `,
 	})
@@ -3930,23 +3917,19 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff2-url?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v3": {
-		    "id": "v3",
-		    "fileurl": "http://localhost:8181/EMPTY-URL"
-		  }
+		  "id": "v3",
+		  "fileurl": "http://localhost:8181/EMPTY-URL"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v3": {
-    "id": "v3",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v3?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z",
-    "fileurl": "http://localhost:8181/EMPTY-URL"
-  }
+  "id": "v3",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v3?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "fileurl": "http://localhost:8181/EMPTY-URL"
 }
 `,
 	})
@@ -3983,22 +3966,18 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff3-resource?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v1": {
-		    "id": "v1",
-		    "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
-		  }
+		  "id": "v1",
+		  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v1": {
-    "id": "v1",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v1?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `,
 	})
@@ -4008,23 +3987,19 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff3-resource?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v2": {
-		    "id": "v2",
-		    "fileurl": "http://localhost:8181/EMPTY-URL"
-	      }
+		  "id": "v2",
+		  "fileurl": "http://localhost:8181/EMPTY-URL"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v2": {
-    "id": "v2",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v2?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z",
-    "fileurl": "http://localhost:8181/EMPTY-URL"
-  }
+  "id": "v2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v2?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "fileurl": "http://localhost:8181/EMPTY-URL"
 }
 `,
 	})
@@ -4034,22 +4009,19 @@ func TestHTTPVersions(t *testing.T) {
 		URL:    "/dirs/d1/files/ff3-resource?meta",
 		Method: "POST",
 		ReqBody: `{
-		  "v3": {
-		    "id": "v3",
-		    "file": "In resource ff3-resource"
-		  }
+		  "id": "v3",
+		  "file": "In resource ff3-resource"
 		}`,
-		Code:       200,
+		Code:       201,
 		ResHeaders: []string{},
 		ResBody: `{
-  "v3": {
-    "id": "v3",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3?meta",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+  "id": "v3",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "contenttype": "application/json"
 }
 `,
 	})
@@ -6663,17 +6635,15 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1", `{"2":{"id":"2","foo2":"test2"}}`, 200,
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1", `{"id":"2","foo2":"test2"}`, 201,
 		`{
-  "2": {
-    "id": "2",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/d1/files/f1/versions/2",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z",
-    "foo2": "test2"
-  }
+  "id": "2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/2",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "foo2": "test2"
 }
 `)
 
@@ -8918,11 +8888,16 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
-		Code:       400,
-		ResHeaders: []string{
-			"Content-Type:text/plain; charset=utf-8",
-		},
-		ResBody: `Set of Versions to add can't be empty
+		Code:       201,
+		ResHeaders: []string{},
+		ResBody: `{
+  "id": "1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f9/versions/1?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z"
+}
 `,
 	})
 
@@ -8932,17 +8907,22 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    `{}`,
-		Code:       400,
-		ResHeaders: []string{
-			"Content-Type:text/plain; charset=utf-8",
-		},
-		ResBody: `Set of Versions to add can't be empty
+		Code:       201,
+		ResHeaders: []string{},
+		ResBody: `{
+  "id": "2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f9/versions/2?meta",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:00Z",
+  "modifiedat": "2024-01-01T12:00:00Z"
+}
 `,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f9/versions?meta - new res,version - empty",
-		URL:        "/dirs/dir1/files/f9/versions?meta",
+		Name:       "POST resources/f99/versions?meta - new res,version - empty",
+		URL:        "/dirs/dir1/files/f99/versions?meta",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
@@ -8955,8 +8935,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f9/versions?meta - new res,version - empty",
-		URL:        "/dirs/dir1/files/f9/versions?meta",
+		Name:       "POST resources/f99/versions?meta - new res,version - empty",
+		URL:        "/dirs/dir1/files/f99/versions?meta",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    `{}`,
@@ -10342,64 +10322,62 @@ func TestHTTPResourceCollections(t *testing.T) {
 	}`, 400, `The "id" attribute must be set to "f6", not "ef6"
 `)
 
-	// via file, Versions + empty - no ?setdefaultversionid
-	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7", `{
-	  "v1": {  },
-	  "v2": {  }
-	}`, 400, `?setdefaultversionid is required
+	// via file, Versions + empty - new file
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7?setdefaultversionid=v1", `{
+	  "id": "v1"
+	}`, 201, `{
+  "id": "v1",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v1",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
 `)
 
-	// via file, Versions + empty
+	// via file, Versions + empty + existing file
 	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7?setdefaultversionid=v2", `{
-	  "v1": {  },
-	  "v2": {  }
-	}`, 200, `{
-  "v1": {
-    "id": "v1",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v1",
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  },
-  "v2": {
-    "id": "v2",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v2",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+	  "id": "v2"
+	}`, 201, `{
+  "id": "v2",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v2",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `)
 
-	// via file,Versions + IDs
-	xHTTP(t, reg, "POST", "/dirs/dir1/files/f8?setdefaultversionid=v2", `{
-	  "v1": { "id": "v1" },
-	  "v2": { "id": "v2" }}
-	}`, 200, `{
-  "v1": {
-    "id": "v1",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/dir1/files/f8/versions/v1",
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  },
-  "v2": {
-    "id": "v2",
-    "epoch": 1,
-    "self": "http://localhost:8181/dirs/dir1/files/f8/versions/v2",
-    "isdefault": true,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z"
-  }
+	// via file, Versions + empty + existing file + this
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7?setdefaultversionid=this", `{
+	  "id": "v3"
+	}`, 201, `{
+  "id": "v3",
+  "epoch": 1,
+  "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v3",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
 }
 `)
 
-	// via file, Versions + bad IDs
-	xHTTP(t, reg, "POST", "/dirs/dir1/files/f9?setdefaultversionid=v2", `{
-	  "v1": { "id": "v1" },
-	  "v2": { "id": "ev2" }}
-	}`, 400, `The "id" attribute must be set to "v2", not "ev2"
+	// via file, Versions + empty + existing file + this + existing v
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7?setdefaultversionid=this", `{
+	  "id": "v2"
+	}`, 200, `{
+  "id": "v2",
+  "epoch": 2,
+  "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v2",
+  "isdefault": true,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z"
+}
+`)
+
+	// via file, Versions + empty + existing file + bad def + existing v
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f7?setdefaultversionid=xxx", `{
+	  "id": "v2"
+	}`, 400, `Version "xxx" not found
 `)
 
 	// Versions + empty
