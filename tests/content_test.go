@@ -143,7 +143,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 	u := test.URL
 
 	t.Logf("Testing: URL: %s", test.URL)
-	metaResp, err := http.Get("http://localhost:8181/" + u + "?meta")
+	metaResp, err := http.Get("http://localhost:8181/" + u + "$meta")
 	xNoErr(t, err)
 	if metaResp == nil {
 		t.Fatalf("metaResp is nil")
@@ -234,7 +234,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 			str := ""
 			str = fmt.Sprintf("%v", propValue)
 			if name == "self" || name == "defaultversionurl" {
-				xCheckEqual(t, "", value[0]+"?meta", str)
+				xCheckEqual(t, "", value[0]+"$meta", str)
 				break
 			}
 
@@ -242,7 +242,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 			break
 		}
 		if !foundIt {
-			t.Fatalf("Missing %q in ?meta version(%s)", name, u)
+			t.Fatalf("Missing %q in $meta version(%s)", name, u)
 		}
 	}
 
@@ -273,6 +273,6 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 		if propName == "labels" {
 			continue
 		}
-		t.Fatalf("Extra prop %q in ?meta, not in header: %s", propName, u)
+		t.Fatalf("Extra prop %q in $meta, not in header: %s", propName, u)
 	}
 }

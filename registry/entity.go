@@ -812,7 +812,7 @@ var OrderedSpecProps = []*Attribute{
 					}
 
 					if meta {
-						return base + "/" + e.Path + "?meta"
+						return base + "/" + e.Path + "$meta"
 					} else {
 						return base + "/" + e.Path
 					}
@@ -896,7 +896,7 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if meta {
-					tmp += "?meta"
+					tmp += "$meta"
 				}
 				return tmp
 			},

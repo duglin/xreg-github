@@ -81,9 +81,9 @@ func TestBasicInline(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+          "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "defaultversionid": "v2",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -91,14 +91,14 @@ func TestBasicInline(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
               "id": "v2",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -122,9 +122,9 @@ func TestBasicInline(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d2/files/f2?meta",
+          "self": "http://localhost:8181/dirs/d2/files/f2$meta",
           "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -132,14 +132,14 @@ func TestBasicInline(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1?meta",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1?meta",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -167,9 +167,9 @@ func TestBasicInline(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
+          "self": "http://localhost:8181/dirs2/d2/files/f2$meta",
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+          "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -177,7 +177,7 @@ func TestBasicInline(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -516,7 +516,7 @@ func TestResourceInline(t *testing.T) {
 		},
 		{
 			Name: "Inline - at file + inline file",
-			URL:  "/dirs/d1/files/f1-proxy?meta&inline=file",
+			URL:  "/dirs/d1/files/f1-proxy$meta?inline=file",
 			Exp: `{
   "defaultversionid": "v3",
   "filebase64": "aGVsbG8tUHJveHk=",
@@ -526,7 +526,7 @@ func TestResourceInline(t *testing.T) {
 		},
 		{
 			Name: "Inline - at file + inline file",
-			URL:  "/dirs/d1/files/f1-proxy?meta&inline=versions.file",
+			URL:  "/dirs/d1/files/f1-proxy$meta?inline=versions.file",
 			Exp: `{
   "defaultversionid": "v3",
   "versions": {
@@ -546,7 +546,7 @@ func TestResourceInline(t *testing.T) {
 		},
 		{
 			Name: "Bad inline xx",
-			URL:  "/dirs/d1/files/f1-proxy?meta&inline=XXversions.file",
+			URL:  "/dirs/d1/files/f1-proxy$meta?inline=XXversions.file",
 			Exp:  "Invalid 'inline' value: dirs.files.XXversions.file\n",
 		},
 		{

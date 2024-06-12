@@ -3998,9 +3998,9 @@ func TestMultModel2Create(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs1/d1/files/f1?meta",
+          "self": "http://localhost:8181/dirs1/d1/files/f1$meta",
           "defaultversionid": "v2",
-          "defaultversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
+          "defaultversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2$meta",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -4008,14 +4008,14 @@ func TestMultModel2Create(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1?meta",
+              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1$meta",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
               "id": "v2",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2?meta",
+              "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2$meta",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -4039,9 +4039,9 @@ func TestMultModel2Create(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs1/d2/files/f2?meta",
+          "self": "http://localhost:8181/dirs1/d2/files/f2$meta",
           "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
+          "defaultversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1$meta",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -4049,14 +4049,14 @@ func TestMultModel2Create(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1?meta",
+              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1$meta",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1?meta",
+              "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1$meta",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -4084,9 +4084,9 @@ func TestMultModel2Create(t *testing.T) {
         "f2": {
           "id": "f2",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs2/d2/files/f2?meta",
+          "self": "http://localhost:8181/dirs2/d2/files/f2$meta",
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+          "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -4094,7 +4094,7 @@ func TestMultModel2Create(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1?meta",
+              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"

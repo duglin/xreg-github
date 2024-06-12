@@ -26,11 +26,11 @@ type RequestInfo struct {
 	ResourceModel    *ResourceModel
 	VersionUID       string
 	What             string // Registry, Coll, Entity
-	HasInline        bool
+	HasNested        bool
 	Inlines          []string        // TODO store a PropPaths instead
 	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
 	ShowModel        bool
-	ShowMeta         bool
+	ShowMeta         bool //	was $meta present
 
 	StatusCode int
 	SentStatus bool
@@ -123,7 +123,6 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		Registry:         GetDefaultReg(tx),
 		BaseURL:          "http://" + r.Host,
 		ShowModel:        r.URL.Query().Has("model"),
-		ShowMeta:         r.URL.Query().Has("meta"),
 	}
 
 	if info.Registry != nil && tx.Registry == nil {
@@ -146,8 +145,9 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		return info, err
 	}
 
+	info.HasNested = r.URL.Query().Has("nested")
+
 	if r.URL.Query().Has("inline") {
-		info.HasInline = true
 		// Only pick up inlining values if we're doing a GET, not write ops
 		if strings.EqualFold(r.Method, "GET") {
 			stopInline := false
@@ -282,8 +282,15 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
+	// /???
 	if len(info.Parts) > 0 && info.Parts[0] == "model" {
 		return nil
+	}
+
+	// /GROUPs
+	if strings.HasSuffix(info.Parts[0], "$meta") {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("$meta isn't allowed on %q", "/"+info.Parts[0])
 	}
 
 	gModel := (*GroupModel)(nil)
@@ -304,11 +311,26 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
+	// /GROUPs/gID
+	if strings.HasSuffix(info.Parts[1], "$meta") {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("$meta isn't allowed on %q",
+			"/"+strings.Join(info.Parts[:2], "/"))
+	}
+
 	info.GroupUID = info.Parts[1]
 	info.Root += "/" + info.Parts[1]
+
 	if len(info.Parts) == 2 {
 		info.What = "Entity"
 		return nil
+	}
+
+	// /GROUPs/gID/RESOURCEs
+	if strings.HasSuffix(info.Parts[2], "$meta") {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("$meta isn't allowed on %q",
+			"/"+strings.Join(info.Parts[:3], "/"))
 	}
 
 	rModel := (*ResourceModel)(nil)
@@ -329,17 +351,44 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
+	// /GROUPs/gID/RESOURCEs/rID
 	info.ResourceUID = info.Parts[3]
 	info.Root += "/" + info.Parts[3]
+
+	// GROUPs/gID/RESOURCEs/rID
 	if len(info.Parts) == 4 {
+		info.ResourceUID, info.ShowMeta =
+			strings.CutSuffix(info.ResourceUID, "$meta")
+
+		if info.ResourceUID == "" {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf("Resource id in URL can't be blank")
+		}
+
+		info.Parts[3] = info.ResourceUID
 		info.What = "Entity"
 		return nil
+	}
+
+	// GROUPs/gID/RESOURCEs/rID/???
+	if strings.HasSuffix(info.ResourceUID, "$meta") {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("$meta isn't allowed on %q",
+			"/"+strings.Join(info.Parts[:4], "/"))
+	}
+
+	if strings.HasSuffix(info.Parts[4], "$meta") {
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("$meta isn't allowed on %q",
+			"/"+strings.Join(info.Parts[:5], "/"))
 	}
 
 	if info.Parts[4] != "versions" {
 		info.StatusCode = http.StatusNotFound
 		return fmt.Errorf("Expected \"versions\", got: %s", info.Parts[4])
 	}
+
+	// GROUPs/gID/RESOURCEs/rID/versions
 	info.Root += "/versions"
 	info.Abstract += "/versions"
 	if len(info.Parts) == 5 {
@@ -347,14 +396,24 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
+	// GROUPs/gID/RESOURCEs/rID/versions/vID
 	info.VersionUID = info.Parts[5]
 	info.Root += "/" + info.Parts[5]
 
 	if len(info.Parts) == 6 {
+		info.VersionUID, info.ShowMeta =
+			strings.CutSuffix(info.VersionUID, "$meta")
+
+		if info.VersionUID == "" {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf("Version id in URL can't be blank")
+		}
+
+		info.Parts[5] = info.VersionUID
 		info.What = "Entity"
 		return nil
 	}
 
-	info.StatusCode = http.StatusNotFound
-	return fmt.Errorf("Not found")
+	info.StatusCode = http.StatusBadRequest
+	return fmt.Errorf("URL is too long")
 }

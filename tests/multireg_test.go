@@ -69,12 +69,12 @@ func TestMultiReg(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg2, "PUT", "/reg-reg2/reg2_dirs/d2/reg2_files/f2?meta", "", 201, `{
+	xHTTP(t, reg2, "PUT", "/reg-reg2/reg2_dirs/d2/reg2_files/f2$meta", "", 201, `{
   "id": "f2",
   "epoch": 1,
-  "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2?meta",
+  "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2$meta",
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2/versions/1?meta",
+  "defaultversionurl": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2/versions/1$meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 

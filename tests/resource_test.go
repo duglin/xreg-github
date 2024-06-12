@@ -41,13 +41,13 @@ func TestCreateResource(t *testing.T) {
 	//      /d2/f2/v1
 
 	// Check basic GET first
-	xCheckGet(t, reg, "/dirs/d1/files/f1?meta",
+	xCheckGet(t, reg, "/dirs/d1/files/f1$meta",
 		`{
   "id": "f1",
   "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2?meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 

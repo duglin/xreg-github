@@ -154,7 +154,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false &&
 		info.ShowMeta {
 		info.StatusCode = http.StatusBadRequest
-		err = fmt.Errorf("Specifying \"?meta\" for a Resource that has the " +
+		err = fmt.Errorf("Specifying \"$meta\" for a Resource that has the " +
 			"model \"hasdocument\" value set to \"false\" is invalid")
 	}
 
@@ -404,7 +404,7 @@ func (pw *PageWriter) Done() {
 	if pw.Info.ShowMeta {
 		metaswitch = "true"
 		metatext = "Show document"
-		urlPath += fmt.Sprintf(`?<a href="%s?ui&meta">meta</a>`, tmp)
+		urlPath += fmt.Sprintf(`$<a href="%s$meta?ui">meta</a>`, tmp)
 	} else {
 		metaswitch = "false"
 		metatext = "Show metadata"
@@ -532,9 +532,10 @@ func (pw *PageWriter) Done() {
 var metaswitch = `+metaswitch+`;
 
 function apply() {
-  var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`?ui"
+  var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`"
 
-  if (metaswitch) loc += "&meta"
+  if (metaswitch) loc += "$meta"
+  loc += "?ui"
 
   var filters = document.getElementById("filters").value
   var lines = filters.split("\n")
@@ -1048,7 +1049,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if method == "PATCH" {
 			addType = ADD_PATCH
 		}
-		err = info.Registry.Update(IncomingObj, addType, info.HasInline)
+		err = info.Registry.Update(IncomingObj, addType, info.HasNested)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1079,7 +1080,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		for id, obj := range objMap {
 			g, _, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-				id, obj, addType, info.HasInline)
+				id, obj, addType, info.HasNested)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1103,7 +1104,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		group, isNew, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-			info.GroupUID, IncomingObj, addType, info.HasInline)
+			info.GroupUID, IncomingObj, addType, info.HasNested)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1145,8 +1146,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	// If there isn't an explicit "return" when this assumes we're left with
 	// a version and will return that back to the client
 
-	if len(info.Parts) == 3 && metaInBody {
-		// POST GROUPs/gID/RESOURCEs?meta + body:map[id]Resource
+	if len(info.Parts) == 3 {
+		// POST GROUPs/gID/RESOURCEs$meta + body:map[id]Resource
 
 		objMap, err := IncomingObj2Map(IncomingObj)
 		if err != nil {
@@ -1161,8 +1162,14 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		for id, obj := range objMap {
+			err = ConvertResourceContents(obj, info.ResourceModel)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+
 			r, _, err := group.UpsertResourceWithObject(info.ResourceType,
-				id, "", obj, addType, info.HasInline, false)
+				id, "", obj, addType, info.HasNested, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1178,37 +1185,39 @@ func HTTPPutPost(info *RequestInfo) error {
 		return SerializeQuery(info, paths, "Coll", nil)
 	}
 
-	if len(info.Parts) == 3 {
-		// POST GROUPS/gID/RESOURCEs  - no "?meta" + body=doc
+	/*
+		if len(info.Parts) == 3 {
+			// POST GROUPS/gID/RESOURCEs  -  body=doc
 
-		// If xReg data are in HTTP headers then we require an ID
-		if resourceUID = propsID; resourceUID == "" {
-			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf(`A "xRegistry-id" header must be provided`)
-		}
+			// If xReg data are in HTTP headers then we require an ID
+			if resourceUID = propsID; resourceUID == "" {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf(`A "xRegistry-id" header must be provided`)
+			}
 
-		// Any ID provided is the Resource's not the Version's, so remove it
-		// and then the UpsertResource code will generate a new version ID
-		delete(IncomingObj, "id")
+			// Any ID provided is the Resource's not the Version's, so remove it
+			// and then the UpsertResource code will generate a new version ID
+			delete(IncomingObj, "id")
 
-		// Upsert the Resource and (if needed) it's first/default Version.
-		// vID should be ""
-		addType := ADD_UPSERT
-		if method == "PATCH" {
-			addType = ADD_PATCH
+			// Upsert the Resource and (if needed) it's first/default Version.
+			// vID should be ""
+			addType := ADD_UPSERT
+			if method == "PATCH" {
+				addType = ADD_PATCH
+			}
+			resource, isNew, err = group.UpsertResourceWithObject(info.ResourceType,
+				resourceUID, versionUID, IncomingObj, addType, info.HasNested, false)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+			version, err = resource.GetDefault()
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
 		}
-		resource, isNew, err = group.UpsertResourceWithObject(info.ResourceType,
-			resourceUID, versionUID, IncomingObj, addType, info.HasInline, false)
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
-		}
-		version, err = resource.GetDefault()
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
-		}
-	}
+	*/
 
 	if len(info.Parts) > 3 {
 		// GROUPs/gID/RESOURCEs/rID...
@@ -1222,7 +1231,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if len(info.Parts) == 4 && (method == "PUT" || method == "PATCH") {
-		// PUT GROUPs/gID/RESOURCEs/rID [?meta]
+		// PUT GROUPs/gID/RESOURCEs/rID [$meta]
 
 		if propsID != "" && propsID != resourceUID {
 			info.StatusCode = http.StatusBadRequest
@@ -1257,7 +1266,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 			resource, isNew, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
-				addType, info.HasInline, false)
+				addType, info.HasNested, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1272,12 +1281,12 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if method == "POST" && len(info.Parts) == 4 {
-		// POST GROUPs/gID/RESOURCEs/rID[?meta], body=obj or doc
+		// POST GROUPs/gID/RESOURCEs/rID[$meta], body=obj or doc
 		if resource == nil {
 			// Implicitly create the resource
 			resource, isNew, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, propsID, IncomingObj,
-				ADD_ADD, info.HasInline, true)
+				ADD_ADD, info.HasNested, true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1295,9 +1304,9 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if info.ShowMeta && method == "POST" && len(info.Parts) == 5 {
-		// POST GROUPs/gID/RESOURCEs/rID/versions?meta - error
+		// POST GROUPs/gID/RESOURCEs/rID/versions$meta - error
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Use of \"?meta\" on the \"versions\" collection is not allowed")
+		return fmt.Errorf("Use of \"$meta\" on the \"versions\" collection is not allowed")
 	}
 
 	if method == "POST" && len(info.Parts) == 5 {
@@ -1310,6 +1319,14 @@ func HTTPPutPost(info *RequestInfo) error {
 			return err
 		}
 
+		for _, obj := range objMap {
+			err = ConvertResourceContents(obj, info.ResourceModel)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+		}
+
 		thisVersion := (*Version)(nil)
 
 		if resource == nil {
@@ -1320,13 +1337,13 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			vID := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
-			if vID == "" || vID == "this" {
+			if vID == "" || vID == "request" {
 				if len(objMap) > 1 {
 					info.StatusCode = http.StatusBadRequest
 					if vID == "" {
 						return fmt.Errorf("?setdefaultversionid is required")
 					}
-					return fmt.Errorf("?setdefaultversionid can not be 'this'")
+					return fmt.Errorf("?setdefaultversionid can not be 'request'")
 				}
 				// Only one Version so use its ID as the default version
 				for k, _ := range objMap {
@@ -1346,7 +1363,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, vID, IncomingObj, info.HasInline, true)
+				resourceUID, vID, IncomingObj, info.HasNested, true)
 
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
@@ -1389,12 +1406,12 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if len(info.Parts) == 6 {
-		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [?meta]
+		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [$meta]
 
 		if resource == nil {
 			// Implicitly create the resource
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, versionUID, IncomingObj, info.HasInline, true)
+				resourceUID, versionUID, IncomingObj, info.HasNested, true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1456,7 +1473,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.Parts[2], resourceUID}
 	info.What = "Entity"
 	info.GroupUID = groupUID
-	info.ResourceUID = resourceUID // needed for ?meta in URLs
+	info.ResourceUID = resourceUID // needed for $meta in URLs
 
 	location := info.BaseURL + "/" + resource.Path
 	if originalLen > 4 || (originalLen == 4 && method == "POST") {
@@ -1466,7 +1483,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if info.ShowMeta { // not 100% sure this the right way/spot
-		location += "?meta"
+		location += "$meta"
 	}
 
 	if isNew { // 201, else let it default to 200
@@ -1543,16 +1560,16 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 		return fmt.Errorf(`"setdefaultversionid" must not be empty`)
 	}
 
-	// "null" and "this" have special meaning
+	// "null" and "request" have special meaning
 	if vID == "null" {
 		// Unstick the default version and go back to newest=default
 		return resource.SetDefault(nil)
 	}
 
-	if vID == "this" {
+	if vID == "request" {
 		if version == nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Can't use 'this' if a version wasn't processed")
+			return fmt.Errorf("Can't use 'request' if a version wasn't processed")
 		}
 		// stick default version to current one we just processed
 		return resource.SetDefault(version)
@@ -2003,9 +2020,10 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	}
 
 	// len=5 is a special case where we know .../versions always has the
-	// metadata in the body so ?meta isn't needed, and in fact an error
+	// metadata in the body so $meta isn't needed, and in fact an error
 
 	metaInBody := (info.ShowMeta ||
+		len(info.Parts) == 3 ||
 		len(info.Parts) == 5 ||
 		(info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false))
 
@@ -2020,7 +2038,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 						"value of \"false\" is invalid")
 				}
 				return nil, fmt.Errorf("Including \"xRegistry\" headers " +
-					"when \"?meta\" is used is invalid")
+					"when \"$meta\" is used is invalid")
 			}
 		}
 
@@ -2035,27 +2053,9 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 			return nil, err
 		}
 
-		if info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == true {
-			data, ok := IncomingObj[resSingular]
-			if ok {
-				// Get the raw bytes of the "resSingular" json attribute
-				buf := []byte(nil)
-				switch reflect.ValueOf(data).Kind() {
-				case reflect.Float64, reflect.Map, reflect.Slice, reflect.Bool:
-					buf, err = json.Marshal(data)
-					if err != nil {
-						return nil, err
-					}
-				case reflect.Invalid:
-					// I think this only happens when it's "null".
-					// just let 'buf' stay as nil
-				default:
-					str := fmt.Sprintf("%s", data)
-					buf = []byte(str)
-				}
-				IncomingObj[resSingular] = buf
-				IncomingObj["#-contenttype"] = "application/json"
-			}
+		err = ConvertResourceContents(IncomingObj, info.ResourceModel)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -2180,4 +2180,41 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	}
 
 	return IncomingObj, nil
+}
+
+func ConvertResourceContents(obj map[string]any, rm *ResourceModel) error {
+	if rm == nil || rm.GetHasDocument() == false {
+		return nil
+	}
+
+	var err error
+	data, ok := obj[rm.Singular]
+	if ok {
+
+		// Special case of: RESOURCE:null
+		if IsNil(data) {
+			obj[rm.Singular] = nil
+			obj["#-contenttype"] = nil
+			return nil
+		}
+
+		// Get the raw bytes of the "rm.Singular" json attribute
+		buf := []byte(nil)
+		switch reflect.ValueOf(data).Kind() {
+		case reflect.Float64, reflect.Map, reflect.Slice, reflect.Bool:
+			buf, err = json.Marshal(data)
+			if err != nil {
+				return err
+			}
+		case reflect.Invalid:
+			// I think this only happens when it's "null".
+			// just let 'buf' stay as nil
+		default:
+			str := fmt.Sprintf("%s", data)
+			buf = []byte(str)
+		}
+		obj[rm.Singular] = buf
+		obj["#-contenttype"] = "application/json"
+	}
+	return nil
 }

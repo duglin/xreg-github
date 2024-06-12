@@ -385,9 +385,9 @@ func TestBasicTypes(t *testing.T) {
         "f1": {
           "id": "f1",
           "epoch": 1,
-          "self": "http://localhost:8181/dirs/d1/files/f1?meta",
+          "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
           "createdat": "2024-01-01T12:00:04Z",
           "modifiedat": "2024-01-01T12:00:02Z",
           "filebool1": true,
@@ -406,7 +406,7 @@ func TestBasicTypes(t *testing.T) {
             "v1": {
               "id": "v1",
               "epoch": 1,
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1?meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:04Z",
               "modifiedat": "2024-01-01T12:00:02Z",
