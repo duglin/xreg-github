@@ -21,6 +21,17 @@ var specialResourceAttrs = map[string]bool{
 	"#nextversionid":       true,
 }
 
+// Remove any attributes that appear on Resources but not Versions.
+// Mainly used to prep an Obj that was directed at a Resource but will be used
+// to update a Version
+func RemoveResourceAttributes(obj map[string]any) {
+	for _, attr := range SpecProps {
+		if attr.InLevel(2) && !attr.InLevel(3) {
+			delete(obj, attr.Name)
+		}
+	}
+}
+
 func (r *Resource) Get(name string) any {
 	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
 
@@ -113,6 +124,20 @@ func (r *Resource) GetDefault() (*Version, error) {
 	return r.FindVersion(val.(string), false)
 }
 
+// Note will set sticky if vID != ""
+func (r *Resource) SetDefaultID(vID string) error {
+	var v *Version
+	var err error
+
+	if vID != "" {
+		v, err = r.FindVersion(vID, false)
+		if err != nil {
+			return err
+		}
+	}
+	return r.SetDefault(v)
+}
+
 // Only call this if you want things to be sticky (when not nil).
 // Creating a new version should do this directly
 func (r *Resource) SetDefault(newDefault *Version) error {
@@ -134,6 +159,7 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 		if err != nil {
 			return err
 		}
+
 		newDefault, err = r.FindVersion(vIDs[len(vIDs)-1], false)
 		if err != nil {
 			return err
@@ -182,6 +208,10 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		}
 	} else {
 		v, err = r.FindVersion(id, true)
+
+		if addType == ADD_ADD && v != nil {
+			return nil, false, fmt.Errorf("Version %q already exists", id)
+		}
 
 		if v != nil && v.UID != id {
 			return nil, false,
@@ -284,123 +314,8 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 }
 
 func (r *Resource) AddVersion(id string) (*Version, error) {
-	return r.AddVersionWithObject(id, nil)
-}
-
-func (r *Resource) AddVersionWithObject(id string, obj Object) (*Version, error) {
-	log.VPrintf(3, ">Enter: AddVersionWithObject: %s)", id)
-	defer log.VPrintf(3, "<Exit: AddVersionWithObject")
-
-	var v *Version
-	var err error
-
-	if id == "" {
-		// No versionID provided so grab the next available one
-		tmp := r.Get("#nextversionid")
-		nextID := NotNilInt(&tmp)
-		for {
-			id = strconv.Itoa(nextID)
-			v, err = r.FindVersion(id, false)
-			if err != nil {
-				return nil, fmt.Errorf("Error checking for Version %q: %s",
-					id, err)
-			}
-
-			// Increment no matter what since it's "next" not "default"
-			nextID++
-
-			if v == nil {
-				r.JustSet("#nextversionid", nextID)
-				break
-			}
-		}
-	} else {
-		v, err = r.FindVersion(id, true)
-
-		if err != nil {
-			return nil, fmt.Errorf("Error checking for Version %q: %s", id, err)
-		}
-		if v != nil && v.UID != id {
-			return nil, fmt.Errorf("Attempting to create a Version with "+
-				"an \"id\" of %q, when one already exists as %q", id, v.UID)
-		}
-		if v != nil {
-			return nil, fmt.Errorf("Version %q already exists", id)
-		}
-	}
-
-	v = &Version{
-		Entity: Entity{
-			tx: r.tx,
-
-			Registry: r.Registry,
-			DbSID:    NewUUID(),
-			Plural:   "versions",
-			UID:      id,
-
-			Level:    3,
-			Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
-			Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
-		},
-		Resource: r,
-	}
-
-	err = DoOne(r.tx, `
-        INSERT INTO Versions(SID, UID, ResourceSID, Path, Abstract)
-        VALUES(?,?,?,?,?)`,
-		v.DbSID, id, r.DbSID,
-		r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+v.UID,
-		r.Group.Plural+string(DB_IN)+r.Plural+string(DB_IN)+"versions")
-	if err != nil {
-		err = fmt.Errorf("Error adding Version: %s", err)
-		log.Print(err)
-		return nil, err
-	}
-
-	v.tx.AddVersion(v)
-
-	if err = v.JustSet("id", id); err != nil {
-		return nil, err
-	}
-
-	if obj != nil {
-		// If there's a doc but no "contenttype" value then:
-		// - if existing entity doesn't have one, set it
-		// - if existing entity does have one then only override it
-		//   if we're not doing PATCH (PUT/POST are compelte overrides)
-		if eval, ok := obj["#-contenttype"]; ok && !IsNil(eval) {
-			if _, ok = obj["contenttype"]; !ok {
-				if val := v.Get("contenttype"); IsNil(val) {
-					obj["contenttype"] = eval
-				}
-			}
-		}
-
-		v.NewObject = obj
-	}
-
-	if err = v.ValidateAndSave(); err != nil {
-		return nil, err
-	}
-
-	// If we can only have one Version, then set the one we just created
-	// as the default.
-	// Also set it if we're not sticky w.r.t. default version
-	_, rm := r.GetModels()
-	if rm.MaxVersions == 1 || r.Get("stickydefaultversion") != true {
-		err = r.SetSave("defaultversionid", v.UID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// If we've reached the maximum # of Versions, then delete oldest
-	if err = r.EnsureMaxVersions(); err != nil {
-		return nil, err
-	}
-
-	log.VPrintf(3, "Created new one - dbSID: %s", v.DbSID)
-	return v, nil
+	v, _, err := r.UpsertVersionWithObject(id, nil, ADD_ADD)
+	return v, err
 }
 
 func (r *Resource) GetVersionIDs() ([]string, error) {

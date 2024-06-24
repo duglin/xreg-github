@@ -78,7 +78,6 @@ TODOs:
 - support overriding spec defined attributes - like "format"
 - support changing the model - test for invalid changes
 - add tests for immutable attributes
-- support ?inline on PUT/POST
 - support the resource sticky/default attributes
   - remove ?setdefault.. for some apis
   - process ?setdefaultversionid flag before we update things
@@ -88,8 +87,4 @@ TODOs:
 - add support for PUT / to update the model
 - add model tests for typemap - just that we can set via full model updates
 - support the DB vanishing for a while
-- support $meta
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
-- test to make sure PATCH+INLINE of a Resource+versions uses the version in the
-  versions collection instead of the Resource. Prop in Res, but not in Ver,
-  is ignored

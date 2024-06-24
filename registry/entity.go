@@ -765,7 +765,7 @@ var OrderedSpecProps = []*Attribute{
 					return fmt.Errorf("Attribute \"epoch\" must be a uinteger")
 				}
 
-				if oldEpoch != 0 && newEpoch != oldEpoch {
+				if !e.tx.IgnoreEpoch && oldEpoch != 0 && newEpoch != oldEpoch {
 					return fmt.Errorf("Attribute %q(%d) doesn't match "+
 						"existing value (%d)", "epoch", newEpoch, oldEpoch)
 				}

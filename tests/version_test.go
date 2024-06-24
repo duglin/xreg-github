@@ -471,7 +471,7 @@ func TestVersionRequiredFields(t *testing.T) {
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 	reg.Rollback()
 
-	v1, err := f1.AddVersionWithObject("v2", registry.Object{"clireq": "test"})
+	v1, _, err := f1.UpsertVersionWithObject("v2", registry.Object{"clireq": "test"}, registry.ADD_ADD)
 	xNoErr(t, err)
 	reg.Commit()
 

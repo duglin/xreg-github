@@ -125,6 +125,10 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		ShowModel:        r.URL.Query().Has("model"),
 	}
 
+	tx.IgnoreEpoch = r.URL.Query().Has("noepoch")
+	tx.IgnoreStickyDefaultVersion = r.URL.Query().Has("nostickydefaultversion")
+	tx.IgnoreDefaultVersionID = r.URL.Query().Has("nodefaultversionid")
+
 	if info.Registry != nil && tx.Registry == nil {
 		tx.Registry = info.Registry
 	}

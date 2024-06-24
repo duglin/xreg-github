@@ -582,7 +582,7 @@ func LoadLargeSample(reg *registry.Registry) *registry.Registry {
 
 func LoadDocStore(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'...", "DocStore")
+	log.VPrintf(1, "Loading registry '%s'", "DocStore")
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "DocStore")
 		ErrFatalf(err)

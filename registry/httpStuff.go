@@ -1185,44 +1185,11 @@ func HTTPPutPost(info *RequestInfo) error {
 		return SerializeQuery(info, paths, "Coll", nil)
 	}
 
-	/*
-		if len(info.Parts) == 3 {
-			// POST GROUPS/gID/RESOURCEs  -  body=doc
-
-			// If xReg data are in HTTP headers then we require an ID
-			if resourceUID = propsID; resourceUID == "" {
-				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf(`A "xRegistry-id" header must be provided`)
-			}
-
-			// Any ID provided is the Resource's not the Version's, so remove it
-			// and then the UpsertResource code will generate a new version ID
-			delete(IncomingObj, "id")
-
-			// Upsert the Resource and (if needed) it's first/default Version.
-			// vID should be ""
-			addType := ADD_UPSERT
-			if method == "PATCH" {
-				addType = ADD_PATCH
-			}
-			resource, isNew, err = group.UpsertResourceWithObject(info.ResourceType,
-				resourceUID, versionUID, IncomingObj, addType, info.HasNested, false)
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return err
-			}
-			version, err = resource.GetDefault()
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return err
-			}
-		}
-	*/
-
 	if len(info.Parts) > 3 {
 		// GROUPs/gID/RESOURCEs/rID...
 
-		resource, err = group.FindResource(info.ResourceType, resourceUID, false)
+		resource, err = group.FindResource(info.ResourceType, resourceUID,
+			false)
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
 			return fmt.Errorf("Error finding resource(%s): %s", resourceUID,
@@ -1240,23 +1207,25 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		if resource != nil {
-			version, err = resource.GetDefault()
-
-			// They passed in a Resource, but we're going to use the data
-			// to update the current Version, so we need to delete the
-			// collections since they're technically Resource-based colls
-			resource.RemoveCollections(IncomingObj)
+			// version, err = resource.GetDefault()
 
 			// ID needs to be the version's ID, not the Resources
-			IncomingObj["id"] = version.UID
+			// IncomingObj["id"] = version.UID
 
 			// Create a new Resource and it's first/only/default Version
 			addType := ADD_UPSERT
 			if method == "PATCH" || !metaInBody {
 				addType = ADD_PATCH
 			}
-			version, _, err = resource.UpsertVersionWithObject(version.UID,
-				IncomingObj, addType)
+			resource, _, err = group.UpsertResourceWithObject(
+				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
+				addType, info.HasNested, false)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+
+			version, err = resource.GetDefault()
 		} else {
 			// Upsert resource's default version
 			delete(IncomingObj, "id") // ID is the Resource's delete it
@@ -1306,7 +1275,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	if info.ShowMeta && method == "POST" && len(info.Parts) == 5 {
 		// POST GROUPs/gID/RESOURCEs/rID/versions$meta - error
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Use of \"$meta\" on the \"versions\" collection is not allowed")
+		return fmt.Errorf("Use of \"$meta\" on the \"versions\" collection " +
+			"is not allowed")
 	}
 
 	if method == "POST" && len(info.Parts) == 5 {
@@ -1343,7 +1313,8 @@ func HTTPPutPost(info *RequestInfo) error {
 					if vID == "" {
 						return fmt.Errorf("?setdefaultversionid is required")
 					}
-					return fmt.Errorf("?setdefaultversionid can not be 'request'")
+					return fmt.Errorf("?setdefaultversionid can not be " +
+						"'request'")
 				}
 				// Only one Version so use its ID as the default version
 				for k, _ := range objMap {
@@ -1429,19 +1400,13 @@ func HTTPPutPost(info *RequestInfo) error {
 
 		if version == nil {
 			// We have a Resource, so add a new Version based on IncomingObj
-			version, err = resource.AddVersionWithObject(versionUID,
-				IncomingObj)
-			isNew = true
+			version, isNew, err = resource.UpsertVersionWithObject(versionUID,
+				IncomingObj, ADD_UPSERT)
 		} else if !isNew {
-			// They passed in a Resource, but we're going to use the data
-			// to create a Versions so we need to delete the new collections
-			// from the Version,but the collections are Resource-based colls
-			resource.RemoveCollections(IncomingObj)
-
 			if propsID != "" && propsID != version.UID {
 				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf("The \"id\" attribute must be set to %q, not %q",
-					version.UID, propsID)
+				return fmt.Errorf("The \"id\" attribute must be set to %q, "+
+					"not %q", version.UID, propsID)
 			}
 
 			IncomingObj["id"] = version.UID

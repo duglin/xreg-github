@@ -262,7 +262,8 @@ func TestRegistryDefaultFields(t *testing.T) {
 }
 `)
 
-	// Notice the default value is not there, this might need a spec change
+	// Notice the default value is not there, this might need a spec change.
+	// I think this is referring to "defstring" ??
 	// DUG TODO ^^
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",

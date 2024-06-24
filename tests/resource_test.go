@@ -27,7 +27,7 @@ func TestCreateResource(t *testing.T) {
 	xCheck(t, v2 != nil && err == nil, "Creating v2 failed")
 
 	vt, err := f1.AddVersion("v2")
-	xCheck(t, vt == nil && err != nil, "Dup v2 should have faile")
+	xCheck(t, vt == nil && err != nil, "Dup v2 should have failed")
 
 	d2, err := reg.AddGroup("dirs", "d2")
 	xNoErr(t, err)
