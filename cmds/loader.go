@@ -631,3 +631,41 @@ func LoadDocStore(reg *registry.Registry) *registry.Registry {
 	reg.Commit()
 	return reg
 }
+
+func LoadCESample(reg *registry.Registry) *registry.Registry {
+	var err error
+	log.VPrintf(1, "Loading registry '%s'", "CloudEvents")
+	if reg == nil {
+		reg, err = registry.FindRegistry(nil, "CloudEvents")
+		ErrFatalf(err)
+		if reg != nil {
+			reg.Rollback()
+			return reg
+		}
+
+		reg, err = registry.NewRegistry(nil, "CloudEvents")
+		ErrFatalf(err, "Error creating new registry: %s", err)
+		defer reg.Rollback()
+
+		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
+		reg.SetSave("name", "CloudEvents Registry")
+		reg.SetSave("description", "An impl of the CloudEvents xReg spec")
+		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+	}
+
+	groups, _ := reg.Model.AddGroupModel("endpoints", "endpoint")
+	res, _ := groups.AddResourceModel("messages", "message", 0, true, true, true)
+	res.AddAttr("*", registry.ANY)
+
+	groups, _ = reg.Model.AddGroupModel("messagegroups", "messagegroup")
+	res, _ = groups.AddResourceModel("message", "message", 0, true, true, true)
+
+	groups, _ = reg.Model.AddGroupModel("schemagroups", "schemagroup")
+	res, _ = groups.AddResourceModel("schemas", "schema", 0, true, true, true)
+
+	// End of model
+
+	ErrFatalf(reg.Model.Verify())
+	reg.Commit()
+	return reg
+}
