@@ -1,0 +1,73 @@
+{
+  "specversion": "0.5",
+  "id": "Endpoints",
+  "name": "CloudyHQ Event Registry",
+  "epoch": 1,
+  "self": "http://localhost:8080/",
+  "description": "Event registry for CloudyFactory and Store notifications",
+  "documentation": "https://docs.cloudyhq.com/event-registry",
+  "labels": {
+    "environment": "production",
+    "domain": "package-tracking"
+  },
+  "endpoints": {
+    "CloudyHQ.Factory.Http": {
+      "id": "CloudyHQ.Factory.Http",
+      "name": "CloudyHQ Factory HTTP Endpoint",
+      "epoch": 1,
+      "self": "http://localhost:8080/endpoints/CloudyHQ.Factory.Http",
+      "description": "HTTP endpoint for CloudyFactory package tracking events",
+      "documentation": "https://docs.cloudyhq.com/factory-endpoint",
+      "labels": {
+        "service": "factory"
+      },
+      "usage": "producer",
+      "format": "CloudEvents/1.0",
+      "config": {
+        "protocol": "HTTP",
+        "endpoints": [
+          {
+            "uri": "https://api.cloudyhq.io/scan"
+          }
+        ],
+        "options": {
+          "deployed": true
+        }
+      },
+      "messagegroups": [
+        "http://localhost:8080/reg-Messages/CloudyHQ.Factory"
+      ],
+      "messagescount": 2
+    },
+    "CloudyHQ.Store.Http": {
+      "id": "CloudyHQ.Store.Http",
+      "name": "CloudyHQ Store HTTP Endpoint",
+      "epoch": 1,
+      "self": "http://localhost:8080/endpoints/CloudyHQ.Store.Http",
+      "description": "HTTP endpoint for Store package tracking notifications",
+      "documentation": "https://docs.cloudyhq.com/store-endpoint",
+      "labels": {
+        "service": "store"
+      },
+      "usage": "producer",
+      "format": "CloudEvents/1.0",
+      "config": {
+        "protocol": "HTTP",
+        "endpoints": [
+          {
+            "uri": "https://api.cloudyhq.io/notify-store"
+          }
+        ],
+        "options": {
+          "deployed": true
+        }
+      },
+      "messagegroups": [
+        "http://localhost:8080/reg-Messages/CloudyHQ.Store"
+      ],
+      "messagescount": 2
+    }
+  },
+  "endpointscount": 2,
+  "endpointsurl": "http://localhost:8080/reg-Endpoints/endpoints"
+}

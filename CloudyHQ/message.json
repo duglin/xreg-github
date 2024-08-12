@@ -1,0 +1,136 @@
+{
+  "schemagroups": {
+    "CloudyHQ": {
+      "id": "CloudyHQ",
+      "schemas": {
+        "PackageTrackingData": {
+          "id": "PackageTrackingData",
+          "versions": {
+            "1": {
+              "id": "1",
+              "format": "JSONSchema/draft-07",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "packageId": {"type": "string"},
+                  "checkpointId": {"type": "string"},
+                  "checkpointLocation": {"type": "string"},
+                  "scanTimestamp": {"type": "string", "format": "date-time"},
+                  "eventType": {"type": "string", "enum": ["ARRIVE", "DEPART"]},
+                  "timezone": {"type": "string"},
+                  "scannerId": {"type": "string"}
+                },
+                "required": ["packageId", "checkpointId", "checkpointLocation", "scanTimestamp", "eventType", "timezone", "scannerId"]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "messagegroups": {
+    "CloudyHQ.Factory": {
+      "id": "CloudyHQ.Factory",
+      "format": "CloudEvents/1.0",
+      "description": "Events related to package tracking for CloudyFactory",
+      "messages": {
+        "CloudyHQ.Factory.Arrive": {
+          "id": "CloudyHQ.Factory.Arrive",
+          "description": "Event for when a package arrives at a checkpoint for CloudyFactory",
+          "format": "CloudEvents/1.0",
+          "metadata": {
+            "type": "CloudyHQ.Factory.Arrive",
+            "subject": {
+              "required": true
+            }
+          },
+          "schemaformat": "JSONSchema/draft-07",
+          "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+        },
+        "CloudyHQ.Factory.Depart": {
+          "id": "CloudyHQ.Factory.Depart",
+          "description": "Event for when a package departs from a checkpoint for CloudyFactory",
+          "format": "CloudEvents/1.0",
+          "metadata": {
+            "type": "CloudyHQ.Factory.Depart",
+            "subject": {
+              "required": true
+            }
+          },
+          "schemaformat": "JSONSchema/draft-07",
+          "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+        }
+      }
+    },
+    "CloudyHQ.Store": {
+      "id": "CloudyHQ.Store",
+      "format": "CloudEvents/1.0",
+      "description": "Events related to package tracking for Stores",
+      "messages": {
+        "CloudyHQ.Store.Arrive": {
+          "id": "CloudyHQ.Store.Arrive",
+          "description": "Event for when a package arrives at a checkpoint for Store notification",
+          "format": "CloudEvents/1.0",
+          "metadata": {
+            "type": "CloudyHQ.Store.Arrive",
+            "subject": {
+              "required": true
+            }
+          },
+          "schemaformat": "JSONSchema/draft-07",
+          "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+        },
+        "CloudyHQ.Store.Depart": {
+          "id": "CloudyHQ.Store.Depart",
+          "description": "Event for when a package departs from a checkpoint for Store notification",
+          "format": "CloudEvents/1.0",
+          "metadata": {
+            "type": "CloudyHQ.Store.Depart",
+            "subject": {
+              "required": true
+            }
+          },
+          "schemaformat": "JSONSchema/draft-07",
+          "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+        }
+      }
+    }
+  },
+  "endpoints": {
+    "CloudyHQ.Factory.Http": {
+      "id": "CloudyHQ.Factory.Http",
+      "usage": "producer",
+      "config": {
+        "protocol": "HTTP",
+        "deployed": true,
+        "endpoints": [
+          {
+            "uri": "https://api.cloudyhq.io/scan"
+          }
+        ]
+      },
+      "messagegroups": [
+        "#/messagegroups/CloudyHQ.Factory"
+      ],
+      "format": "CloudEvents/1.0"
+    },
+    "CloudyHQ.Store.Http": {
+      "id": "CloudyHQ.Store.Http",
+      "usage": "producer",
+      "config": {
+        "protocol": "HTTP",
+        "deployed": true,
+        "endpoints": [
+          {
+            "uri": "https://api.cloudyhq.io/notify-store"
+          }
+        ]
+      },
+      "messagegroups": [
+        "#/messagegroups/CloudyHQ.Store"
+      ],
+      "format": "CloudEvents/1.0"
+    }
+  }
+}
