@@ -14,25 +14,77 @@
             "1": {
               "id": "1",
               "format": "JsonSchema/draft-07",
-              "schema": {
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                  "packageId": {"type": "string"},
-                  "checkpointId": {"type": "string"},
-                  "checkpointLocation": {"type": "string"},
-                  "scanTimestamp": {"type": "string", "format": "date-time"},
-                  "eventType": {"type": "string", "enum": ["ARRIVE", "DEPART"]},
-                  "timezone": {"type": "string"},
-                  "scannerId": {"type": "string"}
-                },
-                "required": ["packageId", "checkpointId", "checkpointLocation", "scanTimestamp", "eventType", "timezone", "scannerId"]
-              }
+              "schema": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"properties\":{\"packageId\":{\"type\":\"string\"},\"checkpointId\":{\"type\":\"string\"},\"checkpointLocation\":{\"type\":\"string\"},\"scanTimestamp\":{\"type\":\"string\",\"format\":\"date-time\"},\"eventType\":{\"type\":\"string\",\"enum\":[\"ARRIVE\",\"DEPART\"]},\"timezone\":{\"type\":\"string\"},\"scannerId\":{\"type\":\"string\"}},\"required\":[\"packageId\",\"checkpointId\",\"checkpointLocation\",\"scanTimestamp\",\"eventType\",\"timezone\",\"scannerId\"]}"
+            }
+          }
+        }
+      }
+    },
+    "CloudyHQ.Factory": {
+      "id": "CloudyHQ.Factory",
+      "name": "CloudyHQ Factory Events",
+      "description": "Schema group for CloudyHQ Factory events",
+      "schemas": {
+        "CloudyHQ.Factory.Arrive": {
+          "id": "CloudyHQ.Factory.Arrive",
+          "name": "Factory Arrive Event",
+          "description": "Event for when a package arrives at a checkpoint for CloudyFactory",
+          "format": "CloudEvents/1.0",
+          "versions": {
+            "1": {
+              "id": "1",
+              "format": "CloudEvents/1.0",
+              "schema": "{\"type\":\"CloudyHQ.Factory.Arrive\",\"schemaurl\":\"#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1\"}"
+            }
+          }
+        },
+        "CloudyHQ.Factory.Depart": {
+          "id": "CloudyHQ.Factory.Depart",
+          "name": "Factory Depart Event",
+          "description": "Event for when a package departs from a checkpoint for CloudyFactory",
+          "format": "CloudEvents/1.0",
+          "versions": {
+            "1": {
+              "id": "1",
+              "format": "CloudEvents/1.0",
+              "schema": "{\"type\":\"CloudyHQ.Factory.Depart\",\"schemaurl\":\"#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1\"}"
+            }
+          }
+        }
+      }
+    },
+    "CloudyHQ.Store": {
+      "id": "CloudyHQ.Store",
+      "name": "CloudyHQ Store Events",
+      "description": "Schema group for CloudyHQ Store events",
+      "schemas": {
+        "CloudyHQ.Store.Arrive": {
+          "id": "CloudyHQ.Store.Arrive",
+          "name": "Store Arrive Event",
+          "description": "Event for when a package arrives at a checkpoint for Store notification",
+          "format": "CloudEvents/1.0",
+          "versions": {
+            "1": {
+              "id": "1",
+              "format": "CloudEvents/1.0",
+              "schema": "{\"type\":\"CloudyHQ.Store.Arrive\",\"schemaurl\":\"#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1\"}"
+            }
+          }
+        },
+        "CloudyHQ.Store.Depart": {
+          "id": "CloudyHQ.Store.Depart",
+          "name": "Store Depart Event",
+          "description": "Event for when a package departs from a checkpoint for Store notification",
+          "format": "CloudEvents/1.0",
+          "versions": {
+            "1": {
+              "id": "1",
+              "format": "CloudEvents/1.0",
+              "schema": "{\"type\":\"CloudyHQ.Store.Depart\",\"schemaurl\":\"#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1\"}"
             }
           }
         }
       }
     }
-
   }
 }

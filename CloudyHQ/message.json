@@ -1,136 +1,132 @@
 {
-  "schemagroups": {
-    "CloudyHQ": {
-      "id": "CloudyHQ",
-      "schemas": {
-        "PackageTrackingData": {
-          "id": "PackageTrackingData",
-          "versions": {
-            "1": {
-              "id": "1",
-              "format": "JSONSchema/draft-07",
-              "schema": {
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                  "packageId": {"type": "string"},
-                  "checkpointId": {"type": "string"},
-                  "checkpointLocation": {"type": "string"},
-                  "scanTimestamp": {"type": "string", "format": "date-time"},
-                  "eventType": {"type": "string", "enum": ["ARRIVE", "DEPART"]},
-                  "timezone": {"type": "string"},
-                  "scannerId": {"type": "string"}
-                },
-                "required": ["packageId", "checkpointId", "checkpointLocation", "scanTimestamp", "eventType", "timezone", "scannerId"]
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "messagegroups": {
     "CloudyHQ.Factory": {
       "id": "CloudyHQ.Factory",
+      "name": "CloudyHQ Factory Events",
+      "description": "Message group for CloudyHQ Factory events",
       "format": "CloudEvents/1.0",
-      "description": "Events related to package tracking for CloudyFactory",
       "messages": {
         "CloudyHQ.Factory.Arrive": {
           "id": "CloudyHQ.Factory.Arrive",
+          "name": "Factory Arrive Event",
           "description": "Event for when a package arrives at a checkpoint for CloudyFactory",
           "format": "CloudEvents/1.0",
           "metadata": {
-            "type": "CloudyHQ.Factory.Arrive",
-            "subject": {
-              "required": true
+            "attributes": {
+              "type": {
+                "value": "CloudyHQ.Factory.Arrive"
+              },
+              "source": {
+                "value": "https://{factory}/scan"
+              },
+              "subject": {
+                "value": "{packageId}",
+                "required": true
+              },
+              "datacontenttype": {
+                "value": "application/json"
+              },
+              "dataschema": {
+                "value": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+              }
             }
           },
-          "schemaformat": "JSONSchema/draft-07",
+          "schemaformat": "JsonSchema/draft-07",
           "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
         },
         "CloudyHQ.Factory.Depart": {
           "id": "CloudyHQ.Factory.Depart",
+          "name": "Factory Depart Event",
           "description": "Event for when a package departs from a checkpoint for CloudyFactory",
           "format": "CloudEvents/1.0",
           "metadata": {
-            "type": "CloudyHQ.Factory.Depart",
-            "subject": {
-              "required": true
+            "attributes": {
+              "type": {
+                "value": "CloudyHQ.Factory.Depart"
+              },
+              "source": {
+                "value": "https://{factory}/scan"
+              },
+              "subject": {
+                "value": "{packageId}",
+                "required": true
+              },
+              "datacontenttype": {
+                "value": "application/json"
+              },
+              "dataschema": {
+                "value": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+              }
             }
           },
-          "schemaformat": "JSONSchema/draft-07",
+          "schemaformat": "JsonSchema/draft-07",
           "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
         }
       }
     },
     "CloudyHQ.Store": {
       "id": "CloudyHQ.Store",
+      "name": "CloudyHQ Store Events",
+      "description": "Message group for CloudyHQ Store events",
       "format": "CloudEvents/1.0",
-      "description": "Events related to package tracking for Stores",
       "messages": {
         "CloudyHQ.Store.Arrive": {
           "id": "CloudyHQ.Store.Arrive",
+          "name": "Store Arrive Event",
           "description": "Event for when a package arrives at a checkpoint for Store notification",
           "format": "CloudEvents/1.0",
           "metadata": {
-            "type": "CloudyHQ.Store.Arrive",
-            "subject": {
-              "required": true
+            "attributes": {
+              "type": {
+                "value": "CloudyHQ.Store.Arrive"
+              },
+              "source": {
+                "value": "https://{store}/notify"
+              },
+              "subject": {
+                "value": "{packageId}",
+                "required": true
+              },
+              "datacontenttype": {
+                "value": "application/json"
+              },
+              "dataschema": {
+                "value": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+              }
             }
           },
-          "schemaformat": "JSONSchema/draft-07",
+          "schemaformat": "JsonSchema/draft-07",
           "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
         },
         "CloudyHQ.Store.Depart": {
           "id": "CloudyHQ.Store.Depart",
+          "name": "Store Depart Event",
           "description": "Event for when a package departs from a checkpoint for Store notification",
           "format": "CloudEvents/1.0",
           "metadata": {
-            "type": "CloudyHQ.Store.Depart",
-            "subject": {
-              "required": true
+            "attributes": {
+              "type": {
+                "value": "CloudyHQ.Store.Depart"
+              },
+              "source": {
+                "value": "https://{store}/notify"
+              },
+              "subject": {
+                "value": "{packageId}",
+                "required": true
+              },
+              "datacontenttype": {
+                "value": "application/json"
+              },
+              "dataschema": {
+                "value": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
+              }
             }
           },
-          "schemaformat": "JSONSchema/draft-07",
+          "schemaformat": "JsonSchema/draft-07",
           "schemaurl": "#/schemagroups/CloudyHQ/schemas/PackageTrackingData/versions/1"
         }
       }
-    }
-  },
-  "endpoints": {
-    "CloudyHQ.Factory.Http": {
-      "id": "CloudyHQ.Factory.Http",
-      "usage": "producer",
-      "config": {
-        "protocol": "HTTP",
-        "deployed": true,
-        "endpoints": [
-          {
-            "uri": "https://api.cloudyhq.io/scan"
-          }
-        ]
-      },
-      "messagegroups": [
-        "#/messagegroups/CloudyHQ.Factory"
-      ],
-      "format": "CloudEvents/1.0"
-    },
-    "CloudyHQ.Store.Http": {
-      "id": "CloudyHQ.Store.Http",
-      "usage": "producer",
-      "config": {
-        "protocol": "HTTP",
-        "deployed": true,
-        "endpoints": [
-          {
-            "uri": "https://api.cloudyhq.io/notify-store"
-          }
-        ]
-      },
-      "messagegroups": [
-        "#/messagegroups/CloudyHQ.Store"
-      ],
-      "format": "CloudEvents/1.0"
     }
   }
 }
