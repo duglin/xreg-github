@@ -381,41 +381,41 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 
 	// End of model
 
-	g, err := reg.AddGroupWithObject("endpoints", "e1", registry.Object{
-		"usage": "producer",
-	}, false)
-	ErrFatalf(err)
-	ErrFatalf(g.SetSave("name", "end1"))
-	ErrFatalf(g.SetSave("epoch", 1))
-	ErrFatalf(g.SetSave("labels.stage", "dev"))
-	ErrFatalf(g.SetSave("labels.stale", "true"))
-
-	r, err := g.AddResource("messages", "created", "v1")
-	ErrFatalf(err)
-	v, err := r.FindVersion("v1", false)
-	ErrFatalf(err)
-	ErrFatalf(v.SetSave("name", "blobCreated"))
-	ErrFatalf(v.SetSave("epoch", 2))
-
-	v, err = r.AddVersion("v2")
-	ErrFatalf(err)
-	ErrFatalf(v.SetSave("name", "blobCreated"))
-	ErrFatalf(v.SetSave("epoch", 4))
-	ErrFatalf(r.SetDefault(v))
-
-	r, err = g.AddResource("messages", "deleted", "v1.0")
-	ErrFatalf(err)
-	v, err = r.FindVersion("v1.0", false)
-	ErrFatalf(err)
-	ErrFatalf(v.SetSave("name", "blobDeleted"))
-	ErrFatalf(v.SetSave("epoch", 3))
-
-	g, err = reg.AddGroupWithObject("endpoints", "e2", registry.Object{
-		"usage": "consumer",
-	}, false)
-	ErrFatalf(err)
-	ErrFatalf(g.SetSave("name", "end1"))
-	ErrFatalf(g.SetSave("epoch", 1))
+	//g, err := reg.AddGroupWithObject("endpoints", "e1", registry.Object{
+	//	"usage": "producer",
+	//}, false)
+	//ErrFatalf(err)
+	//ErrFatalf(g.SetSave("name", "end1"))
+	//ErrFatalf(g.SetSave("epoch", 1))
+	//ErrFatalf(g.SetSave("labels.stage", "dev"))
+	//ErrFatalf(g.SetSave("labels.stale", "true"))
+	//
+	//r, err := g.AddResource("messages", "created", "v1")
+	//ErrFatalf(err)
+	//v, err := r.FindVersion("v1", false)
+	//ErrFatalf(err)
+	//ErrFatalf(v.SetSave("name", "blobCreated"))
+	//ErrFatalf(v.SetSave("epoch", 2))
+	//
+	//v, err = r.AddVersion("v2")
+	//ErrFatalf(err)
+	//ErrFatalf(v.SetSave("name", "blobCreated"))
+	//ErrFatalf(v.SetSave("epoch", 4))
+	//ErrFatalf(r.SetDefault(v))
+	//
+	//r, err = g.AddResource("messages", "deleted", "v1.0")
+	//ErrFatalf(err)
+	//v, err = r.FindVersion("v1.0", false)
+	//ErrFatalf(err)
+	//ErrFatalf(v.SetSave("name", "blobDeleted"))
+	//ErrFatalf(v.SetSave("epoch", 3))
+	//
+	//g, err = reg.AddGroupWithObject("endpoints", "e2", registry.Object{
+	//	"usage": "consumer",
+	//}, false)
+	//ErrFatalf(err)
+	//ErrFatalf(g.SetSave("name", "end1"))
+	//ErrFatalf(g.SetSave("epoch", 1))
 
 	ErrFatalf(reg.Model.Verify())
 	reg.Commit()
