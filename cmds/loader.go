@@ -516,6 +516,13 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 	msgs, _ := reg.Model.AddGroupModel("schemagroups", "schemagroup")
 	msgs.AddResourceModel("schemas", "schema", 0, true, true, true)
 
+	specPath := os.Getenv("XR_SPEC")
+	if specPath == "" {
+		specPath = "https://raw.githubusercontent.com/xregistry/spec/main"
+	}
+	fn := specPath + "/schema/model.json"
+	err = reg.LoadModelFromFile(fn)
+
 	// End of model
 
 	ErrFatalf(reg.Model.Verify())
