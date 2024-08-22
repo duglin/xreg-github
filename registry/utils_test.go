@@ -207,8 +207,8 @@ func (h *FSHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// Test ProcessImports
-func TestProcessImports(t *testing.T) {
+// Test ProcessInclues
+func TestProcessInclues(t *testing.T) {
 	// Setup HTTP server
 	httpPaths := map[string]string{
 		"/empty":        "",
@@ -218,31 +218,31 @@ func TestProcessImports(t *testing.T) {
 		"/twolevel":     `{"foo":"bar3","foo6":{"bar":666}}`,
 		"/twoarray":     `{"foo":"bar","foo6":[{"x":"y"},{"bar":667}]}`,
 		"/nonfoo":       `{"bar":"zzz","foo":"qqq"}`,
-		"/nest1":        `{"foo":"bar1","$import":"onelevel"}`,
-		"/nest2":        `{"foo":"bar1","$import":"twoarray#/foo6/1"}`,
-		"/nest3":        `{"$import": "twoarray#/foo6/1","f3":"bar"}`,
-		"/nest3.1":      `{"$import": "/onelevel"}`,
-		"/nest3.1.f":    `{"$import": "./onelevel"}`,
-		"/nest3.1.f2":   `{"$import": "onelevel"}`,
-		"/nest/nest4":   `{"foo":"bar1","$import":"/onelevel"}`,
-		"/nest/nest4.f": `{"foo":"bar1","$import":"../onelevel"}`,
-		"/nest/nest5":   `{"foo":"bar2","$import":"/nest/nest4"}`,
-		"/nest/nest5.f": `{"foo":"bar2","$import":"../nest/nest4.f"}`,
-		"/nest/nest6":   `{"foo":"bar2","$import":"http://localhost:9999/nest/nest4"}`,
+		"/nest1":        `{"foo":"bar1","$include":"onelevel"}`,
+		"/nest2":        `{"foo":"bar1","$include":"twoarray#/foo6/1"}`,
+		"/nest3":        `{"$include": "twoarray#/foo6/1","f3":"bar"}`,
+		"/nest3.1":      `{"$include": "/onelevel"}`,
+		"/nest3.1.f":    `{"$include": "./onelevel"}`,
+		"/nest3.1.f2":   `{"$include": "onelevel"}`,
+		"/nest/nest4":   `{"foo":"bar1","$include":"/onelevel"}`,
+		"/nest/nest4.f": `{"foo":"bar1","$include":"../onelevel"}`,
+		"/nest/nest5":   `{"foo":"bar2","$include":"/nest/nest4"}`,
+		"/nest/nest5.f": `{"foo":"bar2","$include":"../nest/nest4.f"}`,
+		"/nest/nest6":   `{"foo":"bar2","$include":"http://localhost:9999/nest/nest4"}`,
 
-		"/err1": `{"$import": "empty"}`,
-		"/err2": `{"$import": "notjson"}`,
-		"/err3": `{"$import": "/err3"}`,
-		"/err4": `{"$import": "twolevel/bar"}`,
+		"/err1": `{"$include": "empty"}`,
+		"/err2": `{"$include": "notjson"}`,
+		"/err3": `{"$include": "/err3"}`,
+		"/err4": `{"$include": "twolevel/bar"}`,
 
-		"/nest7":      `{"$imports": []}`,
-		"/nest7.err1": `{"$import": []}`,
-		"/nest7.err2": `{"$imports": [1,2,3]}`,
-		"/nest7.err3": `{"$import": "foo", "$imports": []}`,
+		"/nest7":      `{"$includes": []}`,
+		"/nest7.err1": `{"$include": []}`,
+		"/nest7.err2": `{"$includes": [1,2,3]}`,
+		"/nest7.err3": `{"$include": "foo", "$includes": []}`,
 
-		"/nest8":  `{"$imports": [ "onelevel", "twolevel" ]}`,
-		"/nest9":  `{"$imports": [ "onelevel", "twolevel" ], "foo":"xxx"}`,
-		"/nest10": `{"$imports": [ "nonfoo", "onelevel" ], "foo":"xxx"}`,
+		"/nest8":  `{"$includes": [ "onelevel", "twolevel" ]}`,
+		"/nest9":  `{"$includes": [ "onelevel", "twolevel" ], "foo":"xxx"}`,
+		"/nest10": `{"$includes": [ "nonfoo", "onelevel" ], "foo":"xxx"}`,
 	}
 	server := &http.Server{Addr: ":9999", Handler: &FSHandler{httpPaths}}
 	go server.ListenAndServe()
@@ -308,10 +308,10 @@ func TestProcessImports(t *testing.T) {
 
 		{"nest7", `{}`},
 
-		{"nest7.err1", `In "tmp/xreg1/nest7.err1", $import isn't a string`},
-		{"nest7.err2", `In "tmp/xreg1/nest7.err2", $imports contains a non-string value (1)`},
-		{"nest7.err3", `In "tmp/xreg1/nest7.err3", both $import and $imports is not allowed`},
-		{"http:/nest7.err1", `In "http://localhost:9999/nest7.err1", $import isn't a string`},
+		{"nest7.err1", `In "tmp/xreg1/nest7.err1", $include value isn't a string`},
+		{"nest7.err2", `In "tmp/xreg1/nest7.err2", $includes contains a non-string value (1)`},
+		{"nest7.err3", `In "tmp/xreg1/nest7.err3", both $include and $includes is not allowed`},
+		{"http:/nest7.err1", `In "http://localhost:9999/nest7.err1", $include value isn't a string`},
 
 		{"nest8", `{"foo":"bar","foo6":666}`},
 		{"nest9", `{"foo":"xxx","foo6":666}`},
@@ -343,7 +343,7 @@ func TestProcessImports(t *testing.T) {
 		if err != nil {
 			t.Fatalf(err.Error())
 		}
-		buf, err = ProcessImports(test.Path, buf,
+		buf, err = ProcessIncludes(test.Path, buf,
 			!strings.HasPrefix(test.Path, "http"))
 		if err != nil {
 			buf = []byte(err.Error())
@@ -351,7 +351,8 @@ func TestProcessImports(t *testing.T) {
 		exp := string(mask.ReplaceAll([]byte(test.Result), []byte("tmp")))
 		buf = mask.ReplaceAll(buf, []byte("tmp"))
 		if string(buf) != exp {
-			t.Fatalf("\nExp: %s\nGot: %s", exp, string(buf))
+			t.Fatalf("\nPath: %s\nExp: %s\nGot: %s",
+				test.Path, exp, string(buf))
 		}
 	}
 

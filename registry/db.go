@@ -420,11 +420,17 @@ func (r *Result) RetrieveNextRowFromDB() bool {
 }
 
 func Query(tx *Tx, cmd string, args ...interface{}) (*Result, error) {
+	doTime := os.Getenv("RX_TIMING") != ""
+	startTime := time.Now()
 	if log.GetVerbose() >= 4 {
 		log.Printf("Query: %s", SubQuery(cmd, args))
 	}
 
 	ps, err := tx.Prepare(cmd)
+	if doTime {
+		log.Printf("Query: %s", SubQuery(cmd, args))
+		log.Printf("Prep  time: %s", time.Now().Sub(startTime).Round(time.Millisecond).String())
+	}
 	if err != nil {
 		log.Printf("Error Prepping query (%s)->%s\n", cmd, err)
 		return nil, fmt.Errorf("Error Prepping query (%s)->%s\n", cmd, err)
@@ -432,6 +438,9 @@ func Query(tx *Tx, cmd string, args ...interface{}) (*Result, error) {
 	defer ps.Close()
 
 	rows, err := ps.Query(args...)
+	if doTime {
+		log.Printf("Query time: %s", time.Now().Sub(startTime).Round(time.Millisecond).String())
+	}
 	if err != nil {
 		log.Printf("Error querying DB(%s)(%v)->%s\n", cmd, args, err)
 		return nil, fmt.Errorf("Error querying DB(%s)->%s\n", cmd, err)
@@ -458,6 +467,9 @@ func Query(tx *Tx, cmd string, args ...interface{}) (*Result, error) {
 	// Download all data. We used to pull from DB on each PullNextRow
 	// but mysql doesn't support multiple queries being active in the same Tx
 	result.RetrieveAllRowsFromDB()
+	if doTime {
+		log.Printf("Get   time: %s", time.Now().Sub(startTime).Round(time.Millisecond).String())
+	}
 
 	return result, nil
 }

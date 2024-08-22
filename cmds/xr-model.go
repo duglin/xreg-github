@@ -20,7 +20,7 @@ func addModelCmd(parent *cobra.Command) {
 
 	modelNormalizeCmd := &cobra.Command{
 		Use:   "normalize [ - | FILE... ]",
-		Short: "Parse and resolve imports in an xRegistry model document",
+		Short: "Parse and resolve includes in an xRegistry model document",
 		Run:   modelNormalizeFunc,
 	}
 	modelCmd.AddCommand(modelNormalizeCmd)
@@ -54,7 +54,7 @@ func modelNormalizeFunc(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	buf, err = registry.ProcessImports(fileName, buf, true)
+	buf, err = registry.ProcessIncludes(fileName, buf, true)
 	if err != nil {
 		Error(err.Error())
 	}
@@ -114,7 +114,7 @@ func VerifyModel(fileName string, buf []byte) {
 		fileName = ""
 	}
 
-	buf, err = registry.ProcessImports(fileName, buf, true)
+	buf, err = registry.ProcessIncludes(fileName, buf, true)
 	if err != nil {
 		Error("%s%s", fileName, err)
 	}

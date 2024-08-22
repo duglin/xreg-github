@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	// "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +18,7 @@ import (
 
 var Token string
 var Secret string
+var RepoPath = "https://raw.githubusercontent.com/xregistry/spec/main"
 
 func ErrFatalf(err error, args ...any) {
 	if err == nil {
@@ -46,7 +48,6 @@ func init() {
 
 func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s/%s'", orgName, repoName)
 	Token = strings.TrimSpace(Token)
 
 	/*
@@ -74,14 +75,14 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 	reader := tar.NewReader(gzf)
 
 	if reg == nil {
-		reg, err = registry.FindRegistry(nil, "API-Guru")
+		reg, err = registry.FindRegistry(nil, "APIs-Guru")
 		ErrFatalf(err)
 		if reg != nil {
 			reg.Rollback()
 			return reg
 		}
 
-		reg, err = registry.NewRegistry(nil, "API-Guru")
+		reg, err = registry.NewRegistry(nil, "APIs-Guru")
 		ErrFatalf(err, "Error creating new registry: %s", err)
 		// log.VPrintf(3, "New registry:\n%#v", reg)
 		defer reg.Rollback()
@@ -96,6 +97,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		// TODO Support "model" being part of the Registry struct above
 	}
 
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
 	g, err := reg.Model.AddGroupModel("apiproviders", "apiprovider")
 	ErrFatalf(err)
 	r, err := g.AddResourceModel("apis", "api", 2, true, true, true)
@@ -199,7 +201,6 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 
 func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "TestRegistry")
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "TestRegistry")
 		ErrFatalf(err)
@@ -266,6 +267,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(reg.SetSave("arrmap[1].key1", "arrmapk1-value"))
 	}
 
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	ErrFatalf(err)
 	rm, err := gm.AddResourceModel("files", "file", 2, true, true, true)
@@ -298,7 +300,6 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "Endpoints")
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "Endpoints")
 		ErrFatalf(err)
@@ -317,11 +318,9 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
 	}
 
-	specPath := os.Getenv("XR_SPEC")
-	if specPath == "" {
-		specPath = "https://raw.githubusercontent.com/xregistry/spec/main"
-	}
-	fn := specPath + "/endpoint/model.json"
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
+	fn, err := registry.FindModelFile("endpoint/model.json")
+	ErrFatalf(err)
 	err = reg.LoadModelFromFile(fn)
 	ErrFatalf(err)
 
@@ -424,7 +423,6 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 
 func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "Messages")
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "Messages")
 		ErrFatalf(err)
@@ -443,11 +441,9 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
-	specPath := os.Getenv("XR_SPEC")
-	if specPath == "" {
-		specPath = "https://raw.githubusercontent.com/xregistry/spec/main"
-	}
-	fn := specPath + "/message/model.json"
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
+	fn, err := registry.FindModelFile("message/model.json")
+	ErrFatalf(err)
 	err = reg.LoadModelFromFile(fn)
 	ErrFatalf(err)
 
@@ -494,7 +490,6 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 
 func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "Schemas")
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "Schemas")
 		ErrFatalf(err)
@@ -513,8 +508,11 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
-	msgs, _ := reg.Model.AddGroupModel("schemagroups", "schemagroup")
-	msgs.AddResourceModel("schemas", "schema", 0, true, true, true)
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
+	fn, err := registry.FindModelFile("schema/model.json")
+	ErrFatalf(err)
+	err = reg.LoadModelFromFile(fn)
+	ErrFatalf(err)
 
 	// End of model
 
@@ -526,7 +524,6 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 func LoadLargeSample(reg *registry.Registry) *registry.Registry {
 	var err error
 	start := time.Now()
-	log.VPrintf(1, "Loading registry '%s'...", "Large")
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "Large")
 		ErrFatalf(err)
@@ -545,6 +542,7 @@ func LoadLargeSample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
@@ -575,14 +573,13 @@ func LoadLargeSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(reg.Model.Verify())
 	reg.Commit()
 	dur := time.Now().Sub(start).Round(time.Second)
-	log.VPrintf(1, "Done loading registry '%s' (time: %s)", "Large", dur)
+	log.VPrintf(1, "Done loading registry '%s' (time: %s)", reg.UID, dur)
 	log.VPrintf(1, "Dirs: %d  Files: %d  Versions: %d", dirs, files, vers)
 	return reg
 }
 
 func LoadDocStore(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "DocStore")
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "DocStore")
 		ErrFatalf(err)
@@ -601,6 +598,7 @@ func LoadDocStore(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
 	gm, _ := reg.Model.AddGroupModel("documents", "document")
 	gm.AddResourceModel("formats", "format", 0, true, true, true)
 
@@ -634,7 +632,7 @@ func LoadDocStore(reg *registry.Registry) *registry.Registry {
 
 func LoadCESample(reg *registry.Registry) *registry.Registry {
 	var err error
-	log.VPrintf(1, "Loading registry '%s'", "CloudEvents")
+
 	if reg == nil {
 		reg, err = registry.FindRegistry(nil, "CloudEvents")
 		ErrFatalf(err)
@@ -653,15 +651,11 @@ func LoadCESample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
 	}
 
-	groups, _ := reg.Model.AddGroupModel("endpoints", "endpoint")
-	res, _ := groups.AddResourceModel("messages", "message", 0, true, true, true)
-	res.AddAttr("*", registry.ANY)
-
-	groups, _ = reg.Model.AddGroupModel("messagegroups", "messagegroup")
-	res, _ = groups.AddResourceModel("message", "message", 0, true, true, true)
-
-	groups, _ = reg.Model.AddGroupModel("schemagroups", "schemagroup")
-	res, _ = groups.AddResourceModel("schemas", "schema", 0, true, true, true)
+	log.VPrintf(1, "Loading registry '/reg-%s'", reg.UID)
+	fn, err := registry.FindModelFile("cloudevents/model.json")
+	ErrFatalf(err)
+	err = reg.LoadModelFromFile(fn)
+	ErrFatalf(err)
 
 	// End of model
 

@@ -933,7 +933,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -1071,7 +1077,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -1272,7 +1284,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -1526,7 +1544,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -1781,7 +1805,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -1981,7 +2011,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -2211,7 +2247,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -2442,7 +2484,13 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "id",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "exportrequired": true
+              },
+              "xref": {
+                "name": "xref",
+                "type": "url",
+                "exportrequired": true
               },
               "name": {
                 "name": "name",
@@ -2699,7 +2747,13 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "id",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "exportrequired": true
+              },
+              "xref": {
+                "name": "xref",
+                "type": "url",
+                "exportrequired": true
               },
               "name": {
                 "name": "name",
@@ -3222,7 +3276,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -3304,7 +3364,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -3442,7 +3508,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -3524,7 +3596,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -3773,7 +3851,13 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "id",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "exportrequired": true
+              },
+              "xref": {
+                "name": "xref",
+                "type": "url",
+                "exportrequired": true
               },
               "name": {
                 "name": "name",
@@ -3911,7 +3995,13 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "id",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "exportrequired": true
+              },
+              "xref": {
+                "name": "xref",
+                "type": "url",
+                "exportrequired": true
               },
               "name": {
                 "name": "name",

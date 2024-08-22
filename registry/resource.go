@@ -19,6 +19,7 @@ var specialResourceAttrs = map[string]bool{
 	"defaultversionid":     true,
 	"stickydefaultversion": true,
 	"#nextversionid":       true,
+	"xref":                 true,
 }
 
 // Remove any attributes that appear on Resources but not Versions.

@@ -1,21 +1,18 @@
 all: mysql cmds test image run
 
 # Notes:
-# export XR_SPEC=$HOME/go/src/github.com/xregistry/spec -> to load local models
-# export VERBOSE=[0-9]                                  -> control log verbosity
+# export VERBOSE=[0-9]
 # Override these env vars as needed:
 DBHOST     ?= 127.0.0.1
 DBPORT     ?= 3306
 DBUSER     ?= root
 DBPASSWORD ?= password
 IMAGE      ?= duglin/xreg-server
+XR_SPEC    ?= $(HOME)/go/src/github.com/xregistry/spec   # local xReg spec
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 
-ifdef XR_SPEC
-  # If pointing to local spec then make sure "docker run" uses it too
-  DOCKER_SPEC=/spec
-endif
+export XR_MODEL_PATH=.:./spec:$(XR_SPEC)
 
 cmds: .cmds
 .cmds: server xr
@@ -57,18 +54,18 @@ image: .image
 		misc/startall
 	@echo
 	@echo "# Building the container image"
-ifdef XR_SPEC
-	# Copy local xReg spec files into tmp dir that "docker build" looks for
 	@rm -rf .spec
 	@mkdir -p .spec
-	cp -r $(XR_SPEC)/* .spec
+ifdef XR_SPEC
+	# First, copy local xReg spec files locally so "docker build" gets them
+	cp -r $(XR_SPEC)/* .spec/
+	@echo
+	@echo "# Now build the images"
 endif
 	@misc/errOutput docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
 	@misc/errOutput docker build -f misc/Dockerfile-all -t $(IMAGE)-all \
 		--no-cache .
-ifdef XR_SPEC
 	@rm -rf .spec
-endif
 	@touch .image
 
 testimage: .testimage
@@ -76,10 +73,9 @@ testimage: .testimage
 	@echo
 	@echo "# Verifying the image"
 	@make --no-print-directory mysql waitformysql
-	@misc/errOutput docker run -ti \
+	@misc/errOutput docker run -ti --network host \
 		-e DBHOST=$(DBHOST) -e DBPORT=$(DBPORT) -e DBUSER=$(DBUSER) \
-		-e XR_SPEC=$(DOCKER_SPEC) \
-		--network host \
+		-e XR_MODEL_PATH=/spec \
 		$(IMAGE) --recreate --verify
 	@touch .testimage
 

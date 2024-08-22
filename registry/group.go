@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/duglin/dlog"
 )
@@ -98,6 +99,55 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			id, rType)
 	}
 
+	xref := ""
+	var xrefAny any
+	hasXref := false
+
+	if xrefAny, hasXref = obj["xref"]; hasXref {
+		if IsNil(xrefAny) {
+			// Do nothing
+			// delete(obj, "xref")
+		} else {
+			xref, _ = xrefAny.(string)
+
+			if objIsVer {
+				return nil, false, fmt.Errorf("Can't create a Version with " +
+					"the 'xref' attribute")
+			}
+
+			xref = strings.TrimSpace(xref)
+			parts := strings.Split(xref, "/")
+			if len(parts) != 4 {
+				return nil, false, fmt.Errorf("'xref' must be of the form: " +
+					"GROUPs/gID/RESOURCEs/rID")
+			}
+			/*
+				group, err := g.Registry.FindGroup(parts[0], parts[1], false)
+				if err != nil {
+					return nil, false, err
+				}
+				if IsNil(group) {
+					return nil, false, fmt.Errorf("Can't find group '%s/%s'",
+						parts[0], parts[1])
+				}
+				res, err := group.FindResource(parts[2], parts[3], false)
+				if err != nil {
+					return nil, false, err
+				}
+				if IsNil(res) {
+					return nil, false, fmt.Errorf("Can't find resource '%s/%s'",
+						parts[2], parts[3])
+				}
+			*/
+
+			// Erase all attributes except id and xref
+			obj = map[string]any{
+				"id":   id,
+				"xref": xref,
+			}
+		}
+	}
+
 	// List of versions in the incoming request
 	versions := map[string]any(nil)
 
@@ -174,6 +224,23 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		err = r.SetSave("#nextversionid", 1)
 		if err != nil {
 			return nil, false, err
+		}
+	}
+
+	if hasXref {
+		if IsNil(xref) {
+			delete(obj, "xref")
+			err = r.SetSave("xref", nil)
+			if err != nil {
+				return nil, false, err
+			}
+			hasXref = false
+		} else {
+			err = r.SetSave("xref", xref)
+			if err != nil {
+				return nil, false, err
+			}
+			return r, isNew, nil
 		}
 	}
 

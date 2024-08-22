@@ -18,20 +18,39 @@ func TestXRBasic(t *testing.T) {
 	// Just look for the first 3 lines
 	xCheckEqual(t, "", lines, "xRegistry CLI\n\nUsage")
 
-	if tmp := os.Getenv("XR_SPEC"); tmp != "" {
-		RepoBase = tmp
-	}
-
 	// Make sure we can validate the various spec owned model files
 	files := []string{
 		"sample-model.json",
-		RepoBase + "/endpoint/model.json",
-		RepoBase + "/message/model.json",
-		RepoBase + "/schema/model.json",
+		"/endpoint/model.json",
+		"/message/model.json",
+		"/schema/model.json",
+	}
+	paths := os.Getenv("XR_MODEL_PATH")
+	if paths == "" {
+		paths = ".:" + RepoBase
 	}
 
 	for _, file := range files {
-		cmd = exec.Command("../xr", "model", "verify", file)
+		fn := file
+		if !strings.HasPrefix(fn, "http:") {
+			for _, path := range strings.Split(paths, ":") {
+				if strings.HasPrefix(path, "http:") {
+					fn = path
+					break
+				}
+				fn = path + "/" + file
+				if _, err := os.Stat(fn); err == nil {
+					break
+				}
+				fn = ""
+			}
+			if fn == "" {
+				t.Errorf("Can't find %q in %q", file, paths)
+				t.FailNow()
+			}
+		}
+
+		cmd = exec.Command("../xr", "model", "verify", fn)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Fatalf("File: %s\nOut: %s\nErr: %s", file, string(out), err)

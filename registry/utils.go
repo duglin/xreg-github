@@ -29,6 +29,10 @@ func NewUUID() string {
 	return fmt.Sprintf("%s%d", uuid.NewString()[:8], count)
 }
 
+func IsURL(str string) bool {
+	return strings.HasPrefix(str, "http:") || strings.HasPrefix(str, "https:")
+}
+
 func Must(err error) {
 	if err != nil {
 		panic(err)
@@ -314,14 +318,14 @@ func RemoveComments(buf []byte) []byte {
 	return removeCommentsRE.ReplaceAll(buf, []byte("${1}"))
 }
 
-type ImportArgs struct {
+type IncludeArgs struct {
 	// Cache path/name of "" means stdin
 	Cache      map[string]map[string]any // Path#.. -> json
 	History    []string                  // Just names, no frag, [0]=latest
 	LocalFiles bool                      // ok to access local FS files?
 }
 
-func ProcessImports(file string, buf []byte, localFiles bool) ([]byte, error) {
+func ProcessIncludes(file string, buf []byte, localFiles bool) ([]byte, error) {
 	data := map[string]any{}
 
 	buf = RemoveComments(buf)
@@ -330,7 +334,7 @@ func ProcessImports(file string, buf []byte, localFiles bool) ([]byte, error) {
 		return nil, fmt.Errorf("Error parsing JSON: %s", err)
 	}
 
-	importArgs := ImportArgs{
+	includeArgs := IncludeArgs{
 		Cache: map[string]map[string]any{
 			file: data,
 		},
@@ -338,7 +342,7 @@ func ProcessImports(file string, buf []byte, localFiles bool) ([]byte, error) {
 		LocalFiles: localFiles,
 	}
 
-	if err := ImportTraverse(importArgs, data); err != nil {
+	if err := IncludeTraverse(includeArgs, data); err != nil {
 		return nil, err
 	}
 
@@ -351,40 +355,41 @@ func ProcessImports(file string, buf []byte, localFiles bool) ([]byte, error) {
 	return buf, nil
 }
 
-// data is the current map to check for $import statements
-func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
+// data is the current map to check for $include statements
+func IncludeTraverse(includeArgs IncludeArgs, data map[string]any) error {
 	var err error
-	currFile, _ := SplitFragement(importArgs.History[0]) // Grab just base name
+	currFile, _ := SplitFragement(includeArgs.History[0]) // Grab just base name
 
-	// log.Printf("ImportTraverse:")
-	// log.Printf("  Cache: %v", SortedKeys(importArgs.Cache))
-	// log.Printf("  History: %v", importArgs.History)
+	// log.Printf("IncludeTraverse:")
+	// log.Printf("  Cache: %v", SortedKeys(includeArgs.Cache))
+	// log.Printf("  History: %v", includeArgs.History)
 	// log.Printf("  Recurse:")
 	// log.Printf("    Data keys: %v", SortedKeys(data))
 
-	_, ok1 := data["$import"]
-	_, ok2 := data["$imports"]
+	_, ok1 := data["$include"]
+	_, ok2 := data["$includes"]
 	if ok1 && ok2 {
-		return fmt.Errorf("In %q, both $import and $imports is not allowed",
+		return fmt.Errorf("In %q, both $include and $includes is not allowed",
 			currFile)
 	}
 
 	dataKeys := Keys(data) // so we can add/delete keys
 	for _, key := range dataKeys {
 		val := data[key]
-		if key == "$import" || key == "$imports" {
+		if key == "$include" || key == "$includes" {
 			delete(data, key)
 			list := []string{}
 
 			valValue := reflect.ValueOf(val)
-			if key == "$import" {
+			if key == "$include" {
 				if valValue.Kind() != reflect.String {
-					return fmt.Errorf("In %q, $import isn't a string", currFile)
+					return fmt.Errorf("In %q, $include value isn't a string",
+						currFile)
 				}
 				list = []string{val.(string)}
 			} else {
 				if valValue.Kind() != reflect.Slice {
-					return fmt.Errorf("In %q, $imports isn't an array",
+					return fmt.Errorf("In %q, $includes value isn't an array",
 						currFile)
 				}
 
@@ -392,7 +397,7 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 					impInt := valValue.Index(i).Interface()
 					imp, ok := impInt.(string)
 					if !ok {
-						return fmt.Errorf("In %q, $imports contains a "+
+						return fmt.Errorf("In %q, $includes contains a "+
 							"non-string value (%v)", currFile, impInt)
 					}
 					list = append(list, imp)
@@ -400,35 +405,43 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 			}
 
 			for _, impStr := range list {
-				for _, name := range importArgs.History {
+				for _, name := range includeArgs.History {
 					if name == impStr {
 						return fmt.Errorf("Recursive on %q", name)
 					}
 				}
 
 				if len(impStr) == 0 {
-					return fmt.Errorf("In %q, $import can't be an empty string",
-						currFile)
+					return fmt.Errorf("In %q, $include can't be an empty "+
+						"string", currFile)
 				}
 
 				// log.Printf("CurrFile: %s\nImpStr: %s", currFile, impStr)
 				nextFile := ResolvePath(currFile, impStr)
 				// log.Printf("NextFile: %s", nextFile)
-				importData := importArgs.Cache[nextFile]
+				includeData := includeArgs.Cache[nextFile]
 				base, fragment := SplitFragement(nextFile)
 
-				if importData == nil {
-					importData = importArgs.Cache[base]
-					if importData == nil {
+				if includeData == nil {
+					includeData = includeArgs.Cache[base]
+					if includeData == nil {
+						/*
+							fn, err := FindModelFile(base)
+							if err != nil {
+								return err
+							}
+						*/
+						fn := base
+
 						data := []byte(nil)
-						if strings.HasPrefix(base, "http") {
-							res, err := http.Get(base)
+						if IsURL(fn) {
+							res, err := http.Get(fn)
 							if err != nil {
 								return err
 							}
 							if res.StatusCode != 200 {
 								return fmt.Errorf("Error getting %q: %s",
-									base, res.Status)
+									fn, res.Status)
 							}
 							data, err = io.ReadAll(res.Body)
 							res.Body.Close()
@@ -436,52 +449,53 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 								return err
 							}
 						} else {
-							if importArgs.LocalFiles {
-								if data, err = os.ReadFile(base); err != nil {
-									return fmt.Errorf("Error reading file %q: %s",
-										base, err)
+							if includeArgs.LocalFiles {
+								if data, err = os.ReadFile(fn); err != nil {
+									return fmt.Errorf("Error reading file "+
+										"%q: %s", fn, err)
 								}
 							} else {
-								return fmt.Errorf("Not allowed to access file: %s",
-									base)
+								return fmt.Errorf("Not allowed to access "+
+									"file: %s", fn)
 							}
 						}
 						data = RemoveComments(data)
 
-						if err := Unmarshal(data, &importData); err != nil {
+						if err := Unmarshal(data, &includeData); err != nil {
 							return err
 						}
-						importArgs.Cache[base] = importData
+						includeArgs.Cache[base] = includeData
 					}
 
 					// Now, traverse down to the specific field - if needed
 					if fragment != "" {
-						nextTop := importArgs.Cache[base]
+						nextTop := includeArgs.Cache[base]
 						impData, err := GetJSONPointer(nextTop, fragment)
 						if err != nil {
 							return err
 						}
 
 						if reflect.ValueOf(impData).Kind() != reflect.Map {
-							return fmt.Errorf("In %q, $import(%s) is not a map: %s",
-								currFile, impStr, reflect.ValueOf(importData).Kind())
+							return fmt.Errorf("In %q, $include(%s) is not a "+
+								"map: %s", currFile, impStr,
+								reflect.ValueOf(includeData).Kind())
 						}
 
-						importData = impData.(map[string]any)
-						importArgs.Cache[nextFile] = importData
+						includeData = impData.(map[string]any)
+						includeArgs.Cache[nextFile] = includeData
 					}
 				}
 
 				// Go deep! (recurse) before we add it to current map
-				importArgs.History = append([]string{nextFile},
-					importArgs.History...)
-				if err = ImportTraverse(importArgs, importData); err != nil {
+				includeArgs.History = append([]string{nextFile},
+					includeArgs.History...)
+				if err = IncludeTraverse(includeArgs, includeData); err != nil {
 					return err
 				}
-				importArgs.History = importArgs.History[1:]
+				includeArgs.History = includeArgs.History[1:]
 
 				// Only copy if we don't already have one by this name
-				for k, v := range importData {
+				for k, v := range includeData {
 					if _, ok := data[k]; !ok {
 						data[k] = v
 					}
@@ -490,7 +504,7 @@ func ImportTraverse(importArgs ImportArgs, data map[string]any) error {
 		} else {
 			if reflect.ValueOf(val).Kind() == reflect.Map {
 				nextLevel := val.(map[string]any)
-				if err = ImportTraverse(importArgs, nextLevel); err != nil {
+				if err = IncludeTraverse(includeArgs, nextLevel); err != nil {
 					return err
 				}
 			}
@@ -529,7 +543,7 @@ func ResolvePath(baseFile string, next string) string {
 	}
 
 	// Abs URLs
-	if strings.HasPrefix(next, "http:") || strings.HasPrefix(next, "https:") {
+	if IsURL(next) {
 		return next
 	}
 
@@ -697,4 +711,32 @@ func Match(pattern string, str string) bool {
 		is++
 	}
 	return false
+}
+
+func FindModelFile(name string) (string, error) {
+	if IsURL(name) {
+		return name, nil
+	}
+
+	if strings.HasPrefix(name, "/") {
+		return name, nil
+	}
+
+	// Consider adding the github repo as a default value to PATH and
+	// allowing the filename to be appended to it
+	paths := os.Getenv("XR_MODEL_PATH")
+
+	for _, path := range strings.Split(paths, ":") {
+		path = strings.TrimSpace(path)
+		if path == "" {
+			path = "."
+		}
+		path = path + "/" + name
+
+		if _, err := os.Stat(path); err == nil {
+			return path, nil
+		}
+	}
+
+	return "", fmt.Errorf("Can't find %q in %q", name, paths)
 }

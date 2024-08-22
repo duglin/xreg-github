@@ -45,14 +45,15 @@ func InitDB() {
 		return
 	}
 
-	reg, err := registry.FindRegistry(nil, "SampleRegistry")
+	reg, err := registry.FindRegistry(nil, "CloudEvents")
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return
 	}
 
 	if reg == nil {
-		reg = LoadDirsSample(reg)
+		reg = LoadCESample(nil)
+		LoadDirsSample(nil)
 		LoadEndpointsSample(nil)
 		LoadMessagesSample(nil)
 		LoadSchemasSample(nil)
@@ -62,6 +63,7 @@ func InitDB() {
 			go LoadLargeSample(nil)
 		}
 	}
+	log.Printf("Default registry is: %s", reg.UID)
 
 	if reg == nil {
 		fmt.Fprintf(os.Stderr, "No registry loaded\n")

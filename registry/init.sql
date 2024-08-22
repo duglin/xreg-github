@@ -182,6 +182,7 @@ CREATE TABLE Resources (
 
     PRIMARY KEY (SID),
     INDEX(GroupSID, UID),
+    INDEX(Path),
     UNIQUE INDEX (GroupSID, ModelSID, UID)
 );
 
@@ -205,15 +206,9 @@ CREATE TABLE Versions (
     ResourceContentSID  VARCHAR(64),
 
     PRIMARY KEY (SID),
-    UNIQUE INDEX (ResourceSID, UID)
+    UNIQUE INDEX (ResourceSID, UID),
+    INDEX(ResourceSID)
 );
-
-CREATE TRIGGER VersionsTrigger BEFORE DELETE ON Versions
-FOR EACH ROW
-BEGIN
-    DELETE FROM Props WHERE EntitySID=OLD.SID @
-    DELETE FROM ResourceContents WHERE VersionSID=OLD.SID @
-END ;
 
 CREATE TABLE Props (
     RegistrySID VARCHAR(64) NOT NULL,
@@ -223,32 +218,48 @@ CREATE TABLE Props (
     PropType    CHAR(64) NOT NULL,          # string, boolean, int, ...
 
     PRIMARY KEY (EntitySID, PropName),
-    INDEX (EntitySID)
+    INDEX (EntitySID),
+    INDEX (PropName)
 );
 
-CREATE TABLE ResourceContents (
-    VersionSID      VARCHAR(255),
-    Content         MEDIUMBLOB,
-
-    PRIMARY KEY (VersionSID)
-);
-
-CREATE VIEW DefaultProps AS
+CREATE VIEW xRefSrc2TgtResources AS
 SELECT
-    p.RegistrySID,
-    r.SID AS EntitySID,
-    p.PropName,
-    p.PropValue,
-    p.PropType
-FROM Props AS p
-JOIN Versions AS v ON (p.EntitySID=v.SID)
-JOIN Resources AS r ON (r.SID=v.ResourceSID)
-JOIN Props AS p1 ON (p1.EntitySID=r.SID)
-WHERE p1.PropName='defaultVersionId,' AND v.UID=p1.PropValue AND
-      p.PropName<>'id,' ;     # Don't overwrite this
-# NOTE!!! if DB_IN changes then the above 2 lines MUST change
-# TODO move the creation of this into the code then we can dynamically
-# use DB_IN instead of hard-coding the "," in here
+    P.RegistrySID,
+    P.EntitySID AS SourceSID,
+    sR.Path AS SourcePath,
+    sR.Abstract AS SourceAbstract,
+    tR.SID as TargetSID,
+    tR.Path as TargetPath
+FROM Props AS P
+JOIN Resources AS sR ON (sR.SID=P.EntitySID)
+JOIN Resources AS tR ON (tR.Path=P.PropValue)
+WHERE P.PropName='xref,' ;
+
+CREATE VIEW xRefVersions AS
+SELECT
+    CONCAT(xR.SourceSID, '-', V.SID) AS SID,
+    V.UID,
+    xR.SourceSID AS ResourceSID,
+    CONCAT(xR.SourcePath, '/versions/', V.UID) AS Path,
+    CONCAT(xR.SourceAbstract, ',versions') AS Abstract,
+    V.Counter,
+    V.ResourceURL,
+    V.ResourceProxyURL,
+    V.ResourceContentSID
+FROM xRefSrc2TgtResources AS xR
+JOIN Versions AS V ON (V.ResourceSID=xR.TargetSID);
+
+# This is Versions table + xref'd Versions
+CREATE VIEW EffectiveVersions AS
+SELECT * FROM Versions
+UNION SELECT * FROM xRefVersions ;
+
+CREATE TRIGGER VersionsTrigger BEFORE DELETE ON Versions
+FOR EACH ROW
+BEGIN
+    DELETE FROM Props WHERE EntitySID=OLD.SID @
+    DELETE FROM ResourceContents WHERE VersionSID=OLD.SID @
+END ;
 
 CREATE VIEW Entities AS
 SELECT                          # Gather Registries
@@ -286,7 +297,7 @@ UNION SELECT                    # Add Resources
 FROM Resources AS r
 JOIN ModelEntities AS m ON (m.SID=r.ModelSID)
 
-UNION SELECT                    # Add Versions
+UNION SELECT                    # Add Versions (including xref'd versions)
     rm.RegistrySID AS RegSID,
     3 AS Level,
     'versions' AS Plural,
@@ -295,12 +306,69 @@ UNION SELECT                    # Add Versions
     v.UID AS UID,
     v.Abstract,
     v.Path
-FROM Versions AS v
+FROM EffectiveVersions AS v
 JOIN Resources AS r ON (r.SID=v.ResourceSID)
 JOIN ModelEntities AS rm ON (rm.SID=r.ModelSID) ;
 
-CREATE VIEW AllProps AS
+# Calculate the raw Props that need to be duplicated due to xRefs.
+# This assumes other calculated props (like isDefault) will be done later
+CREATE VIEW xRefProps AS
+SELECT                            # Iterate over the xRef Resources
+    R.RegistrySID,
+    R.SourceSID AS EntitySID,
+    P.PropName,
+    P.PropValue,
+    P.PropType
+FROM xRefSrc2TgtResources AS R
+JOIN Props AS P ON (              # Grab the Target Resource's attributes
+  P.EntitySID=R.TargetSID AND
+  P.PropName<>'id,' AND           # Don't override this
+  P.PropName<>'xref,' )           # Don't override this
+UNION SELECT                      # Grab the Target Version's attributes
+    R.RegistrySID,
+    CONCAT(R.SourceSID, '-', P.EntitySID) AS EntitySID,
+    P.PropName,
+    P.PropValue,
+    P.PropType
+FROM xRefSrc2TgtResources AS R
+JOIN Props AS P ON (
+  P.EntitySID IN (
+    SELECT eSID FROM Entities WHERE ParentSID=R.TargetSID
+  ) AND
+  P.PropName<>'xref,' )           # Don't override this
+;
+
+# This is the Props table + xref'd props (for Resource and Versions)
+CREATE VIEW EffectiveProps AS
 SELECT * FROM Props
+UNION SELECT * FROM xRefProps ;
+
+CREATE TABLE ResourceContents (
+    VersionSID      VARCHAR(255),
+    Content         MEDIUMBLOB,
+
+    PRIMARY KEY (VersionSID)
+);
+
+CREATE VIEW DefaultProps AS
+SELECT
+    p.RegistrySID,
+    r.SID AS EntitySID,
+    p.PropName,
+    p.PropValue,
+    p.PropType
+FROM EffectiveProps AS p
+JOIN EffectiveVersions AS v ON (p.EntitySID=v.SID)
+JOIN Resources AS r ON (r.SID=v.ResourceSID)
+JOIN EffectiveProps AS p1 ON (p1.EntitySID=r.SID)
+WHERE p1.PropName='defaultVersionId,' AND v.UID=p1.PropValue AND
+      p.PropName<>'id,' ;     # Don't overwrite this
+# NOTE!!! if DB_IN changes then the above 2 lines MUST change
+# TODO move the creation of this into the code then we can dynamically
+# use DB_IN instead of hard-coding the "," in here
+
+CREATE VIEW AllProps AS
+SELECT * FROM EffectiveProps
 UNION SELECT * FROM DefaultProps
 UNION SELECT                    # Add in "isdefault", which is calculated
   v.RegSID,
@@ -309,11 +377,21 @@ UNION SELECT                    # Add in "isdefault", which is calculated
   'true',
   'boolean'
 FROM Entities AS v
-JOIN Props AS p ON (
+JOIN EffectiveProps AS p ON (
   p.EntitySID=v.ParentSID AND
   p.PropName='defaultversionid,'
   AND p.PropValue=v.UID );
 
+CREATE VIEW xRefResources AS
+SELECT
+    xR.SourceSID AS SID,
+    R.UID,
+    R.GroupSID,
+    R.ModelSID,
+    R.Path,
+    R.Abstract
+FROM xRefSrc2TgtResources AS xR
+JOIN Resources AS R ON (R.SID=xR.SourceSID) ;
 
 CREATE VIEW FullTree AS
 SELECT

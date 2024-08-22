@@ -643,7 +643,13 @@ func TestHTTPModel(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -874,7 +880,13 @@ func TestHTTPModel(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",
@@ -1108,7 +1120,13 @@ func TestHTTPModel(t *testing.T) {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "exportrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url",
+              "exportrequired": true
             },
             "name": {
               "name": "name",

@@ -68,6 +68,7 @@ type Attribute struct {
 	Immutable      bool      `json:"immutable,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
+	ExportRequired bool      `json:"exportrequired,omitempty"`
 	Default        any       `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
@@ -127,10 +128,28 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 	attrsCopy := maps.Clone(attrs) // Copy so we can delete keys
 	count := 0
 
+	// Very risky but it works for now....determine which level we're at
+	// by looking for level-only attributes
+	level := 1 // Default to Group
+	if attrsCopy["specversion"] != nil {
+		level = 0 // Registry
+	} else if attrsCopy["stickydefaultversion"] != nil {
+		level = 2 // Resource
+	} else if attrsCopy["isdefault"] != nil {
+		level = 3 // Version
+	}
+
 	buf.WriteString("{")
 	for _, specProp := range OrderedSpecProps {
 		if attr, ok := attrsCopy[specProp.Name]; ok {
 			delete(attrsCopy, specProp.Name)
+
+			tmpAttr := *attr
+			attr = &tmpAttr
+			if level != 2 && attr.ExportRequired {
+				attr.ExportRequired = false
+			}
+
 			// We need to exclude "model" because we don't want to show the
 			// end user "model" as a valid attribute in the model.
 			if specProp.Name == "model" {

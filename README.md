@@ -88,3 +88,6 @@ TODOs:
 - add model tests for typemap - just that we can set via full model updates
 - support the DB vanishing for a while
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
+- support ?export
+- support versionid
+- test xref more

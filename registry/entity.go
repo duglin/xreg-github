@@ -692,6 +692,7 @@ var OrderedSpecProps = []*Attribute{
 		Type:           STRING,
 		Immutable:      true,
 		ServerRequired: true,
+		ExportRequired: true,
 
 		internals: AttrInternals{
 			levels:    "",
@@ -718,6 +719,22 @@ var OrderedSpecProps = []*Attribute{
 			updateFn: func(e *Entity) error {
 				// Make sure the ID is always set
 				e.NewObject["id"] = e.UID
+				return nil
+			},
+		},
+	},
+	{
+		Name:           "xref",
+		Type:           URL,
+		ExportRequired: true,
+
+		internals: AttrInternals{
+			levels: "2",
+			getFn:  nil,
+			checkFn: func(e *Entity) error {
+				return nil
+			},
+			updateFn: func(e *Entity) error {
 				return nil
 			},
 		},

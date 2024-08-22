@@ -308,12 +308,12 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 		buf, err = os.ReadFile(file)
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Processing %q: %s", file, err)
 	}
 
-	buf, err = ProcessImports(file, buf, true)
+	buf, err = ProcessIncludes(file, buf, true)
 	if err != nil {
-		return err
+		return fmt.Errorf("Processing %q: %s", file, err)
 	}
 
 	model := &Model{
@@ -321,17 +321,17 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 	}
 
 	if err := Unmarshal(buf, model); err != nil {
-		return err
+		return fmt.Errorf("Processing %q: %s", file, err)
 	}
 
 	model.SetPointers()
 
 	if err := model.Verify(); err != nil {
-		return err
+		return fmt.Errorf("Processing %q: %s", file, err)
 	}
 
 	if err := reg.Model.ApplyNewModel(model); err != nil {
-		return err
+		return fmt.Errorf("Processing %q: %s", file, err)
 	}
 
 	// reg.Model = model
