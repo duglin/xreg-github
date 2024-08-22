@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"runtime/pprof"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/duglin/dlog"
@@ -44,6 +45,7 @@ func init() {
 
 // Active transaction - mainly for debugging and testing
 var TXs = map[string]*Tx{}
+var TXsMutex = sync.RWMutex{}
 
 func DumpTXs() {
 	// Only show info if there are active Txs
@@ -52,6 +54,7 @@ func DumpTXs() {
 	}
 
 	count := 1
+	TXsMutex.RLock()
 	for _, t := range TXs {
 		log.Printf("NewTx Stack %d:", count)
 		for _, s := range t.stack {
@@ -59,6 +62,7 @@ func DumpTXs() {
 		}
 		count++
 	}
+	TXsMutex.RUnlock()
 
 	// Show threads/processes
 	pprof.Lookup("goroutine").WriteTo(PProfFilter, 1)
@@ -204,7 +208,9 @@ func (tx *Tx) NewTx() error {
 	tx.Versions = map[string]*Version{}
 	tx.uuid = NewUUID()
 	tx.stack = GetStack()
+	TXsMutex.Lock()
 	TXs[tx.uuid] = tx
+	TXsMutex.Unlock()
 	return nil
 }
 
@@ -218,7 +224,9 @@ func (tx *Tx) Commit() error {
 		return err
 	}
 
+	TXsMutex.Lock()
 	delete(TXs, tx.uuid)
+	TXsMutex.Unlock()
 	tx.tx = nil
 	tx.CreateTime = ""
 	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
@@ -237,7 +245,9 @@ func (tx *Tx) Rollback() error {
 		return err
 	}
 
+	TXsMutex.Lock()
 	delete(TXs, tx.uuid)
+	TXsMutex.Unlock()
 	tx.tx = nil
 	tx.CreateTime = ""
 	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx

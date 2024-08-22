@@ -1,6 +1,6 @@
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/duglin/dlog v0.0.0-20230725021749-8365912d889a h1:coVROcfqDbRpLbl1hYru0vcRI4ebMopAedLTZ+OVurE=
-github.com/duglin/dlog v0.0.0-20230725021749-8365912d889a/go.mod h1:mjcUJ8I4w649acz/QrZEKDBLxU1OnlVhYPMOR5g0naU=
+github.com/duglin/dlog v0.0.0-20231117185220-2f50b3ce612d h1:uBF3EJeh1fsAmmJtWMOIkETo67Wv9mxRGCjLr8F0kBA=
+github.com/duglin/dlog v0.0.0-20231117185220-2f50b3ce612d/go.mod h1:mjcUJ8I4w649acz/QrZEKDBLxU1OnlVhYPMOR5g0naU=
 github.com/go-sql-driver/mysql v1.7.1 h1:lUIinVbN1DY0xBg0eMOzmmtGoHwWBbvnWubQUrtU8EI=
 github.com/go-sql-driver/mysql v1.7.1/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
