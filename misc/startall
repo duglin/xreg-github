@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -ex
-
-docker-entrypoint.sh mysqld &
-/waitformysql
-/server $*

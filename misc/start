@@ -1,0 +1,25 @@
+#!/bin/sh
+
+export DBHOST=${DBHOST:-127.0.0.1}
+export DBPORT=${DBPORT:-3306}
+export DBUSER=${DBUSER:-root}
+export DBPASSWORD=${DBPASSWORD:-password}
+
+export MYSQL_ROOT_PASSWORD=${DBPASSWORD}
+export MYSQL_USER=${DBUSER}
+
+export XR_MODEL_PATH=${XR_MODEL_PATH:-/spec}
+
+set -ex
+
+env | grep -v PASS | sort
+
+if [[ "$1" == "all" ]]; then
+  docker-entrypoint.sh mysqld &
+  /waitformysql
+elif [[ "$1" == "mysql" ]]; then
+  docker-entrypoint.sh mysqld
+  exit 0
+fi
+
+/server $*

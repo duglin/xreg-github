@@ -15,7 +15,7 @@ ENV BUILDFLAGS -ldflags \"-w -extldflags -static\" \
 
 RUN make cmds
 
-FROM scratch
+FROM alpine
 # FROM mysql
 # ENV MYSQL_ROOT_PASSWORD=password
 
@@ -28,7 +28,7 @@ COPY misc/repo.tar /misc/repo.tar
 
 # If local copy of spec is found, copy it into the image so we can use it
 COPY .spec* /spec/
+COPY misc/waitformysql /
+COPY misc/start /
 
-ENTRYPOINT [ "/server" ]
-# ENTRYPOINT [ "/usr/bin/sh" ]
-# CMD [ "-c", "docker-entrypoint.sh mysqld & sleep 10 && /server" ]
+ENTRYPOINT [ "/start" ]

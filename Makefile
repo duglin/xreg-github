@@ -50,8 +50,7 @@ xr: cmds/xr*.go registry/*
 	go build $(BUILDFLAGS) -o $@ cmds/xr*.go
 
 image: .image
-.image: server misc/Dockerfile misc/waitformysql misc/Dockerfile-all \
-		misc/startall
+.image: server misc/Dockerfile misc/waitformysql misc/Dockerfile-all misc/start
 	@echo
 	@echo "# Building the container image"
 	@rm -rf .spec
@@ -74,8 +73,9 @@ testimage: .testimage
 	@echo "# Verifying the image"
 	@make --no-print-directory mysql waitformysql
 	@misc/errOutput docker run -ti --network host \
+		$(IMAGE) --recreate --verify
+	@misc/errOutput docker run -ti --network host \
 		-e DBHOST=$(DBHOST) -e DBPORT=$(DBPORT) -e DBUSER=$(DBUSER) \
-		-e XR_MODEL_PATH=/spec \
 		$(IMAGE) --recreate --verify
 	@touch .testimage
 
