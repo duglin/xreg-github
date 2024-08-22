@@ -6,7 +6,6 @@ export DBUSER=${DBUSER:-root}
 export DBPASSWORD=${DBPASSWORD:-password}
 
 export MYSQL_ROOT_PASSWORD=${DBPASSWORD}
-export MYSQL_USER=${DBUSER}
 
 export XR_MODEL_PATH=${XR_MODEL_PATH:-/spec}
 
