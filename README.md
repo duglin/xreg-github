@@ -8,10 +8,7 @@ To run it:
 ```
 # You need to have Docker installed
 
-# Start a mysql server. Give it about 30 seconds to fully start
-$ make mysql
-
-# Run the tests & xreg server (creates a new DB each time):
+# Build, test and run the xreg server (creates a new DB each time):
 $ make
 
 or to use existing DB (no tests):
@@ -21,14 +18,33 @@ $ make start
 Try it:
 ```
 # In a browser go to:
-  http://localhost:8080?reg
+  http://localhost:8080?ui
 
 # Or just:
 $ curl http://localhost:8080
 $ curl http://localhost:8080?inline
 
-# To run a mysql client to see the DBs:
+# To run a mysql client to see the DBs (debugging):
 $ make mysql-client
+```
+
+# Developers
+
+See `misc/Dockefile-dev` for the minimal things you'll need to install.
+Useful Makefile targets:
+```
+- make              : build, test and run the server locally
+- make all          : build, test and run the server locally
+- make run          : build the exes and run it (no tests)
+- make test         : build the exes and run tests, don't run
+- make clean        : erase all build artifacts, stop mysql. Basically, reset
+- make image        : build the all Docker images
+- make push         : push the Docker images to DockerHub
+- make mysql        : just start mysql as a Docker container
+- make mysql-client : run the mysql client, for testing
+- make testdev      : build a dev docker image, and build/test/run everything
+                      to make sure the minimal dev install requirements
+                      haven't changed
 ```
 
 OLD TODO:

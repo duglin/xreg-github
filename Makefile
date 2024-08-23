@@ -69,7 +69,7 @@ endif
 testimage: .testimage
 .testimage: .image
 	@echo
-	@echo "# Verifying the image"
+	@echo "# Verifying the images"
 	@make --no-print-directory mysql waitformysql
 	@misc/errOutput docker run -ti --network host \
 		$(IMAGE) --recreate --verify
@@ -84,29 +84,27 @@ push: .push
 	docker push $(IMAGE)-all
 	@touch .push
 
-notest run: mysql server local
-
-start: mysql server waitformysql #image
+start: mysql server waitformysql
 	@echo
 	@echo "# Starting server"
-	./server
-	@#docker run -ti --network host $(IMAGE)
+	./server $(VERIFY)
 
-local: mysql server waitformysql
+notest run local: mysql server waitformysql
 	@echo
-	@echo "# Starting server locally from scratch"
+	@echo "# Starting server from scratch"
 	./server --recreate $(VERIFY)
 
 docker-all: image
 	docker run -ti -p 8080:8080 $(IMAGE)-all --recreate
 
 large:
+	# Run the server with a ton of data
 	@XR_LOAD_LARGE=1 make --no-print-directory run
 
 docker: mysql image waitformysql
 	@echo
 	@echo "# Starting server in Docker from scratch"
-	docker run -ti --network host $(IMAGE) --recreate
+	docker run -ti --network host $(IMAGE) --recreate $(VERIFY)
 
 mysql:
 	@docker container inspect mysql > /dev/null 2>&1 || \
