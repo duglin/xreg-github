@@ -95,7 +95,7 @@ start: mysql server waitformysql #image
 local: mysql server waitformysql
 	@echo
 	@echo "# Starting server locally from scratch"
-	./server --recreate
+	./server --recreate $(VERIFY)
 
 docker-all: image
 	docker run -ti -p 8080:8080 $(IMAGE)-all --recreate
@@ -158,6 +158,19 @@ prof: server qtest
 	@# go tool pprof -http:0.0.0.0:9999 cpu.prof
 	@go tool pprof -top -cum cpu.prof | sed -n '0,/flat/p;/xreg/p' | more
 	@rm -f cpu.prof mem.prof tests.test
+
+testdev:
+	@# See the misc/Dockerfile-dev for more info
+	@echo "# Make sure mysql isn't running"
+	-docker rm -f mysql > /dev/null 2>&1
+	@echo
+	@echo "# Build the dev image"
+	@misc/errOutput docker build -t duglin/xreg-dev --no-cache \
+		-f misc/Dockerfile-dev .
+	@echo
+	@echo "# Build, test and run the server"
+	docker run -ti -v /var/run/docker.sock:/var/run/docker.sock \
+		-e VERIFY=--verify --network host duglin/xreg-dev make clean all
 
 clean:
 	@echo "# Cleaning"

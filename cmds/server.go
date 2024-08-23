@@ -67,7 +67,7 @@ func InitDB() {
 			go LoadLargeSample(nil)
 		}
 	}
-	log.Printf("Default registry is: %s", reg.UID)
+	log.Printf("Default registry: %s", reg.UID)
 
 	if reg == nil {
 		fmt.Fprintf(os.Stderr, "No registry loaded\n")
