@@ -8,7 +8,7 @@ DBPORT     ?= 3306
 DBUSER     ?= root
 DBPASSWORD ?= password
 IMAGE      ?= duglin/xreg-server
-XR_SPEC    ?= $(HOME)/go/src/github.com/xregistry/spec   # local xReg spec
+XR_SPEC    ?= $(HOME)/go/src/github.com/xregistry/spec
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 
@@ -52,14 +52,13 @@ xr: cmds/xr*.go registry/*
 image: .image
 .image: server misc/Dockerfile misc/waitformysql misc/Dockerfile-all misc/start
 	@echo
-	@echo "# Building the container image"
+	@echo "# Building the container images"
 	@rm -rf .spec
 	@mkdir -p .spec
 ifdef XR_SPEC
-	# First, copy local xReg spec files locally so "docker build" gets them
-	cp -r $(XR_SPEC)/* .spec/
-	@echo
-	@echo "# Now build the images"
+	@! test -d "$(XR_SPEC)" || \
+		(echo "# Copy xReg spec files so 'docker build' gets them" && \
+		cp -r "$(XR_SPEC)/"* .spec/  )
 endif
 	@misc/errOutput docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
 	@misc/errOutput docker build -f misc/Dockerfile-all -t $(IMAGE)-all \
@@ -166,6 +165,6 @@ clean:
 	@rm -f server xr
 	@rm -f .test .image .push
 	@go clean -cache -testcache
-	@-k3d cluster delete xreg > /dev/null 2>&1
+	@-! which k3d > /dev/null || k3d cluster delete xreg > /dev/null 2>&1
 	@-docker rm -f mysql mysql-client > /dev/null 2>&1
 	@docker system prune -f > /dev/null

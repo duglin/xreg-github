@@ -52,6 +52,10 @@ func InitDB() {
 	}
 
 	if reg == nil {
+		paths := os.Getenv("XR_MODEL_PATH")
+		os.Setenv("XR_MODEL_PATH", ".:"+paths+
+			"://raw.githubusercontent.com/xregistry/spec/main")
+
 		reg = LoadCESample(nil)
 		LoadDirsSample(nil)
 		LoadEndpointsSample(nil)

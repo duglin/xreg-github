@@ -733,8 +733,20 @@ func FindModelFile(name string) (string, error) {
 		}
 		path = path + "/" + name
 
-		if _, err := os.Stat(path); err == nil {
-			return path, nil
+		if strings.HasPrefix(path, "//") {
+			path = "https:" + path
+		}
+
+		if IsURL(path) {
+			res, err := http.Get(path)
+			if err == nil && res.StatusCode/100 == 2 {
+				return path, nil
+			}
+		} else {
+
+			if _, err := os.Stat(path); err == nil {
+				return path, nil
+			}
 		}
 	}
 

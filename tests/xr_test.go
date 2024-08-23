@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 var RepoBase = "https://raw.githubusercontent.com/xregistry/spec/main"
@@ -26,23 +28,13 @@ func TestXRBasic(t *testing.T) {
 		"/schema/model.json",
 	}
 	paths := os.Getenv("XR_MODEL_PATH")
-	if paths == "" {
-		paths = ".:" + RepoBase
-	}
+	os.Setenv("XR_MODEL_PATH", paths+":.:"+RepoBase)
 
 	for _, file := range files {
 		fn := file
-		if !strings.HasPrefix(fn, "http:") {
-			for _, path := range strings.Split(paths, ":") {
-				if strings.HasPrefix(path, "http:") {
-					fn = path
-					break
-				}
-				fn = path + "/" + file
-				if _, err := os.Stat(fn); err == nil {
-					break
-				}
-				fn = ""
+		if !strings.HasPrefix(fn, "http") {
+			if fn, err = registry.FindModelFile(file); err == nil {
+				break
 			}
 			if fn == "" {
 				t.Errorf("Can't find %q in %q", file, paths)

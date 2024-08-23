@@ -18,7 +18,6 @@ import (
 
 var Token string
 var Secret string
-var RepoPath = "https://raw.githubusercontent.com/xregistry/spec/main"
 
 func ErrFatalf(err error, args ...any) {
 	if err == nil {
