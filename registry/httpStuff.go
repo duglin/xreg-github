@@ -1512,7 +1512,7 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 		return nil
 	}
 
-	if info.ResourceModel.GetSetStickyDefault() == false {
+	if info.ResourceModel.GetSetDefaultSticky() == false {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Resource %q doesn't allow setting of `+
 			`"defaultversionid"`, info.ResourceModel.Plural)

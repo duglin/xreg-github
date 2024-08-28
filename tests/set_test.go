@@ -151,8 +151,8 @@ func TestSetDots(t *testing.T) {
 
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
   "labels": {
     "abc.def": "ABC"
   },
@@ -168,8 +168,8 @@ func TestSetDots(t *testing.T) {
 	xJSONCheck(t, err, nil)
 	xCheckGet(t, reg, "/dirs/d1", `{
   "id": "d1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -288,8 +288,8 @@ func TestSetLabels(t *testing.T) {
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestSetLabels",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "labels": {
     "r2": "123.234"
   },
@@ -299,8 +299,8 @@ func TestSetLabels(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1",
+      "epoch": 1,
       "labels": {
         "dd": "dd.foo"
       },
@@ -310,10 +310,8 @@ func TestSetLabels(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-          "defaultversionid": "v2",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+          "epoch": 1,
           "labels": {
             "2nd": "3rd",
             "dd-ff": "dash",
@@ -325,11 +323,14 @@ func TestSetLabels(t *testing.T) {
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
+          "defaultversionid": "v2",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+
           "versions": {
             "v1": {
               "id": "v1",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+              "epoch": 1,
               "labels": {
                 "vv2": "v11"
               },
@@ -338,8 +339,8 @@ func TestSetLabels(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+              "epoch": 1,
               "isdefault": true,
               "labels": {
                 "2nd": "3rd",
@@ -370,8 +371,8 @@ func TestSetLabels(t *testing.T) {
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestSetLabels",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "labels": {
     "r2": "123.234"
   },
@@ -381,8 +382,8 @@ func TestSetLabels(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1",
+      "epoch": 1,
       "labels": {
         "dd": "dd.foo"
       },
@@ -392,22 +393,23 @@ func TestSetLabels(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-          "stickydefaultversion": true,
-          "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+          "epoch": 1,
           "labels": {
             "vv2": "v11"
           },
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
+          "defaultversionsticky": true,
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+
           "versions": {
             "v1": {
               "id": "v1",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+              "epoch": 1,
               "isdefault": true,
               "labels": {
                 "vv2": "v11"
@@ -417,8 +419,8 @@ func TestSetLabels(t *testing.T) {
             },
             "v2": {
               "id": "v2",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+              "epoch": 1,
               "labels": {
                 "2nd": "3rd",
                 "dd-ff": "dash",

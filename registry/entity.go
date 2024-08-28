@@ -692,7 +692,6 @@ var OrderedSpecProps = []*Attribute{
 		Type:           STRING,
 		Immutable:      true,
 		ServerRequired: true,
-		ExportRequired: true,
 
 		internals: AttrInternals{
 			levels:    "",
@@ -724,9 +723,41 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "xref",
+		Name:           "self",
 		Type:           URL,
-		ExportRequired: true,
+		ReadOnly:       true,
+		ServerRequired: true,
+
+		internals: AttrInternals{
+			levels:    "",
+			dontStore: false,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				base := ""
+				if info != nil {
+					base = info.BaseURL
+				}
+				if e.Level > 1 {
+					meta := info != nil && (info.ShowMeta || info.ResourceUID == "" || len(info.Parts) == 5)
+					_, rm := e.GetModels()
+					if rm.GetHasDocument() == false {
+						meta = false
+					}
+
+					if meta {
+						return base + "/" + e.Path + "$meta"
+					} else {
+						return base + "/" + e.Path
+					}
+				}
+				return base + "/" + e.Path
+			},
+			checkFn:  nil,
+			updateFn: nil,
+		},
+	},
+	{
+		Name: "xref",
+		Type: URL,
 
 		internals: AttrInternals{
 			levels: "2",
@@ -737,18 +768,6 @@ var OrderedSpecProps = []*Attribute{
 			updateFn: func(e *Entity) error {
 				return nil
 			},
-		},
-	},
-	{
-		Name: "name",
-		Type: STRING,
-
-		internals: AttrInternals{
-			levels:    "",
-			dontStore: false,
-			getFn:     nil,
-			checkFn:   nil,
-			updateFn:  nil,
 		},
 	},
 	{
@@ -808,36 +827,15 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "self",
-		Type:           URL,
-		ReadOnly:       true,
-		ServerRequired: true,
+		Name: "name",
+		Type: STRING,
 
 		internals: AttrInternals{
 			levels:    "",
 			dontStore: false,
-			getFn: func(e *Entity, info *RequestInfo) any {
-				base := ""
-				if info != nil {
-					base = info.BaseURL
-				}
-				if e.Level > 1 {
-					meta := info != nil && (info.ShowMeta || info.ResourceUID == "" || len(info.Parts) == 5)
-					_, rm := e.GetModels()
-					if rm.GetHasDocument() == false {
-						meta = false
-					}
-
-					if meta {
-						return base + "/" + e.Path + "$meta"
-					} else {
-						return base + "/" + e.Path
-					}
-				}
-				return base + "/" + e.Path
-			},
-			checkFn:  nil,
-			updateFn: nil,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
 		},
 	},
 	{
@@ -856,69 +854,6 @@ var OrderedSpecProps = []*Attribute{
 
 				return nil
 			},
-		},
-	},
-	{
-		Name:     "stickydefaultversion",
-		Type:     BOOLEAN,
-		ReadOnly: true,
-
-		internals: AttrInternals{
-			levels:    "2",
-			dontStore: false,
-			getFn:     nil,
-			checkFn:   nil,
-			updateFn:  nil,
-		},
-	},
-	{
-		Name:     "defaultversionid",
-		Type:     STRING,
-		ReadOnly: true,
-		// ServerRequired: true,
-
-		internals: AttrInternals{
-			levels:    "2",
-			dontStore: false,
-			getFn:     nil,
-			checkFn:   nil,
-			updateFn:  nil,
-		},
-	},
-	{
-		Name:     "defaultversionurl",
-		Type:     URL,
-		ReadOnly: true,
-		// ServerRequired: true,
-
-		internals: AttrInternals{
-			levels:    "2",
-			dontStore: false,
-			getFn: func(e *Entity, info *RequestInfo) any {
-				val := e.Object["defaultversionid"]
-				if IsNil(val) {
-					return nil
-				}
-				base := ""
-				if info != nil {
-					base = info.BaseURL
-				}
-
-				tmp := base + "/" + e.Path + "/versions/" + val.(string)
-
-				meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
-				_, rm := e.GetModels()
-				if rm.GetHasDocument() == false {
-					meta = false
-				}
-
-				if meta {
-					tmp += "$meta"
-				}
-				return tmp
-			},
-			checkFn:  nil,
-			updateFn: nil,
 		},
 	},
 	{
@@ -1030,6 +965,69 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
+		Name:     "defaultversionsticky",
+		Type:     BOOLEAN,
+		ReadOnly: true,
+
+		internals: AttrInternals{
+			levels:    "2",
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
+	},
+	{
+		Name:     "defaultversionid",
+		Type:     STRING,
+		ReadOnly: true,
+		// ServerRequired: true,
+
+		internals: AttrInternals{
+			levels:    "2",
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
+	},
+	{
+		Name:     "defaultversionurl",
+		Type:     URL,
+		ReadOnly: true,
+		// ServerRequired: true,
+
+		internals: AttrInternals{
+			levels:    "2",
+			dontStore: false,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				val := e.Object["defaultversionid"]
+				if IsNil(val) {
+					return nil
+				}
+				base := ""
+				if info != nil {
+					base = info.BaseURL
+				}
+
+				tmp := base + "/" + e.Path + "/versions/" + val.(string)
+
+				meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
+				_, rm := e.GetModels()
+				if rm.GetHasDocument() == false {
+					meta = false
+				}
+
+				if meta {
+					tmp += "$meta"
+				}
+				return tmp
+			},
+			checkFn:  nil,
+			updateFn: nil,
+		},
+	},
+	{
 		Name:     "model",
 		Type:     OBJECT,
 		ReadOnly: true,
@@ -1093,6 +1091,27 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 			continue // not allowed at this level so skip it
 		}
 
+		// Before "default*" attributes, add extensions and "resource*"
+		if e.Level == 2 && prop.Name == "defaultversionsticky" {
+			for _, key := range SortedKeys(daObj) {
+				if SpecProps[key] != nil {
+					continue
+				}
+				val, _ := daObj[key]
+				attr := attrs[key]
+				delete(daObj, key)
+				if attr == nil {
+					attr = attrs["*"]
+					PanicIf(key[0] != '#' && attr == nil, "Can't find attr for %q", key)
+				}
+
+				if err := fn(e, info, key, val, attr); err != nil {
+					return err
+				}
+			}
+		}
+
+		// Should be a no-op for Resources
 		if val, ok := daObj[prop.Name]; ok {
 			if !IsNil(val) {
 				if err := fn(e, info, prop.Name, val, attr); err != nil {

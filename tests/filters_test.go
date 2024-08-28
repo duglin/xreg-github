@@ -40,8 +40,8 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "labels": {
     "reg1": "1ger"
   },
@@ -152,8 +152,8 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&filter=id=v1",
 			Exp: `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+  "epoch": 1,
   "createdat": "2024-12-01T12:00:00Z",
   "modifiedat": "2024-12-01T12:00:00Z"
 }
@@ -179,8 +179,8 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "labels": {
     "reg1": "1ger"
   },
@@ -198,8 +198,8 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "labels": {
     "reg1": "1ger"
   },
@@ -217,8 +217,8 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "labels": {
     "reg1": "1ger"
   },
@@ -228,36 +228,37 @@ func TestBasicFilters(t *testing.T) {
   "dirs": {
     "d2": {
       "id": "d2",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
+      "epoch": 1,
       "createdat": "2024-12-01T12:00:02Z",
       "modifiedat": "2024-12-01T12:00:02Z",
 
       "files": {
         "f2": {
           "id": "f2",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2$meta",
-          "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+          "epoch": 1,
           "labels": {
             "file1": "1elif"
           },
           "createdat": "2024-12-01T12:00:02Z",
           "modifiedat": "2024-12-01T12:00:02Z",
 
+          "defaultversionid": "v1.1",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+
           "versions": {
             "v1": {
               "id": "v1",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
+              "epoch": 1,
               "createdat": "2024-12-01T12:00:02Z",
               "modifiedat": "2024-12-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+              "epoch": 1,
               "isdefault": true,
               "labels": {
                 "file1": "1elif"
@@ -300,8 +301,8 @@ func TestBasicFilters(t *testing.T) {
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestBasicFilters",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "labels": {
     "reg1": "1ger"
   },
@@ -311,36 +312,37 @@ func TestBasicFilters(t *testing.T) {
   "dirs": {
     "d2": {
       "id": "d2",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d2",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z",
 
       "files": {
         "f2": {
           "id": "f2",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d2/files/f2$meta",
-          "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+          "epoch": 1,
           "labels": {
             "file1": "1elif"
           },
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
+          "defaultversionid": "v1.1",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+
           "versions": {
             "v1": {
               "id": "v1",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
+              "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
               "id": "v1.1",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+              "epoch": 1,
               "isdefault": true,
               "labels": {
                 "file1": "1elif"

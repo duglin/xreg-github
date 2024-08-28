@@ -85,7 +85,6 @@ TODOs:
   unique within the scope of their parent
 - make sure we throw an error if ?specversion on HTTP requests specifies the
   wrong version
-- make sure we have tests for resource.readonly - in particular DELETE
 
 - pagination
 - have DB generate the COLLECTIONcount attributes so people can query over
@@ -107,3 +106,4 @@ TODOs:
 - support ?export
 - support versionid
 - test xref more
+- support readonly - remove resource.readonly

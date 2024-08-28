@@ -81,7 +81,7 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
 
     MaxVersions       INT,      # For Resources
     SetVersionId      BOOL,     # For Resources
-    SetStickyDefault  BOOL,     # For Resources
+    SetDefaultSticky  BOOL,     # For Resources
     HasDocument       BOOL,     # For Resources
     ReadOnly          BOOL,     # For Resources
     TypeMap           JSON,

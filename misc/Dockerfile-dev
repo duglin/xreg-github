@@ -1,0 +1,23 @@
+# This will build an xRegistry dev env image.
+# It serves two purposes:
+# 1 - shows the minimal steps necessary to build, test, run this repo
+# 2 - people can use this as a docker dev environment if they want one
+
+FROM golang:alpine
+
+# Minimal tools - docker is just for the client, it assumes we'll use the
+# docker running on the host due to --network host on the "docker run"
+RUN apk add make git bash docker
+
+# Clone the repo. Don't actually do it since we want to test changes to make
+# sure it didn't break anything. However, normally you'll want to use this
+# 'clone' command instead of the 'COPY' below.
+# WORKDIR /go/src/github.com/duglin
+# git clone https://github.com/duglin/xreg-github.git
+
+# Copy our repo (comment this section out if the above section is enabled)
+WORKDIR /go/src/github.com/duglin/xreg-github
+COPY . ./
+
+# Pull down all of the go packages just so we don't need to do it later
+RUN go get ./...

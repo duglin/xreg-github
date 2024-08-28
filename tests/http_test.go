@@ -191,8 +191,8 @@ func TestHTTPhtml(t *testing.T) {
 {
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPhtml",
-  "epoch": 1,
   "self": "<a href="http://localhost:8181/?html">http://localhost:8181/?html</a>",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
 }
@@ -218,8 +218,8 @@ func TestHTTPModel(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPModel",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "model": {
@@ -240,20 +240,20 @@ func TestHTTPModel(t *testing.T) {
         "immutable": true,
         "serverrequired": true
       },
-      "name": {
-        "name": "name",
-        "type": "string"
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
       },
       "epoch": {
         "name": "epoch",
         "type": "uinteger",
         "serverrequired": true
       },
-      "self": {
-        "name": "self",
-        "type": "url",
-        "readonly": true,
-        "serverrequired": true
+      "name": {
+        "name": "name",
+        "type": "string"
       },
       "description": {
         "name": "description",
@@ -312,20 +312,20 @@ func TestHTTPModel(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -383,20 +383,20 @@ func TestHTTPModel(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -454,20 +454,20 @@ func TestHTTPModel(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -537,20 +537,20 @@ func TestHTTPModel(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -587,20 +587,20 @@ func TestHTTPModel(t *testing.T) {
           "immutable": true,
           "serverrequired": true
         },
-        "name": {
-          "name": "name",
-          "type": "string"
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
         },
         "epoch": {
           "name": "epoch",
           "type": "uinteger",
           "serverrequired": true
         },
-        "self": {
-          "name": "self",
-          "type": "url",
-          "readonly": true,
-          "serverrequired": true
+        "name": {
+          "name": "name",
+          "type": "string"
         },
         "description": {
           "name": "description",
@@ -636,28 +636,13 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversion": true,
+          "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true,
-              "exportrequired": true
-            },
-            "xref": {
-              "name": "xref",
-              "type": "url",
-              "exportrequired": true
-            },
-            "name": {
-              "name": "name",
-              "type": "string"
-            },
-            "epoch": {
-              "name": "epoch",
-              "type": "uinteger",
               "serverrequired": true
             },
             "self": {
@@ -666,24 +651,22 @@ func TestHTTPModel(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
+            "xref": {
+              "name": "xref",
+              "type": "url"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
-            },
-            "stickydefaultversion": {
-              "name": "stickydefaultversion",
-              "type": "boolean",
-              "readonly": true
-            },
-            "defaultversionid": {
-              "name": "defaultversionid",
-              "type": "string",
-              "readonly": true
-            },
-            "defaultversionurl": {
-              "name": "defaultversionurl",
-              "type": "url",
               "readonly": true
             },
             "description": {
@@ -716,6 +699,21 @@ func TestHTTPModel(t *testing.T) {
             "contenttype": {
               "name": "contenttype",
               "type": "string"
+            },
+            "defaultversionsticky": {
+              "name": "defaultversionsticky",
+              "type": "boolean",
+              "readonly": true
+            },
+            "defaultversionid": {
+              "name": "defaultversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "defaultversionurl": {
+              "name": "defaultversionurl",
+              "type": "url",
+              "readonly": true
             }
           }
         }
@@ -745,7 +743,7 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversion": true,
+          "setdefaultversionsticky": true,
           "hasdocument": false
         }
       }
@@ -774,20 +772,20 @@ func TestHTTPModel(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -824,20 +822,20 @@ func TestHTTPModel(t *testing.T) {
           "immutable": true,
           "serverrequired": true
         },
-        "name": {
-          "name": "name",
-          "type": "string"
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
         },
         "epoch": {
           "name": "epoch",
           "type": "uinteger",
           "serverrequired": true
         },
-        "self": {
-          "name": "self",
-          "type": "url",
-          "readonly": true,
-          "serverrequired": true
+        "name": {
+          "name": "name",
+          "type": "string"
         },
         "description": {
           "name": "description",
@@ -873,28 +871,13 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversion": true,
+          "setdefaultversionsticky": true,
           "hasdocument": false,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true,
-              "exportrequired": true
-            },
-            "xref": {
-              "name": "xref",
-              "type": "url",
-              "exportrequired": true
-            },
-            "name": {
-              "name": "name",
-              "type": "string"
-            },
-            "epoch": {
-              "name": "epoch",
-              "type": "uinteger",
               "serverrequired": true
             },
             "self": {
@@ -903,24 +886,22 @@ func TestHTTPModel(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
+            "xref": {
+              "name": "xref",
+              "type": "url"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
-            },
-            "stickydefaultversion": {
-              "name": "stickydefaultversion",
-              "type": "boolean",
-              "readonly": true
-            },
-            "defaultversionid": {
-              "name": "defaultversionid",
-              "type": "string",
-              "readonly": true
-            },
-            "defaultversionurl": {
-              "name": "defaultversionurl",
-              "type": "url",
               "readonly": true
             },
             "description": {
@@ -953,6 +934,21 @@ func TestHTTPModel(t *testing.T) {
             "contenttype": {
               "name": "contenttype",
               "type": "string"
+            },
+            "defaultversionsticky": {
+              "name": "defaultversionsticky",
+              "type": "boolean",
+              "readonly": true
+            },
+            "defaultversionid": {
+              "name": "defaultversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "defaultversionurl": {
+              "name": "defaultversionurl",
+              "type": "url",
+              "readonly": true
             }
           }
         }
@@ -1010,20 +1006,20 @@ func TestHTTPModel(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -1064,20 +1060,20 @@ func TestHTTPModel(t *testing.T) {
           "immutable": true,
           "serverrequired": true
         },
-        "name": {
-          "name": "name",
-          "type": "string"
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
         },
         "epoch": {
           "name": "epoch",
           "type": "uinteger",
           "serverrequired": true
         },
-        "self": {
-          "name": "self",
-          "type": "url",
-          "readonly": true,
-          "serverrequired": true
+        "name": {
+          "name": "name",
+          "type": "string"
         },
         "description": {
           "name": "description",
@@ -1113,28 +1109,13 @@ func TestHTTPModel(t *testing.T) {
           "singular": "file",
           "maxversions": 0,
           "setversionid": true,
-          "setstickydefaultversion": true,
+          "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
             "id": {
               "name": "id",
               "type": "string",
               "immutable": true,
-              "serverrequired": true,
-              "exportrequired": true
-            },
-            "xref": {
-              "name": "xref",
-              "type": "url",
-              "exportrequired": true
-            },
-            "name": {
-              "name": "name",
-              "type": "string"
-            },
-            "epoch": {
-              "name": "epoch",
-              "type": "uinteger",
               "serverrequired": true
             },
             "self": {
@@ -1143,24 +1124,22 @@ func TestHTTPModel(t *testing.T) {
               "readonly": true,
               "serverrequired": true
             },
+            "xref": {
+              "name": "xref",
+              "type": "url"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
-            },
-            "stickydefaultversion": {
-              "name": "stickydefaultversion",
-              "type": "boolean",
-              "readonly": true
-            },
-            "defaultversionid": {
-              "name": "defaultversionid",
-              "type": "string",
-              "readonly": true
-            },
-            "defaultversionurl": {
-              "name": "defaultversionurl",
-              "type": "url",
               "readonly": true
             },
             "description": {
@@ -1193,6 +1172,21 @@ func TestHTTPModel(t *testing.T) {
             "contenttype": {
               "name": "contenttype",
               "type": "string"
+            },
+            "defaultversionsticky": {
+              "name": "defaultversionsticky",
+              "type": "boolean",
+              "readonly": true
+            },
+            "defaultversionid": {
+              "name": "defaultversionid",
+              "type": "string",
+              "readonly": true
+            },
+            "defaultversionurl": {
+              "name": "defaultversionurl",
+              "type": "url",
+              "readonly": true
             }
           }
         }
@@ -1209,8 +1203,8 @@ func TestHTTPModel(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/", `{}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPModel",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -1222,8 +1216,8 @@ func TestHTTPModel(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/", `{"description": "two"}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPModel",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "description": "two",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -1332,8 +1326,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
 }
@@ -1351,8 +1345,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
 }
@@ -1372,8 +1366,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 4,
   "self": "http://localhost:8181/",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
 }
@@ -1444,8 +1438,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 5,
   "self": "http://localhost:8181/",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myany": 5.5,
@@ -1542,8 +1536,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 6,
   "self": "http://localhost:8181/",
+  "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myany": 5.5,
@@ -1711,8 +1705,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 7,
   "self": "http://localhost:8181/",
+  "epoch": 7,
   "documentation": "docs",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
@@ -1733,8 +1727,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 8,
   "self": "http://localhost:8181/",
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
 }
@@ -1758,8 +1752,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 9,
   "self": "http://localhost:8181/",
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myany": 5.5,
@@ -1787,8 +1781,8 @@ func TestHTTPRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPRegistry",
-  "epoch": 10,
   "self": "http://localhost:8181/",
+  "epoch": 10,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myany": "foo",
@@ -1887,9 +1881,9 @@ func TestHTTPGroups(t *testing.T) {
 		ResBody: `{
   "dir1": {
     "id": "dir1",
-    "name": "my group",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1",
+    "epoch": 1,
+    "name": "my group",
     "description": "desc",
     "documentation": "docs-url",
     "labels": {
@@ -1951,9 +1945,9 @@ func TestHTTPGroups(t *testing.T) {
 		ResBody: `{
   "dir2": {
     "id": "dir2",
-    "name": "my group",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir2",
+    "epoch": 1,
+    "name": "my group",
     "description": "desc",
     "documentation": "docs-url",
     "labels": {
@@ -1983,8 +1977,8 @@ func TestHTTPGroups(t *testing.T) {
   },
   "dir3": {
     "id": "dir3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir3",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -1998,9 +1992,9 @@ func TestHTTPGroups(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs", "", 200, `{
   "dir1": {
     "id": "dir1",
-    "name": "my group",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1",
+    "epoch": 1,
+    "name": "my group",
     "description": "desc",
     "documentation": "docs-url",
     "labels": {
@@ -2030,9 +2024,9 @@ func TestHTTPGroups(t *testing.T) {
   },
   "dir2": {
     "id": "dir2",
-    "name": "my group",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir2",
+    "epoch": 1,
+    "name": "my group",
     "description": "desc",
     "documentation": "docs-url",
     "labels": {
@@ -2062,8 +2056,8 @@ func TestHTTPGroups(t *testing.T) {
   },
   "dir3": {
     "id": "dir3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir3",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -2090,8 +2084,8 @@ func TestHTTPGroups(t *testing.T) {
 		ResBody: `{
   "dir1": {
     "id": "dir1",
-    "epoch": 2,
     "self": "http://localhost:8181/dirs/dir1",
+    "epoch": 2,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -2100,8 +2094,8 @@ func TestHTTPGroups(t *testing.T) {
   },
   "dir2": {
     "id": "dir2",
-    "epoch": 2,
     "self": "http://localhost:8181/dirs/dir2",
+    "epoch": 2,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -2110,8 +2104,8 @@ func TestHTTPGroups(t *testing.T) {
   },
   "dir3": {
     "id": "dir3",
-    "epoch": 2,
     "self": "http://localhost:8181/dirs/dir3",
+    "epoch": 2,
     "description": "hello",
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
@@ -2164,8 +2158,8 @@ func TestHTTPGroups(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
   "id":"dir1",
-  "name":"my group new",
   "epoch": 2,
+  "name":"my group new",
   "description":"desc new",
   "documentation":"docs-url-new",
   "labels": {
@@ -2180,9 +2174,9 @@ func TestHTTPGroups(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "id": "dir1",
-  "name": "my group new",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 3,
+  "name": "my group new",
   "description": "desc new",
   "documentation": "docs-url-new",
   "labels": {
@@ -2208,8 +2202,8 @@ func TestHTTPGroups(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
   "id":"dir1",
-  "name":"my group new",
   "epoch": 3,
+  "name":"my group new",
   "description":"desc new",
   "documentation":"docs-url-new",
   "labels": {
@@ -2224,9 +2218,9 @@ func TestHTTPGroups(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "id": "dir1",
-  "name": "my group new",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 4,
+  "name": "my group new",
   "description": "desc new",
   "documentation": "docs-url-new",
   "labels": {
@@ -2249,8 +2243,8 @@ func TestHTTPGroups(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
   "id":"dir1",
-  "name":"my group new",
   "epoch": 10,
+  "name":"my group new",
   "description":"desc new",
   "documentation":"docs-url-new",
   "labels": {
@@ -2285,8 +2279,8 @@ func TestHTTPGroups(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "id": "dir1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -2352,12 +2346,12 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: f1",
-			"xRegistry-epoch: 1",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
 			"Location: http://localhost:8181/dirs/dir1/files/f1",
@@ -2379,12 +2373,12 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type: my/format",
 			"xRegistry-id: f1",
-			"xRegistry-epoch: 2",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
+			"xRegistry-epoch: 2",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
@@ -2403,14 +2397,14 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type: my/format",
 			"xRegistry-id: f1",
-			"xRegistry-epoch: 3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
+			"xRegistry-epoch: 3",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"Content-Length: 21",
 		},
@@ -2429,12 +2423,12 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			// "Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: f1",
-			"xRegistry-epoch: 4",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f1",
+			"xRegistry-epoch: 4",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f1/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
@@ -2478,17 +2472,17 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 1",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"xRegistry-origin: foo.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Location: http://localhost:8181/dirs/dir1/files/f3",
@@ -2510,17 +2504,17 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 2",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 2",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
-			"xRegistry-origin: foo.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2543,14 +2537,14 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f4",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f4",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f4/versions/1",
+			"xRegistry-epoch: 1",
 			"xRegistry-name: my doc",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"xRegistry-fileurl: http://example.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f4/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f4/versions",
 			"Location: http://localhost:8181/dirs/dir1/files/f4",
@@ -2572,18 +2566,18 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 3",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 3",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
-			"xRegistry-origin: foo.com",
 			"xRegistry-fileurl: http://example.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Location: http://example.com",
@@ -2619,17 +2613,17 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 4",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 4",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
-			"xRegistry-origin: foo.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2648,17 +2642,17 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 5",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 5",
 			"xRegistry-description: very cool",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
-			"xRegistry-origin: foo.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2679,16 +2673,16 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 6",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 6",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
-			"xRegistry-origin: foo.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2710,16 +2704,16 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 7",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 7",
 			"xRegistry-documentation: my doc url",
-			"xRegistry-origin: foo.com",
 			"xRegistry-labels-l1: l1l1",
 			"xRegistry-labels-l4: 4444",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2740,15 +2734,15 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		ResHeaders: []string{
 			"xRegistry-id: f3",
 			"xRegistry-name: my doc",
-			"xRegistry-epoch: 8",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 8",
 			"xRegistry-documentation: my doc url",
-			"xRegistry-origin: foo.com",
 			"xRegistry-labels-l3: 3333",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2768,15 +2762,15 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f3",
-			"xRegistry-name: my doc",
-			"xRegistry-epoch: 9",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 9",
+			"xRegistry-name: my doc",
 			"xRegistry-documentation: my doc url",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
-			"xRegistry-origin: foo.com",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2800,19 +2794,19 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f3",
-			"xRegistry-name: my doc",
-			"xRegistry-epoch: 10",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 10",
+			"xRegistry-name: my doc",
 			"xRegistry-documentation: my doc url",
-			"xRegistry-origin: foo.com",
 			"xRegistry-labels-foo: foo",
 			"xRegistry-labels-foo-bar: l-foo-bar",
 			"xRegistry-labels-foo_bar: l-foo_bar",
 			"xRegistry-labels-foo.bar: l-foo.bar",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2838,19 +2832,19 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f3",
-			"xRegistry-name: my doc",
-			"xRegistry-epoch: 11",
 			"xRegistry-self: http://localhost:8181/dirs/dir1/files/f3",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"xRegistry-epoch: 11",
+			"xRegistry-name: my doc",
 			"xRegistry-documentation: my doc url",
-			"xRegistry-origin: foo.com",
 			"xRegistry-labels-foo: foo",
 			"xRegistry-labels-foo-bar: l-foo-bar",
 			"xRegistry-labels-foo_bar: l-foo_bar",
 			"xRegistry-labels-foo.bar: l-foo.bar",
+			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/dir1/files/f3/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
@@ -2961,8 +2955,8 @@ func TestHTTPCases(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: v1",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/v1",
+			"xRegistry-epoch: 1",
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -2978,12 +2972,12 @@ func TestHTTPCases(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f1",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid: v1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/v1",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid: v1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/v1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 		},
@@ -2995,8 +2989,8 @@ func TestHTTPCases(t *testing.T) {
 	// Group
 	xHTTP(t, reg, "PUT", "/dirs/d1", `{ "id": "d1" }`, 200, `{
   "id": "d1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -3015,12 +3009,13 @@ func TestHTTPCases(t *testing.T) {
 	// Resource
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$meta", `{ "id": "f1" }`, 200, `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -3043,8 +3038,8 @@ func TestHTTPCases(t *testing.T) {
 	// Version
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$meta", `{ "id": "v1" }`, 200, `{
   "id": "v1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+  "epoch": 3,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -3155,12 +3150,12 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f1-proxy",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-defaultversionid: v3",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
 			"xRegistry-versionscount: 3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
@@ -3183,8 +3178,8 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: v3",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -3207,8 +3202,8 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: v2",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
@@ -3233,13 +3228,13 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f2-url",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2-url",
-			"xRegistry-defaultversionid: v3",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f2-url/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f2-url/versions/v3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2-url/versions",
 			"xRegistry-versionscount: 3",
 			"Location: http://localhost:8181/EMPTY-URL",
@@ -3263,12 +3258,12 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f3-resource",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f3-resource",
-			"xRegistry-defaultversionid: v3",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f3-resource/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f3-resource/versions/v3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f3-resource/versions",
 			"xRegistry-versionscount: 3",
 		},
@@ -3314,13 +3309,14 @@ func TestHTTPVersions(t *testing.T) {
 		},
 		ResBody: `{
   "id": "f1-proxy",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3340,14 +3336,15 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f1-proxy",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
   "file": "Hello world! v1",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3365,8 +3362,8 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: 1",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy/versions/1",
+			"xRegistry-epoch: 1",
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -3388,14 +3385,15 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f1-proxy",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
   "file": "Hello world! v1",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3421,8 +3419,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResBody: `{
   "v2": {
     "id": "v2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
@@ -3458,8 +3456,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResBody: `{
   "2": {
     "id": "2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
@@ -3479,8 +3477,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "v2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/v2$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
@@ -3499,12 +3497,12 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id:f1-proxy",
-			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-defaultversionid:2",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
+			"xRegistry-epoch:2",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:2",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"xRegistry-versionscount:3",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 		},
@@ -3521,12 +3519,12 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id:f1-proxy",
-			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-defaultversionid:2",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
+			"xRegistry-epoch:2",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:2",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"xRegistry-versionscount:3",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 		},
@@ -3548,13 +3546,14 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f1-proxy",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy$meta",
-  "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2$meta",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "fileurl": "http://localhost:8181/EMPTY-URL",
+
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2$meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3575,12 +3574,13 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f1-proxy",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy$meta",
-  "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2$meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3636,12 +3636,13 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f1-proxy",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1-proxy$meta",
-  "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2$meta",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions/2$meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1-proxy/versions"
@@ -3660,12 +3661,12 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: f1-proxy",
-			"xRegistry-epoch: 5",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1-proxy",
-			"xRegistry-defaultversionid: 2",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
+			"xRegistry-epoch: 5",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid: 2",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions/2",
 			"xRegistry-versionscount: 3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 		},
@@ -3687,8 +3688,8 @@ func TestHTTPVersions(t *testing.T) {
 			"Location:http://localhost:8181/dirs/d1/files/f2/versions/v1",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f2/versions/v1",
 			"xRegistry-id:v1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v1",
+			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -3710,8 +3711,8 @@ func TestHTTPVersions(t *testing.T) {
 			"Location:http://localhost:8181/dirs/d1/files/f2/versions/v2",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f2/versions/v2",
 			"xRegistry-id:v2",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v2",
+			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -3733,8 +3734,8 @@ func TestHTTPVersions(t *testing.T) {
 			"Location:http://localhost:8181/dirs/d1/files/f2/versions/v3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f2/versions/v3",
 			"xRegistry-id:v3",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v3",
+			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -3769,8 +3770,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v1$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -3791,8 +3792,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v2$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -3813,8 +3814,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v3",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -3861,8 +3862,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v1$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -3883,8 +3884,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v2$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -3904,8 +3905,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v3",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff2-url/versions/v3$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -3953,8 +3954,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v1$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -3974,8 +3975,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v2$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -3996,8 +3997,8 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v3",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -4042,12 +4043,12 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: ff1-proxy",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff1-proxy",
-			"xRegistry-defaultversionid: v3",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
 			"xRegistry-versionscount: 3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions",
 			"Content-Location: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
@@ -4064,8 +4065,8 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: v3",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -4101,13 +4102,13 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: ff2-url",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff2-url",
-			"xRegistry-defaultversionid: v3",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff2-url/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"xRegistry-fileurl: http://localhost:8181/EMPTY-URL",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff2-url/versions/v3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff2-url/versions",
 			"xRegistry-versionscount: 3",
 			"Location: http://localhost:8181/EMPTY-URL",
@@ -4124,12 +4125,12 @@ func TestHTTPVersions(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"xRegistry-id: ff3-resource",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/ff3-resource",
-			"xRegistry-defaultversionid: v3",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid: v3",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/ff3-resource/versions/v3",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff3-resource/versions",
 			"xRegistry-versionscount: 3",
 		},
@@ -4153,8 +4154,8 @@ func TestHTTPVersions(t *testing.T) {
 			"Content-Type:my/format",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/v1",
 			"xRegistry-id:v1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/v1",
+			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -4179,8 +4180,8 @@ func TestHTTPVersions(t *testing.T) {
 			"Content-Type:my/format2",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/1",
 			"xRegistry-id:1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -4199,13 +4200,14 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f5",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f5$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "my/format2",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f5/versions"
@@ -4226,12 +4228,12 @@ func TestHTTPVersions(t *testing.T) {
 			"Content-Type:my/format2",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/1",
 			"xRegistry-id:f5",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f5/versions/1",
 			"xRegistry-versionscount:2",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f5/versions",
 		},
@@ -4245,16 +4247,16 @@ func TestHTTPVersions(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
   "id": "v1",
-  "epoch": 1,
-  "self": "http://localhost:8181/dirs/d1/files/f5/versions/xxx$meta"
+  "self": "http://localhost:8181/dirs/d1/files/f5/versions/xxx$meta",
+  "epoch": 1
 }`,
 		Code:        200,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "v1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f5/versions/v1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
 }
@@ -4271,13 +4273,14 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f5",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f5$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "my/format2",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f5/versions"
@@ -4309,8 +4312,8 @@ func TestHTTPEnum(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
 }
@@ -4328,8 +4331,8 @@ func TestHTTPEnum(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint": 2
@@ -4363,8 +4366,8 @@ func TestHTTPEnum(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
-  "epoch": 4,
   "self": "http://localhost:8181/",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint": 4
@@ -4383,8 +4386,8 @@ func TestHTTPEnum(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPEnum",
-  "epoch": 5,
   "self": "http://localhost:8181/",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint": 1
@@ -4495,8 +4498,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint": 10
@@ -4540,8 +4543,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myext": 5.5,
@@ -4582,8 +4585,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 4,
   "self": "http://localhost:8181/",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint": 10,
@@ -4617,8 +4620,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 5,
   "self": "http://localhost:8181/",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint": 10,
@@ -4650,8 +4653,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 6,
   "self": "http://localhost:8181/",
+  "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint": 10,
@@ -4703,8 +4706,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 7,
   "self": "http://localhost:8181/",
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint5": 1
@@ -4724,8 +4727,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 8,
   "self": "http://localhost:8181/",
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint5": 1,
@@ -4774,8 +4777,8 @@ func TestHTTPIfValue(t *testing.T) {
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "id": "TestHTTPIfValues",
-  "epoch": 9,
   "self": "http://localhost:8181/",
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "myint5": 1,
@@ -4937,8 +4940,8 @@ func TestHTTPResources(t *testing.T) {
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", "{}", 201, `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -4949,8 +4952,8 @@ func TestHTTPResources(t *testing.T) {
   "mystring": "hello"
 }`, 200, `{
   "id": "v1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "epoch": 2,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -4971,8 +4974,8 @@ func TestHTTPResources(t *testing.T) {
   "object": {}
 }`, 200, `{
   "id": "v1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "epoch": 3,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -5001,8 +5004,8 @@ func TestHTTPResources(t *testing.T) {
   }
 }`, 200, `{
   "id": "v1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "epoch": 4,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -5019,12 +5022,13 @@ func TestHTTPResources(t *testing.T) {
   "mystring": null
 }`, 200, `{
   "id": "f1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -5035,8 +5039,8 @@ func TestHTTPResources(t *testing.T) {
   "mystring": null
 }`, 200, `{
   "id": "v1",
-  "epoch": 6,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+  "epoch": 6,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
@@ -5098,6 +5102,9 @@ func TestHTTPNonStrings(t *testing.T) {
 		Code:    201,
 		ResBody: `hello`,
 		ResHeaders: []string{
+			"xRegistry-id: f1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
+			"xRegistry-epoch: 1",
 			"xRegistry-myint: -5",
 			"xRegistry-mydec: 5.4",
 			"xRegistry-mybool: true",
@@ -5108,15 +5115,12 @@ func TestHTTPNonStrings(t *testing.T) {
 			"xRegistry-mymapuint-k4: 6",
 			"xRegistry-ext: true",
 			"xRegistry-ifext: 666",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"xRegistry-versionscount: 1",
-			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-defaultversionid: 1",
 			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
-			"xRegistry-id: f1",
-			"xRegistry-epoch: 1",
+			"xRegistry-versionscount: 1",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 			"Content-Type:text/plain; charset=utf-8",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"Content-Length:5",
@@ -5133,10 +5137,8 @@ func TestHTTPNonStrings(t *testing.T) {
 		ResHeaders:  []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "ext": true,
@@ -5157,6 +5159,9 @@ func TestHTTPNonStrings(t *testing.T) {
     "k4": 6
   },
   "myuint": 5,
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -5217,12 +5222,12 @@ func TestHTTPDefault(t *testing.T) {
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"Location: http://localhost:8181/dirs/d1/files/f1",
 			"xRegistry-id: f1",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 		},
@@ -5241,8 +5246,8 @@ func TestHTTPDefault(t *testing.T) {
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
 			"Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
 			"xRegistry-id: 2",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"xRegistry-epoch: 1",
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -5261,8 +5266,8 @@ func TestHTTPDefault(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-id: 1",
-			"xRegistry-epoch: 2",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch: 2",
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
@@ -5281,15 +5286,15 @@ func TestHTTPDefault(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-id: 1",
-			"xRegistry-epoch: 3",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch: 3",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 		},
 		ResBody: `hello`,
 	})
 
-	rm.SetSetStickyDefault(false)
+	rm.SetSetDefaultSticky(false)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:        "PUT file f1/2 - setdefault=2 - diff server",
@@ -5328,8 +5333,8 @@ func TestHTTPDefault(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-id: 1",
-			"xRegistry-epoch: 4",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch: 4",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 		},
@@ -5347,8 +5352,8 @@ func TestHTTPDefault(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
 			"xRegistry-id: 2",
-			"xRegistry-epoch: 2",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"xRegistry-epoch: 2",
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
@@ -5376,7 +5381,7 @@ func TestHTTPDefault(t *testing.T) {
 	})
 
 	// Enable client-side setting
-	rm.SetSetStickyDefault(true)
+	rm.SetSetDefaultSticky(true)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:    "POST file f1?setdefault - empty",
@@ -5423,8 +5428,8 @@ func TestHTTPDefault(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: newone",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/newone",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length: 7",
@@ -5447,13 +5452,14 @@ func TestHTTPDefault(t *testing.T) {
 		},
 		ResBody: `{
   "id": "f1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -5474,8 +5480,8 @@ func TestHTTPDefault(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type: text/plain; charset=utf-8",
 			"xRegistry-id: bogus",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/bogus",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length: 9",
@@ -5497,13 +5503,14 @@ func TestHTTPDefault(t *testing.T) {
 		},
 		ResBody: `{
   "id": "f1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 4,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -5606,8 +5613,8 @@ func TestHTTPDelete(t *testing.T) {
 		ResBody: `{
   "d1": {
     "id": "d1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5616,8 +5623,8 @@ func TestHTTPDelete(t *testing.T) {
   },
   "d3": {
     "id": "d3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d3",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5626,8 +5633,8 @@ func TestHTTPDelete(t *testing.T) {
   },
   "d4": {
     "id": "d4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d4",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5699,8 +5706,8 @@ func TestHTTPDelete(t *testing.T) {
 		ResBody: `{
   "d1": {
     "id": "d1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5709,8 +5716,8 @@ func TestHTTPDelete(t *testing.T) {
   },
   "d4": {
     "id": "d4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d4",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5730,8 +5737,8 @@ func TestHTTPDelete(t *testing.T) {
 		ResBody: `{
   "d1": {
     "id": "d1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5764,8 +5771,8 @@ func TestHTTPDelete(t *testing.T) {
 		ResBody: `{
   "d2": {
     "id": "d2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d2",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5774,8 +5781,8 @@ func TestHTTPDelete(t *testing.T) {
   },
   "d3": {
     "id": "d3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d3",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5784,8 +5791,8 @@ func TestHTTPDelete(t *testing.T) {
   },
   "d4": {
     "id": "d4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d4",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5807,8 +5814,8 @@ func TestHTTPDelete(t *testing.T) {
 		ResBody: `{
   "d2": {
     "id": "d2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d2",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5817,8 +5824,8 @@ func TestHTTPDelete(t *testing.T) {
   },
   "d4": {
     "id": "d4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d4",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5849,8 +5856,8 @@ func TestHTTPDelete(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "d1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -5895,12 +5902,13 @@ func TestHTTPDelete(t *testing.T) {
 		ResBody: `{
   "f6": {
     "id": "f6",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/f6$meta",
-    "defaultversionid": "v6.1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f6/versions/v6.1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "v6.1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f6/versions/v6.1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d1/files/f6/versions"
@@ -5939,13 +5947,14 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta", ``, 200,
 		`{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v5",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$meta",
 
   "versionscount": 10,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -5988,48 +5997,49 @@ func TestHTTPDelete(t *testing.T) {
 	// Make sure we have some left, and default is still v5
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline", "", 200, `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v5",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$meta",
 
   "versions": {
     "v10": {
       "id": "v10",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v3": {
       "id": "v3",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v5": {
       "id": "v5",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v5$meta",
+      "epoch": 1,
       "isdefault": true,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v6": {
       "id": "v6",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v6$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v9": {
       "id": "v9",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v9$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     }
@@ -6055,34 +6065,35 @@ func TestHTTPDelete(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline", "", 200, `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v3",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v3",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$meta",
 
   "versions": {
     "v10": {
       "id": "v10",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v3": {
       "id": "v3",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3$meta",
+      "epoch": 1,
       "isdefault": true,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v6": {
       "id": "v6",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v6$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     }
@@ -6102,34 +6113,35 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setdefaultversionid=v10", `[{"id":"v6"}]`, 204, "")
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline", "", 200, `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v10",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v10",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
 
   "versions": {
     "v1": {
       "id": "v1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z"
     },
     "v10": {
       "id": "v10",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
+      "epoch": 1,
       "isdefault": true,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v3": {
       "id": "v3",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     }
@@ -6143,26 +6155,27 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions", `[{"id":"v3"}]`, 204, "")
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline", "", 200, `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v10",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v10",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
 
   "versions": {
     "v1": {
       "id": "v1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z"
     },
     "v10": {
       "id": "v10",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
+      "epoch": 1,
       "isdefault": true,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
@@ -6175,27 +6188,28 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions?setdefaultversionid=v1", `[]`, 204, "")
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline", "", 200, `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
 
   "versions": {
     "v1": {
       "id": "v1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+      "epoch": 1,
       "isdefault": true,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v10": {
       "id": "v10",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z"
     }
@@ -6256,8 +6270,8 @@ func TestHTTPRequiredFields(t *testing.T) {
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRequiredFields",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "description": "testing",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -6277,8 +6291,8 @@ func TestHTTPRequiredFields(t *testing.T) {
   "clireq2": "testing2"
 }`, 201, `{
   "id": "d1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
   "description": "testing",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -6299,14 +6313,15 @@ func TestHTTPRequiredFields(t *testing.T) {
   "clireq3": "testing3"
 }`, 201, `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 1,
   "description": "testingdesc3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "clireq3": "testing3",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -6352,15 +6367,15 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 		Code: 201,
 		ResHeaders: []string{
-			"xRegistry-clireq3: testing3",
-			"xRegistry-description: desctesting",
-			"xRegistry-epoch: 1",
 			"xRegistry-id: f2",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f2/versions/1",
+			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f2",
+			"xRegistry-description: desctesting",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-clireq3: testing3",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f2/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2/versions",
 
@@ -6382,14 +6397,15 @@ func TestHTTPRequiredFields(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f2",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f2$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
+  "epoch": 2,
   "description": "desctesting3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "clireq3": "testing4",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
@@ -6471,12 +6487,13 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	// Load up one that has hasdocument=true
 	xHTTP(t, reg, "PUT", "/dirs/d1/bars/b1$meta", "", 201, `{
   "id": "b1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/bars/b1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/bars/b1/versions"
@@ -6495,13 +6512,14 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 		ResBody: `{
   "ff1": {
     "id": "ff1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/ff1",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
     "test": "foo",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d1/files/ff1/versions"
@@ -6518,26 +6536,27 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "d1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
   "bars": {
     "b1": {
       "id": "b1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/bars/b1$meta",
-      "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+
+      "defaultversionid": "1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$meta",
 
       "versions": {
         "1": {
           "id": "1",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/bars/b1/versions/1$meta",
+          "epoch": 1,
           "isdefault": true,
           "createdat": "2024-01-01T12:00:01Z",
           "modifiedat": "2024-01-01T12:00:01Z"
@@ -6552,19 +6571,20 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "files": {
     "ff1": {
       "id": "ff1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/ff1",
-      "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z",
       "test": "foo",
 
+      "defaultversionid": "1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
+
       "versions": {
         "1": {
           "id": "1",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
+          "epoch": 1,
           "isdefault": true,
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
@@ -6584,13 +6604,14 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", `{"foo":"test"}`, 201,
 		`{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "foo": "test",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -6600,13 +6621,14 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", `{"foo2":"test2"}`, 200,
 		`{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "foo2": "test2",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -6616,8 +6638,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1", `{"id":"2","foo2":"test2"}`, 201,
 		`{
   "id": "2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/2",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -6629,8 +6651,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 		`{
   "3": {
     "id": "3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
@@ -6642,8 +6664,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/3", `{"foo3.1":"test3.1"}`, 200,
 		`{
   "id": "3",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/3",
+  "epoch": 2,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -6654,8 +6676,8 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/4", `{"foo4":"test4"}`, 201,
 		`{
   "id": "4",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/4",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -6687,20 +6709,20 @@ func TestHTTPModelSchema(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -6747,20 +6769,20 @@ func TestHTTPModelSchema(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -6807,20 +6829,20 @@ func TestHTTPModelSchema(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "name": {
-      "name": "name",
-      "type": "string"
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
       "serverrequired": true
     },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
+    "name": {
+      "name": "name",
+      "type": "string"
     },
     "description": {
       "name": "description",
@@ -6871,7 +6893,7 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 		Singular:         "file",
 		MaxVersions:      0,
 		SetVersionId:     registry.PtrBool(true),
-		SetStickyDefault: registry.PtrBool(true),
+		SetDefaultSticky: registry.PtrBool(true),
 		HasDocument:      registry.PtrBool(true),
 		ReadOnly:         true,
 	})
@@ -6879,8 +6901,8 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 
 	xHTTP(t, reg, "PUT", "/dirs/dir1", "{}", 201, `{
   "id": "dir1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -6900,12 +6922,13 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/dir1/files", "", 200, `{
   "f1": {
     "id": "f1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-    "defaultversionid": "v1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "v1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -6915,8 +6938,8 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/dir1/files/f1/versions/v1$meta", "", 200, `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -6950,13 +6973,13 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   201,
 		ResHeaders: []string{
 			"xRegistry-id: f1",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-stickydefaultversion: true",
-			"xRegistry-defaultversionid: 1",
-			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionsticky: true",
+			"xRegistry-defaultversionid: 1",
+			"xRegistry-defaultversionurl: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionscount: 1",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
 			"Location: http://localhost:8181/dirs/d1/files/f1",
@@ -6971,8 +6994,8 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   201,
 		ResHeaders: []string{
 			"xRegistry-id: 2",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
@@ -6987,8 +7010,8 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id: 1",
-			"xRegistry-epoch: 1",
 			"xRegistry-isdefault: true",
+			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -7009,9 +7032,9 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   201,
 		ResHeaders: []string{
 			"xRegistry-id: 3",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/3",
 			"xRegistry-epoch: 1",
 			"xRegistry-isdefault: true",
-			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/3",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/3",
@@ -7024,8 +7047,8 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   201,
 		ResHeaders: []string{
 			"xRegistry-id: 4",
-			"xRegistry-epoch: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/4",
+			"xRegistry-epoch: 1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/4",
@@ -7039,13 +7062,14 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 4,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7068,12 +7092,13 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "4",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/4$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "4",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/4$meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7095,13 +7120,14 @@ func TestDefaultVersionThis(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7131,13 +7157,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7151,12 +7178,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7168,14 +7195,15 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", "", 200, `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
   "file": "hello",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7193,13 +7221,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7213,12 +7242,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:2",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
 			"Content-Length:7",
@@ -7230,14 +7259,15 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", "", 200, `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
   "file": "\"hel\nlo",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7256,13 +7286,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7276,12 +7307,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:3",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:3",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7292,16 +7323,17 @@ func TestHTTPContent(t *testing.T) {
 	})
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", "", 200, `{
   "id": "f1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
   "file": {
     "foo": "bar"
   },
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7320,13 +7352,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7340,12 +7373,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:4",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:4",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7356,10 +7389,8 @@ func TestHTTPContent(t *testing.T) {
 	})
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", "", 200, `{
   "id": "f1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
@@ -7368,6 +7399,9 @@ func TestHTTPContent(t *testing.T) {
     null,
     5
   ],
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7386,13 +7420,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7406,12 +7441,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:5",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:5",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7422,14 +7457,15 @@ func TestHTTPContent(t *testing.T) {
 	})
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", "", 200, `{
   "id": "f1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
   "file": 123,
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7447,12 +7483,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 6,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7466,13 +7503,14 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 6,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "filebase64": "ImhlbGxvIgo=",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7491,12 +7529,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 7,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7510,13 +7549,14 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 7,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "filebase64": "aGVsbG8K",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7535,12 +7575,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 8,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7554,13 +7595,14 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 8,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "filebase64": "eyAiZm9vIjoiYmFyIjogfQo=",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7579,12 +7621,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 9,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7598,12 +7641,13 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 9,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7622,12 +7666,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 10,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 10,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7641,12 +7686,13 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 10,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 10,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7665,12 +7711,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 11,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 11,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7684,12 +7731,13 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "id": "f1",
-  "epoch": 11,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 11,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -7720,13 +7768,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f11",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f11$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f11/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f11/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f11/versions"
@@ -7740,12 +7789,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f11",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f11",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f11/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f11/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f11/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7766,13 +7815,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f12",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f12$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f12/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f12/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f12/versions"
@@ -7786,12 +7836,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f12",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f12",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f12/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f12/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f12/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7812,13 +7862,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f13",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f13$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f13/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f13/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f13/versions"
@@ -7832,12 +7883,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f13",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f13",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f13/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f13/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f13/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7858,13 +7909,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f14",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f14$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f14/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f14/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f14/versions"
@@ -7878,12 +7930,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f14",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f14",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f14/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f14/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f14/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7904,13 +7956,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f15",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f15$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f15/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f15/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f15/versions"
@@ -7924,12 +7977,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f15",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f15",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f15/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f15/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f15/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7950,13 +8003,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f16",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f16$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f16/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f16/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f16/versions"
@@ -7970,12 +8024,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f16",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f16",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f16/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f16/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f16/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
@@ -7997,13 +8051,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f17",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f17$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f17/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "foo/bar",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f17/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f17/versions"
@@ -8017,12 +8072,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f17",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f17",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f17/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f17/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f17/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:foo/bar",
@@ -8034,14 +8089,15 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f17$meta?inline=file", ``, 200, `{
   "id": "f17",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f17$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f17/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "foo/bar",
   "filebase64": "aGUJbGxv",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f17/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f17/versions"
@@ -8060,12 +8116,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 201,
 		ResBody: `{
   "id": "f18",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8079,12 +8136,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f18",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f18",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f18/versions",
 			"xRegistry-versionscount:1",
 			"Content-Length:6",
@@ -8095,13 +8152,14 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$meta?inline=file", ``, 200, `{
   "id": "f18",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "filebase64": "aGUJbGxv",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8120,12 +8178,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f18",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8139,12 +8198,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f18",
-			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f18",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"xRegistry-epoch:2",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f18/versions",
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
@@ -8155,13 +8214,14 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$meta?inline=file", ``, 200, `{
   "id": "f18",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "filebase64": "Zm9v",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8179,13 +8239,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f18",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8199,12 +8260,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f18",
-			"xRegistry-epoch:3",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f18",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"xRegistry-epoch:3",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f18/versions",
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
@@ -8216,14 +8277,15 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$meta?inline=file", ``, 200, `{
   "id": "f18",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
   "file": "foo",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8242,13 +8304,14 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f18",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "foo/bar",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8262,12 +8325,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f18",
-			"xRegistry-epoch:4",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f18",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"xRegistry-epoch:4",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f18/versions",
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
@@ -8279,14 +8342,15 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$meta?inline=file", ``, 200, `{
   "id": "f18",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "foo/bar",
   "filebase64": "YmFy",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8304,12 +8368,13 @@ func TestHTTPContent(t *testing.T) {
 		Code: 200,
 		ResBody: `{
   "id": "f18",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8323,12 +8388,12 @@ func TestHTTPContent(t *testing.T) {
 		Code:   200,
 		ResHeaders: []string{
 			"xRegistry-id:f18",
-			"xRegistry-epoch:5",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f18",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"xRegistry-epoch:5",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f18/versions/1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f18/versions",
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
@@ -8339,13 +8404,14 @@ func TestHTTPContent(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$meta?inline=file", ``, 200, `{
   "id": "f18",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f18$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "filebase64": "YmFy",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f18/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions"
@@ -8371,12 +8437,12 @@ func TestHTTPContent2(t *testing.T) {
 		Code:    201,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-createdat:2024-01-01T12:00:00Z",
 			"xRegistry-modifiedat:2024-01-01T12:00:00Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionscount:1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"Content-Type:text/plain; charset=utf-8",
@@ -8394,12 +8460,12 @@ func TestHTTPContent2(t *testing.T) {
 		Code:    200,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:2",
 			"xRegistry-createdat:2024-01-01T12:00:00Z",
 			"xRegistry-modifiedat:2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionscount:1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"Content-Type:my/format",
@@ -8415,12 +8481,12 @@ func TestHTTPContent2(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{
 			"xRegistry-id:f1",
-			"xRegistry-epoch:3",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"xRegistry-epoch:3",
 			"xRegistry-createdat:2024-01-01T12:00:00Z",
 			"xRegistry-modifiedat:2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"xRegistry-versionscount:1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"Content-Type:my/format", //Not blank because we PATCH headers
@@ -8440,13 +8506,14 @@ func TestHTTPContent2(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f2$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
   "contenttype": "my/format",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
@@ -8465,12 +8532,13 @@ func TestHTTPContent2(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f2",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f2$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
@@ -8501,49 +8569,53 @@ func TestHTTPContent2(t *testing.T) {
 		ResBody: `{
   "f1": {
     "id": "f1",
-    "epoch": 4,
     "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+    "epoch": 4,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
   },
   "f2": {
     "id": "f2",
-    "epoch": 3,
     "self": "http://localhost:8181/dirs/d1/files/f2$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
+    "epoch": 3,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
   },
   "f3": {
     "id": "f3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/f3$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:02Z",
     "contenttype": "application/json",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d1/files/f3/versions"
   },
   "f4": {
     "id": "f4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/f4$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f4/versions/1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f4/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d1/files/f4/versions"
@@ -8575,22 +8647,22 @@ func TestHTTPContent2(t *testing.T) {
 		ResBody: `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/fv/versions/v1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   },
   "v2": {
     "id": "v2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/fv/versions/v2$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   },
   "v3": {
     "id": "v3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/fv/versions/v3$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z",
@@ -8598,8 +8670,8 @@ func TestHTTPContent2(t *testing.T) {
   },
   "v4": {
     "id": "v4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1/files/fv/versions/v4$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   }
@@ -8661,12 +8733,13 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "f22": {
     "id": "f22",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f22$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f22/versions/1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f22/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f22/versions"
@@ -8704,12 +8777,13 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "f2": {
     "id": "f2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f2$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
@@ -8735,13 +8809,14 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "f2": {
     "id": "f2",
-    "epoch": 2,
     "self": "http://localhost:8181/dirs/dir1/files/f2$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1$meta",
+    "epoch": 2,
     "description": "foo",
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
@@ -8791,28 +8866,30 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "f2": {
     "id": "f2",
-    "epoch": 3,
     "self": "http://localhost:8181/dirs/dir1/files/f2$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1$meta",
+    "epoch": 3,
     "description": "foo",
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
   },
   "f3": {
     "id": "f3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f3$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f3/versions/1$meta",
+    "epoch": 1,
     "labels": {
       "l1": "hello"
     },
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f3/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f3/versions"
@@ -8876,14 +8953,15 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		},
 		ResBody: `{
   "id": "f4",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f4$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f4/versions/1$meta",
+  "epoch": 1,
   "description": "my f4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f4/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f4/versions"
@@ -8899,13 +8977,13 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{
 			"xRegistry-id:f4",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f4",
+			"xRegistry-epoch:1",
 			"xRegistry-description:my f4",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/dir1/files/f4/versions/1",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/dir1/files/f4/versions/1",
 			"xRegistry-versionscount:1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/dir1/files/f4/versions",
 			"Content-Length:5",
@@ -8930,13 +9008,14 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		},
 		ResBody: `{
   "id": "f5",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f5$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f5/versions/1$meta",
+  "epoch": 1,
   "description": "my f5",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f5/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f5/versions"
@@ -8954,8 +9033,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:    201,
 		ResHeaders: []string{
 			"xRegistry-id:1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f6/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-description:my f6",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
@@ -8977,9 +9056,9 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:    201,
 		ResHeaders: []string{
 			"xRegistry-id:1",
+			"xRegistry-description:my f61",
 			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f61/versions/1",
-			"xRegistry-description:my f61",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -9000,8 +9079,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:    201,
 		ResHeaders: []string{
 			"xRegistry-id:1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f62/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-description:my f62",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
@@ -9023,8 +9102,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:    201,
 		ResHeaders: []string{
 			"xRegistry-id:1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f63/versions/1",
+			"xRegistry-epoch:1",
 			"xRegistry-description:my f63",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
@@ -9047,8 +9126,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:    201,
 		ResHeaders: []string{
 			"xRegistry-id:v1",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f7/versions/v1",
+			"xRegistry-epoch:1",
 			"xRegistry-description:my f7",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
@@ -9083,8 +9162,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f9/versions/1$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z"
@@ -9102,8 +9181,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f9/versions/2$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z"
@@ -9140,8 +9219,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f9/versions/v1$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -9197,8 +9276,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f10a/versions/v1$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -9255,8 +9334,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f10/versions/v1$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -9281,16 +9360,16 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v1$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   },
   "v2": {
     "id": "v2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v2$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   }
@@ -9314,15 +9393,15 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   },
   "v2": {
     "id": "v2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -9348,8 +9427,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "v1": {
     "id": "v1",
-    "epoch": 2,
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1$meta",
+    "epoch": 2,
     "isdefault": true,
     "description": "my v1",
     "createdat": "2024-01-01T12:00:01Z",
@@ -9357,16 +9436,16 @@ func TestHTTPResourcesBulk(t *testing.T) {
   },
   "v2": {
     "id": "v2",
-    "epoch": 2,
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2$meta",
+    "epoch": 2,
     "description": "my v2",
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z"
   },
   "v3": {
     "id": "v3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v3$meta",
+    "epoch": 1,
     "description": "my v3",
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:02Z"
@@ -9391,8 +9470,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "v4": {
     "id": "v4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v4$meta",
+    "epoch": 1,
     "description": "my v4",
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -9441,8 +9520,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:    201,
 		ResHeaders: []string{
 			"xRegistry-id:3",
-			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
+			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/3",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
@@ -9461,9 +9540,9 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code:       201,
 		ResHeaders: []string{
 			"xRegistry-id:4",
+			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/4",
 			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
-			"xRegistry-self:http://localhost:8181/dirs/dir1/files/f13/versions/4",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:2",
@@ -9482,8 +9561,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "5",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f13/versions/5$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -9501,8 +9580,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "6",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -9520,8 +9599,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "6",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6$meta",
+  "epoch": 2,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
@@ -9571,8 +9650,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	xHTTP(t, reg, "GET", "/", ``, 200, `--{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "createdat": "`+regMod+`",
   "modifiedat": "`+regMod+`",
 
@@ -9584,8 +9663,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/", `{}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9602,8 +9681,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "description": "testing",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -9618,8 +9697,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 4,
   "self": "http://localhost:8181/",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9636,8 +9715,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 5,
   "self": "http://localhost:8181/",
+  "epoch": 5,
   "labels": {
     "foo": "bar"
   },
@@ -9654,8 +9733,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 6,
   "self": "http://localhost:8181/",
+  "epoch": 6,
   "labels": {},
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -9670,8 +9749,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 7,
   "self": "http://localhost:8181/",
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9685,8 +9764,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 8,
   "self": "http://localhost:8181/",
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "regext": "str",
@@ -9701,8 +9780,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "id": "TestHTTPRegistryPatch",
-  "epoch": 9,
   "self": "http://localhost:8181/",
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9727,8 +9806,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir1", `{}`, 200, `{
   "id": "dir1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9744,8 +9823,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "description": "testing"
 	}`, 200, `{
   "id": "dir1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 3,
   "description": "testing",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -9759,8 +9838,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "description": null
 	}`, 200, `{
   "id": "dir1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9776,8 +9855,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "createdat": null
 	}`, 200, `{
   "id": "dir1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 5,
   "labels": {
     "foo": "bar"
   },
@@ -9793,8 +9872,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "labels": {}
 	}`, 200, `{
   "id": "dir1",
-  "epoch": 6,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 6,
   "labels": {},
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -9808,8 +9887,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "labels": null
 	}`, 200, `{
   "id": "dir1",
-  "epoch": 7,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9822,8 +9901,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "gext": "str"
 	}`, 200, `{
   "id": "dir1",
-  "epoch": 8,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "gext": "str",
@@ -9837,8 +9916,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "gext": null
 	}`, 200, `{
   "id": "dir1",
-  "epoch": 9,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -9869,12 +9948,13 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$meta", `{}`, 200, `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -9888,13 +9968,14 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "description": "testing"
 	}`, 200, `{
   "id": "f1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 3,
   "description": "testing",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -9905,12 +9986,13 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "description": null
 	}`, 200, `{
   "id": "f1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -9924,15 +10006,16 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "createdat": null
 	}`, 200, `{
   "id": "f1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 5,
   "labels": {
     "foo": "bar"
   },
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -9943,13 +10026,14 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "labels": {}
 	}`, 200, `{
   "id": "f1",
-  "epoch": 6,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 6,
   "labels": {},
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -9960,12 +10044,13 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "labels": null
 	}`, 200, `{
   "id": "f1",
-  "epoch": 7,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -9976,13 +10061,14 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "rext": "str"
 	}`, 200, `{
   "id": "f1",
-  "epoch": 8,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "rext": "str",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -9993,12 +10079,13 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "rext": null
 	}`, 200, `{
   "id": "f1",
-  "epoch": 9,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -10027,8 +10114,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$meta", `{}`, 200, `{
   "id": "v1",
-  "epoch": 10,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 10,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10042,8 +10129,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "description": "testing"
 	}`, 200, `{
   "id": "v1",
-  "epoch": 11,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 11,
   "isdefault": true,
   "description": "testing",
   "createdat": "2024-01-01T12:00:00Z",
@@ -10055,8 +10142,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "description": null
 	}`, 200, `{
   "id": "v1",
-  "epoch": 12,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 12,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10070,8 +10157,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "createdat": null
 	}`, 200, `{
   "id": "v1",
-  "epoch": 13,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 13,
   "isdefault": true,
   "labels": {
     "foo": "bar"
@@ -10085,8 +10172,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "labels": {}
 	}`, 200, `{
   "id": "v1",
-  "epoch": 14,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 14,
   "isdefault": true,
   "labels": {},
   "createdat": "2024-01-01T12:00:00Z",
@@ -10098,8 +10185,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "labels": null
 	}`, 200, `{
   "id": "v1",
-  "epoch": 15,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 15,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10110,8 +10197,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "rext": "str"
 	}`, 200, `{
   "id": "v1",
-  "epoch": 16,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 16,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -10123,8 +10210,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	  "rext": null
 	}`, 200, `{
   "id": "v1",
-  "epoch": 17,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 17,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10140,8 +10227,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir2", `{}`, 201, `{
   "id": "dir2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir2",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
 
@@ -10152,12 +10239,13 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2$meta", `{}`, 201, `{
   "id": "f2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir2/files/f2$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir2/files/f2/versions/1$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir2/files/f2/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir2/files/f2/versions"
@@ -10166,8 +10254,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2/versions/v2$meta", `{}`, 201, `{
   "id": "v2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir2/files/f2/versions/v2$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z"
@@ -10176,8 +10264,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir3/files/f3/versions/v3$meta", `{}`, 201, `{
   "id": "v3",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir3/files/f3/versions/v3$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z"
@@ -10197,8 +10285,8 @@ func TestHTTPEpoch(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$meta", `{}`,
 		201, `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z"
@@ -10208,8 +10296,8 @@ func TestHTTPEpoch(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1",
 		`{"epoch":null}`, 200, `{
   "id": "dir1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/dir1",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -10220,12 +10308,13 @@ func TestHTTPEpoch(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$meta",
 		`{"epoch":null}`, 200, `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/dir1/files/f1$meta",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -10234,8 +10323,8 @@ func TestHTTPEpoch(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$meta",
 		`{"epoch":null}`, 200, `{
   "id": "v1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 3,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10264,13 +10353,14 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1",
 		`{"description": "desc"}`, 200, `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/dir1/files/f1",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "epoch": 2,
   "description": "desc",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -10280,12 +10370,13 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1",
 		`{"description": null}`, 200, `{
   "id": "f1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/dir1/files/f1",
-  "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
@@ -10299,8 +10390,8 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1",
 		`{"description": "desc"}`, 200, `{
   "id": "v1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "epoch": 4,
   "isdefault": true,
   "description": "desc",
   "createdat": "2024-01-01T12:00:01Z",
@@ -10311,8 +10402,8 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1",
 		`{"description": null}`, 200, `{
   "id": "v1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1",
+  "epoch": 5,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
@@ -10336,24 +10427,26 @@ func TestHTTPResourceCollections(t *testing.T) {
 	}`, 200, `{
   "f1": {
     "id": "f1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f1",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/1",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions"
   },
   "f2": {
     "id": "f2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f2",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f2/versions/1",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f2/versions"
@@ -10368,24 +10461,26 @@ func TestHTTPResourceCollections(t *testing.T) {
 	}`, 200, `{
   "f3": {
     "id": "f3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f3",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f3/versions/1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f3/versions/1",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f3/versions"
   },
   "f4": {
     "id": "f4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/f4",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f4/versions/1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f4/versions/1",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f4/versions"
@@ -10405,8 +10500,8 @@ func TestHTTPResourceCollections(t *testing.T) {
 	  "id": "v1"
 	}`, 201, `{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v1",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10418,8 +10513,8 @@ func TestHTTPResourceCollections(t *testing.T) {
 	  "id": "v2"
 	}`, 201, `{
   "id": "v2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v2",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10431,8 +10526,8 @@ func TestHTTPResourceCollections(t *testing.T) {
 	  "id": "v3"
 	}`, 201, `{
   "id": "v3",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v3",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
@@ -10444,8 +10539,8 @@ func TestHTTPResourceCollections(t *testing.T) {
 	  "id": "v2"
 	}`, 200, `{
   "id": "v2",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/dir1/files/f7/versions/v2",
+  "epoch": 2,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
@@ -10465,15 +10560,15 @@ func TestHTTPResourceCollections(t *testing.T) {
 	}`, 200, `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/ff1/versions/v1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   },
   "v2": {
     "id": "v2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/ff1/versions/v2",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -10488,15 +10583,15 @@ func TestHTTPResourceCollections(t *testing.T) {
 	}`, 200, `{
   "v1": {
     "id": "v1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/ff8/versions/v1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   },
   "v2": {
     "id": "v2",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/dir1/files/ff8/versions/v2",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -10523,8 +10618,8 @@ func TestHTTPmeta(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1$meta", `{}`, 201,
 		`{
   "id": "v1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$meta",
+  "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z"
@@ -10582,8 +10677,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPURLs",
-  "epoch": 1,
   "self": "http://localhost:8181/",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
 
@@ -10606,8 +10701,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPURLs",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "description": "a test",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -10631,8 +10726,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPURLs",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "description": "a test",
   "labels": {
     "l1": "foo"
@@ -10707,8 +10802,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "d1": {
     "id": "d1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z",
 
@@ -10729,8 +10824,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "d1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
 
@@ -10752,8 +10847,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "d2",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d2",
+  "epoch": 1,
   "description": "foo",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
@@ -10776,8 +10871,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "d2",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d2",
+  "epoch": 2,
   "description": "foo",
   "labels": {
     "l1": "v1"
@@ -10856,14 +10951,15 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "f1": {
     "id": "f1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d2/files/f1$meta",
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/1$meta",
+    "epoch": 1,
     "description": "my f1",
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z",
     "contenttype": "application/json",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/1$meta",
 
     "versionscount": 1,
     "versionsurl": "http://localhost:8181/dirs/d2/files/f1/versions"
@@ -10880,14 +10976,14 @@ func TestHTTPURLs(t *testing.T) {
 		ReqBody:    ``,
 		Code:       200,
 		ResHeaders: []string{
-			"xRegistry-createdat:2024-01-01T12:00:00Z",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d2/files/f1/versions/1",
-			"xRegistry-epoch:1",
 			"xRegistry-id:f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-description:my f1",
-			"xRegistry-modifiedat:2024-01-01T12:00:00Z",
 			"xRegistry-self:http://localhost:8181/dirs/d2/files/f1",
+			"xRegistry-epoch:1",
+			"xRegistry-description:my f1",
+			"xRegistry-createdat:2024-01-01T12:00:00Z",
+			"xRegistry-modifiedat:2024-01-01T12:00:00Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d2/files/f1/versions/1",
 			"xRegistry-versionscount:1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d2/files/f1/versions",
 			"Content-Length:11",
@@ -10908,14 +11004,14 @@ func TestHTTPURLs(t *testing.T) {
 		ReqBody: `Everybody wants to rule the world`,
 		Code:    200,
 		ResHeaders: []string{
-			"xRegistry-createdat:2024-01-01T12:00:00Z",
-			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d2/files/f1/versions/1",
-			"xRegistry-epoch:2",
 			"xRegistry-id:f1",
-			"xRegistry-defaultversionid:1",
-			"xRegistry-description:new f1",
-			"xRegistry-modifiedat:2024-01-01T12:00:01Z",
 			"xRegistry-self:http://localhost:8181/dirs/d2/files/f1",
+			"xRegistry-epoch:2",
+			"xRegistry-description:new f1",
+			"xRegistry-createdat:2024-01-01T12:00:00Z",
+			"xRegistry-modifiedat:2024-01-01T12:00:01Z",
+			"xRegistry-defaultversionid:1",
+			"xRegistry-defaultversionurl:http://localhost:8181/dirs/d2/files/f1/versions/1",
 			"xRegistry-versionscount:1",
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d2/files/f1/versions",
 			"Content-Length:33",
@@ -10951,13 +11047,13 @@ func TestHTTPURLs(t *testing.T) {
 		ReqBody: `this is a new version`,
 		Code:    201,
 		ResHeaders: []string{
-			"xRegistry-createdat:2024-01-01T12:00:00Z",
-			"xRegistry-description:new v",
-			"xRegistry-epoch:1",
 			"xRegistry-id:2",
-			"xRegistry-isdefault:true",
-			"xRegistry-modifiedat:2024-01-01T12:00:00Z",
 			"xRegistry-self:http://localhost:8181/dirs/d2/files/f1/versions/2",
+			"xRegistry-epoch:1",
+			"xRegistry-description:new v",
+			"xRegistry-isdefault:true",
+			"xRegistry-createdat:2024-01-01T12:00:00Z",
+			"xRegistry-modifiedat:2024-01-01T12:00:00Z",
 			"Content-Location:http://localhost:8181/dirs/d2/files/f1/versions/2",
 			"Content-Type:text/plain; charset=utf-8",
 		},
@@ -10975,13 +11071,14 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d2/files/f1$meta",
-  "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/2$meta",
+  "epoch": 1,
   "description": "new v",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
+
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/2$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d2/files/f1/versions"
@@ -10999,13 +11096,14 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d2/files/f1$meta",
-  "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/2$meta",
+  "epoch": 2,
   "description": "update 2",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/2$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d2/files/f1/versions"
@@ -11023,16 +11121,17 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d2/files/f1$meta",
-  "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/2$meta",
+  "epoch": 3,
   "description": "update 2",
   "labels": {
     "l1": "v1"
   },
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d2/files/f1/versions/2$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d2/files/f1/versions"
@@ -11053,8 +11152,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "3",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d2/files/f1/versions/3$meta",
+  "epoch": 1,
   "isdefault": true,
   "description": "be 3!",
   "createdat": "2024-01-01T12:00:00Z",
@@ -11075,8 +11174,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "1": {
     "id": "1",
-    "epoch": 2,
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/1$meta",
+    "epoch": 2,
     "description": "new f1",
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:01Z",
@@ -11084,8 +11183,8 @@ func TestHTTPURLs(t *testing.T) {
   },
   "2": {
     "id": "2",
-    "epoch": 3,
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/2$meta",
+    "epoch": 3,
     "description": "update 2",
     "labels": {
       "l1": "v1"
@@ -11095,8 +11194,8 @@ func TestHTTPURLs(t *testing.T) {
   },
   "3": {
     "id": "3",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/3$meta",
+    "epoch": 1,
     "isdefault": true,
     "description": "be 3!",
     "createdat": "2024-01-01T12:00:04Z",
@@ -11142,15 +11241,15 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "v4": {
     "id": "v4",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/v4$meta",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   },
   "v5": {
     "id": "v5",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$meta",
+    "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z",
@@ -11169,8 +11268,8 @@ func TestHTTPURLs(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{
 			"xRegistry-id:v5",
-			"xRegistry-epoch:1",
 			"xRegistry-self:http://localhost:8181/dirs/d2/files/f1/versions/v5",
+			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat:2024-01-01T12:00:00Z",
 			"xRegistry-modifiedat:2024-01-01T12:00:00Z",
@@ -11189,8 +11288,8 @@ func TestHTTPURLs(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{
 			"xRegistry-id:v5",
-			"xRegistry-epoch:2",
 			"xRegistry-self:http://localhost:8181/dirs/d2/files/f1/versions/v5",
+			"xRegistry-epoch:2",
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat:2024-01-01T12:00:00Z",
 			"xRegistry-modifiedat:2024-01-01T12:00:01Z",
@@ -11236,8 +11335,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v5",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$meta",
+  "epoch": 2,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -11258,8 +11357,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v5",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$meta",
+  "epoch": 3,
   "isdefault": true,
   "description": "cool one",
   "createdat": "2024-01-01T12:00:00Z",
@@ -11280,8 +11379,8 @@ func TestHTTPURLs(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "v5",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$meta",
+  "epoch": 4,
   "isdefault": true,
   "description": "cool one",
   "labels": {
@@ -11327,8 +11426,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "description": "myreg",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11355,8 +11454,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "description": "myreg2",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11371,8 +11470,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		`{
   "d1": {
     "id": "d1",
-    "epoch": 1,
     "self": "http://localhost:8181/dirs/d1",
+    "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -11403,8 +11502,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 4,
   "self": "http://localhost:8181/",
+  "epoch": 4,
   "description": "myreg3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11419,8 +11518,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		`{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 4,
   "self": "http://localhost:8181/",
+  "epoch": 4,
   "description": "myreg3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11428,8 +11527,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "epoch": 2,
       "self": "http://localhost:8181/dirs/d1",
+      "epoch": 2,
       "description": "d1",
       "createdat": "2024-01-01T12:00:03Z",
       "modifiedat": "2024-01-01T12:00:02Z",
@@ -11437,18 +11536,19 @@ func TestHTTPNestedRegistry(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-          "defaultversionid": "1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+          "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
+
+          "defaultversionid": "1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
           "versions": {
             "1": {
               "id": "1",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+              "epoch": 1,
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -11495,8 +11595,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 5,
   "self": "http://localhost:8181/",
+  "epoch": 5,
   "description": "myreg4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11511,8 +11611,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		`{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 5,
   "self": "http://localhost:8181/",
+  "epoch": 5,
   "description": "myreg4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11520,8 +11620,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "epoch": 3,
       "self": "http://localhost:8181/dirs/d1",
+      "epoch": 3,
       "description": "d1.1",
       "createdat": "2024-01-01T12:00:03Z",
       "modifiedat": "2024-01-01T12:00:02Z",
@@ -11529,19 +11629,20 @@ func TestHTTPNestedRegistry(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "epoch": 2,
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-          "defaultversionid": "1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+          "epoch": 2,
           "description": "f1-1",
           "createdat": "2024-01-01T12:00:04Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
+          "defaultversionid": "1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+
           "versions": {
             "1": {
               "id": "1",
-              "epoch": 2,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+              "epoch": 2,
               "isdefault": true,
               "description": "f1-1",
               "createdat": "2024-01-01T12:00:04Z",
@@ -11574,7 +11675,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 			  "files": {
 			    "f1": {
 				  "description": "f1",
-				  "stickydefaultversionid": true,
+
+				  "defaultversionstickyid": true,
 				  "defaultversionid": "2",
 				  "versions": {
 				    "1": {
@@ -11594,8 +11696,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 6,
   "self": "http://localhost:8181/",
+  "epoch": 6,
   "description": "myreg4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11610,8 +11712,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 		`{
   "specversion": "0.5",
   "id": "TestHTTPNestedRegistry",
-  "epoch": 6,
   "self": "http://localhost:8181/",
+  "epoch": 6,
   "description": "myreg4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -11619,8 +11721,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
   "dirs": {
     "d1": {
       "id": "d1",
-      "epoch": 4,
       "self": "http://localhost:8181/dirs/d1",
+      "epoch": 4,
       "description": "d1.1",
       "createdat": "2024-01-01T12:00:03Z",
       "modifiedat": "2024-01-01T12:00:02Z",
@@ -11628,27 +11730,28 @@ func TestHTTPNestedRegistry(t *testing.T) {
       "files": {
         "f1": {
           "id": "f1",
-          "epoch": 1,
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-          "defaultversionid": "2",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$meta",
+          "epoch": 1,
           "description": "f1-2.1",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
+          "defaultversionid": "2",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$meta",
+
           "versions": {
             "1": {
               "id": "1",
-              "epoch": 3,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+              "epoch": 3,
               "description": "f1-1.1",
               "createdat": "2024-01-01T12:00:04Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "2": {
               "id": "2",
-              "epoch": 1,
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/2$meta",
+              "epoch": 1,
               "isdefault": true,
               "description": "f1-2.1",
               "createdat": "2024-01-01T12:00:02Z",
@@ -11689,13 +11792,14 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 1,
   "description": "f1",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -11706,19 +11810,20 @@ func TestHTTPNestedResources(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline", ``, 200,
 		`{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 1,
   "description": "f1",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
 
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+
   "versions": {
     "1": {
       "id": "1",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+      "epoch": 1,
       "isdefault": true,
       "description": "f1",
       "createdat": "2024-01-01T12:00:00Z",
@@ -11737,7 +11842,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
           "description": "f1.1",
-		  "stickydefaultversion": true,
+		  "defaultversionsticky": true,
 		  "defaultversionid": "v2"
         }`,
 		Code:       400,
@@ -11753,12 +11858,12 @@ func TestHTTPNestedResources(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
           "description": "f1.1",
-		  "stickydefaultversion": "hi",
+		  "defaultversionsticky": "hi",
 		  "defaultversionid": "v2"
         }`,
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `'stickydefaultversion' must be a boolean or null
+		ResBody: `'defaultversionsticky' must be a boolean or null
 `,
 	})
 
@@ -11769,20 +11874,21 @@ func TestHTTPNestedResources(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
           "description": "f1.2",
-		  "stickydefaultversion": null,
+		  "defaultversionsticky": null,
 		  "defaultversionid": "v3"
         }`,
 		Code:       200,
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 2,
   "description": "f1.2",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -11803,13 +11909,14 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 3,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -11823,20 +11930,21 @@ func TestHTTPNestedResources(t *testing.T) {
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
-          "stickydefaultversion": true
+          "defaultversionsticky": true
         }`,
 		Code:       200,
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 4,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -11858,14 +11966,15 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 5,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -11876,20 +11985,21 @@ func TestHTTPNestedResources(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline", ``, 200,
 		`{
   "id": "f1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "epoch": 5,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
+  "defaultversionsticky": true,
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+
   "versions": {
     "1": {
       "id": "1",
-      "epoch": 5,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+      "epoch": 5,
       "isdefault": true,
       "description": "f1.3",
       "createdat": "2024-01-01T12:00:00Z",
@@ -11897,8 +12007,8 @@ func TestHTTPNestedResources(t *testing.T) {
     },
     "v2": {
       "id": "v2",
-      "epoch": 1,
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+      "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     }
@@ -11914,7 +12024,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
-		  "stickydefaultversion": false,
+		  "defaultversionsticky": false,
           "versions": {
 		    "v3": {}
           }
@@ -11923,12 +12033,13 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "v3",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v3",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$meta",
 
   "versionscount": 3,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -11943,7 +12054,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
           "description": "f2.4",
-		  "stickydefaultversion": true,
+		  "defaultversionsticky": true,
 		  "defaultversionid": "v2",
 		  "versions": {
 		    "v4": { "description": "v4.1" }
@@ -11953,14 +12064,15 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 2,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+  "epoch": 2,
   "description": "f2.4",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
 
   "versionscount": 4,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -11975,7 +12087,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ReqHeaders: []string{},
 		ReqBody: `{
           "description": "fx",
-		  "stickydefaultversion": true,
+		  "defaultversionsticky": true,
 		  "defaultversionid": "v5",
 		  "versions": {
 		    "v5": { "description": "v5.1" }
@@ -11985,14 +12097,15 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v5",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$meta",
+  "epoch": 1,
   "description": "v5.1",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$meta",
 
   "versionscount": 5,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -12012,14 +12125,15 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 3,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+  "epoch": 3,
   "description": "f2.4",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
 
   "versionscount": 5,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -12033,20 +12147,21 @@ func TestHTTPNestedResources(t *testing.T) {
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
-		  "stickydefaultversion": true
+		  "defaultversionsticky": true
         }`,
 		Code:       200,
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 4,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+  "epoch": 4,
   "description": "f2.4",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
 
   "versionscount": 5,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -12055,25 +12170,26 @@ func TestHTTPNestedResources(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + nostickydefaultversion",
-		URL:        "/dirs/d1/files/f1$meta?nested&nostickydefaultversion",
+		Name:       "PATCH /rID?nested + nodefaultversionsticky",
+		URL:        "/dirs/d1/files/f1$meta?nested&nodefaultversionsticky",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
-		  "stickydefaultversion": null
+		  "defaultversionsticky": null
         }`,
 		Code:       200,
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 5,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+  "epoch": 5,
   "description": "f2.4",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
 
   "versionscount": 5,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -12093,14 +12209,15 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResHeaders: []string{},
 		ResBody: `{
   "id": "f1",
-  "epoch": 6,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "stickydefaultversion": true,
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+  "epoch": 6,
   "description": "f2.4",
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionsticky": true,
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
 
   "versionscount": 5,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -12145,8 +12262,8 @@ func TestHTTPExport(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPExport",
-  "epoch": 2,
   "self": "http://localhost:8181/",
+  "epoch": 2,
   "description": "my reg",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -12173,8 +12290,8 @@ func TestHTTPExport(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPExport",
-  "epoch": 3,
   "self": "http://localhost:8181/",
+  "epoch": 3,
   "description": "my reg",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -12208,8 +12325,8 @@ func TestHTTPExport(t *testing.T) {
 		ResBody: `{
   "specversion": "0.5",
   "id": "TestHTTPExport",
-  "epoch": 4,
   "self": "http://localhost:8181/",
+  "epoch": 4,
   "description": "my reg",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",

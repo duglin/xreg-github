@@ -43,8 +43,8 @@ func TestCreateGroup(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1",
 		`{
   "id": "d1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 

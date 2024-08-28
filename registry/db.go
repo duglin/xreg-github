@@ -126,7 +126,7 @@ type Tx struct {
 	CreateTime                 string // use for entity timestamps too
 	User                       string
 	IgnoreEpoch                bool
-	IgnoreStickyDefaultVersion bool
+	IgnoreDefaultVersionSticky bool
 	IgnoreDefaultVersionID     bool
 
 	// Cache of entities this Tx is dealing with. Things can get funky if

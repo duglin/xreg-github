@@ -44,12 +44,13 @@ func TestCreateResource(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1/files/f1$meta",
 		`{
   "id": "f1",
-  "epoch": 1,
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+  "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
 
   "versionscount": 2,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -174,13 +175,13 @@ func TestResourceMaxVersions(t *testing.T) {
 		Singular:    "file",
 		MaxVersions: 1, // ONLY ALLOW 1 VERSION
 	})
-	xCheckErr(t, err, `'setstickydefaultversion' must be 'false' since 'maxversions' is '1'`)
+	xCheckErr(t, err, `'setdefaultversionsticky' must be 'false' since 'maxversions' is '1'`)
 
 	rm, err = gm.AddResourceModelFull(&registry.ResourceModel{
 		Plural:           "files",
 		Singular:         "file",
 		MaxVersions:      1, // ONLY ALLOW 1 VERSION
-		SetStickyDefault: registry.PtrBool(false),
+		SetDefaultSticky: registry.PtrBool(false),
 	})
 	xNoErr(t, err)
 

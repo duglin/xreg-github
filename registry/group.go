@@ -247,7 +247,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	// Now we have a Resource.
 	// Order of processing:
 	// - "versions" collection if there
-	// - "stickydefaultversion" flag if there
+	// - "defaultversionsticky" flag if there
 	// - "defaultversionid" flag if sticky is set
 	// - Resource level properties applied to default version IFF default
 	//   version wasn't already uploaded as part of the "versions" collection
@@ -271,15 +271,15 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 	}
 
-	// Now process the stickydefaultversion and defaultversionid attributes.
+	// Now process the defaultversionsticky and defaultversionid attributes.
 	// Start with current sticky value
-	sticky := (r.Get("stickydefaultversion") == true)
+	sticky := (r.Get("defaultversionsticky") == true)
 
 	// If there's an incoming obj and it changes 'sticky' then use it
-	if !r.tx.IgnoreStickyDefaultVersion && !IsNil(obj) {
-		stickyAny, ok := obj["stickydefaultversion"]
+	if !r.tx.IgnoreDefaultVersionSticky && !IsNil(obj) {
+		stickyAny, ok := obj["defaultversionsticky"]
 		if ok && (stickyAny != true && stickyAny != false && !IsNil(stickyAny)) {
-			return nil, false, fmt.Errorf("'stickydefaultversion' must be " +
+			return nil, false, fmt.Errorf("'defaultversionsticky' must be " +
 				"a boolean or null")
 		}
 

@@ -68,7 +68,6 @@ type Attribute struct {
 	Immutable      bool      `json:"immutable,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
-	ExportRequired bool      `json:"exportrequired,omitempty"`
 	Default        any       `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
@@ -114,7 +113,7 @@ type ResourceModel struct {
 	Singular         string            `json:"singular"`
 	MaxVersions      int               `json:"maxversions"`             // do not include omitempty
 	SetVersionId     *bool             `json:"setversionid"`            // do not include omitempty
-	SetStickyDefault *bool             `json:"setstickydefaultversion"` // do not include omitempty
+	SetDefaultSticky *bool             `json:"setdefaultversionsticky"` // do not include omitempty
 	HasDocument      *bool             `json:"hasdocument"`             // do not include omitempty
 	ReadOnly         bool              `json:"readonly,omitempty"`
 	TypeMap          map[string]string `json:"typemap,omitempty"`
@@ -128,17 +127,6 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 	attrsCopy := maps.Clone(attrs) // Copy so we can delete keys
 	count := 0
 
-	// Very risky but it works for now....determine which level we're at
-	// by looking for level-only attributes
-	level := 1 // Default to Group
-	if attrsCopy["specversion"] != nil {
-		level = 0 // Registry
-	} else if attrsCopy["stickydefaultversion"] != nil {
-		level = 2 // Resource
-	} else if attrsCopy["isdefault"] != nil {
-		level = 3 // Version
-	}
-
 	buf.WriteString("{")
 	for _, specProp := range OrderedSpecProps {
 		if attr, ok := attrsCopy[specProp.Name]; ok {
@@ -146,9 +134,6 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 
 			tmpAttr := *attr
 			attr = &tmpAttr
-			if level != 2 && attr.ExportRequired {
-				attr.ExportRequired = false
-			}
 
 			// We need to exclude "model" because we don't want to show the
 			// end user "model" as a valid attribute in the model.
@@ -192,7 +177,7 @@ func (r *ResourceModel) UnmarshalJSON(data []byte) error {
 	// Set the default values
 	r.MaxVersions = MAXVERSIONS
 	r.SetVersionId = PtrBool(SETVERSIONID)
-	r.SetStickyDefault = PtrBool(SETSTICKYDEFAULT)
+	r.SetDefaultSticky = PtrBool(SETDEFAULTSTICKY)
 	r.HasDocument = PtrBool(HASDOCUMENT)
 
 	type tmpResourceModel ResourceModel
@@ -622,7 +607,7 @@ func LoadModel(reg *Registry) *Model {
 	results, err = Query(reg.tx, `
         SELECT
             SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
-			MaxVersions, SetVersionId, SetStickyDefault, HasDocument, ReadOnly,
+			MaxVersions, SetVersionId, SetDefaultSticky, HasDocument, ReadOnly,
 			TypeMap
         FROM ModelEntities
         WHERE RegistrySID=?
@@ -673,7 +658,7 @@ func LoadModel(reg *Registry) *Model {
 					Attributes:       attrs,
 					MaxVersions:      NotNilIntDef(row[6], MAXVERSIONS),
 					SetVersionId:     PtrBool(NotNilBoolDef(row[7], SETVERSIONID)),
-					SetStickyDefault: PtrBool(NotNilBoolDef(row[8], SETSTICKYDEFAULT)),
+					SetDefaultSticky: PtrBool(NotNilBoolDef(row[8], SETDEFAULTSTICKY)),
 					HasDocument:      PtrBool(NotNilBoolDef(row[9], HASDOCUMENT)),
 					ReadOnly:         NotNilBoolDef(row[10], READONLY),
 					TypeMap:          typemap,
@@ -764,7 +749,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 					Singular:         newRM.Singular,
 					MaxVersions:      newRM.MaxVersions,
 					SetVersionId:     newRM.SetVersionId,
-					SetStickyDefault: newRM.SetStickyDefault,
+					SetDefaultSticky: newRM.SetDefaultSticky,
 					HasDocument:      newRM.HasDocument,
 					ReadOnly:         newRM.ReadOnly,
 				})
@@ -777,7 +762,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 				oldRM.Singular = newRM.Singular
 				oldRM.MaxVersions = newRM.MaxVersions
 				oldRM.SetVersionId = newRM.SetVersionId
-				oldRM.SetStickyDefault = newRM.SetStickyDefault
+				oldRM.SetDefaultSticky = newRM.SetDefaultSticky
 				oldRM.HasDocument = newRM.HasDocument
 				oldRM.ReadOnly = newRM.ReadOnly
 			}
@@ -910,19 +895,19 @@ func (gm *GroupModel) AddResourceModelSimple(plural, singular string) (*Resource
 		Singular:         singular,
 		MaxVersions:      MAXVERSIONS,
 		SetVersionId:     PtrBool(SETVERSIONID),
-		SetStickyDefault: PtrBool(SETSTICKYDEFAULT),
+		SetDefaultSticky: PtrBool(SETDEFAULTSTICKY),
 		HasDocument:      PtrBool(HASDOCUMENT),
 		ReadOnly:         READONLY,
 	})
 }
 
-func (gm *GroupModel) AddResourceModel(plural string, singular string, maxVersions int, setVerId bool, setStickyDefault bool, hasDocument bool) (*ResourceModel, error) {
+func (gm *GroupModel) AddResourceModel(plural string, singular string, maxVersions int, setVerId bool, setDefaultSticky bool, hasDocument bool) (*ResourceModel, error) {
 	return gm.AddResourceModelFull(&ResourceModel{
 		Plural:           plural,
 		Singular:         singular,
 		MaxVersions:      maxVersions,
 		SetVersionId:     PtrBool(setVerId),
-		SetStickyDefault: PtrBool(setStickyDefault),
+		SetDefaultSticky: PtrBool(setDefaultSticky),
 		HasDocument:      PtrBool(hasDocument),
 		ReadOnly:         READONLY,
 	})
@@ -938,8 +923,8 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	if rm.MaxVersions < 0 {
 		return nil, fmt.Errorf("'maxversions'(%d) must be >= 0", rm.MaxVersions)
 	}
-	if rm.MaxVersions == 1 && rm.GetSetStickyDefault() != false {
-		return nil, fmt.Errorf("'setstickydefaultversion' must be 'false' since " +
+	if rm.MaxVersions == 1 && rm.GetSetDefaultSticky() != false {
+		return nil, fmt.Errorf("'setdefaultversionsticky' must be 'false' since " +
 			"'maxversions' is '1'")
 	}
 	if !IsValidAttributeName(rm.Plural) {
@@ -970,10 +955,10 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	err := DoOne(gm.Registry.tx, `
 		INSERT INTO ModelEntities(
 			SID, RegistrySID, ParentSID, Plural, Singular, MaxVersions,
-			SetVersionId, SetStickyDefault, HasDocument, ReadOnly, TypeMap)
+			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap)
 		VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 		rm.SID, gm.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.MaxVersions,
-		rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly, typemap)
+		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", rm.Plural, err)
 		return nil, err
@@ -995,8 +980,8 @@ func (rm *ResourceModel) GetSetVersionId() bool {
 	return rm.SetVersionId == nil || *rm.SetVersionId == true
 }
 
-func (rm *ResourceModel) GetSetStickyDefault() bool {
-	return rm.SetStickyDefault == nil || *rm.SetStickyDefault == true
+func (rm *ResourceModel) GetSetDefaultSticky() bool {
+	return rm.SetDefaultSticky == nil || *rm.SetDefaultSticky == true
 }
 
 func (rm *ResourceModel) GetHasDocument() bool {
@@ -1034,20 +1019,20 @@ func (rm *ResourceModel) Save() error {
             SID, RegistrySID,
 			ParentSID, Plural, Singular, MaxVersions,
 			Attributes,
-			SetVersionId, SetStickyDefault, HasDocument, ReadOnly, TypeMap)
+			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
             ParentSID=?, Plural=?, Singular=?,
 			Attributes=?,
-            MaxVersions=?, SetVersionId=?, SetStickyDefault=?, HasDocument=?, ReadOnly=?, TypeMap=?`,
+            MaxVersions=?, SetVersionId=?, SetDefaultSticky=?, HasDocument=?, ReadOnly=?, TypeMap=?`,
 		rm.SID, rm.GroupModel.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.MaxVersions,
 		attrs,
-		rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly, typemap,
+		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap,
 
 		rm.GroupModel.SID, rm.Plural, rm.Singular,
 		attrs,
-		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetStickyDefault(), rm.GetHasDocument(), rm.ReadOnly, typemap)
+		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
 		return err
@@ -1592,8 +1577,8 @@ func (rm *ResourceModel) SetMaxVersions(maxV int) error {
 	return rm.VerifyAndSave()
 }
 
-func (rm *ResourceModel) SetSetStickyDefault(val bool) error {
-	rm.SetStickyDefault = PtrBool(val)
+func (rm *ResourceModel) SetSetDefaultSticky(val bool) error {
+	rm.SetDefaultSticky = PtrBool(val)
 	return rm.VerifyAndSave()
 }
 
@@ -1897,7 +1882,8 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			return fmt.Errorf("Duplicate attribute name (%s) at: %s", name,
 				ld.Path.UI())
 		}
-		if name != "*" && !IsValidAttributeName(name) { // valid chars?
+		if name != "*" && SpecProps[name] == nil &&
+			!IsValidAttributeName(name) { // valid chars?
 			return fmt.Errorf("%q has an invalid attribute key %q - must "+
 				"match %q", ld.Path.UI(), name, RegexpPropName.String())
 		}
