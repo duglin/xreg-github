@@ -422,7 +422,7 @@ func (e *Entity) ValidateAndSave() error {
 }
 
 // This is really just an internal Setter used for testing.
-// It'sll set a property and then validate and save the entity in the DB
+// It'll set a property and then validate and save the entity in the DB
 func (e *Entity) SetPP(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: SetPP(%s: %s=%v)", e.DbSID, pp.UI(), val)
 	defer log.VPrintf(3, "<Exit SetPP")
@@ -709,7 +709,7 @@ var OrderedSpecProps = []*Attribute{
 					return fmt.Errorf("ID can't be an empty string")
 				}
 
-				if oldID != "" && newID != oldID {
+				if oldID != "" && !IsNil(oldID) && newID != oldID {
 					return fmt.Errorf(`The "id" attribute must be set to `+
 						`%q, not %q`, oldID, newID)
 				}
@@ -717,7 +717,10 @@ var OrderedSpecProps = []*Attribute{
 			},
 			updateFn: func(e *Entity) error {
 				// Make sure the ID is always set
-				e.NewObject["id"] = e.UID
+				if IsNil(e.NewObject["id"]) {
+					ShowStack()
+					return fmt.Errorf("ID is nil - that's bad, fit it!")
+				}
 				return nil
 			},
 		},

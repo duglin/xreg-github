@@ -381,6 +381,11 @@ func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error 
 		}
 	}
 
+	// Make sure we always have an ID
+	if IsNil(reg.NewObject["id"]) {
+		reg.NewObject["id"] = reg.UID
+	}
+
 	return reg.ValidateAndSave()
 }
 
@@ -496,6 +501,11 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 					g.NewObject[k] = v
 				}
 			}
+		}
+
+		// Make sure we always have an ID
+		if IsNil(g.NewObject["id"]) {
+			g.NewObject["id"] = g.UID
 		}
 
 		if err = g.ValidateAndSave(); err != nil {

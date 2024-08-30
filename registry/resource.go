@@ -291,6 +291,11 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		}
 	}
 
+	// Make sure we always have an ID
+	if IsNil(v.NewObject["id"]) {
+		v.NewObject["id"] = id
+	}
+
 	if err = v.ValidateAndSave(); err != nil {
 		return nil, false, err
 	}
@@ -316,6 +321,11 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 
 func (r *Resource) AddVersion(id string) (*Version, error) {
 	v, _, err := r.UpsertVersionWithObject(id, nil, ADD_ADD)
+	return v, err
+}
+
+func (r *Resource) AddVersionWithObject(id string, obj Object) (*Version, error) {
+	v, _, err := r.UpsertVersionWithObject(id, obj, ADD_ADD)
 	return v, err
 }
 

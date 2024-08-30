@@ -166,9 +166,10 @@ testdev:
 	@misc/errOutput docker build -t duglin/xreg-dev --no-cache \
 		-f misc/Dockerfile-dev .
 	@echo
-	@echo "# Build, test and run the server"
+	@echo "## Build, test and run the server all within the dev image"
 	docker run -ti -v /var/run/docker.sock:/var/run/docker.sock \
 		-e VERIFY=--verify --network host duglin/xreg-dev make clean all
+	@echo "## Done! Exited the dev image"
 
 clean:
 	@echo "# Cleaning"

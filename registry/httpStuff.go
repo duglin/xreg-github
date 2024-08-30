@@ -9,6 +9,7 @@ import (
 	"net/http"
 	// "os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -587,6 +588,9 @@ func GetModelInlines(m *Model) []string {
 			res = append(res, gm.Plural+"."+inline)
 		}
 	}
+
+	sort.Strings(res)
+
 	return res
 }
 
