@@ -699,6 +699,9 @@ var OrderedSpecProps = []*Attribute{
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
 				oldID := any(e.UID)
+				if e.Level == 3 {
+					oldID = any(e.Object["id"])
+				}
 				newID := any(e.NewObject["id"])
 
 				if IsNil(newID) {
@@ -825,6 +828,46 @@ var OrderedSpecProps = []*Attribute{
 
 				e.NewObject["epoch"] = epoch + 1
 				e.EpochSet = true
+				return nil
+			},
+		},
+	},
+	{
+		Name:           "versionid",
+		Type:           STRING,
+		Immutable:      true,
+		ServerRequired: true,
+
+		internals: AttrInternals{
+			levels:    "3",
+			dontStore: false,
+			getFn:     nil,
+			checkFn: func(e *Entity) error {
+				oldID := any(e.UID)
+				newID := any(e.NewObject["versionid"])
+
+				if IsNil(newID) {
+					return nil // Not trying to be updated, so skip it
+				}
+
+				if newID == "" {
+					return fmt.Errorf("'versionid' can't be an empty string")
+				}
+
+				if oldID != "" && newID != oldID {
+					// log.Printf("New: %s", ToJSON(e.NewObject))
+					// ShowStack()
+					return fmt.Errorf(`The "versionid" attribute must be `+
+						`set to %q, not %q`, oldID, newID)
+				}
+				return nil
+			},
+			updateFn: func(e *Entity) error {
+				// Make sure the versionid is always set
+				if IsNil(e.NewObject["versionid"]) {
+					ShowStack()
+					return fmt.Errorf("ID is nil - that's bad, fit it!")
+				}
 				return nil
 			},
 		},

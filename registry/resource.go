@@ -217,7 +217,8 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		if v != nil && v.UID != id {
 			return nil, false,
 				fmt.Errorf("Attempting to create a Version with "+
-					"an \"id\" of %q, when one already exists as %q", id, v.UID)
+					"a \"versionid\" of %q, when one already exists as %q",
+					id, v.UID)
 		}
 
 		if err != nil {
@@ -259,7 +260,10 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 
 		v.tx.AddVersion(v)
 
-		if err = v.JustSet("id", id); err != nil {
+		if err = v.JustSet("id", r.UID); err != nil {
+			return nil, false, err
+		}
+		if err = v.JustSet("versionid", id); err != nil {
 			return nil, false, err
 		}
 	}
@@ -292,8 +296,18 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 	}
 
 	// Make sure we always have an ID
-	if IsNil(v.NewObject["id"]) {
-		v.NewObject["id"] = id
+	rID := v.NewObject["id"]
+	if IsNil(rID) {
+		v.NewObject["id"] = r.UID
+	} else if rID != r.UID {
+		return nil, false,
+			fmt.Errorf("The \"id\" attribute must be set to %q, not %q",
+				r.UID, rID)
+	}
+
+	// Make sure we always have a versionid
+	if IsNil(v.NewObject["versionid"]) {
+		v.NewObject["versionid"] = v.UID
 	}
 
 	if err = v.ValidateAndSave(); err != nil {

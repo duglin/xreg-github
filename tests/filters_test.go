@@ -60,12 +60,12 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "2 leaves match",
-			URL:  "?inline&oneline&filter=dirs.files.versions.id=v1",
+			URL:  "?inline&oneline&filter=dirs.files.versions.versionid=v1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}}`,
 		},
 		{
 			Name: "Just one leaf - v2",
-			URL:  "?inline&oneline&filter=dirs.files.versions.id=v2",
+			URL:  "?inline&oneline&filter=dirs.files.versions.versionid=v2",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}}}`,
 		},
 		{
@@ -139,21 +139,22 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version coll - match",
-			URL:  "dirs/d1/files/f1/versions?inline&oneline&filter=id=v1",
+			URL:  "dirs/d1/files/f1/versions?inline&oneline&filter=versionid=v1",
 			Exp:  `{"v1":{}}`,
 		},
 		{
 			Name: "Get/filter version coll - no match",
-			URL:  "dirs/d1/files/f1/versions?inline&oneline&filter=id=xxx",
+			URL:  "dirs/d1/files/f1/versions?inline&oneline&filter=versionid=xxx",
 			Exp:  "{}",
 		},
 		{
 			Name: "Get/filter version - match",
-			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&filter=id=v1",
+			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&filter=versionid=v1",
 			Exp: `{
-  "id": "v1",
+  "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
   "epoch": 1,
+  "versionid": "v1",
   "createdat": "2024-12-01T12:00:00Z",
   "modifiedat": "2024-12-01T12:00:00Z"
 }
@@ -161,7 +162,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version - no match",
-			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&oneline&filter=id=xxx",
+			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&oneline&filter=versionid=xxx",
 			// Nothing, matched, so 404
 			Exp: `Not found`,
 		},
@@ -238,6 +239,7 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "self": "http://localhost:8181/dirs/d2/files/f2$meta",
           "epoch": 1,
+          "versionid": "v1.1",
           "labels": {
             "file1": "1elif"
           },
@@ -249,16 +251,18 @@ func TestBasicFilters(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "createdat": "2024-12-01T12:00:02Z",
               "modifiedat": "2024-12-01T12:00:02Z"
             },
             "v1.1": {
-              "id": "v1.1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
               "epoch": 1,
+              "versionid": "v1.1",
               "isdefault": true,
               "labels": {
                 "file1": "1elif"
@@ -322,6 +326,7 @@ func TestBasicFilters(t *testing.T) {
           "id": "f2",
           "self": "http://localhost:8181/dirs/d2/files/f2$meta",
           "epoch": 1,
+          "versionid": "v1.1",
           "labels": {
             "file1": "1elif"
           },
@@ -333,16 +338,18 @@ func TestBasicFilters(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
-              "id": "v1.1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
               "epoch": 1,
+              "versionid": "v1.1",
               "isdefault": true,
               "labels": {
                 "file1": "1elif"
@@ -431,17 +438,17 @@ func TestANDORFilters(t *testing.T) {
 		},
 		{
 			Name: "multi result 2 levels down - match",
-			URL:  "?oneline&inline&filter=dirs.files.versions.id=v1",
+			URL:  "?oneline&inline&filter=dirs.files.versions.versionid=v1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - match",
-			URL:  "dirs?oneline&inline&filter=files.versions.id=v1",
+			URL:  "dirs?oneline&inline&filter=files.versions.versionid=v1",
 			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - no match",
-			URL:  "dirs?oneline&inline&filter=files.versions.id=xxx",
+			URL:  "dirs?oneline&inline&filter=files.versions.versionid=xxx",
 			Exp:  `{}`,
 		},
 
@@ -463,17 +470,17 @@ func TestANDORFilters(t *testing.T) {
 		},
 		{
 			Name: "dirsOR and sOR - match first",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemagroups.schemas.versions.id=v1.0,schemagroups.schemas.versions.id=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.versionid=v2&filter=schemagroups.schemas.versions.versionid=v1.0,schemagroups.schemas.versions.versionid=v2.0",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "dirsOR and sOR - match second",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=xxx&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.defaultversionid=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.versionid=xxx&filter=schemagroups.schemas.versions.versionid=v2.0,schemagroups.schemas.defaultversionid=v2.0",
 			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and sOR - both match",
-			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.id=v2&filter=schemagroups.schemas.versions.id=v2.0,schemagroups.schemas.defaultversionid=v2.0",
+			URL:  "?oneline&inline&filter=dirs.files.id=f1,dirs.files.versions.versionid=v2&filter=schemagroups.schemas.versions.versionid=v2.0,schemagroups.schemas.defaultversionid=v2.0",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
 		},
 	}

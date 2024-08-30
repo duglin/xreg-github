@@ -46,6 +46,7 @@ func TestCreateResource(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v2",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -203,7 +204,7 @@ func TestResourceMaxVersions(t *testing.T) {
 		"err: %q default: %s", err, ToJSON(defaultV))
 	vers, err = f1.GetVersions()
 	xNoErr(t, err)
-	xCheck(t, len(vers) == 1 && vers[0].Object["id"] == "v2", "Should be v2")
+	xCheck(t, len(vers) == 1 && vers[0].Object["versionid"] == "v2", "Should be v2")
 
 	err = rm.SetMaxVersions(2)
 	xNoErr(t, err)
@@ -218,8 +219,8 @@ func TestResourceMaxVersions(t *testing.T) {
 	vers, err = f1.GetVersions()
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 2, "Should be 2")
-	xCheck(t, vers[0].Object["id"] == "v2", "0=v2")
-	xCheck(t, vers[1].Object["id"] == "v3", "1=v3")
+	xCheck(t, vers[0].Object["versionid"] == "v2", "0=v2")
+	xCheck(t, vers[1].Object["versionid"] == "v3", "1=v3")
 
 	// Create v4, which should bump v3 out of the list, not v2 (default)
 	v4, err := f1.AddVersion("v4")
@@ -231,8 +232,8 @@ func TestResourceMaxVersions(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 2, "Should be 2, but is: %d", len(vers))
 	xCheck(t, len(vers) == 2, "Should be 2, but is: %s", ToJSON(vers))
-	xCheck(t, vers[0].Object["id"] == "v2", "0=v2")
-	xCheck(t, vers[1].Object["id"] == "v4", "1=v4")
+	xCheck(t, vers[0].Object["versionid"] == "v2", "0=v2")
+	xCheck(t, vers[1].Object["versionid"] == "v4", "1=v4")
 
 	err = rm.SetMaxVersions(0)
 	xNoErr(t, err)
@@ -264,5 +265,5 @@ func TestResourceMaxVersions(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, len(vers) == 1, "Should be 1, but is: %d", len(vers))
 	xCheck(t, len(vers) == 1, "Should be 1, but is: %s", ToJSON(vers))
-	xCheck(t, vers[0].Object["id"] == "v5", "0=v5")
+	xCheck(t, vers[0].Object["versionid"] == "v5", "0=v5")
 }

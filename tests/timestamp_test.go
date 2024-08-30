@@ -115,6 +115,7 @@ func TestTimestampRegistry(t *testing.T) {
           "id": "f1",
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "epoch": 1,
+          "versionid": "v1",
           "createdat": "2024-01-01T12:00:03Z",
           "modifiedat": "2024-01-01T12:00:03Z",
 
@@ -123,9 +124,10 @@ func TestTimestampRegistry(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:03Z",
               "modifiedat": "2024-01-01T12:00:03Z"
@@ -280,9 +282,10 @@ func TestTimestampRegistry(t *testing.T) {
 		Code:       201,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "id": "v99",
+  "id": "f5",
   "self": "http://localhost:8181/dirs/d5/files/f5/versions/v99$meta",
   "epoch": 1,
+  "versionid": "v99",
   "isdefault": true,
   "createdat": "1970-01-02T03:04:05Z",
   "modifiedat": "2000-05-04T03:02:01Z"

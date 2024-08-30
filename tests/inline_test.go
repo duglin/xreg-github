@@ -82,6 +82,7 @@ func TestBasicInline(t *testing.T) {
           "id": "f1",
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "epoch": 1,
+          "versionid": "v2",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -90,16 +91,18 @@ func TestBasicInline(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
-              "id": "v2",
+              "id": "f1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
               "epoch": 1,
+              "versionid": "v2",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -124,6 +127,7 @@ func TestBasicInline(t *testing.T) {
           "id": "f2",
           "self": "http://localhost:8181/dirs/d2/files/f2$meta",
           "epoch": 1,
+          "versionid": "v1.1",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -132,16 +136,18 @@ func TestBasicInline(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
-              "id": "v1.1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
               "epoch": 1,
+              "versionid": "v1.1",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -170,6 +176,7 @@ func TestBasicInline(t *testing.T) {
           "id": "f2",
           "self": "http://localhost:8181/dirs2/d2/files/f2$meta",
           "epoch": 1,
+          "versionid": "v1",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -178,9 +185,10 @@ func TestBasicInline(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -394,48 +402,60 @@ func TestResourceInline(t *testing.T) {
     "d1": {
       "files": {
         "f1-proxy": {
+          "versionid": "v3",
           "filebase64": "aGVsbG8tUHJveHk=",
           "defaultversionid": "v3",
           "versions": {
             "v1": {
+              "versionid": "v1",
               "filebase64": "SGVsbG8gd29ybGQhIHYx"
             },
             "v2": {
+              "versionid": "v2",
               "fileurl": "http://localhost:8181/EMPTY-URL"
             },
             "v3": {
+              "versionid": "v3",
               "filebase64": "aGVsbG8tUHJveHk="
             }
           },
           "versionscount": 3,
         },
         "f2-url": {
+          "versionid": "v3",
           "fileurl": "http://localhost:8181/EMPTY-URL",
           "defaultversionid": "v3",
           "versions": {
             "v1": {
+              "versionid": "v1",
               "filebase64": "SGVsbG8gd29ybGQhIHYx"
             },
             "v2": {
+              "versionid": "v2",
               "filebase64": "aGVsbG8tUHJveHk="
             },
             "v3": {
+              "versionid": "v3",
               "fileurl": "http://localhost:8181/EMPTY-URL"
             }
           },
           "versionscount": 3,
         },
         "f3-resource": {
+          "versionid": "v3",
           "filebase64": "SGVsbG8gd29ybGQhIHYz",
           "defaultversionid": "v3",
           "versions": {
             "v1": {
+              "versionid": "v1",
               "filebase64": "aGVsbG8tUHJveHk="
             },
             "v2": {
+              "versionid": "v2",
               "fileurl": "http://localhost:8181/EMPTY-URL"
             },
             "v3": {
+              "versionid": "v3",
               "filebase64": "SGVsbG8gd29ybGQhIHYz"
             }
           },
@@ -458,6 +478,7 @@ func TestResourceInline(t *testing.T) {
     "d1": {
       "files": {
         "f1-proxy": {
+          "versionid": "v3",
           "filebase64": "aGVsbG8tUHJveHk=",
           "defaultversionid": "v3",
           "versionscount": 3,
@@ -479,15 +500,19 @@ func TestResourceInline(t *testing.T) {
     "d1": {
       "files": {
         "f1-proxy": {
+          "versionid": "v3",
           "defaultversionid": "v3",
           "versions": {
             "v1": {
+              "versionid": "v1",
               "filebase64": "SGVsbG8gd29ybGQhIHYx"
             },
             "v2": {
+              "versionid": "v2",
               "fileurl": "http://localhost:8181/EMPTY-URL"
             },
             "v3": {
+              "versionid": "v3",
               "filebase64": "aGVsbG8tUHJveHk="
             }
           },
@@ -521,6 +546,7 @@ func TestResourceInline(t *testing.T) {
 			Name: "Inline - at file + inline file",
 			URL:  "/dirs/d1/files/f1-proxy$meta?inline=file",
 			Exp: `{
+  "versionid": "v3",
   "filebase64": "aGVsbG8tUHJveHk=",
   "defaultversionid": "v3",
   "versionscount": 3,
@@ -531,15 +557,19 @@ func TestResourceInline(t *testing.T) {
 			Name: "Inline - at file + inline file",
 			URL:  "/dirs/d1/files/f1-proxy$meta?inline=versions.file",
 			Exp: `{
+  "versionid": "v3",
   "defaultversionid": "v3",
   "versions": {
     "v1": {
+      "versionid": "v1",
       "filebase64": "SGVsbG8gd29ybGQhIHYx"
     },
     "v2": {
+      "versionid": "v2",
       "fileurl": "http://localhost:8181/EMPTY-URL"
     },
     "v3": {
+      "versionid": "v3",
       "filebase64": "aGVsbG8tUHJveHk="
     }
   },

@@ -327,10 +327,6 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 	}
 
-	if !objIsVer {
-		delete(obj, "id") // Clear any ID there since it's the Resource's
-	}
-
 	// If the passed-in vID is empty then use the defaultVersion
 	if vID == "" {
 		vID = defVerID

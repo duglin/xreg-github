@@ -48,9 +48,10 @@ func TestCreateVersion(t *testing.T) {
 	// Check basic GET first
 	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/v1$meta",
 		`{
-  "id": "v1",
+  "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
   "epoch": 1,
+  "versionid": "v1",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
 }
@@ -101,6 +102,7 @@ func TestCreateVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -160,6 +162,7 @@ func TestCreateVersion(t *testing.T) {
     "id": "f1",
     "self": "http://localhost:8181/dirs/d2/files/f1$meta",
     "epoch": 1,
+    "versionid": "v3",
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -192,6 +195,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v2",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -211,6 +215,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v2",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -230,6 +235,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v2",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -249,6 +255,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -269,6 +276,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -288,6 +296,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -309,6 +318,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v2",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -328,6 +338,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v5",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -345,6 +356,7 @@ func TestDefaultVersion(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v5",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -379,6 +391,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -397,6 +410,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -421,6 +435,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
   "id": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
+  "versionid": "v4",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -430,24 +445,27 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
 
   "versions": {
     "v4": {
-      "id": "v4",
+      "id": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v4$meta",
       "epoch": 1,
+      "versionid": "v4",
       "isdefault": true,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v7": {
-      "id": "v7",
+      "id": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v7$meta",
       "epoch": 1,
+      "versionid": "v7",
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z"
     },
     "v8": {
-      "id": "v8",
+      "id": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v8$meta",
       "epoch": 1,
+      "versionid": "v8",
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z"
     }

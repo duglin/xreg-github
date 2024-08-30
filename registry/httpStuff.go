@@ -1041,6 +1041,13 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 	}
 
+	vpropsID := ""
+	if v, ok := IncomingObj["versionid"]; ok {
+		if reflect.ValueOf(v).Kind() == reflect.String {
+			vpropsID = NotNilString(&v)
+		}
+	}
+
 	// Walk the PATH and process things
 	///////////////////////////////////
 
@@ -1258,7 +1265,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if resource == nil {
 			// Implicitly create the resource
 			resource, isNew, err = group.UpsertResourceWithObject(
-				info.ResourceType, resourceUID, propsID, IncomingObj,
+				info.ResourceType, resourceUID, vpropsID, IncomingObj,
 				ADD_ADD, info.HasNested, true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
@@ -1266,7 +1273,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 			version, err = resource.GetDefault()
 		} else {
-			version, isNew, err = resource.UpsertVersionWithObject(propsID,
+			version, isNew, err = resource.UpsertVersionWithObject(vpropsID,
 				IncomingObj, ADD_UPSERT)
 		}
 		if err != nil {
@@ -1407,13 +1414,13 @@ func HTTPPutPost(info *RequestInfo) error {
 			version, isNew, err = resource.UpsertVersionWithObject(versionUID,
 				IncomingObj, ADD_UPSERT)
 		} else if !isNew {
-			if propsID != "" && propsID != version.UID {
+			if vpropsID != "" && vpropsID != version.UID {
 				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf("The \"id\" attribute must be set to %q, "+
-					"not %q", version.UID, propsID)
+				return fmt.Errorf("The \"versionid\" attribute must be set "+
+					"to %q, not %q", version.UID, vpropsID)
 			}
 
-			IncomingObj["id"] = version.UID
+			IncomingObj["versionid"] = version.UID
 			addType := ADD_UPSERT
 			if method == "PATCH" || !metaInBody {
 				addType = ADD_PATCH

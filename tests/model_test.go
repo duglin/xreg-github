@@ -950,6 +950,12 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "uinteger",
               "serverrequired": true
             },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "name": {
               "name": "name",
               "type": "string"
@@ -1090,6 +1096,12 @@ func TestResourceModelCreate(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -1297,6 +1309,12 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "uinteger",
               "serverrequired": true
             },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "name": {
               "name": "name",
               "type": "string"
@@ -1553,6 +1571,12 @@ func TestResourceModelCreate(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -1814,6 +1838,12 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "uinteger",
               "serverrequired": true
             },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "name": {
               "name": "name",
               "type": "string"
@@ -2016,6 +2046,12 @@ func TestResourceModelCreate(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -2250,6 +2286,12 @@ func TestResourceModelCreate(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -2487,6 +2529,12 @@ func TestResourceModelCreate(t *testing.T) {
                 "type": "uinteger",
                 "serverrequired": true
               },
+              "versionid": {
+                "name": "versionid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
               "name": {
                 "name": "name",
                 "type": "string"
@@ -2562,6 +2610,7 @@ func TestResourceModelCreate(t *testing.T) {
           "id": "f1",
           "self": "http://localhost:8181/dirs/dir1/files/f1",
           "epoch": 1,
+          "versionid": "v1",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -2747,6 +2796,12 @@ func TestResourceModelCreate(t *testing.T) {
               "epoch": {
                 "name": "epoch",
                 "type": "uinteger",
+                "serverrequired": true
+              },
+              "versionid": {
+                "name": "versionid",
+                "type": "string",
+                "immutable": true,
                 "serverrequired": true
               },
               "name": {
@@ -3276,6 +3331,12 @@ func TestMultModelCreate(t *testing.T) {
               "type": "uinteger",
               "serverrequired": true
             },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "name": {
               "name": "name",
               "type": "string"
@@ -3360,6 +3421,12 @@ func TestMultModelCreate(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -3504,6 +3571,12 @@ func TestMultModelCreate(t *testing.T) {
               "type": "uinteger",
               "serverrequired": true
             },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "name": {
               "name": "name",
               "type": "string"
@@ -3588,6 +3661,12 @@ func TestMultModelCreate(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
               "serverrequired": true
             },
             "name": {
@@ -3843,6 +3922,12 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "uinteger",
                 "serverrequired": true
               },
+              "versionid": {
+                "name": "versionid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
               "name": {
                 "name": "name",
                 "type": "string"
@@ -3985,6 +4070,12 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "uinteger",
                 "serverrequired": true
               },
+              "versionid": {
+                "name": "versionid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
               "name": {
                 "name": "name",
                 "type": "string"
@@ -4060,6 +4151,7 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f1",
           "self": "http://localhost:8181/dirs1/d1/files/f1$meta",
           "epoch": 1,
+          "versionid": "v2",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -4068,16 +4160,18 @@ func TestMultModel2Create(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f1",
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
-              "id": "v2",
+              "id": "f1",
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2$meta",
               "epoch": 1,
+              "versionid": "v2",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -4102,6 +4196,7 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f2",
           "self": "http://localhost:8181/dirs1/d2/files/f2$meta",
           "epoch": 1,
+          "versionid": "v1.1",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -4110,16 +4205,18 @@ func TestMultModel2Create(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
-              "id": "v1.1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1$meta",
               "epoch": 1,
+              "versionid": "v1.1",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -4148,6 +4245,7 @@ func TestMultModel2Create(t *testing.T) {
           "id": "f2",
           "self": "http://localhost:8181/dirs2/d2/files/f2$meta",
           "epoch": 1,
+          "versionid": "v1",
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -4156,9 +4254,10 @@ func TestMultModel2Create(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "id": "f2",
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
               "epoch": 1,
+              "versionid": "v1",
               "isdefault": true,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"

@@ -73,6 +73,7 @@ func TestMultiReg(t *testing.T) {
   "id": "f2",
   "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2$meta",
   "epoch": 1,
+  "versionid": "1",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 

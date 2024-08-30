@@ -195,7 +195,7 @@ END ;
 
 CREATE TABLE Versions (
     SID                 VARCHAR(64) NOT NULL,   # System ID
-    UID                 VARCHAR(64) NOT NULL,   # User defined
+    UID                 VARCHAR(64) NOT NULL,   # User defined, vID
     ResourceSID         VARCHAR(64) NOT NULL,   # System ID
     Path                VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
     Abstract            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
