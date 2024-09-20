@@ -68,6 +68,7 @@ type Attribute struct {
 	Immutable      bool      `json:"immutable,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
+	Location       string    `json:"location,omitempty"`
 	Default        any       `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs

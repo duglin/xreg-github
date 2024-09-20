@@ -343,6 +343,9 @@ func (pw *PageWriter) Done() {
 		prefix += string(UX_IN)
 	}
 	for _, arrayF := range pw.Info.Filters {
+		if filters != "" {
+			filters += "\n"
+		}
 		subF := ""
 		for _, FE := range arrayF {
 			if subF != "" {
@@ -352,11 +355,14 @@ func (pw *PageWriter) Done() {
 			next, _ = strings.CutPrefix(next, prefix)
 			subF += next
 			if FE.HasEqual {
-				subF += "="
+				subF += "=" + FE.Value
+				if FE.HasExact {
+					subF += "="
+				}
 				subF += FE.Value
 			}
 		}
-		filters += subF + "\n"
+		filters += subF
 	}
 
 	inlineOptions := []string{}

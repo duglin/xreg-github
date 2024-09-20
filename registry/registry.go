@@ -607,7 +607,12 @@ eSID IN ( -- eSID from query
 				args = append(args, reg.DbSID, filter.Path)
 				if filter.HasEqual {
 					args = append(args, filter.Value)
-					check = "PropValue=?"
+					if filter.HasExact {
+						check = "PropValue=?"
+					} else {
+						args = append(args, filter.Value)
+						check = "((PropType<>'string' AND PropValue=?) OR (PropType='string' AND PropValue LIKE CONCAT('%',?,'%')))"
+					}
 				} else {
 					check = "PropValue IS NOT NULL"
 				}

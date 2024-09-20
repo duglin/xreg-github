@@ -112,6 +112,7 @@ type FilterExpr struct {
 	Path     string // endpoints.id  TODO store a PropPath?
 	Value    string // myEndpoint
 	HasEqual bool
+	HasExact bool
 }
 
 func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo, error) {
@@ -237,10 +238,18 @@ func (info *RequestInfo) ParseFilters() error {
 				path = absPP.DB()
 			}
 
+			exact := false
+			if found {
+				if exact = strings.HasPrefix(value, "="); exact {
+					value = value[1:]
+				}
+			}
+
 			filter := &FilterExpr{
 				Path:     path,
 				Value:    value,
 				HasEqual: found,
+				HasExact: exact,
 			}
 
 			if AndFilters == nil {

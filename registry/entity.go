@@ -730,6 +730,7 @@ var OrderedSpecProps = []*Attribute{
 		Type:           URL,
 		ReadOnly:       true,
 		ServerRequired: true,
+		// Location:       "both",
 
 		internals: AttrInternals{
 			levels:    "",
@@ -761,6 +762,7 @@ var OrderedSpecProps = []*Attribute{
 	{
 		Name: "xref",
 		Type: URL,
+		// Location: "resource",
 
 		internals: AttrInternals{
 			levels: "2",
@@ -777,6 +779,7 @@ var OrderedSpecProps = []*Attribute{
 		Name:           "epoch",
 		Type:           UINTEGER,
 		ServerRequired: true,
+		// Location:       "resource",
 
 		internals: AttrInternals{
 			levels:    "013",
@@ -829,6 +832,21 @@ var OrderedSpecProps = []*Attribute{
 			},
 		},
 	},
+	/*
+		{
+			Name: "readonly",
+			Type: BOOLEAN,
+			// Location: "resource",
+
+			internals: AttrInternals{
+				levels:    "2",
+				dontStore: false,
+				getFn:     nil,
+				checkFn:   nil,
+				updateFn:  nil,
+			},
+		},
+	*/
 	{
 		Name: "name",
 		Type: STRING,

@@ -60,7 +60,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "2 leaves match",
-			URL:  "?inline&oneline&filter=dirs.files.versions.id=v1",
+			URL:  "?inline&oneline&filter=dirs.files.versions.id==v1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}}`,
 		},
 		{
@@ -139,7 +139,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version coll - match",
-			URL:  "dirs/d1/files/f1/versions?inline&oneline&filter=id=v1",
+			URL:  "dirs/d1/files/f1/versions?inline&oneline&filter=id==v1",
 			Exp:  `{"v1":{}}`,
 		},
 		{
@@ -149,7 +149,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version - match",
-			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&filter=id=v1",
+			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&filter=id==v1",
 			Exp: `{
   "id": "v1",
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
@@ -282,12 +282,12 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter dir file.labels - no match empty string",
-			URL:  "?inline&filter=dirs.files.labels.file1=",
+			URL:  "?inline&filter=dirs.files.labels.file1==",
 			Exp:  "Not found\n",
 		},
 		{
 			Name: "Get/filter dir file.labels.xxx - no match empty string",
-			URL:  "?inline&filter=dirs.files.labels.xxx=",
+			URL:  "?inline&filter=dirs.files.labels.xxx==",
 			Exp:  "Not found\n",
 		},
 		{
@@ -431,12 +431,12 @@ func TestANDORFilters(t *testing.T) {
 		},
 		{
 			Name: "multi result 2 levels down - match",
-			URL:  "?oneline&inline&filter=dirs.files.versions.id=v1",
+			URL:  "?oneline&inline&filter=dirs.files.versions.id==v1",
 			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - match",
-			URL:  "dirs?oneline&inline&filter=files.versions.id=v1",
+			URL:  "dirs?oneline&inline&filter=files.versions.id==v1",
 			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}`,
 		},
 		{

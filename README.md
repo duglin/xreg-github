@@ -107,3 +107,18 @@ TODOs:
 - support versionid
 - test xref more
 - support readonly - remove resource.readonly
+- format is optional in schema spec
+- s/format/envelope/
+- s/message/protocoloptions/
+- s/binding/protocol/
+- add envelopeoptions and envelopmetadata
+- allow $meta on hasdoc=false resources
+- add "validation" attribute - schema
+- error w/o ?nested + children
+- s/id/SINGULARid/
+- remove versionid from resources
+- filtering = is exact, add wildcard support
+- Add content-disposition header for hasdoc resources
+- s/?resource/?attrib support
+- remove "readonly" attribute from model Resources, add to Resource
+- undo == for filter and use wildcards
