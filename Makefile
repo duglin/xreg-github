@@ -9,6 +9,8 @@ DBUSER     ?= root
 DBPASSWORD ?= password
 IMAGE      ?= duglin/xreg-server
 XR_SPEC    ?= $(HOME)/go/src/github.com/xregistry/spec
+GIT_COMMIT ?= $(shell git rev-list -1 HEAD)
+BUILDFLAGS := -ldflags -X=main.GitCommit=$(GIT_COMMIT)
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 
@@ -60,8 +62,10 @@ ifdef XR_SPEC
 		(echo "# Copy xReg spec files so 'docker build' gets them" && \
 		cp -r "$(XR_SPEC)/"* .spec/  )
 endif
-	@misc/errOutput docker build -f misc/Dockerfile -t $(IMAGE) --no-cache .
-	@misc/errOutput docker build -f misc/Dockerfile-all -t $(IMAGE)-all \
+	@misc/errOutput docker build -f misc/Dockerfile \
+		--build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(IMAGE) --no-cache .
+	@misc/errOutput docker build -f misc/Dockerfile-all \
+		--build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(IMAGE)-all \
 		--no-cache .
 	@rm -rf .spec
 	@touch .image
@@ -164,7 +168,7 @@ testdev:
 	@echo
 	@echo "# Build the dev image"
 	@misc/errOutput docker build -t duglin/xreg-dev --no-cache \
-		-f misc/Dockerfile-dev .
+		--build-arg GIT_COMMIT=$(GIT_COMMIT) -f misc/Dockerfile-dev .
 	@echo
 	@echo "## Build, test and run the server all within the dev image"
 	docker run -ti -v /var/run/docker.sock:/var/run/docker.sock \

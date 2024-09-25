@@ -5,6 +5,8 @@
 
 FROM golang:alpine
 
+ARG GIT_COMMIT
+
 # Minimal tools - docker is just for the client, it assumes we'll use the
 # docker running on the host due to --network host on the "docker run"
 RUN apk add make git bash docker

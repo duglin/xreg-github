@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var GitComit string
 var worked = true
 var Verbose = EnvBool("XR_VERBOSE", false)
 var Server = EnvString("XR_SERVER", "")

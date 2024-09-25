@@ -10,6 +10,7 @@ import (
 	"github.com/duglin/xreg-github/registry"
 )
 
+var GitCommit string
 var Port = 8080
 var DBName = "registry"
 var Verbose = 2
@@ -93,9 +94,12 @@ func main() {
 	doRecreate = flag.Bool("recreate", false, "Recreate DB, then run")
 	doVerify = flag.Bool("verify", false, "Exit after loading - for testing")
 	flag.IntVar(&Verbose, "v", Verbose, "Verbose level")
+	flag.IntVar(&Port, "p", Port, "Listen port")
 	flag.Parse()
 
 	log.SetVerbose(Verbose)
+
+	log.VPrintf(1, "GitCommit: %.10s", GitCommit)
 
 	if tmp := os.Getenv("PORT"); tmp != "" {
 		tmpInt, _ := strconv.Atoi(tmp)

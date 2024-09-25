@@ -1,6 +1,8 @@
 FROM golang:alpine
 RUN apk add make
 
+ARG GIT_COMMIT
+
 WORKDIR /go/src/
 COPY . /go/src/
 
@@ -10,7 +12,8 @@ RUN find . -maxdepth 1 -type f -executable -exec rm {} \;
 # Force static builds
 ENV GO_EXTLINK_ENABLED=0
 ENV CGO_ENABLED=0
-ENV BUILDFLAGS -ldflags \"-w -extldflags -static\" \
+ENV BUILDFLAGS -ldflags \
+	\"-w -extldflags -static -X=main.GitCommit=$GIT_COMMIT \" \
 	-tags netgo -installsuffix netgo
 
 RUN make cmds

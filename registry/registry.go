@@ -606,12 +606,13 @@ eSID IN ( -- eSID from query
 				check := ""
 				args = append(args, reg.DbSID, filter.Path)
 				if filter.HasEqual {
-					args = append(args, filter.Value)
-					if filter.HasExact {
+					value, wildcard := WildcardIt(filter.Value)
+					args = append(args, value)
+					if !wildcard {
 						check = "PropValue=?"
 					} else {
-						args = append(args, filter.Value)
-						check = "((PropType<>'string' AND PropValue=?) OR (PropType='string' AND PropValue LIKE CONCAT('%',?,'%')))"
+						args = append(args, value)
+						check = "((PropType<>'string' AND PropValue=?) OR (PropType='string' AND PropValue LIKE ?))"
 					}
 				} else {
 					check = "PropValue IS NOT NULL"
@@ -651,4 +652,22 @@ ORDER BY Path ;
 
 	log.VPrintf(3, "Query:\n%s\n\n", SubQuery(query, args))
 	return query, args, nil
+}
+
+func WildcardIt(str string) (string, bool) {
+	wild := false
+	res := strings.Builder{}
+
+	prevch := '\000'
+	for _, ch := range str {
+		if ch == '*' && prevch != '\\' {
+			res.WriteRune('%')
+			wild = true
+		} else {
+			res.WriteRune(ch)
+		}
+		prevch = ch
+	}
+
+	return res.String(), wild
 }

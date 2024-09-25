@@ -13,10 +13,11 @@ set -ex
 
 env | grep -v PASS | sort
 
-if [[ "$1" == "all" ]]; then
+if [[ "$1" == "--db" ]]; then
   docker-entrypoint.sh mysqld &
   /waitformysql
-elif [[ "$1" == "mysql" ]]; then
+  shift
+elif [[ "$1" == "db" ]]; then
   docker-entrypoint.sh mysqld
   exit 0
 fi
