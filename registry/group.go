@@ -183,6 +183,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 				Registry: g.Registry,
 				DbSID:    NewUUID(),
 				Plural:   rType,
+				Singular: rModel.Singular,
 				UID:      id,
 
 				Level:    2,
@@ -435,6 +436,7 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 				Registry: g.Registry,
 				DbSID:    NewUUID(),
 				Plural:   rType,
+				Singular: rModel.Singular,
 				UID:      id,
 
 				Level:    2,

@@ -99,6 +99,7 @@ func main() {
 
 	log.SetVerbose(Verbose)
 
+	registry.PanicIf(GitCommit == "", "GitCommit isn't set")
 	log.VPrintf(1, "GitCommit: %.10s", GitCommit)
 
 	if tmp := os.Getenv("PORT"); tmp != "" {

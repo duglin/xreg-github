@@ -236,6 +236,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 				Registry: r.Registry,
 				DbSID:    NewUUID(),
 				Plural:   "versions",
+				Singular: "version",
 				UID:      id,
 
 				Level:    3,

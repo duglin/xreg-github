@@ -23,6 +23,7 @@ type Entity struct {
 	Registry  *Registry `json:"-"`
 	DbSID     string    // Entity's SID
 	Plural    string
+	Singular  string
 	UID       string         // Entity's UID
 	Object    map[string]any `json:"-"`
 	NewObject map[string]any `json:"-"` // updated version, save() will store
@@ -206,8 +207,8 @@ func RawEntityFromPath(tx *Tx, regID string, path string, anyCase bool) (*Entity
 	log.VPrintf(3, ">Enter: RawEntityFromPath(%s)", path)
 	defer log.VPrintf(3, "<Exit: RawEntityFromPath")
 
-	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-	//   0     1      2     3    4     5         6         7     8      9
+	// RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1      2      3       4     5    6       7         8       9    10
 
 	caseExpr := ""
 	if anyCase {
@@ -219,6 +220,7 @@ func RawEntityFromPath(tx *Tx, regID string, path string, anyCase bool) (*Entity
             e.RegSID as RegSID,
             e.Level as Level,
             e.Plural as Plural,
+            e.Singular as Singular,
             e.eSID as eSID,
             e.UID as UID,
             p.PropName as PropName,
@@ -243,8 +245,8 @@ func RawEntitiesFromQuery(tx *Tx, regID string, query string, args ...any) ([]*E
 	log.VPrintf(3, ">Enter: RawEntititiesFromQuery(%s)", query)
 	defer log.VPrintf(3, "<Exit: RawEntitiesFromQuery")
 
-	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-	//   0     1      2     3    4     5         6         7     8      9
+	// RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1      2     3        4    5     6         7        8     9     10
 
 	if query != "" {
 		query = "AND (" + query + ") "
@@ -255,6 +257,7 @@ func RawEntitiesFromQuery(tx *Tx, regID string, query string, args ...any) ([]*E
             e.RegSID as RegSID,
             e.Level as Level,
             e.Plural as Plural,
+            e.Singular as Singular,
             e.eSID as eSID,
             e.UID as UID,
             p.PropName as PropName,
@@ -603,8 +606,8 @@ func (e *Entity) SetFromDBName(name string, val *string, propType string) error 
 func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 	entity := (*Entity)(nil)
 
-	// RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-	//   0     1      2     3    4     5         6         7     8      9
+	// RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1      2     3        4     5   6         7        8       9    10
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		// log.Printf("Row(%d): %#v", len(row), row)
 		if log.GetVerbose() >= 4 {
@@ -620,20 +623,21 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 		}
 		level := int((*row[1]).(int64))
 		plural := NotNilString(row[2])
-		uid := NotNilString(row[4])
+		uid := NotNilString(row[5])
 
 		if entity == nil {
 			entity = &Entity{
 				tx: tx,
 
 				Registry: tx.Registry,
-				DbSID:    NotNilString(row[3]),
+				DbSID:    NotNilString(row[4]),
 				Plural:   plural,
+				Singular: NotNilString(row[3]),
 				UID:      uid,
 
 				Level:    level,
-				Path:     NotNilString(row[8]),
-				Abstract: NotNilString(row[9]),
+				Path:     NotNilString(row[9]),
+				Abstract: NotNilString(row[10]),
 			}
 		} else {
 			// If the next row isn't part of the current Entity then
@@ -645,9 +649,9 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 			}
 		}
 
-		propName := NotNilString(row[5])
-		propVal := NotNilString(row[6])
-		propType := NotNilString(row[7])
+		propName := NotNilString(row[6])
+		propVal := NotNilString(row[7])
+		propType := NotNilString(row[8])
 
 		// Edge case - no props but entity is there
 		if propName == "" && propVal == "" && propType == "" {

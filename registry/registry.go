@@ -77,9 +77,10 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 		Entity: Entity{
 			tx: tx,
 
-			DbSID:  dbSID,
-			Plural: "registries",
-			UID:    id,
+			DbSID:    dbSID,
+			Plural:   "registries",
+			Singular: "registry",
+			UID:      id,
 
 			Level:    0,
 			Path:     "",
@@ -459,6 +460,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 				Registry: reg,
 				DbSID:    NewUUID(),
 				Plural:   gType,
+				Singular: reg.Model.Groups[gType].Singular,
 				UID:      id,
 
 				Level:    1,
@@ -555,7 +557,7 @@ func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*Filt
 	args = []interface{}{reg.DbSID}
 	query = `
 SELECT
-  RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+  RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
 FROM FullTree WHERE RegSID=?`
 
 	// Remove entities that are higher than the GET PATH specified

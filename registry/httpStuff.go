@@ -669,7 +669,7 @@ func HTTPGETContent(info *RequestInfo) error {
 
 	query := `
 SELECT
-  RegSID,Level,Plural,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+  RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
 FROM FullTree WHERE RegSID=? AND `
 	args := []any{info.Registry.DbSID}
 
