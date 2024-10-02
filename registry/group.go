@@ -83,14 +83,15 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 	if r != nil && r.UID != id {
 		return nil, false, fmt.Errorf("Attempting to create a Resource with "+
-			"an \"id\" of %q, when one already exists as %q", id, r.UID)
+			"a \"%sid\" of %q, when one already exists as %q",
+			rModel.Singular, id, r.UID)
 	}
 
-	if obj != nil && !IsNil(obj["id"]) && !objIsVer {
-		if id != obj["id"] {
+	if obj != nil && !IsNil(obj[rModel.Singular+"id"]) && !objIsVer {
+		if id != obj[rModel.Singular+"id"] {
 			return nil, false,
-				fmt.Errorf(`The "id" attribute must be set `+
-					`to %q, not %q`, id, obj["id"])
+				fmt.Errorf(`The "%sid" attribute must be set to %q, not %q`,
+					rModel.Singular, id, obj[rModel.Singular+"id"])
 		}
 	}
 
@@ -142,8 +143,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 			// Erase all attributes except id and xref
 			obj = map[string]any{
-				"id":   id,
-				"xref": xref,
+				r.Singular + "id": id,
+				"xref":            xref,
 			}
 		}
 	}
@@ -217,7 +218,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 		// Use the ID passed as an arg, not from the metadata, as the true
 		// ID. If the one in the metadata differs we'll flag it down below
-		err = r.JustSet("id", r.UID)
+		err = r.JustSet(r.Singular+"id", r.UID)
 		if err != nil {
 			return nil, false, err
 		}
@@ -329,7 +330,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	}
 
 	if !objIsVer {
-		delete(obj, "id") // Clear any ID there since it's the Resource's
+		delete(obj, r.Singular+"id") // Clear any ID there since it's the Resource's
 	}
 
 	// If the passed-in vID is empty then use the defaultVersion
@@ -342,14 +343,14 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	// If both Resource attrs and Version attrs are present, use the Version's
 	if vID != "" {
 		if _, ok := versions[defVerID]; !ok {
-			RemoveResourceAttributes(obj)
+			RemoveResourceAttributes(rModel.Singular, obj)
 			_, _, err := r.UpsertVersionWithObject(vID, obj, addType)
 			if err != nil {
 				return nil, false, err
 			}
 		}
 	} else {
-		RemoveResourceAttributes(obj)
+		RemoveResourceAttributes(rModel.Singular, obj)
 		_, _, err := r.UpsertVersionWithObject(vID, obj, addType)
 		if err != nil {
 			return nil, false, err
@@ -391,14 +392,15 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 
 	if r != nil && r.UID != id {
 		return nil, false, fmt.Errorf("Attempting to create a Resource with "+
-			"an \"id\" of %q, when one already exists as %q", id, r.UID)
+			"a \"%sid\" of %q, when one already exists as %q",
+			rModel.Singular, id, r.UID)
 	}
 
-	if obj != nil && !IsNil(obj["id"]) && !objIsVer {
-		if id != obj["id"] {
+	if obj != nil && !IsNil(obj[r.Singular+"id"]) && !objIsVer {
+		if id != obj[r.Singular+"id"] {
 			return nil, false,
-				fmt.Errorf(`The "id" attribute must be set `+
-					`to %q, not %q`, id, obj["id"])
+				fmt.Errorf(`The "%sid" attribute must be set `+
+					`to %q, not %q`, r.Singular, id, obj[r.Singular+"id"])
 		}
 	}
 
@@ -470,7 +472,7 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 
 		// Use the ID passed as an arg, not from the metadata, as the true
 		// ID. If the one in the metadata differs we'll flag it down below
-		err = r.JustSet("id", r.UID)
+		err = r.JustSet(r.Singular+"id", r.UID)
 		if err != nil {
 			return nil, false, err
 		}
@@ -481,7 +483,7 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 		}
 
 		if !objIsVer {
-			delete(obj, "id") // Clear any ID there since it's the Resource's
+			delete(obj, r.Singular+"id") // Clear any ID there since it's the Resource's
 		}
 
 		// We only process the Resource level attributes if we're not
@@ -526,7 +528,7 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 
 				v.NewObject = obj
 				// if !objIsVer {
-				v.NewObject["id"] = v.UID // ID is Resource's, switch to Version's
+				v.NewObject["versionid"] = v.UID // ID is Resource's, switch to Version's
 				// }
 
 				if addType == ADD_PATCH {

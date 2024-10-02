@@ -15,7 +15,7 @@ func TestCreateRegistry(t *testing.T) {
 	xCheckGet(t, reg, "/",
 		`{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestCreateRegistry",
+  "registryid": "TestCreateRegistry",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -48,7 +48,7 @@ func TestCreateRegistry(t *testing.T) {
 
 	xCheckGet(t, reg, "", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestCreateRegistry",
+  "registryid": "TestCreateRegistry",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -119,7 +119,7 @@ func TestRegistryProps(t *testing.T) {
 
 	xCheckGet(t, reg, "", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryProps",
+  "registryid": "TestRegistryProps",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "name": "nameIt",
@@ -157,7 +157,7 @@ func TestRegistryRequiredFields(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryRequiredFields",
+  "registryid": "TestRegistryRequiredFields",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "description": "testing",
@@ -254,7 +254,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryDefaultFields",
+  "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -267,7 +267,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	// DUG TODO ^^
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryDefaultFields",
+  "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -279,7 +279,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	// DUG TODO ^^ and previous one
 	xHTTP(t, reg, "PUT", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryDefaultFields",
+  "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
@@ -293,7 +293,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   "myobj": {}
 }`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryDefaultFields",
+  "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
@@ -311,7 +311,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   }
 }`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryDefaultFields",
+  "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
@@ -326,7 +326,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/", `{
 }`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryDefaultFields",
+  "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
@@ -339,7 +339,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   "myobj": null
 }`, 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestRegistryDefaultFields",
+  "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",

@@ -15,7 +15,7 @@ type Resource struct {
 // These attributes are on the Resource not the Version
 // We used to use a "." as a prefix to know - may still need to at some point
 var specialResourceAttrs = map[string]bool{
-	"id":                   true,
+	// "id":                   true,
 	"defaultversionid":     true,
 	"defaultversionsticky": true,
 	"#nextversionid":       true,
@@ -25,10 +25,16 @@ var specialResourceAttrs = map[string]bool{
 // Remove any attributes that appear on Resources but not Versions.
 // Mainly used to prep an Obj that was directed at a Resource but will be used
 // to update a Version
-func RemoveResourceAttributes(obj map[string]any) {
-	for _, attr := range SpecProps {
+func RemoveResourceAttributes(singular string, obj map[string]any) {
+	// attrArray, _ := CalcSpecProps(-1, singular)
+
+	for _, attr := range OrderedSpecProps { // attrArray {
 		if attr.InLevel(2) && !attr.InLevel(3) {
-			delete(obj, attr.Name)
+			name := attr.Name
+			if name == "id" {
+				name = singular + "id"
+			}
+			delete(obj, name)
 		}
 	}
 }
@@ -36,7 +42,7 @@ func RemoveResourceAttributes(obj map[string]any) {
 func (r *Resource) Get(name string) any {
 	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
 
-	if specialResourceAttrs[name] {
+	if name == r.Singular+"id" || specialResourceAttrs[name] {
 		return r.Entity.Get(name)
 	}
 
@@ -49,7 +55,7 @@ func (r *Resource) Get(name string) any {
 
 func (r *Resource) SetCommit(name string, val any) error {
 	log.VPrintf(4, "Set: r(%s).SetCommit(%s,%v)", r.UID, name, val)
-	if specialResourceAttrs[name] {
+	if name == r.Singular+"id" || specialResourceAttrs[name] {
 		return r.Entity.SetCommit(name, val)
 	}
 
@@ -63,7 +69,7 @@ func (r *Resource) SetCommit(name string, val any) error {
 
 func (r *Resource) JustSet(name string, val any) error {
 	log.VPrintf(4, "JustSet: r(%s).JustSet(%s,%v)", r.UID, name, val)
-	if specialResourceAttrs[name] {
+	if name == r.Singular+"id" || specialResourceAttrs[name] {
 		return r.Entity.JustSet(NewPPP(name), val)
 	}
 
@@ -77,7 +83,7 @@ func (r *Resource) JustSet(name string, val any) error {
 
 func (r *Resource) SetSave(name string, val any) error {
 	log.VPrintf(4, "SetSave: r(%s).SetSave(%s,%v)", r.UID, name, val)
-	if specialResourceAttrs[name] {
+	if name == r.Singular+"id" || specialResourceAttrs[name] {
 		return r.Entity.SetSave(name, val)
 	}
 
@@ -217,7 +223,8 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		if v != nil && v.UID != id {
 			return nil, false,
 				fmt.Errorf("Attempting to create a Version with "+
-					"an \"id\" of %q, when one already exists as %q", id, v.UID)
+					"a \"versionid\" of %q, when one already exists as %q",
+					id, v.UID)
 		}
 
 		if err != nil {
@@ -260,7 +267,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 
 		v.tx.AddVersion(v)
 
-		if err = v.JustSet("id", id); err != nil {
+		if err = v.JustSet("versionid", id); err != nil {
 			return nil, false, err
 		}
 	}
@@ -293,8 +300,8 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 	}
 
 	// Make sure we always have an ID
-	if IsNil(v.NewObject["id"]) {
-		v.NewObject["id"] = id
+	if IsNil(v.NewObject["versionid"]) {
+		v.NewObject["versionid"] = id
 	}
 
 	if err = v.ValidateAndSave(); err != nil {

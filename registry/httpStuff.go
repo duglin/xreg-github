@@ -356,10 +356,6 @@ func (pw *PageWriter) Done() {
 			subF += next
 			if FE.HasEqual {
 				subF += "=" + FE.Value
-				if FE.HasExact {
-					subF += "="
-				}
-				subF += FE.Value
 			}
 		}
 		filters += subF
@@ -1039,14 +1035,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		return err
 	}
 
-	// If ID is in the incoming object, grab it for later use
-	propsID := ""
-	if v, ok := IncomingObj["id"]; ok {
-		if reflect.ValueOf(v).Kind() == reflect.String {
-			propsID = NotNilString(&v)
-		}
-	}
-
 	// Walk the PATH and process things
 	///////////////////////////////////
 
@@ -1210,10 +1198,17 @@ func HTTPPutPost(info *RequestInfo) error {
 	if len(info.Parts) == 4 && (method == "PUT" || method == "PATCH") {
 		// PUT GROUPs/gID/RESOURCEs/rID [$meta]
 
+		propsID := "" // RESOURCEid
+		if v, ok := IncomingObj[info.ResourceModel.Singular+"id"]; ok {
+			if reflect.ValueOf(v).Kind() == reflect.String {
+				propsID = NotNilString(&v)
+			}
+		}
+
 		if propsID != "" && propsID != resourceUID {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("The \"id\" attribute must be set to %q, not %q",
-				resourceUID, propsID)
+			return fmt.Errorf("The \"%sid\" attribute must be set to %q, "+
+				"not %q", info.ResourceModel.Singular, resourceUID, propsID)
 		}
 
 		if resource != nil {
@@ -1238,7 +1233,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			version, err = resource.GetDefault()
 		} else {
 			// Upsert resource's default version
-			delete(IncomingObj, "id") // ID is the Resource's delete it
+			delete(IncomingObj, info.ResourceModel.Singular+"id") // ID is the Resource's delete it
 			addType := ADD_UPSERT
 			if method == "PATCH" {
 				addType = ADD_PATCH
@@ -1261,6 +1256,13 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	if method == "POST" && len(info.Parts) == 4 {
 		// POST GROUPs/gID/RESOURCEs/rID[$meta], body=obj or doc
+		propsID := "" // versionid
+		if v, ok := IncomingObj["versionid"]; ok {
+			if reflect.ValueOf(v).Kind() == reflect.String {
+				propsID = NotNilString(&v)
+			}
+		}
+
 		if resource == nil {
 			// Implicitly create the resource
 			resource, isNew, err = group.UpsertResourceWithObject(
@@ -1388,6 +1390,12 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	if len(info.Parts) == 6 {
 		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [$meta]
+		propsID := "" //versionid
+		if v, ok := IncomingObj["versionid"]; ok {
+			if reflect.ValueOf(v).Kind() == reflect.String {
+				propsID = NotNilString(&v)
+			}
+		}
 
 		if resource == nil {
 			// Implicitly create the resource
@@ -1415,11 +1423,11 @@ func HTTPPutPost(info *RequestInfo) error {
 		} else if !isNew {
 			if propsID != "" && propsID != version.UID {
 				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf("The \"id\" attribute must be set to %q, "+
-					"not %q", version.UID, propsID)
+				return fmt.Errorf("The \"versionid\" attribute must be set "+
+					"to %q, not %q", version.UID, propsID)
 			}
 
-			IncomingObj["id"] = version.UID
+			IncomingObj["versionid"] = version.UID
 			addType := ADD_UPSERT
 			if method == "PATCH" || !metaInBody {
 				addType = ADD_PATCH
@@ -1739,15 +1747,11 @@ func HTTPDelete(info *RequestInfo) error {
 	return fmt.Errorf("Bad API: %s", info.BaseURL)
 }
 
-type IDEntry struct {
-	ID    string
-	Epoch *int
-}
+type EpochEntry map[string]any
+type EpochEntryMap map[string]EpochEntry
 
-type IDArray []IDEntry
-
-func LoadIDList(info *RequestInfo) (IDArray, error) {
-	list := IDArray{}
+func LoadEpochMap(info *RequestInfo) (EpochEntryMap, error) {
+	res := EpochEntryMap{}
 
 	body, err := io.ReadAll(info.OriginalRequest.Body)
 	if err != nil {
@@ -1757,27 +1761,29 @@ func LoadIDList(info *RequestInfo) (IDArray, error) {
 	bodyStr := strings.TrimSpace(string(body))
 
 	if len(bodyStr) > 0 {
-		err = Unmarshal([]byte(bodyStr), &list)
+		err = Unmarshal([]byte(bodyStr), &res)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		// IDArray == nil mean no list at all, not same as empty list
+		// EpochEntryMap == nil mean no list at all, not same as empty list
 		return nil, nil
 	}
 
-	return list, nil
+	return res, nil
 }
 
 func HTTPDeleteGroups(info *RequestInfo) error {
-	list, err := LoadIDList(info)
+	list, err := LoadEpochMap(info)
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return err
 	}
 
 	// No list provided so get list of Groups so we can delete them all
+	// TODO: optimize this to just delete it all in one shot
 	if list == nil {
+		list = EpochEntryMap{}
 		results, err := Query(info.tx, `
 			SELECT UID
 			FROM Entities
@@ -1788,39 +1794,45 @@ func HTTPDeleteGroups(info *RequestInfo) error {
 			return fmt.Errorf("Error getting the list: %s", err)
 		}
 		for row := results.NextRow(); row != nil; row = results.NextRow() {
-			list = append(list, IDEntry{NotNilString(row[0]), nil})
+			list[NotNilString(row[0])] = EpochEntry{}
 		}
 		defer results.Close()
 	}
 
 	// Delete each Group, checking epoch first if provided
-	for _, entry := range list {
-		group, err := info.Registry.FindGroup(info.GroupType, entry.ID, false)
+	for id, entry := range list {
+		group, err := info.Registry.FindGroup(info.GroupType, id, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf(`Error getting Group /%q`, entry.ID)
+			return fmt.Errorf(`Error getting Group %q`, id)
 		}
 		if group == nil {
 			// Silently ignore the 404
 			continue
-			/*
-				info.StatusCode = http.StatusNotFound
-				return fmt.Errorf(`Group %q not found`, entry.ID)
-			*/
 		}
 
-		if entry.Epoch != nil {
-			if group.Get("epoch") != *(entry.Epoch) {
-				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf(`Epoch value for %q must be %d`,
-					entry.ID, group.Get("epoch"))
+		if tmp, ok := entry["epoch"]; ok {
+			tmpInt, err := AnyToUInt(tmp)
+			if err != nil {
+				return fmt.Errorf(`Epoch value for %q must be a uinteger`,
+					id)
 			}
+			if tmpInt != group.Get("epoch") {
+				return fmt.Errorf(`Epoch value for %q must be %d`,
+					id, group.Get("epoch"))
+			}
+		}
+
+		singular := group.Singular + "id"
+		if tmp, ok := entry[singular]; ok && tmp != id {
+			return fmt.Errorf(`%q value for %q must be %q`,
+				singular, id, id)
 		}
 
 		err = group.Delete()
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf(`Error deleting %q: %s`, entry.ID, err)
+			return fmt.Errorf(`Error deleting %q: %s`, id, err)
 		}
 	}
 
@@ -1829,14 +1841,16 @@ func HTTPDeleteGroups(info *RequestInfo) error {
 }
 
 func HTTPDeleteResources(info *RequestInfo) error {
-	list, err := LoadIDList(info)
+	list, err := LoadEpochMap(info)
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return err
 	}
 
 	// No list provided so get list of Resources so we can delete them all
+	// TODO: optimize this to just delete it all in one shot
 	if list == nil {
+		list = EpochEntryMap{}
 		results, err := Query(info.tx, `
 			SELECT UID
 			FROM Entities
@@ -1848,7 +1862,7 @@ func HTTPDeleteResources(info *RequestInfo) error {
 			return fmt.Errorf("Error getting the list: %s", err)
 		}
 		for row := results.NextRow(); row != nil; row = results.NextRow() {
-			list = append(list, IDEntry{NotNilString(row[0]), nil})
+			list[NotNilString(row[0])] = EpochEntry{}
 		}
 		defer results.Close()
 	}
@@ -1860,33 +1874,39 @@ func HTTPDeleteResources(info *RequestInfo) error {
 	}
 
 	// Delete each Resource, checking epoch first if provided
-	for _, entry := range list {
-		resource, err := group.FindResource(info.ResourceType, entry.ID, false)
+	for id, entry := range list {
+		resource, err := group.FindResource(info.ResourceType, id, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf(`Error getting Resource %q`, entry.ID)
+			return fmt.Errorf(`Error getting Resource %q`, id)
 		}
 		if resource == nil {
 			// Silently ignore the 404
 			continue
-			/*
-				info.StatusCode = http.StatusNotFound
-				return fmt.Errorf(`Resource %q not found`, entry.ID)
-			*/
 		}
 
-		if entry.Epoch != nil {
-			if resource.Get("epoch") != *(entry.Epoch) {
-				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf(`Epoch value for %q must be %d`,
-					entry.ID, resource.Get("epoch"))
+		if tmp, ok := entry["epoch"]; ok {
+			tmpInt, err := AnyToUInt(tmp)
+			if err != nil {
+				return fmt.Errorf(`Epoch value for %q must be a uinteger`,
+					id)
 			}
+			if tmpInt != group.Get("epoch") {
+				return fmt.Errorf(`Epoch value for %q must be %d`,
+					id, group.Get("epoch"))
+			}
+		}
+
+		singular := resource.Singular + "id"
+		if tmp, ok := entry[singular]; ok && tmp != id {
+			return fmt.Errorf(`%q value for %q must be %q`,
+				singular, id, id)
 		}
 
 		err = resource.Delete()
 		if err != nil {
 			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf(`Error deleting %q: %s`, entry.ID, err)
+			return fmt.Errorf(`Error deleting %q: %s`, id, err)
 		}
 	}
 
@@ -1897,14 +1917,16 @@ func HTTPDeleteResources(info *RequestInfo) error {
 func HTTPDeleteVersions(info *RequestInfo) error {
 	nextDefault := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
 
-	list, err := LoadIDList(info)
+	list, err := LoadEpochMap(info)
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
 		return err
 	}
 
 	// No list provided so get list of Versions so we can delete them all
+	// TODO: optimize this to just delete it all in one shot
 	if list == nil {
+		list = EpochEntryMap{}
 		results, err := Query(info.tx, `
 			SELECT UID
 			FROM Entities
@@ -1916,7 +1938,7 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 			return fmt.Errorf("Error getting the list: %s", err)
 		}
 		for row := results.NextRow(); row != nil; row = results.NextRow() {
-			list = append(list, IDEntry{NotNilString(row[0]), nil})
+			list[NotNilString(row[0])] = EpochEntry{}
 		}
 		defer results.Close()
 	}
@@ -1935,27 +1957,34 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 	}
 
 	// Delete each Version, checking epoch first if provided
-	for _, entry := range list {
-		version, err := resource.FindVersion(entry.ID, false)
+	for id, entry := range list {
+		version, err := resource.FindVersion(id, false)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf(`Error getting Version %q: %s`, entry.ID, err)
+			return fmt.Errorf(`Error getting Version %q: %s`, id, err)
 		}
 		if version == nil {
 			// Silently ignore the 404
 			continue
-			/*
-				info.StatusCode = http.StatusNotFound
-				return fmt.Errorf(`Version %q not found`, entry.ID)
-			*/
 		}
 
-		if entry.Epoch != nil {
-			if version.Get("epoch") != *(entry.Epoch) {
-				info.StatusCode = http.StatusBadRequest
-				return fmt.Errorf(`Epoch value for %q must be %d`,
-					entry.ID, version.Get("epoch"))
+		if tmp, ok := entry["epoch"]; ok {
+			tmpInt, err := AnyToUInt(tmp)
+			if err != nil {
+				return fmt.Errorf(`Epoch value for %q must be a uinteger`,
+					id)
 			}
+			if tmpInt != group.Get("epoch") {
+				return fmt.Errorf(`Epoch value for %q must be %d`,
+					id, group.Get("epoch"))
+			}
+		}
+
+		singular := version.Singular + "id"
+		if tmp, ok := entry[singular]; ok && tmp != version.Get(singular) {
+			info.StatusCode = http.StatusBadRequest
+			return fmt.Errorf(`%q value for %q must be %q`,
+				singular, id, version.Get(singular))
 		}
 
 		err = version.Delete(nextDefault)

@@ -112,7 +112,7 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 	if err = reg.JustSet("specversion", SPECVERSION); err != nil {
 		return nil, err
 	}
-	if err = reg.JustSet("id", reg.UID); err != nil {
+	if err = reg.JustSet("registryid", reg.UID); err != nil {
 		return nil, err
 	}
 
@@ -383,8 +383,8 @@ func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error 
 	}
 
 	// Make sure we always have an ID
-	if IsNil(reg.NewObject["id"]) {
-		reg.NewObject["id"] = reg.UID
+	if IsNil(reg.NewObject["registryid"]) {
+		reg.NewObject["registryid"] = reg.UID
 	}
 
 	return reg.ValidateAndSave()
@@ -442,8 +442,8 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 
 	if g != nil && g.UID != id {
 		return nil, false, fmt.Errorf("Attempting to create a Group "+
-			"with an \"id\" of %q, when one already exists as %q",
-			id, g.UID)
+			"with a \"%sid\" of %q, when one already exists as %q",
+			reg.Model.Groups[gType].Singular, id, g.UID)
 	}
 	if addType == ADD_ADD && g != nil {
 		return nil, false, fmt.Errorf("Group %q of type %q already exists",
@@ -486,7 +486,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 
 		// Use the ID passed as an arg, not from the metadata, as the true
 		// ID. If the one in the metadata differs we'll flag it down below
-		if err = g.JustSet("id", g.UID); err != nil {
+		if err = g.JustSet(g.Singular+"id", g.UID); err != nil {
 			return nil, false, err
 		}
 	}
@@ -506,8 +506,8 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 		}
 
 		// Make sure we always have an ID
-		if IsNil(g.NewObject["id"]) {
-			g.NewObject["id"] = g.UID
+		if IsNil(g.NewObject[g.Singular+"id"]) {
+			g.NewObject[g.Singular+"id"] = g.UID
 		}
 
 		if err = g.ValidateAndSave(); err != nil {

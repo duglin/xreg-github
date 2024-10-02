@@ -37,7 +37,7 @@ func TestTimestampRegistry(t *testing.T) {
 	xCheckGet(t, reg, "/",
 		`{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestTimestampRegistry",
+  "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -58,7 +58,7 @@ func TestTimestampRegistry(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestTimestampRegistry",
+  "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "description": "my docs",
@@ -95,7 +95,7 @@ func TestTimestampRegistry(t *testing.T) {
 		Code:   200,
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestTimestampRegistry",
+  "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "description": "my docs",
@@ -104,7 +104,7 @@ func TestTimestampRegistry(t *testing.T) {
 
   "dirs": {
     "d1": {
-      "id": "d1",
+      "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:03Z",
@@ -112,7 +112,7 @@ func TestTimestampRegistry(t *testing.T) {
 
       "files": {
         "f1": {
-          "id": "f1",
+          "fileid": "f1",
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:03Z",
@@ -123,7 +123,8 @@ func TestTimestampRegistry(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f1",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "epoch": 1,
               "isdefault": true,
@@ -174,7 +175,7 @@ func TestTimestampRegistry(t *testing.T) {
 	   		Code:   200,
 	   		ResBody: `{
 	     "specversion": "` + registry.SPECVERSION + `",
-	     "id": "TestTimestampRegistry2",
+	     "registryid": "TestTimestampRegistry2",
 	     "self": "http://localhost:8181/",
 	     "epoch": 1,
 	     "createdat": "2024-01-01T12:00:01Z",
@@ -197,7 +198,7 @@ func TestTimestampRegistry(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `--{
   "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestTimestampRegistry",
+  "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
   "epoch": 2,
   "createdat": "1970-01-02T03:04:05Z",
@@ -225,7 +226,7 @@ func TestTimestampRegistry(t *testing.T) {
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestTimestampRegistry",
+  "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
   "epoch": 3,
   "createdat": "2024-01-01T12:00:00Z",
@@ -250,7 +251,7 @@ func TestTimestampRegistry(t *testing.T) {
 		Code:       201,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "id": "d4",
+  "dirid": "d4",
   "self": "http://localhost:8181/dirs/d4",
   "epoch": 1,
   "createdat": "1970-01-02T03:04:05Z",
@@ -280,7 +281,8 @@ func TestTimestampRegistry(t *testing.T) {
 		Code:       201,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "id": "v99",
+  "fileid": "f5",
+  "versionid": "v99",
   "self": "http://localhost:8181/dirs/d5/files/f5/versions/v99$meta",
   "epoch": 1,
   "isdefault": true,

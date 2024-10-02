@@ -466,7 +466,12 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	name := pp.DB()
 
 	// Any prop with "dontStore"=true we skip
-	if sp, ok := SpecProps[pp.Top()]; ok && sp.internals.dontStore {
+	specPropName := pp.Top()
+	if specPropName == e.Singular+"id" {
+		specPropName = "id"
+	}
+
+	if sp, ok := SpecProps[specPropName]; ok && sp.internals.dontStore {
 		return nil
 	}
 
@@ -666,6 +671,34 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 	return entity, nil
 }
 
+func CalcSpecProps(level int, singular string) ([]*Attribute, map[string]*Attribute) {
+	// Use level < 0 to not check the level of the prop
+	// Use singular = "" to not twiddle any "singular" specific logic
+	resMap := map[string]*Attribute{}
+	resArr := []*Attribute{}
+
+	for _, prop := range OrderedSpecProps {
+		if level >= 0 && !prop.InLevel(level) {
+			continue
+		}
+
+		var copyProp *Attribute
+
+		// If needed, duplicate it.
+		// If Attribute is ever more than scalars we'll need to deep copy
+		if copyProp.Name == "id" {
+			tmp := *prop
+			copyProp = &tmp
+			copyProp.Name = singular + "id"
+		}
+
+		resArr = append(resArr, copyProp)
+		resMap[copyProp.Name] = copyProp
+	}
+
+	return resArr, resMap
+}
+
 // This allows for us to choose the order and define custom logic per prop
 var OrderedSpecProps = []*Attribute{
 	{
@@ -696,34 +729,100 @@ var OrderedSpecProps = []*Attribute{
 		Type:           STRING,
 		Immutable:      true,
 		ServerRequired: true,
+		Location:       "both",
 
 		internals: AttrInternals{
 			levels:    "",
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
+				singular := e.Singular
+				// PanicIf(singular == "", "singular is '' :  %v", e)
+				if e.Level == 3 {
+					_, rm := AbstractToModels(e.Registry, e.Abstract)
+					singular = rm.Singular
+				}
+				singular += "id"
+
 				oldID := any(e.UID)
-				newID := any(e.NewObject["id"])
+				if e.Level == 3 {
+					// Grab rID from /GROUPs/gID/RESOURCEs/rID/versions/vID
+					parts := strings.Split(e.Path, "/")
+					oldID = parts[3]
+				}
+				newID := any(e.NewObject[singular])
 
 				if IsNil(newID) {
 					return nil // Not trying to be updated, so skip it
 				}
 
 				if newID == "" {
-					return fmt.Errorf("ID can't be an empty string")
+					return fmt.Errorf(`%q can't be an empty string`,
+						singular)
 				}
 
 				if oldID != "" && !IsNil(oldID) && newID != oldID {
-					return fmt.Errorf(`The "id" attribute must be set to `+
-						`%q, not %q`, oldID, newID)
+					return fmt.Errorf(`The %q attribute must be set to `+
+						`%q, not %q`, singular, oldID, newID)
 				}
 				return nil
 			},
 			updateFn: func(e *Entity) error {
 				// Make sure the ID is always set
-				if IsNil(e.NewObject["id"]) {
+				singular := e.Singular
+				if e.Level == 3 {
+					_, rm := AbstractToModels(e.Registry, e.Abstract)
+					singular = rm.Singular
+				}
+				singular += "id"
+
+				if e.Level == 3 {
+					// Versions shouldn't store the RESOURCEid
+					delete(e.NewObject, singular)
+				} else {
+					if IsNil(e.NewObject[singular]) {
+						ShowStack()
+						return fmt.Errorf(`%q is nil - that's bad, fix it!`,
+							singular)
+					}
+				}
+				return nil
+			},
+		},
+	},
+	{
+		Name:           "versionid",
+		Type:           STRING,
+		Immutable:      true,
+		ServerRequired: true,
+
+		internals: AttrInternals{
+			levels:    "3",
+			dontStore: false,
+			getFn:     nil,
+			checkFn: func(e *Entity) error {
+				oldID := any(e.UID)
+				newID := any(e.NewObject["versionid"])
+
+				if IsNil(newID) {
+					return nil // Not trying to be updated, so skip it
+				}
+
+				if newID == "" {
+					return fmt.Errorf(`"versionid" can't be an empty string`)
+				}
+
+				if oldID != "" && !IsNil(oldID) && newID != oldID {
+					return fmt.Errorf(`The "versionid" attribute must be `+
+						`set to %q, not %q`, oldID, newID)
+				}
+				return nil
+			},
+			updateFn: func(e *Entity) error {
+				// Make sure the ID is always set
+				if IsNil(e.NewObject["versionid"]) {
 					ShowStack()
-					return fmt.Errorf("ID is nil - that's bad, fit it!")
+					return fmt.Errorf(`"versionid" is nil - fix it!`)
 				}
 				return nil
 			},
@@ -734,7 +833,7 @@ var OrderedSpecProps = []*Attribute{
 		Type:           URL,
 		ReadOnly:       true,
 		ServerRequired: true,
-		// Location:       "both",
+		Location:       "both",
 
 		internals: AttrInternals{
 			levels:    "",
@@ -764,9 +863,9 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "xref",
-		Type: URL,
-		// Location: "resource",
+		Name:     "xref",
+		Type:     URL,
+		Location: "resource",
 
 		internals: AttrInternals{
 			levels: "2",
@@ -840,7 +939,7 @@ var OrderedSpecProps = []*Attribute{
 		{
 			Name: "readonly",
 			Type: BOOLEAN,
-			// Location: "resource",
+			Location: "resource",
 
 			internals: AttrInternals{
 				levels:    "2",
@@ -933,8 +1032,9 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "createdat",
-		Type: TIMESTAMP,
+		Name:           "createdat",
+		Type:           TIMESTAMP,
+		ServerRequired: true,
 
 		internals: AttrInternals{
 			levels:    "013",
@@ -957,8 +1057,9 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "modifiedat",
-		Type: TIMESTAMP,
+		Name:           "modifiedat",
+		Type:           TIMESTAMP,
+		ServerRequired: true,
 
 		internals: AttrInternals{
 			levels:    "013",
@@ -993,6 +1094,7 @@ var OrderedSpecProps = []*Attribute{
 		Name:     "defaultversionsticky",
 		Type:     BOOLEAN,
 		ReadOnly: true,
+		Location: "resource",
 
 		internals: AttrInternals{
 			levels:    "2",
@@ -1007,6 +1109,7 @@ var OrderedSpecProps = []*Attribute{
 		Type:     STRING,
 		ReadOnly: true,
 		// ServerRequired: true,
+		Location: "resource",
 
 		internals: AttrInternals{
 			levels:    "2",
@@ -1021,6 +1124,7 @@ var OrderedSpecProps = []*Attribute{
 		Type:     URL,
 		ReadOnly: true,
 		// ServerRequired: true,
+		Location: "resource",
 
 		internals: AttrInternals{
 			levels:    "2",
@@ -1104,59 +1208,98 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	attrs := e.GetAttributes(e.Object)
 
 	if log.GetVerbose() > 3 {
+		log.VPrintf(4, "SerProps.Entity: %s", ToJSON(e))
 		log.VPrintf(4, "SerProps.Obj: %s", ToJSON(e.Object))
 		log.VPrintf(4, "SerProps daObj: %s", ToJSON(daObj))
 	}
 
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
-		attr, ok := attrs[prop.Name]
+		name := prop.Name
+		if name == "id" {
+			if e.Level != 3 {
+				// versionid has it's own special entry
+				name = e.Singular + "id"
+			} else {
+				// at level 3 id=RESOURCEid
+				_, rm := AbstractToModels(e.Registry, e.Abstract)
+				name = rm.Singular + "id"
+			}
+		}
+
+		attr, ok := attrs[name]
 		if !ok {
-			delete(daObj, prop.Name)
+			delete(daObj, name)
 			continue // not allowed at this level so skip it
 		}
 
 		// Before "default*" attributes, add extensions and "resource*"
 		if e.Level == 2 && prop.Name == "defaultversionsticky" {
-			for _, key := range SortedKeys(daObj) {
-				if SpecProps[key] != nil {
-					continue
-				}
-				val, _ := daObj[key]
-				attr := attrs[key]
-				delete(daObj, key)
-				if attr == nil {
-					attr = attrs["*"]
-					PanicIf(key[0] != '#' && attr == nil, "Can't find attr for %q", key)
+			for _, objKey := range SortedKeys(daObj) {
+				attrKey := objKey
+				if attrKey == e.Singular+"id" {
+					attrKey = "id"
 				}
 
-				if err := fn(e, info, key, val, attr); err != nil {
+				if SpecProps[attrKey] != nil {
+					continue
+				}
+				val, _ := daObj[objKey]
+				attr := attrs[attrKey]
+				delete(daObj, objKey)
+				if attr == nil {
+					attr = attrs["*"]
+					PanicIf(attrKey[0] != '#' && attr == nil, "Can't find attr for %q", attrKey)
+				}
+
+				if err := fn(e, info, objKey, val, attr); err != nil {
 					return err
 				}
 			}
 		}
 
 		// Should be a no-op for Resources
-		if val, ok := daObj[prop.Name]; ok {
+		if val, ok := daObj[name]; ok {
 			if !IsNil(val) {
-				if err := fn(e, info, prop.Name, val, attr); err != nil {
+				cleanup := false
+				var m *Model
+
+				t := reflect.ValueOf(val).Type()
+				if t.Kind() == reflect.Pointer &&
+					t.Elem().String() == "registry.Model" {
+
+					m, ok = val.(*Model)
+					PanicIf(!ok, "Not a model")
+					m.SetSingular()
+					cleanup = true
+				}
+
+				err := fn(e, info, name, val, attr)
+				if cleanup {
+					m.UnsetSingular()
+				}
+				if err != nil {
 					return err
 				}
 			}
-			delete(daObj, prop.Name)
+			delete(daObj, name)
 		}
 	}
 
 	// Now do all other props (extensions) alphabetically
-	for _, key := range SortedKeys(daObj) {
-		val, _ := daObj[key]
-		attr := attrs[key]
+	for _, objKey := range SortedKeys(daObj) {
+		attrKey := objKey
+		if attrKey == e.Singular+"id" {
+			attrKey = "id"
+		}
+		val, _ := daObj[objKey]
+		attr := attrs[attrKey]
 		if attr == nil {
 			attr = attrs["*"]
-			PanicIf(key[0] != '#' && attr == nil, "Can't find attr for %q", key)
+			PanicIf(attrKey[0] != '#' && attr == nil, "Can't find attr for %q", attrKey)
 		}
 
-		if err := fn(e, info, key, val, attr); err != nil {
+		if err := fn(e, info, objKey, val, attr); err != nil {
 			return err
 		}
 	}
@@ -1279,11 +1422,16 @@ func (e *Entity) AddCalcProps(info *RequestInfo) map[string]any {
 			continue
 		}
 
+		name := prop.Name
+		if name == "id" {
+			name = e.Singular + "id"
+		}
+
 		// Only generate/set the value if it's not already set
-		if _, ok := mat[prop.Name]; !ok {
+		if _, ok := mat[name]; !ok {
 			if val := prop.internals.getFn(e, info); !IsNil(val) {
 				// Only write it if we have a value
-				mat[prop.Name] = val
+				mat[name] = val
 			}
 		}
 	}
@@ -1557,6 +1705,17 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				continue
 			}
 
+			if key == "id" {
+				tmp := origAttrs["$singular"]
+				if tmp != nil {
+					if e.Level == 3 {
+						key = "versionid"
+					} else {
+						key = tmp.Description + "id"
+					}
+				}
+			}
+
 			val, ok := newObj[key]
 
 			// A Default value is defined but there's no value, so set it
@@ -1622,7 +1781,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 					path.P(key).UI())
 			}
 
-			// Not ClientRequired && no there (or being deleted)
+			// Not ClientRequired && not there (or being deleted)
 			if !attr.ClientRequired && (!ok || IsNil(val)) {
 				delete(objKeys, key)
 				continue

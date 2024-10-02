@@ -104,9 +104,9 @@ TODOs:
 - support the DB vanishing for a while
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
 - support ?export
-- support versionid
 - test xref more
 - support readonly - remove resource.readonly
+- remove "readonly" attribute from model Resources, add to Resource
 - format is optional in schema spec
 - s/format/envelope/
 - s/message/protocoloptions/
@@ -115,8 +115,6 @@ TODOs:
 - allow $meta on hasdoc=false resources
 - add "validation" attribute - schema
 - error w/o ?nested + children
-- s/id/SINGULARid/
-- remove versionid from resources
 - Add content-disposition header for hasdoc resources
 - s/?resource/?attrib support
-- remove "readonly" attribute from model Resources, add to Resource
+- move epoch to be resource level

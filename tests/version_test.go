@@ -48,7 +48,8 @@ func TestCreateVersion(t *testing.T) {
 	// Check basic GET first
 	xCheckGet(t, reg, "/dirs/d1/files/f1/versions/v1$meta",
 		`{
-  "id": "v1",
+  "fileid": "f1",
+  "versionid": "v1",
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -98,7 +99,7 @@ func TestCreateVersion(t *testing.T) {
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{},"v3":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
 	xCheckGet(t, reg, "/dirs/d1/files/f1$meta", `{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -157,7 +158,7 @@ func TestCreateVersion(t *testing.T) {
 	xCheckGet(t, reg, "dirs/d2/files",
 		`{
   "f1": {
-    "id": "f1",
+    "fileid": "f1",
     "self": "http://localhost:8181/dirs/d2/files/f1$meta",
     "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
@@ -189,7 +190,7 @@ func TestDefaultVersion(t *testing.T) {
 
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -208,7 +209,7 @@ func TestDefaultVersion(t *testing.T) {
 
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -227,7 +228,7 @@ func TestDefaultVersion(t *testing.T) {
 
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -246,7 +247,7 @@ func TestDefaultVersion(t *testing.T) {
 	xNoErr(t, f1.SetDefault(nil))
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -266,7 +267,7 @@ func TestDefaultVersion(t *testing.T) {
 
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -285,7 +286,7 @@ func TestDefaultVersion(t *testing.T) {
 	xNoErr(t, err)
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -306,7 +307,7 @@ func TestDefaultVersion(t *testing.T) {
 	xNoErr(t, err)
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -325,7 +326,7 @@ func TestDefaultVersion(t *testing.T) {
 	xNoErr(t, err)
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -342,7 +343,7 @@ func TestDefaultVersion(t *testing.T) {
 	xNoErr(t, v4.Delete(""))
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -376,7 +377,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
 
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -394,7 +395,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
 
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -418,7 +419,7 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
 
 	xCheckGet(t, reg, "dirs/d1/files/f1$meta?inline=versions",
 		`{
-  "id": "f1",
+  "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -430,7 +431,8 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
 
   "versions": {
     "v4": {
-      "id": "v4",
+      "fileid": "f1",
+      "versionid": "v4",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v4$meta",
       "epoch": 1,
       "isdefault": true,
@@ -438,14 +440,16 @@ func TestDefaultVersionMaxVersions(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v7": {
-      "id": "v7",
+      "fileid": "f1",
+      "versionid": "v7",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v7$meta",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z"
     },
     "v8": {
-      "id": "v8",
+      "fileid": "f1",
+      "versionid": "v8",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v8$meta",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",

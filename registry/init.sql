@@ -228,10 +228,12 @@ SELECT
     P.EntitySID AS SourceSID,
     sR.Path AS SourcePath,
     sR.Abstract AS SourceAbstract,
+    sRM.Singular AS Singular,
     tR.SID as TargetSID,
     tR.Path as TargetPath
 FROM Props AS P
 JOIN Resources AS sR ON (sR.SID=P.EntitySID)
+JOIN ModelEntities AS sRM ON (sRM.SID=sR.ModelSID)
 JOIN Resources AS tR ON (tR.Path=P.PropValue)
 WHERE P.PropName='xref,' ;
 
@@ -326,7 +328,7 @@ SELECT                            # Iterate over the xRef Resources
 FROM xRefSrc2TgtResources AS R
 JOIN Props AS P ON (              # Grab the Target Resource's attributes
   P.EntitySID=R.TargetSID AND
-  P.PropName<>'id,' AND           # Don't override this
+  P.PropName<>CONCAT(R.Singular,'id,') AND           # Don't override this
   P.PropName<>'xref,' )           # Don't override this
 UNION SELECT                      # Grab the Target Version's attributes
     R.RegistrySID,
@@ -366,7 +368,7 @@ JOIN EffectiveVersions AS v ON (p.EntitySID=v.SID)
 JOIN Resources AS r ON (r.SID=v.ResourceSID)
 JOIN EffectiveProps AS p1 ON (p1.EntitySID=r.SID)
 WHERE p1.PropName='defaultVersionId,' AND v.UID=p1.PropValue AND
-      p.PropName<>'id,' ;     # Don't overwrite this
+      p.PropName<>'versionid,' ;     # Don't include this
 # NOTE!!! if DB_IN changes then the above 2 lines MUST change
 # TODO move the creation of this into the code then we can dynamically
 # use DB_IN instead of hard-coding the "," in here
@@ -384,7 +386,17 @@ FROM Entities AS v
 JOIN EffectiveProps AS p ON (
   p.EntitySID=v.ParentSID AND
   p.PropName='defaultversionid,'
-  AND p.PropValue=v.UID );
+  AND p.PropValue=v.UID )
+UNION SELECT                   # Add in "RESOURCEid", which is calculated
+  v.RegSID,
+  v.eSID,
+  CONCAT(rm.Singular, 'id,'),
+  r.UID,
+  'string'
+FROM Entities AS v
+JOIN Resources AS r ON (r.SID=v.ParentSID)
+JOIN ModelEntities AS rm ON (rm.SID=r.ModelSID)
+WHERE v.Level=3 ;
 
 CREATE VIEW xRefResources AS
 SELECT

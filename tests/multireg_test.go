@@ -30,7 +30,7 @@ func TestMultiReg(t *testing.T) {
 	// reg
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestMultiReg",
+  "registryid": "TestMultiReg",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -44,7 +44,7 @@ func TestMultiReg(t *testing.T) {
 	// reg2
 	xHTTP(t, reg2, "GET", "/reg-reg2", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "reg2",
+  "registryid": "reg2",
   "self": "http://localhost:8181/reg-reg2/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -58,7 +58,7 @@ func TestMultiReg(t *testing.T) {
 	xHTTP(t, reg2, "GET", "/reg-reg2/reg2_dirs", "", 200, "{}\n")
 
 	xHTTP(t, reg2, "PUT", "/reg-reg2/reg2_dirs/d2", "", 201, `{
-  "id": "d2",
+  "reg2_dirid": "d2",
   "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -70,7 +70,7 @@ func TestMultiReg(t *testing.T) {
 `)
 
 	xHTTP(t, reg2, "PUT", "/reg-reg2/reg2_dirs/d2/reg2_files/f2$meta", "", 201, `{
-  "id": "f2",
+  "reg2_fileid": "f2",
   "self": "http://localhost:8181/reg-reg2/reg2_dirs/d2/reg2_files/f2$meta",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",

@@ -45,7 +45,7 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestBasicInline",
+  "registryid": "TestBasicInline",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -63,7 +63,7 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?inline",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "id": "TestBasicInline",
+  "registryid": "TestBasicInline",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -71,7 +71,7 @@ func TestBasicInline(t *testing.T) {
 
   "dirs": {
     "d1": {
-      "id": "d1",
+      "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -79,7 +79,7 @@ func TestBasicInline(t *testing.T) {
 
       "files": {
         "f1": {
-          "id": "f1",
+          "fileid": "f1",
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
@@ -90,14 +90,16 @@ func TestBasicInline(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f1",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
-              "id": "v2",
+              "fileid": "f1",
+              "versionid": "v2",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
               "epoch": 1,
               "isdefault": true,
@@ -113,7 +115,7 @@ func TestBasicInline(t *testing.T) {
       "filesurl": "http://localhost:8181/dirs/d1/files"
     },
     "d2": {
-      "id": "d2",
+      "dirid": "d2",
       "self": "http://localhost:8181/dirs/d2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -121,7 +123,7 @@ func TestBasicInline(t *testing.T) {
 
       "files": {
         "f2": {
-          "id": "f2",
+          "fileid": "f2",
           "self": "http://localhost:8181/dirs/d2/files/f2$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
@@ -132,14 +134,16 @@ func TestBasicInline(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f2",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
-              "id": "v1.1",
+              "fileid": "f2",
+              "versionid": "v1.1",
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
               "epoch": 1,
               "isdefault": true,
@@ -159,7 +163,7 @@ func TestBasicInline(t *testing.T) {
   "dirsurl": "http://localhost:8181/dirs",
   "dirs2": {
     "d2": {
-      "id": "d2",
+      "dir2id": "d2",
       "self": "http://localhost:8181/dirs2/d2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -167,7 +171,7 @@ func TestBasicInline(t *testing.T) {
 
       "files": {
         "f2": {
-          "id": "f2",
+          "fileid": "f2",
           "self": "http://localhost:8181/dirs2/d2/files/f2$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
@@ -178,7 +182,8 @@ func TestBasicInline(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f2",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
               "epoch": 1,
               "isdefault": true,
@@ -452,7 +457,7 @@ func TestResourceInline(t *testing.T) {
 		},
 		{
 			Name: "Inline - filter + inline file",
-			URL:  "?filter=dirs.files.id=f1-proxy&inline=dirs.files.file",
+			URL:  "?filter=dirs.files.fileid=f1-proxy&inline=dirs.files.file",
 			Exp: `{
   "dirs": {
     "d1": {
@@ -473,7 +478,7 @@ func TestResourceInline(t *testing.T) {
 		},
 		{
 			Name: "Inline - filter + inline vers.file",
-			URL:  "?filter=dirs.files.id=f1-proxy&inline=dirs.files.versions.file",
+			URL:  "?filter=dirs.files.fileid=f1-proxy&inline=dirs.files.versions.file",
 			Exp: `{
   "dirs": {
     "d1": {
@@ -572,7 +577,10 @@ func TestResourceInline(t *testing.T) {
 
 		remove := []string{
 			`"specversion"`,
-			`"id"`,
+			`"registryid"`,
+			`"dirid"`,
+			`"fileid"`,
+			`"versionid"`,
 			`"epoch"`,
 			`"self"`,
 			`"isdefault"`,

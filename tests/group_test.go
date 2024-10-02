@@ -42,7 +42,7 @@ func TestCreateGroup(t *testing.T) {
 	// Check basic GET first
 	xCheckGet(t, reg, "/dirs/d1",
 		`{
-  "id": "d1",
+  "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",

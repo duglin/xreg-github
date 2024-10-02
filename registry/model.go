@@ -123,29 +123,61 @@ type ResourceModel struct {
 
 // To be picky, let's Marshal the list of attributes with Spec defined ones
 // first, and then the extensions in alphabetical order
+
 func (attrs Attributes) MarshalJSON() ([]byte, error) {
 	buf := bytes.Buffer{}
 	attrsCopy := maps.Clone(attrs) // Copy so we can delete keys
 	count := 0
 
+	// Hack!
+	// attribute "$singular" holds the singular name of the entity.
+	// attribute "$level" hold the xReg level of the entity.
+	// Couldn't find a better way to pass this info all the way down.
+	singular := ""
+	level := -1
+	if attr, ok := attrsCopy["$singular"]; ok {
+		singular = attr.Description
+		delete(attrsCopy, "$singular")
+	}
+	if attr, ok := attrsCopy["$level"]; ok {
+		levelStr := attr.Description
+		delete(attrsCopy, "$level")
+		if levelStr != "" {
+			level = int(levelStr[0] - '0')
+		}
+	}
+	// end of hack
+
 	buf.WriteString("{")
 	for _, specProp := range OrderedSpecProps {
-		if attr, ok := attrsCopy[specProp.Name]; ok {
-			delete(attrsCopy, specProp.Name)
+		if level >= 0 && !specProp.InLevel(level) {
+			// log.Printf("Skipping: %s  L: %d", specProp.Name, level)
+			// continue
+		}
+
+		name := specProp.Name
+		if name == "id" {
+			if singular != "" {
+				name = singular + name
+			}
+		}
+
+		if attr, ok := attrsCopy[name]; ok {
+			delete(attrsCopy, name)
 
 			tmpAttr := *attr
 			attr = &tmpAttr
 
 			// We need to exclude "model" because we don't want to show the
 			// end user "model" as a valid attribute in the model.
-			if specProp.Name == "model" {
+			if name == "model" {
 				continue
 			}
 
 			if count > 0 {
 				buf.WriteRune(',')
 			}
-			buf.WriteString(`"` + specProp.Name + `": `)
+			buf.WriteString(`"` + name + `": `)
 			tmpBuf, err := json.Marshal(attr)
 			if err != nil {
 				return nil, err
@@ -155,7 +187,14 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 		}
 	}
 
-	for _, name := range SortedKeys(attrsCopy) {
+	keys := SortedKeys(attrsCopy)
+
+	// Make sure "*" is last, it just looks nicer that way
+	if len(keys) > 1 && keys[0] == "*" {
+		keys = append(keys[1:], keys[0])
+	}
+
+	for _, name := range keys {
 		if count > 0 {
 			buf.WriteRune(',')
 		}
@@ -229,12 +268,67 @@ func (m *Model) DelSchema(schema string) error {
 func (m *Model) SetPointers() {
 	PanicIf(m.Registry == nil, "Model.Registry can't be nil")
 
+	if m.Attributes == nil {
+		m.Attributes = map[string]*Attribute{}
+	}
+
 	for _, attr := range m.Attributes {
 		attr.SetRegistry(m.Registry)
 	}
 
 	for _, gm := range m.Groups {
 		gm.SetRegistry(m.Registry)
+	}
+}
+
+// Total hack. Need a way to pass in the Singular and Level info from the
+// model down into the serialization routines.
+func (m *Model) SetSingular() {
+	m.Attributes["$singular"] = &Attribute{
+		Name:        "$singular",
+		Type:        STRING,
+		Description: "registry",
+	}
+	m.Attributes["$level"] = &Attribute{
+		Name:        "$level",
+		Type:        STRING,
+		Description: "0",
+	}
+
+	for _, gm := range m.Groups {
+		gm.Attributes["$singular"] = &Attribute{
+			Name:        "$singular",
+			Type:        STRING,
+			Description: gm.Singular,
+		}
+		gm.Attributes["$level"] = &Attribute{
+			Name:        "$level",
+			Type:        STRING,
+			Description: "1",
+		}
+
+		for _, rm := range gm.Resources {
+			rm.Attributes["$singular"] = &Attribute{
+				Name:        "$singular",
+				Type:        STRING,
+				Description: rm.Singular,
+			}
+			rm.Attributes["$level"] = &Attribute{
+				Name:        "$level",
+				Type:        STRING,
+				Description: "2",
+			}
+		}
+	}
+}
+
+func (m *Model) UnsetSingular() {
+	delete(m.Attributes, "$singular")
+	for _, gm := range m.Groups {
+		delete(gm.Attributes, "$singular")
+		for _, rm := range gm.Resources {
+			delete(rm.Attributes, "$singular")
+		}
 	}
 }
 
@@ -585,7 +679,7 @@ func LoadModel(reg *Registry) *Model {
 	results.Close()
 
 	model.Attributes.SetRegistry(reg)
-	model.Attributes.SetSpecPropsFields()
+	model.Attributes.SetSpecPropsFields("registry")
 
 	// Load Schemas
 	results, err = Query(reg.tx, `
@@ -642,7 +736,7 @@ func LoadModel(reg *Registry) *Model {
 				Resources: map[string]*ResourceModel{},
 			}
 
-			g.Attributes.SetSpecPropsFields()
+			g.Attributes.SetSpecPropsFields(g.Singular)
 
 			model.Groups[NotNilString(row[3])] = g
 			groups[NotNilString(row[0])] = g
@@ -665,7 +759,7 @@ func LoadModel(reg *Registry) *Model {
 					TypeMap:          typemap,
 				}
 
-				r.Attributes.SetSpecPropsFields()
+				r.Attributes.SetSpecPropsFields(r.Singular)
 
 				g.Resources[r.Plural] = r
 			}
@@ -1296,12 +1390,21 @@ func (m *Model) Verify() error {
 
 	if m.Attributes == nil {
 		m.Attributes = Attributes{}
+
 	}
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Registry level attribute, then skip it
 		if !specProp.InLevel(0) {
 			continue
+		}
+
+		if specProp.Name == "id" {
+			specProp = specProp.Clone("registryid")
+			specProp.Location = ""
+		} else {
+			specProp = specProp.Clone("")
+			specProp.Location = ""
 		}
 
 		modelAttr, ok := m.Attributes[specProp.Name]
@@ -1376,12 +1479,21 @@ func (gm *GroupModel) Verify(gmName string) error {
 	// This just checks the Group level Attributes
 	if gm.Attributes == nil {
 		gm.Attributes = Attributes{}
+
 	}
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Group level attribute, then skip it
 		if !specProp.InLevel(1) {
 			continue
+		}
+
+		if specProp.Name == "id" {
+			specProp = specProp.Clone(gm.Singular + "id")
+			specProp.Location = ""
+		} else {
+			specProp = specProp.Clone("")
+			specProp.Location = ""
 		}
 
 		modelAttr, ok := gm.Attributes[specProp.Name]
@@ -1423,6 +1535,10 @@ func (gm *GroupModel) SetRegistry(reg *Registry) {
 	}
 
 	gm.Registry = reg
+	if gm.Attributes == nil {
+		gm.Attributes = map[string]*Attribute{}
+	}
+
 	gm.Attributes.SetRegistry(reg)
 
 	for _, rm := range gm.Resources {
@@ -1477,6 +1593,10 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		// If it's not a Resource level attribute, then skip it
 		if !specProp.InLevel(3) && !specProp.InLevel(2) {
 			continue
+		}
+
+		if specProp.Name == "id" {
+			specProp = specProp.Clone(rm.Singular + "id")
 		}
 
 		modelAttr, ok := rm.Attributes[specProp.Name]
@@ -1568,6 +1688,10 @@ func (rm *ResourceModel) VerifyData() error {
 func (rm *ResourceModel) SetRegistry(reg *Registry) {
 	if rm == nil {
 		return
+	}
+
+	if rm.Attributes == nil {
+		rm.Attributes = map[string]*Attribute{}
 	}
 
 	rm.Attributes.SetRegistry(reg)
@@ -1883,13 +2007,18 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			return fmt.Errorf("Duplicate attribute name (%s) at: %s", name,
 				ld.Path.UI())
 		}
+		// Not sure why we look at SpecProp, I suspect it's because at one
+		// point in time we had non-conforming (special) names in there and
+		// we wanted to let those pass.
+		// Technicall we should convert the XXXid into id but any XXXid needs
+		// to be a valid name/string so we should be ok
 		if name != "*" && SpecProps[name] == nil &&
 			!IsValidAttributeName(name) { // valid chars?
 			return fmt.Errorf("%q has an invalid attribute key %q - must "+
 				"match %q", ld.Path.UI(), name, RegexpPropName.String())
 		}
 		path := ld.Path.P(name)
-		if name != attr.Name { // missing Nmae: field?
+		if name != attr.Name { // missing Name: field?
 			return fmt.Errorf("%q must have a \"name\" set to %q", path.UI(),
 				name)
 		}
@@ -1999,8 +2128,11 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 // Copy the internal data for spec defined properties so we can access
 // that info directly from these Attributes instead of having to go back
 // to the SpecProps stuff
-func (attrs Attributes) SetSpecPropsFields() {
+func (attrs Attributes) SetSpecPropsFields(singular string) {
 	for k, attr := range attrs {
+		if k == singular+"id" {
+			k = "id"
+		}
 		if specProp := SpecProps[k]; specProp != nil {
 			attr.internals = specProp.internals
 		}
@@ -2128,7 +2260,12 @@ func AbstractToSingular(reg *Registry, abs string) string {
 
 // The model serializer we use for the "xRegistry" schema format
 func Model2xRegistryJson(m *Model, format string) ([]byte, error) {
-	return json.MarshalIndent(m, "", "  ")
+	m.SetSingular()
+
+	buf, err := json.MarshalIndent(m, "", "  ")
+	m.UnsetSingular()
+
+	return buf, err
 }
 
 func GetModelSerializer(format string) ModelSerializer {
@@ -2196,4 +2333,13 @@ func AbstractToModels(reg *Registry, abs string) (*GroupModel, *ResourceModel) {
 	}
 	// *GroupModel, *ResourceModel, isVersion
 	return gm, rm
+}
+
+func (attr *Attribute) Clone(newName string) *Attribute {
+	newAttr := *attr
+	if newName != "" {
+		newAttr.Name = newName
+	}
+
+	return &newAttr
 }

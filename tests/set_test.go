@@ -150,7 +150,7 @@ func TestSetDots(t *testing.T) {
 	dir.Refresh()
 
 	xCheckGet(t, reg, "/dirs/d1", `{
-  "id": "d1",
+  "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
   "epoch": 1,
   "labels": {
@@ -167,7 +167,7 @@ func TestSetDots(t *testing.T) {
 	err = dir.SetSave("labels", nil)
 	xJSONCheck(t, err, nil)
 	xCheckGet(t, reg, "/dirs/d1", `{
-  "id": "d1",
+  "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -287,7 +287,7 @@ func TestSetLabels(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestSetLabels",
+  "registryid": "TestSetLabels",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "labels": {
@@ -298,7 +298,7 @@ func TestSetLabels(t *testing.T) {
 
   "dirs": {
     "d1": {
-      "id": "d1",
+      "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
       "labels": {
@@ -309,7 +309,7 @@ func TestSetLabels(t *testing.T) {
 
       "files": {
         "f1": {
-          "id": "f1",
+          "fileid": "f1",
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "epoch": 1,
           "labels": {
@@ -328,7 +328,8 @@ func TestSetLabels(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f1",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "epoch": 1,
               "labels": {
@@ -338,7 +339,8 @@ func TestSetLabels(t *testing.T) {
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
-              "id": "v2",
+              "fileid": "f1",
+              "versionid": "v2",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
               "epoch": 1,
               "isdefault": true,
@@ -370,7 +372,7 @@ func TestSetLabels(t *testing.T) {
 	file.SetDefault(ver)
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestSetLabels",
+  "registryid": "TestSetLabels",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "labels": {
@@ -381,7 +383,7 @@ func TestSetLabels(t *testing.T) {
 
   "dirs": {
     "d1": {
-      "id": "d1",
+      "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
       "labels": {
@@ -392,7 +394,7 @@ func TestSetLabels(t *testing.T) {
 
       "files": {
         "f1": {
-          "id": "f1",
+          "fileid": "f1",
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "epoch": 1,
           "labels": {
@@ -407,7 +409,8 @@ func TestSetLabels(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f1",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "epoch": 1,
               "isdefault": true,
@@ -418,7 +421,8 @@ func TestSetLabels(t *testing.T) {
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
-              "id": "v2",
+              "fileid": "f1",
+              "versionid": "v2",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
               "epoch": 1,
               "labels": {

@@ -23,8 +23,8 @@ func TestNoModel(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -61,18 +61,20 @@ func TestNoModel(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   }
 }
 `)
 	xCheckGet(t, reg, "?model", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestNoModel",
+  "registryid": "TestNoModel",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -89,8 +91,8 @@ func TestNoModel(t *testing.T) {
         "immutable": true,
         "serverrequired": true
       },
-      "id": {
-        "name": "id",
+      "registryid": {
+        "name": "registryid",
         "type": "string",
         "immutable": true,
         "serverrequired": true
@@ -127,11 +129,13 @@ func TestNoModel(t *testing.T) {
       },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       }
     }
   }
@@ -160,8 +164,8 @@ func TestRegSchema(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -198,11 +202,13 @@ func TestRegSchema(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   }
 }
@@ -223,8 +229,8 @@ func TestRegSchema(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -261,11 +267,13 @@ func TestRegSchema(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   }
 }
@@ -285,8 +293,8 @@ func TestRegSchema(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -323,11 +331,13 @@ func TestRegSchema(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   }
 }
@@ -346,8 +356,8 @@ func TestRegSchema(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -384,11 +394,13 @@ func TestRegSchema(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   }
 }
@@ -415,8 +427,8 @@ func TestGroupModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -453,11 +465,13 @@ func TestGroupModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -465,8 +479,8 @@ func TestGroupModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -507,11 +521,13 @@ func TestGroupModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       }
     }
@@ -531,8 +547,8 @@ func TestGroupModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -569,11 +585,13 @@ func TestGroupModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -581,8 +599,8 @@ func TestGroupModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -623,11 +641,13 @@ func TestGroupModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       }
     }
@@ -647,8 +667,8 @@ func TestGroupModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -685,11 +705,13 @@ func TestGroupModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -697,8 +719,8 @@ func TestGroupModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -739,11 +761,13 @@ func TestGroupModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       }
     }
@@ -821,8 +845,8 @@ func TestResourceModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -859,11 +883,13 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -871,8 +897,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -913,11 +939,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -929,8 +957,15 @@ func TestResourceModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -939,11 +974,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -980,11 +1017,13 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -993,17 +1032,20 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -1013,8 +1055,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs2",
       "singular": "dir2",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dir2id": {
+          "name": "dir2id",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -1055,11 +1097,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -1071,8 +1115,15 @@ func TestResourceModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -1081,11 +1132,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -1122,11 +1175,13 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -1135,17 +1190,20 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -1168,8 +1226,8 @@ func TestResourceModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -1206,11 +1264,13 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -1218,8 +1278,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -1260,11 +1320,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -1276,8 +1338,15 @@ func TestResourceModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -1286,11 +1355,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -1327,11 +1398,13 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -1340,17 +1413,20 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -1360,8 +1436,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs2",
       "singular": "dir2",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dir2id": {
+          "name": "dir2id",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -1402,11 +1478,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       }
     }
@@ -1426,8 +1504,8 @@ func TestResourceModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -1464,11 +1542,13 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -1476,8 +1556,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -1518,11 +1598,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -1534,8 +1616,15 @@ func TestResourceModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -1544,11 +1633,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -1585,11 +1676,13 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -1598,17 +1691,20 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -1618,8 +1714,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs2",
       "singular": "dir2",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dir2id": {
+          "name": "dir2id",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -1660,11 +1756,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       }
     }
@@ -1685,8 +1783,8 @@ func TestResourceModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -1723,11 +1821,13 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -1735,8 +1835,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -1777,11 +1877,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -1793,8 +1895,15 @@ func TestResourceModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -1803,11 +1912,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -1844,11 +1955,13 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -1857,17 +1970,20 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -1889,8 +2005,8 @@ func TestResourceModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -1927,11 +2043,13 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -1939,8 +2057,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -1981,11 +2099,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -1997,8 +2117,15 @@ func TestResourceModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -2007,11 +2134,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -2048,11 +2177,13 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -2061,17 +2192,20 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -2119,8 +2253,8 @@ func TestResourceModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -2157,11 +2291,13 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "mystr": {
       "name": "mystr",
@@ -2173,8 +2309,8 @@ func TestResourceModelCreate(t *testing.T) {
       "plural": "dirs",
       "singular": "dir",
       "attributes": {
-        "id": {
-          "name": "id",
+        "dirid": {
+          "name": "dirid",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -2215,11 +2351,13 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -2231,8 +2369,15 @@ func TestResourceModelCreate(t *testing.T) {
           "setdefaultversionsticky": false,
           "hasdocument": false,
           "attributes": {
-            "id": {
-              "name": "id",
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -2241,11 +2386,13 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -2282,11 +2429,13 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -2295,17 +2444,20 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -2337,7 +2489,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	xCheckGet(t, reg, "?model&inline=dirs.files", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestResourceModels",
+  "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -2354,8 +2506,8 @@ func TestResourceModelCreate(t *testing.T) {
         "immutable": true,
         "serverrequired": true
       },
-      "id": {
-        "name": "id",
+      "registryid": {
+        "name": "registryid",
         "type": "string",
         "immutable": true,
         "serverrequired": true
@@ -2392,11 +2544,13 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       },
       "mystr": {
         "name": "mystr",
@@ -2408,8 +2562,8 @@ func TestResourceModelCreate(t *testing.T) {
         "plural": "dirs",
         "singular": "dir",
         "attributes": {
-          "id": {
-            "name": "id",
+          "dirid": {
+            "name": "dirid",
             "type": "string",
             "immutable": true,
             "serverrequired": true
@@ -2450,11 +2604,13 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           }
         },
         "resources": {
@@ -2466,8 +2622,15 @@ func TestResourceModelCreate(t *testing.T) {
             "setdefaultversionsticky": false,
             "hasdocument": false,
             "attributes": {
-              "id": {
-                "name": "id",
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true,
+                "location": "both"
+              },
+              "versionid": {
+                "name": "versionid",
                 "type": "string",
                 "immutable": true,
                 "serverrequired": true
@@ -2476,11 +2639,13 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "location": "both"
               },
               "xref": {
                 "name": "xref",
-                "type": "url"
+                "type": "url",
+                "location": "resource"
               },
               "epoch": {
                 "name": "epoch",
@@ -2517,11 +2682,13 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "contenttype": {
                 "name": "contenttype",
@@ -2530,17 +2697,20 @@ func TestResourceModelCreate(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
                 "type": "string",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionurl": {
                 "name": "defaultversionurl",
                 "type": "url",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               }
             }
           }
@@ -2551,7 +2721,7 @@ func TestResourceModelCreate(t *testing.T) {
 
   "dirs": {
     "dir1": {
-      "id": "dir1",
+      "dirid": "dir1",
       "self": "http://localhost:8181/dirs/dir1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -2559,7 +2729,7 @@ func TestResourceModelCreate(t *testing.T) {
 
       "files": {
         "f1": {
-          "id": "f1",
+          "fileid": "f1",
           "self": "http://localhost:8181/dirs/dir1/files/f1",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
@@ -2603,7 +2773,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestResourceModels",
+  "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -2620,8 +2790,8 @@ func TestResourceModelCreate(t *testing.T) {
         "immutable": true,
         "serverrequired": true
       },
-      "id": {
-        "name": "id",
+      "registryid": {
+        "name": "registryid",
         "type": "string",
         "immutable": true,
         "serverrequired": true
@@ -2658,11 +2828,13 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       }
     },
     "groups": {
@@ -2670,8 +2842,8 @@ func TestResourceModelCreate(t *testing.T) {
         "plural": "dirs",
         "singular": "dir",
         "attributes": {
-          "id": {
-            "name": "id",
+          "dirid": {
+            "name": "dirid",
             "type": "string",
             "immutable": true,
             "serverrequired": true
@@ -2712,11 +2884,13 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           }
         },
         "resources": {
@@ -2728,8 +2902,15 @@ func TestResourceModelCreate(t *testing.T) {
             "setdefaultversionsticky": false,
             "hasdocument": false,
             "attributes": {
-              "id": {
-                "name": "id",
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true,
+                "location": "both"
+              },
+              "versionid": {
+                "name": "versionid",
                 "type": "string",
                 "immutable": true,
                 "serverrequired": true
@@ -2738,11 +2919,13 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "location": "both"
               },
               "xref": {
                 "name": "xref",
-                "type": "url"
+                "type": "url",
+                "location": "resource"
               },
               "epoch": {
                 "name": "epoch",
@@ -2779,11 +2962,13 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "contenttype": {
                 "name": "contenttype",
@@ -2792,17 +2977,20 @@ func TestResourceModelCreate(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
                 "type": "string",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionurl": {
                 "name": "defaultversionurl",
                 "type": "url",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               }
             }
           }
@@ -2813,7 +3001,7 @@ func TestResourceModelCreate(t *testing.T) {
 
   "dirs": {
     "dir1": {
-      "id": "dir1",
+      "dirid": "dir1",
       "self": "http://localhost:8181/dirs/dir1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -2840,7 +3028,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=dirs", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestResourceModels",
+  "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -2857,8 +3045,8 @@ func TestResourceModelCreate(t *testing.T) {
         "immutable": true,
         "serverrequired": true
       },
-      "id": {
-        "name": "id",
+      "registryid": {
+        "name": "registryid",
         "type": "string",
         "immutable": true,
         "serverrequired": true
@@ -2895,11 +3083,13 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       }
     },
     "groups": {
@@ -2907,8 +3097,8 @@ func TestResourceModelCreate(t *testing.T) {
         "plural": "dirs",
         "singular": "dir",
         "attributes": {
-          "id": {
-            "name": "id",
+          "dirid": {
+            "name": "dirid",
             "type": "string",
             "immutable": true,
             "serverrequired": true
@@ -2949,11 +3139,13 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           }
         }
       }
@@ -2962,7 +3154,7 @@ func TestResourceModelCreate(t *testing.T) {
 
   "dirs": {
     "dir1": {
-      "id": "dir1",
+      "dirid": "dir1",
       "self": "http://localhost:8181/dirs/dir1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -2985,7 +3177,7 @@ func TestResourceModelCreate(t *testing.T) {
 	reg.Model.ApplyNewModel(newModel)
 	xCheckGet(t, reg, "?model&inline=", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestResourceModels",
+  "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -3002,8 +3194,8 @@ func TestResourceModelCreate(t *testing.T) {
         "immutable": true,
         "serverrequired": true
       },
-      "id": {
-        "name": "id",
+      "registryid": {
+        "name": "registryid",
         "type": "string",
         "immutable": true,
         "serverrequired": true
@@ -3040,11 +3232,13 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       }
     },
     "groups": {
@@ -3052,8 +3246,8 @@ func TestResourceModelCreate(t *testing.T) {
         "plural": "dirs2",
         "singular": "dir2",
         "attributes": {
-          "id": {
-            "name": "id",
+          "dir2id": {
+            "name": "dir2id",
             "type": "string",
             "immutable": true,
             "serverrequired": true
@@ -3094,11 +3288,13 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           }
         }
       }
@@ -3147,8 +3343,8 @@ func TestMultModelCreate(t *testing.T) {
       "immutable": true,
       "serverrequired": true
     },
-    "id": {
-      "name": "id",
+    "registryid": {
+      "name": "registryid",
       "type": "string",
       "immutable": true,
       "serverrequired": true
@@ -3185,11 +3381,13 @@ func TestMultModelCreate(t *testing.T) {
     },
     "createdat": {
       "name": "createdat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     },
     "modifiedat": {
       "name": "modifiedat",
-      "type": "timestamp"
+      "type": "timestamp",
+      "serverrequired": true
     }
   },
   "groups": {
@@ -3197,8 +3395,8 @@ func TestMultModelCreate(t *testing.T) {
       "plural": "gms1",
       "singular": "gm1",
       "attributes": {
-        "id": {
-          "name": "id",
+        "gm1id": {
+          "name": "gm1id",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -3239,11 +3437,13 @@ func TestMultModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -3255,8 +3455,15 @@ func TestMultModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "rm1id": {
+              "name": "rm1id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -3265,11 +3472,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -3306,11 +3515,13 @@ func TestMultModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -3319,17 +3530,20 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         },
@@ -3341,8 +3555,15 @@ func TestMultModelCreate(t *testing.T) {
           "setdefaultversionsticky": false,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "rm2id": {
+              "name": "rm2id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -3351,11 +3572,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -3392,11 +3615,13 @@ func TestMultModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -3405,17 +3630,20 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -3425,8 +3653,8 @@ func TestMultModelCreate(t *testing.T) {
       "plural": "gms2",
       "singular": "gm2",
       "attributes": {
-        "id": {
-          "name": "id",
+        "gm2id": {
+          "name": "gm2id",
           "type": "string",
           "immutable": true,
           "serverrequired": true
@@ -3467,11 +3695,13 @@ func TestMultModelCreate(t *testing.T) {
         },
         "createdat": {
           "name": "createdat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         },
         "modifiedat": {
           "name": "modifiedat",
-          "type": "timestamp"
+          "type": "timestamp",
+          "serverrequired": true
         }
       },
       "resources": {
@@ -3483,8 +3713,15 @@ func TestMultModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "rm1id": {
+              "name": "rm1id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -3493,11 +3730,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -3534,11 +3773,13 @@ func TestMultModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -3547,17 +3788,20 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         },
@@ -3569,8 +3813,15 @@ func TestMultModelCreate(t *testing.T) {
           "setdefaultversionsticky": true,
           "hasdocument": true,
           "attributes": {
-            "id": {
-              "name": "id",
+            "rm2id": {
+              "name": "rm2id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true,
+              "location": "both"
+            },
+            "versionid": {
+              "name": "versionid",
               "type": "string",
               "immutable": true,
               "serverrequired": true
@@ -3579,11 +3830,13 @@ func TestMultModelCreate(t *testing.T) {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "serverrequired": true,
+              "location": "both"
             },
             "xref": {
               "name": "xref",
-              "type": "url"
+              "type": "url",
+              "location": "resource"
             },
             "epoch": {
               "name": "epoch",
@@ -3620,11 +3873,13 @@ func TestMultModelCreate(t *testing.T) {
             },
             "createdat": {
               "name": "createdat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "modifiedat": {
               "name": "modifiedat",
-              "type": "timestamp"
+              "type": "timestamp",
+              "serverrequired": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -3633,17 +3888,20 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
-              "readonly": true
+              "readonly": true,
+              "location": "resource"
             }
           }
         }
@@ -3697,7 +3955,7 @@ func TestMultModel2Create(t *testing.T) {
 
 	xCheckGet(t, reg, "?model&inline", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestMultModel2Create",
+  "registryid": "TestMultModel2Create",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -3714,8 +3972,8 @@ func TestMultModel2Create(t *testing.T) {
         "immutable": true,
         "serverrequired": true
       },
-      "id": {
-        "name": "id",
+      "registryid": {
+        "name": "registryid",
         "type": "string",
         "immutable": true,
         "serverrequired": true
@@ -3752,11 +4010,13 @@ func TestMultModel2Create(t *testing.T) {
       },
       "createdat": {
         "name": "createdat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       },
       "modifiedat": {
         "name": "modifiedat",
-        "type": "timestamp"
+        "type": "timestamp",
+        "serverrequired": true
       }
     },
     "groups": {
@@ -3764,8 +4024,8 @@ func TestMultModel2Create(t *testing.T) {
         "plural": "dirs1",
         "singular": "dir1",
         "attributes": {
-          "id": {
-            "name": "id",
+          "dir1id": {
+            "name": "dir1id",
             "type": "string",
             "immutable": true,
             "serverrequired": true
@@ -3806,11 +4066,13 @@ func TestMultModel2Create(t *testing.T) {
           },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           }
         },
         "resources": {
@@ -3822,8 +4084,15 @@ func TestMultModel2Create(t *testing.T) {
             "setdefaultversionsticky": false,
             "hasdocument": true,
             "attributes": {
-              "id": {
-                "name": "id",
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true,
+                "location": "both"
+              },
+              "versionid": {
+                "name": "versionid",
                 "type": "string",
                 "immutable": true,
                 "serverrequired": true
@@ -3832,11 +4101,13 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "location": "both"
               },
               "xref": {
                 "name": "xref",
-                "type": "url"
+                "type": "url",
+                "location": "resource"
               },
               "epoch": {
                 "name": "epoch",
@@ -3873,11 +4144,13 @@ func TestMultModel2Create(t *testing.T) {
               },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "contenttype": {
                 "name": "contenttype",
@@ -3886,17 +4159,20 @@ func TestMultModel2Create(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
                 "type": "string",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionurl": {
                 "name": "defaultversionurl",
                 "type": "url",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               }
             }
           }
@@ -3906,8 +4182,8 @@ func TestMultModel2Create(t *testing.T) {
         "plural": "dirs2",
         "singular": "dir2",
         "attributes": {
-          "id": {
-            "name": "id",
+          "dir2id": {
+            "name": "dir2id",
             "type": "string",
             "immutable": true,
             "serverrequired": true
@@ -3948,11 +4224,13 @@ func TestMultModel2Create(t *testing.T) {
           },
           "createdat": {
             "name": "createdat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           },
           "modifiedat": {
             "name": "modifiedat",
-            "type": "timestamp"
+            "type": "timestamp",
+            "serverrequired": true
           }
         },
         "resources": {
@@ -3964,8 +4242,15 @@ func TestMultModel2Create(t *testing.T) {
             "setdefaultversionsticky": true,
             "hasdocument": true,
             "attributes": {
-              "id": {
-                "name": "id",
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true,
+                "location": "both"
+              },
+              "versionid": {
+                "name": "versionid",
                 "type": "string",
                 "immutable": true,
                 "serverrequired": true
@@ -3974,11 +4259,13 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "serverrequired": true,
+                "location": "both"
               },
               "xref": {
                 "name": "xref",
-                "type": "url"
+                "type": "url",
+                "location": "resource"
               },
               "epoch": {
                 "name": "epoch",
@@ -4015,11 +4302,13 @@ func TestMultModel2Create(t *testing.T) {
               },
               "createdat": {
                 "name": "createdat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "modifiedat": {
                 "name": "modifiedat",
-                "type": "timestamp"
+                "type": "timestamp",
+                "serverrequired": true
               },
               "contenttype": {
                 "name": "contenttype",
@@ -4028,17 +4317,20 @@ func TestMultModel2Create(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
                 "type": "string",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               },
               "defaultversionurl": {
                 "name": "defaultversionurl",
                 "type": "url",
-                "readonly": true
+                "readonly": true,
+                "location": "resource"
               }
             }
           }
@@ -4049,7 +4341,7 @@ func TestMultModel2Create(t *testing.T) {
 
   "dirs1": {
     "d1": {
-      "id": "d1",
+      "dir1id": "d1",
       "self": "http://localhost:8181/dirs1/d1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -4057,7 +4349,7 @@ func TestMultModel2Create(t *testing.T) {
 
       "files": {
         "f1": {
-          "id": "f1",
+          "fileid": "f1",
           "self": "http://localhost:8181/dirs1/d1/files/f1$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
@@ -4068,14 +4360,16 @@ func TestMultModel2Create(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f1",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1$meta",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v2": {
-              "id": "v2",
+              "fileid": "f1",
+              "versionid": "v2",
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v2$meta",
               "epoch": 1,
               "isdefault": true,
@@ -4091,7 +4385,7 @@ func TestMultModel2Create(t *testing.T) {
       "filesurl": "http://localhost:8181/dirs1/d1/files"
     },
     "d2": {
-      "id": "d2",
+      "dir1id": "d2",
       "self": "http://localhost:8181/dirs1/d2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -4099,7 +4393,7 @@ func TestMultModel2Create(t *testing.T) {
 
       "files": {
         "f2": {
-          "id": "f2",
+          "fileid": "f2",
           "self": "http://localhost:8181/dirs1/d2/files/f2$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
@@ -4110,14 +4404,16 @@ func TestMultModel2Create(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f2",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1$meta",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
             "v1.1": {
-              "id": "v1.1",
+              "fileid": "f2",
+              "versionid": "v1.1",
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1$meta",
               "epoch": 1,
               "isdefault": true,
@@ -4137,7 +4433,7 @@ func TestMultModel2Create(t *testing.T) {
   "dirs1url": "http://localhost:8181/dirs1",
   "dirs2": {
     "d2": {
-      "id": "d2",
+      "dir2id": "d2",
       "self": "http://localhost:8181/dirs2/d2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:02Z",
@@ -4145,7 +4441,7 @@ func TestMultModel2Create(t *testing.T) {
 
       "files": {
         "f2": {
-          "id": "f2",
+          "fileid": "f2",
           "self": "http://localhost:8181/dirs2/d2/files/f2$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:02Z",
@@ -4156,7 +4452,8 @@ func TestMultModel2Create(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f2",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$meta",
               "epoch": 1,
               "isdefault": true,

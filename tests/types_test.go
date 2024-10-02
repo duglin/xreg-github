@@ -297,7 +297,7 @@ func TestBasicTypes(t *testing.T) {
 
 	xCheckGet(t, reg, "?inline", `{
   "specversion": "`+registry.SPECVERSION+`",
-  "id": "TestBasicTypes",
+  "registryid": "TestBasicTypes",
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
@@ -364,7 +364,7 @@ func TestBasicTypes(t *testing.T) {
 
   "dirs": {
     "d1": {
-      "id": "d1",
+      "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:04Z",
@@ -383,7 +383,7 @@ func TestBasicTypes(t *testing.T) {
 
       "files": {
         "f1": {
-          "id": "f1",
+          "fileid": "f1",
           "self": "http://localhost:8181/dirs/d1/files/f1$meta",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:04Z",
@@ -405,7 +405,8 @@ func TestBasicTypes(t *testing.T) {
 
           "versions": {
             "v1": {
-              "id": "v1",
+              "fileid": "f1",
+              "versionid": "v1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
               "epoch": 1,
               "isdefault": true,
@@ -432,7 +433,7 @@ func TestBasicTypes(t *testing.T) {
       "filesurl": "http://localhost:8181/dirs/d1/files"
     },
     "dir2": {
-      "id": "dir2",
+      "dirid": "dir2",
       "self": "http://localhost:8181/dirs/dir2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:04Z",
