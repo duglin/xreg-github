@@ -436,7 +436,7 @@ func (pw *PageWriter) Done() {
     background-color: lightsteelblue;
     white-space: nowrap ;
     overflow-y: auto ;
-    min-width: 15em ;
+    min-width: fit-content ;
   }
   #right {
     display: flex ;
@@ -444,7 +444,7 @@ func (pw *PageWriter) Done() {
     flex-wrap: nowrap ;
     justify-content: flex-start ;
     width: 100%% ;
-
+    overflow: auto ;
   }
   #url {
     background-color: lightgray;
@@ -479,6 +479,7 @@ func (pw *PageWriter) Done() {
   }
   textarea {
     margin-bottom: 10px ;
+	min-width: 100%% ;
   }
   #filters {
     display: block ;
@@ -511,6 +512,7 @@ func (pw *PageWriter) Done() {
   li {
     white-space: nowrap ;
     cursor: pointer ;
+	list-style-type: circle ;
   }
 </style>
 <div id=left>
