@@ -195,8 +195,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 
 		err = DoOne(r.tx, `
-        INSERT INTO Resources(SID, UID, GroupSID, ModelSID, Path, Abstract)
-        SELECT ?,?,?,SID,?,?
+        INSERT INTO Resources(SID, UID, RegistrySID, GroupSID, ModelSID, Path, Abstract)
+        SELECT ?,?,?,?,SID,?,?
         FROM ModelEntities
         WHERE RegistrySID=?
           AND ParentSID IN (
@@ -205,7 +205,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
             AND ParentSID IS NULL
             AND Plural=?)
             AND Plural=?`,
-			r.DbSID, r.UID, g.DbSID,
+			r.DbSID, r.UID, g.Registry.DbSID, g.DbSID,
 			g.Plural+"/"+g.UID+"/"+rType+"/"+r.UID, g.Plural+string(DB_IN)+rType,
 			g.Registry.DbSID,
 			g.Registry.DbSID, g.Plural,
@@ -448,8 +448,8 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 		}
 
 		err = DoOne(r.tx, `
-        INSERT INTO Resources(SID, UID, GroupSID, ModelSID, Path, Abstract)
-        SELECT ?,?,?,SID,?,?
+        INSERT INTO Resources(SID, UID, RegistrySID, GroupSID, ModelSID, Path, Abstract)
+        SELECT ?,?,?,?,SID,?,?
         FROM ModelEntities
         WHERE RegistrySID=?
           AND ParentSID IN (
@@ -458,7 +458,7 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
             AND ParentSID IS NULL
             AND Plural=?)
             AND Plural=?`,
-			r.DbSID, r.UID, g.DbSID,
+			r.DbSID, r.UID, g.Registry.DbSID, g.DbSID,
 			g.Plural+"/"+g.UID+"/"+rType+"/"+r.UID, g.Plural+string(DB_IN)+rType,
 			g.Registry.DbSID,
 			g.Registry.DbSID, g.Plural,

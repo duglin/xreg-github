@@ -307,9 +307,9 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		}
 
 		err = DoOne(r.tx, `
-        INSERT INTO Versions(SID, UID, ResourceSID, Path, Abstract)
-        VALUES(?,?,?,?,?)`,
-			v.DbSID, id, r.DbSID,
+        INSERT INTO Versions(SID, UID, RegistrySID, ResourceSID, Path, Abstract)
+        VALUES(?,?,?,?,?,?)`,
+			v.DbSID, id, r.Registry.DbSID, r.DbSID,
 			r.Group.Plural+"/"+r.Group.UID+"/"+r.Plural+"/"+r.UID+"/versions/"+v.UID,
 			r.Group.Plural+string(DB_IN)+r.Plural+string(DB_IN)+"versions")
 		if err != nil {

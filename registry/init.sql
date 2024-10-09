@@ -175,12 +175,14 @@ END ;
 CREATE TABLE Resources (
     SID             VARCHAR(64) NOT NULL,   # System ID
     UID             VARCHAR(64) NOT NULL,   # User defined
+    RegistrySID     VARCHAR(64) NOT NULL,
     GroupSID        VARCHAR(64) NOT NULL,   # System ID
     ModelSID        VARCHAR(64) NOT NULL,
     Path            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
     Abstract        VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
 
     PRIMARY KEY (SID),
+    UNIQUE INDEX(RegistrySID,SID),
     INDEX(GroupSID, UID),
     INDEX(Path),
     UNIQUE INDEX (GroupSID, ModelSID, UID)
@@ -196,6 +198,7 @@ END ;
 CREATE TABLE Versions (
     SID                 VARCHAR(64) NOT NULL,   # System ID
     UID                 VARCHAR(64) NOT NULL,   # User defined
+    RegistrySID         VARCHAR(64) NOT NULL,
     ResourceSID         VARCHAR(64) NOT NULL,   # System ID
     Path                VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
     Abstract            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
@@ -207,7 +210,8 @@ CREATE TABLE Versions (
 
     PRIMARY KEY (SID),
     UNIQUE INDEX (ResourceSID, UID),
-    INDEX(ResourceSID)
+    UNIQUE INDEX (RegistrySID, SID),
+    INDEX (ResourceSID)
 );
 
 CREATE TABLE Props (
@@ -232,15 +236,16 @@ SELECT
     tR.SID as TargetSID,
     tR.Path as TargetPath
 FROM Props AS P
-JOIN Resources AS sR ON (sR.SID=P.EntitySID)
+JOIN Resources AS sR ON (sR.RegistrySID=P.RegistrySID AND sR.SID=P.EntitySID)
 JOIN ModelEntities AS sRM ON (sRM.SID=sR.ModelSID)
-JOIN Resources AS tR ON (tR.ModelSID=sR.ModelSID AND tR.Path=P.PropValue)
+JOIN Resources AS tR ON (tR.RegistrySID=P.RegistrySID AND tR.Path=P.PropValue)
 WHERE P.PropName='xref,' ;
 
 CREATE VIEW xRefVersions AS
 SELECT
     CONCAT(xR.SourceSID, '-', V.SID) AS SID,
     V.UID,
+    xR.RegistrySID AS RegistrySID,
     xR.SourceSID AS ResourceSID,
     CONCAT(xR.SourcePath, '/versions/', V.UID) AS Path,
     CONCAT(xR.SourceAbstract, ',versions') AS Abstract,
