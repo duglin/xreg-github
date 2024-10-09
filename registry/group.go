@@ -143,8 +143,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 			// Erase all attributes except id and xref
 			obj = map[string]any{
-				r.Singular + "id": id,
-				"xref":            xref,
+				rModel.Singular + "id": id,
+				"xref":                 xref,
 			}
 		}
 	}
@@ -212,7 +212,6 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			rType)
 		if err != nil {
 			err = fmt.Errorf("Error adding Resource: %s", err)
-			log.Print(err)
 			return nil, false, err
 		}
 
@@ -230,7 +229,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	}
 
 	if hasXref {
-		if IsNil(xref) {
+		if IsNil(xrefAny) {
 			delete(obj, "xref")
 			err = r.SetSave("xref", nil)
 			if err != nil {
@@ -466,7 +465,6 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 			rType)
 		if err != nil {
 			err = fmt.Errorf("Error adding Resource: %s", err)
-			log.Print(err)
 			return nil, false, err
 		}
 

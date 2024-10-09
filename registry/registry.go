@@ -290,7 +290,7 @@ func (reg *Registry) LoadModel() *Model {
 
 func (reg *Registry) LoadModelFromFile(file string) error {
 	log.VPrintf(3, ">Enter: LoadModelFromFile: %s", file)
-	defer log.VPrintf(3, "<Exit:FindGroup")
+	defer log.VPrintf(3, "<Exit:LoadModelFromFile")
 
 	var err error
 	buf := []byte{}

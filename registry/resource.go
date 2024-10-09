@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	log "github.com/duglin/dlog"
 )
@@ -42,7 +43,23 @@ func RemoveResourceAttributes(singular string, obj map[string]any) {
 func (r *Resource) Get(name string) any {
 	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
 
-	if name == r.Singular+"id" || specialResourceAttrs[name] {
+	if name == r.Singular+"id" {
+		return r.Entity.Get(name)
+	}
+
+	xrefStr, xref, err := r.GetXref()
+	Must(err)
+	if xrefStr != "" {
+		// Set but target is missing
+		if xref == nil {
+			return nil
+		}
+
+		// Got target, so call Get() on it
+		return xref.Get(name)
+	}
+
+	if specialResourceAttrs[name] {
 		return r.Entity.Get(name)
 	}
 
@@ -51,6 +68,42 @@ func (r *Resource) Get(name string) any {
 		panic(err)
 	}
 	return v.Entity.Get(name)
+}
+
+func (r *Resource) GetXref() (string, *Resource, error) {
+	tmp := r.Entity.Get("xref")
+	if IsNil(tmp) {
+		return "", nil, nil
+	}
+
+	xref := strings.TrimSpace(tmp.(string))
+	if xref == "" {
+		return "", nil, nil
+	}
+	parts := strings.Split(xref, "/")
+	if len(parts) != 4 {
+		return "", nil, fmt.Errorf("'xref' (%q) must be of the form: "+
+			"GROUPs/gID/RESOURCEs/rID", tmp.(string))
+	}
+
+	group, err := r.Registry.FindGroup(parts[0], parts[1], false)
+	if err != nil || IsNil(group) {
+		return "", nil, err
+	}
+	if IsNil(group) {
+		return "", nil, nil
+	}
+	res, err := group.FindResource(parts[2], parts[3], false)
+	if err != nil || IsNil(res) {
+		return "", nil, err
+	}
+
+	// If pointing to ourselves, don't recurse, just exit
+	if res.Path == r.Path {
+		return xref, nil, nil
+	}
+
+	return xref, res, nil
 }
 
 func (r *Resource) SetCommit(name string, val any) error {

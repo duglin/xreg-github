@@ -66,6 +66,22 @@ func GoToOurType(val any) string {
 	panic(fmt.Sprintf("Bad Kind: %v", reflect.ValueOf(val).Kind()))
 }
 
+func (e *Entity) ToString() string {
+	str := fmt.Sprintf("%s/%s\n  Object: %s\n  NewObject: %s",
+		e.Singular, e.UID, ToJSON(e.Object), ToJSON(e.NewObject))
+	return str
+}
+
+func (e *Entity) EnsureNewObject() {
+	if e.NewObject == nil {
+		if e.Object == nil {
+			e.NewObject = map[string]any{}
+		} else {
+			e.NewObject = maps.Clone(e.Object)
+		}
+	}
+}
+
 func (e *Entity) Get(path string) any {
 	pp, err := PropPathFromUI(path)
 	PanicIf(err != nil, fmt.Sprintf("%s", err))
@@ -366,6 +382,9 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 			e.NewObject = maps.Clone(e.Object)
 		}
 	}
+	// If we don't have a NewObject yet then this is our first update
+	// so clone the current values before adding the new prop/val
+	e.EnsureNewObject()
 
 	// Cheat a little just to make caller's life easier by converting
 	// empty structs and maps need to be of the type we like (meaning 'any's)
@@ -400,13 +419,13 @@ func (e *Entity) ValidateAndSave() error {
 	log.VPrintf(3, ">Enter: ValidateAndSave %s/%s", e.Abstract, e.UID)
 	defer log.VPrintf(3, "<Exit: ValidateAndSave")
 
+	// If nothing changed, then exit
+	if e.NewObject == nil {
+		return nil
+	}
+
 	// Make sure we have a tx since Validate assumes it
 	e.tx.NewTx()
-
-	// If nothing changed, just exit
-	// if e.NewObject == nil {
-	// return nil
-	// }
 
 	if log.GetVerbose() > 2 {
 		log.VPrintf(3, "Validating %s/%s e.Object:\n%s\n\ne.NewObject:\n%s",
@@ -1592,8 +1611,7 @@ func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, e
 	if IsNil(res) {
 		delete(daMap, pp.Top())
 	} else {
-		daMap[pp.Top()], err = MaterializeProp(daMap[pp.Top()], pp.Next(), val,
-			prev.Append(pp.First()))
+		daMap[pp.Top()], err = res, err
 	}
 
 	return daMap, err

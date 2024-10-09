@@ -234,7 +234,7 @@ SELECT
 FROM Props AS P
 JOIN Resources AS sR ON (sR.SID=P.EntitySID)
 JOIN ModelEntities AS sRM ON (sRM.SID=sR.ModelSID)
-JOIN Resources AS tR ON (tR.Path=P.PropValue)
+JOIN Resources AS tR ON (tR.ModelSID=sR.ModelSID AND tR.Path=P.PropValue)
 WHERE P.PropName='xref,' ;
 
 CREATE VIEW xRefVersions AS

@@ -118,3 +118,4 @@ TODOs:
 - Add content-disposition header for hasdoc resources
 - s/?resource/?attrib support
 - move epoch to be resource level
+- make sure ID only has valid chars
