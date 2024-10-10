@@ -41,15 +41,15 @@ test: .test .testimage
 unittest:
 	go test -failfast ./registry
 
-server: cmds/server.go cmds/loader.go registry/*
+server: cmds/server/* registry/*
 	@echo
 	@echo "# Building server"
-	go build $(BUILDFLAGS) -o $@ cmds/server.go cmds/loader.go
+	go build $(BUILDFLAGS) -o $@ cmds/server/*.go
 
-xr: cmds/xr*.go registry/*
+xr: cmds/xr/* registry/*
 	@echo
 	@echo "# Building CLI"
-	go build $(BUILDFLAGS) -o $@ cmds/xr*.go
+	go build $(BUILDFLAGS) -o $@ cmds/xr/*.go
 
 image: .image
 .image: server misc/Dockerfile misc/waitformysql misc/Dockerfile-all misc/start
