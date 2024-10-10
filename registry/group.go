@@ -105,41 +105,21 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	hasXref := false
 
 	if xrefAny, hasXref = obj["xref"]; hasXref {
+		if objIsVer {
+			return nil, false, fmt.Errorf("Can't create a Version with " +
+				"the 'xref' attribute")
+		}
+
 		if IsNil(xrefAny) {
-			// Do nothing
-			// delete(obj, "xref")
+			// Do nothing - leave it there so we can null it out later
 		} else {
 			xref, _ = xrefAny.(string)
-
-			if objIsVer {
-				return nil, false, fmt.Errorf("Can't create a Version with " +
-					"the 'xref' attribute")
-			}
-
 			xref = strings.TrimSpace(xref)
 			parts := strings.Split(xref, "/")
 			if len(parts) != 4 {
-				return nil, false, fmt.Errorf("'xref' must be of the form: " +
-					"GROUPs/gID/RESOURCEs/rID")
+				return nil, false, fmt.Errorf("'xref' (%s) must be of the "+
+					"form: GROUPs/gID/RESOURCEs/rID", xref)
 			}
-			/*
-				group, err := g.Registry.FindGroup(parts[0], parts[1], false)
-				if err != nil {
-					return nil, false, err
-				}
-				if IsNil(group) {
-					return nil, false, fmt.Errorf("Can't find group '%s/%s'",
-						parts[0], parts[1])
-				}
-				res, err := group.FindResource(parts[2], parts[3], false)
-				if err != nil {
-					return nil, false, err
-				}
-				if IsNil(res) {
-					return nil, false, fmt.Errorf("Can't find resource '%s/%s'",
-						parts[2], parts[3])
-				}
-			*/
 
 			// Erase all attributes except id and xref
 			obj = map[string]any{
@@ -211,8 +191,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			g.Registry.DbSID, g.Plural,
 			rType)
 		if err != nil {
-			err = fmt.Errorf("Error adding Resource: %s", err)
-			return nil, false, err
+			return nil, false, fmt.Errorf("Error adding Resource: %s", err)
 		}
 
 		// Use the ID passed as an arg, not from the metadata, as the true
@@ -229,7 +208,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	}
 
 	if hasXref {
-		if IsNil(xrefAny) {
+		if IsNil(xrefAny) || xref == "" {
 			delete(obj, "xref")
 			err = r.SetSave("xref", nil)
 			if err != nil {
@@ -241,6 +220,17 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			if err != nil {
 				return nil, false, err
 			}
+
+			vers, err := r.GetVersions()
+			if err != nil {
+				return nil, false, err
+			}
+			for _, ver := range vers {
+				if err = ver.JustDelete(); err != nil {
+					return nil, false, err
+				}
+			}
+
 			return r, isNew, nil
 		}
 	}

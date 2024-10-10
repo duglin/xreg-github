@@ -180,11 +180,13 @@ CREATE TABLE Resources (
     ModelSID        VARCHAR(64) NOT NULL,
     Path            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
     Abstract        VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
+    # xRef            VARCHAR(255),
 
     PRIMARY KEY (SID),
     UNIQUE INDEX(RegistrySID,SID),
     INDEX(GroupSID, UID),
     INDEX(Path),
+    # INDEX(xRef),
     UNIQUE INDEX (GroupSID, ModelSID, UID)
 );
 
@@ -223,23 +225,25 @@ CREATE TABLE Props (
 
     PRIMARY KEY (EntitySID, PropName),
     INDEX (EntitySID),
-    INDEX (PropName)
+    INDEX (PropName),
+    INDEX (RegistrySID, PropName)
 );
 
 CREATE VIEW xRefSrc2TgtResources AS
 SELECT
-    P.RegistrySID,
-    P.EntitySID AS SourceSID,
+    sR.RegistrySID,
+    sR.SID AS SourceSID,
     sR.Path AS SourcePath,
     sR.Abstract AS SourceAbstract,
     sRM.Singular AS Singular,
     tR.SID as TargetSID,
     tR.Path as TargetPath
-FROM Props AS P
-JOIN Resources AS sR ON (sR.RegistrySID=P.RegistrySID AND sR.SID=P.EntitySID)
+FROM Resources AS sR
 JOIN ModelEntities AS sRM ON (sRM.SID=sR.ModelSID)
-JOIN Resources AS tR ON (tR.RegistrySID=P.RegistrySID AND tR.Path=P.PropValue)
-WHERE P.PropName='xref,' ;
+JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND
+    tR.Path=(SELECT PropValue FROM Props WHERE
+             EntitySID=sR.SID AND PropName='xref,'));
+# JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND tR.Path=sR.xRef);
 
 CREATE VIEW xRefVersions AS
 SELECT
@@ -308,18 +312,16 @@ FROM Resources AS r
 JOIN ModelEntities AS m ON (m.SID=r.ModelSID)
 
 UNION SELECT                    # Add Versions (including xref'd versions)
-    rm.RegistrySID AS RegSID,
+    v.RegistrySID AS RegSID,
     3 AS Level,
     'versions' AS Plural,
     'version' AS Singular,
-    r.SID AS ParentSID,
+    v.ResourceSID AS ParentSID,
     v.SID AS eSID,
     v.UID AS UID,
     v.Abstract,
     v.Path
-FROM EffectiveVersions AS v
-JOIN Resources AS r ON (r.SID=v.ResourceSID)
-JOIN ModelEntities AS rm ON (rm.SID=r.ModelSID) ;
+FROM EffectiveVersions AS v ;
 
 # Calculate the raw Props that need to be duplicated due to xRefs.
 # This assumes other calculated props (like isDefault) will be done later
@@ -332,21 +334,23 @@ SELECT                            # Iterate over the xRef Resources
     P.PropType
 FROM xRefSrc2TgtResources AS R
 JOIN Props AS P ON (              # Grab the Target Resource's attributes
-  P.EntitySID=R.TargetSID AND
-  P.PropName<>CONCAT(R.Singular,'id,') AND           # Don't override this
-  P.PropName<>'xref,' )           # Don't override this
-UNION SELECT                      # Grab the Target Version's attributes
+    P.EntitySID=R.TargetSID AND
+    P.PropName<>CONCAT(R.Singular,'id,') AND
+    P.PropName<>'xref,'
+)
+UNION SELECT
     R.RegistrySID,
-    CONCAT(R.SourceSID, '-', P.EntitySID) AS EntitySID,
+    CONCAT(R.SourceSID, '-', P.EntitySID),
     P.PropName,
     P.PropValue,
     P.PropType
 FROM xRefSrc2TgtResources AS R
 JOIN Props AS P ON (
-  P.EntitySID IN (
-    SELECT eSID FROM Entities WHERE ParentSID=R.TargetSID
-  ) AND
-  P.PropName<>'xref,' )           # Don't override this
+    P.EntitySID IN (
+        SELECT eSID FROM Entities WHERE ParentSID=R.TargetSID
+    ) AND
+    P.PropName<>'xref,'
+)
 ;
 
 # This is the Props table + xref'd props (for Resource and Versions)

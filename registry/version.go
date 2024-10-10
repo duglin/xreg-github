@@ -27,6 +27,18 @@ func (v *Version) SetSave(name string, val any) error {
 	return v.Entity.SetSave(name, val)
 }
 
+// JustDelete will delete the Version w/o any additional logic like
+// "defaultversionid" manipulation.
+// Used when xref on the Resource is set.
+func (v *Version) JustDelete() error {
+	// Zero is ok if it's already been deleted
+	err := DoZeroOne(v.tx, `DELETE FROM Versions WHERE SID=?`, v.DbSID)
+	if err != nil {
+		return fmt.Errorf("Error deleting Version %q: %s", v.UID, err)
+	}
+	return nil
+}
+
 func (v *Version) Delete(nextVersionID string) error {
 	log.VPrintf(3, ">Enter: Version.Delete(%s, %s)", v.UID, nextVersionID)
 	defer log.VPrintf(3, "<Exit: Version.Delete")
@@ -35,13 +47,13 @@ func (v *Version) Delete(nextVersionID string) error {
 		return fmt.Errorf("Can't set defaultversionid to Version being deleted")
 	}
 
-	// Zero is ok if it's already been deleted
-	err := DoZeroOne(v.tx, `DELETE FROM Versions WHERE SID=?`, v.DbSID)
-	if err != nil {
+	// delete it!
+	if err := v.JustDelete(); err != nil {
 		return fmt.Errorf("Error deleting Version %q: %s", v.UID, err)
 	}
 
-	// On zero, we'll continue and process the nextVersionID... should we?
+	// If it was already gone we'll continue and process the nextVersionID...
+	// should we?
 
 	vIDs, err := v.Resource.GetVersionIDs()
 	if err != nil {

@@ -164,7 +164,7 @@ func ObjectGetProp(obj any, pp *PropPath) (any, bool, error) {
 // Value, Found, Error
 func NestedGetProp(obj any, pp *PropPath, prev *PropPath) (any, bool, error) {
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "ObjectGetProp: %q\nobj:\n%s", pp.UI(), ToJSON(obj))
+		log.VPrintf(0, "ObjectGetProp: %q\nobj:\n%s", pp.UI(), ToJSON(obj))
 	}
 	if pp == nil || pp.Len() == 0 {
 		return obj, true, nil
@@ -255,6 +255,30 @@ func RawEntityFromPath(tx *Tx, regID string, path string, anyCase bool) (*Entity
 	}
 
 	return readNextEntity(tx, results)
+}
+
+func (e *Entity) Query(query string, args ...any) ([][]any, error) {
+	results, err := Query(e.tx, query, args...)
+	defer results.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	data := ([][]any)(nil)
+	for row := results.NextRow(); row != nil; row = results.NextRow() {
+		if data == nil {
+			data = [][]any{}
+		}
+		// row == []*any
+		r := make([]any, len(row))
+		for i, d := range row {
+			r[i] = d
+		}
+		data = append(data, r)
+	}
+
+	return data, nil
 }
 
 func RawEntitiesFromQuery(tx *Tx, regID string, query string, args ...any) ([]*Entity, error) {
@@ -373,15 +397,6 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	// Assume no other edits are pending
 	// e.Refresh() // trying not to have this here
 
-	if e.NewObject == nil {
-		// If we don't have a NewObject yet then this is our first update
-		// so clone the current values before adding the new prop/val
-		if e.Object == nil {
-			e.NewObject = map[string]any{}
-		} else {
-			e.NewObject = maps.Clone(e.Object)
-		}
-	}
 	// If we don't have a NewObject yet then this is our first update
 	// so clone the current values before adding the new prop/val
 	e.EnsureNewObject()
@@ -406,10 +421,24 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 		e.EpochSet = true
 	}
 
+	// Since "xref" is also a Property on the Resources table we need to
+	// set it manually. We can do it lower down (closer to the DB funcs)
+	// because down there "xref" won't appear in NewObject when it's set to nil
+	/*
+		if e.Level == 2 && pp.Top() == "xref" {
+			// Handles both val=nil and non-nil cases
+			err := DoOneTwo(e.tx, `UPDATE Resources SET xRef=? WHERE SID=?`,
+				val, e.DbSID)
+			if err != nil {
+				return err
+			}
+		}
+	*/
+
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "Abstract/ID: %s/%s", e.Abstract, e.UID)
-		log.VPrintf(3, "e.Object:\n%s", ToJSON(e.Object))
-		log.VPrintf(3, "e.NewObject:\n%s", ToJSON(e.NewObject))
+		log.VPrintf(0, "Abstract/ID: %s/%s", e.Abstract, e.UID)
+		log.VPrintf(0, "e.Object:\n%s", ToJSON(e.Object))
+		log.VPrintf(0, "e.NewObject:\n%s", ToJSON(e.NewObject))
 	}
 
 	return ObjectSetProp(e.NewObject, pp, val)
@@ -428,7 +457,7 @@ func (e *Entity) ValidateAndSave() error {
 	e.tx.NewTx()
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "Validating %s/%s e.Object:\n%s\n\ne.NewObject:\n%s",
+		log.VPrintf(0, "Validating %s/%s e.Object:\n%s\n\ne.NewObject:\n%s",
 			e.Abstract, e.UID, ToJSON(e.Object), ToJSON(e.NewObject))
 	}
 
@@ -450,7 +479,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 	defer log.VPrintf(3, "<Exit SetPP")
 	defer func() {
 		if log.GetVerbose() > 2 {
-			log.VPrintf(3, "SetPP exit: e.Object:\n%s", ToJSON(e.Object))
+			log.VPrintf(0, "SetPP exit: e.Object:\n%s", ToJSON(e.Object))
 		}
 	}()
 
@@ -527,7 +556,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	}
 
 	if IsNil(val) {
-		// Should never use this but keeping it just in case
+		// Should never need this but keeping it just in case
 		err = Do(e.tx, `DELETE FROM Props WHERE EntitySID=? and PropName=?`,
 			e.DbSID, name)
 	} else {
@@ -1227,9 +1256,9 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	attrs := e.GetAttributes(e.Object)
 
 	if log.GetVerbose() > 3 {
-		log.VPrintf(4, "SerProps.Entity: %s", ToJSON(e))
-		log.VPrintf(4, "SerProps.Obj: %s", ToJSON(e.Object))
-		log.VPrintf(4, "SerProps daObj: %s", ToJSON(daObj))
+		log.VPrintf(0, "SerProps.Entity: %s", ToJSON(e))
+		log.VPrintf(0, "SerProps.Obj: %s", ToJSON(e.Object))
+		log.VPrintf(0, "SerProps daObj: %s", ToJSON(daObj))
 	}
 
 	// Do spec defined props first, in order
@@ -1337,7 +1366,7 @@ func (e *Entity) Save() error {
 	}
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID,
+		log.VPrintf(0, "Saving - %s (id:%s):\n%s\n", e.Abstract, e.UID,
 			ToJSON(e.NewObject))
 	}
 
@@ -1633,8 +1662,8 @@ func (e *Entity) Validate() error {
 	attrs := e.GetAttributes(e.NewObject)
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "========")
-		log.VPrintf(3, "Validating:\n%s", ToJSON(e.NewObject))
+		log.VPrintf(0, "========")
+		log.VPrintf(0, "Validating:\n%s", ToJSON(e.NewObject))
 	}
 	return e.ValidateObject(e.NewObject, attrs, NewPP())
 }
@@ -1647,8 +1676,8 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 	defer log.VPrintf(3, "<Exit: ValidateObject")
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "Check Obj:\n%s", ToJSON(val))
-		log.VPrintf(3, "OrigAttrs:\n%s", ToJSON(SortedKeys(origAttrs)))
+		log.VPrintf(0, "Check Obj:\n%s", ToJSON(val))
+		log.VPrintf(0, "OrigAttrs:\n%s", ToJSON(SortedKeys(origAttrs)))
 	}
 
 	valValue := reflect.ValueOf(val)
@@ -1844,8 +1873,8 @@ func (e *Entity) ValidateAttribute(val any, attr *Attribute, path *PropPath) err
 	defer log.VPrintf(3, "<Exit: ValidateAttribute")
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, " val: %v", ToJSON(val))
-		log.VPrintf(3, " attr: %v", ToJSON(attr))
+		log.VPrintf(0, " val: %v", ToJSON(val))
+		log.VPrintf(0, " attr: %v", ToJSON(attr))
 	}
 
 	if attr.Type == ANY {
@@ -1879,8 +1908,8 @@ func (e *Entity) ValidateMap(val any, item *Item, path *PropPath) error {
 	defer log.VPrintf(3, "<Exit: ValidateMap")
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, " item: %v", ToJSON(item))
-		log.VPrintf(3, " val: %v", ToJSON(val))
+		log.VPrintf(0, " item: %v", ToJSON(item))
+		log.VPrintf(0, " val: %v", ToJSON(val))
 	}
 
 	if IsNil(val) {
@@ -1918,8 +1947,8 @@ func (e *Entity) ValidateArray(val any, item *Item, path *PropPath) error {
 	defer log.VPrintf(3, "<Exit: ValidateArray")
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, "item: %s", ToJSON(item))
-		log.VPrintf(3, "val: %s", ToJSON(val))
+		log.VPrintf(0, "item: %s", ToJSON(item))
+		log.VPrintf(0, "val: %s", ToJSON(val))
 	}
 
 	if IsNil(val) {
@@ -1950,7 +1979,7 @@ func (e *Entity) ValidateArray(val any, item *Item, path *PropPath) error {
 
 func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error {
 	if log.GetVerbose() > 2 {
-		log.VPrintf(3, ">Enter: ValidateScalar(%s:%s)", path.UI(), ToJSON(val))
+		log.VPrintf(0, ">Enter: ValidateScalar(%s:%s)", path.UI(), ToJSON(val))
 		defer log.VPrintf(3, "<Exit: ValidateScalar")
 	}
 

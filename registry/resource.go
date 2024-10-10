@@ -82,7 +82,7 @@ func (r *Resource) GetXref() (string, *Resource, error) {
 	}
 	parts := strings.Split(xref, "/")
 	if len(parts) != 4 {
-		return "", nil, fmt.Errorf("'xref' (%q) must be of the form: "+
+		return "", nil, fmt.Errorf("'xref' (%s) must be of the form: "+
 			"GROUPs/gID/RESOURCEs/rID", tmp.(string))
 	}
 
