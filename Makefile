@@ -17,7 +17,7 @@ TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 export XR_MODEL_PATH=.:./spec:$(XR_SPEC)
 
 cmds: .cmds
-.cmds: server xr
+.cmds: server xr xrconform
 	@touch .cmds
 
 qtest: .test
@@ -48,8 +48,13 @@ server: cmds/server/* registry/*
 
 xr: cmds/xr/* registry/*
 	@echo
-	@echo "# Building CLI"
+	@echo "# Building xr (cli)"
 	go build $(BUILDFLAGS) -o $@ cmds/xr/*.go
+
+xrconform: cmds/xrconform/* registry/*
+	@echo
+	@echo "# Building xrconform (compliance checker)"
+	go build $(BUILDFLAGS) -o $@ cmds/xrconform/*.go
 
 image: .image
 .image: server misc/Dockerfile misc/waitformysql misc/Dockerfile-all misc/start

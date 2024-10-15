@@ -1,6 +1,11 @@
 .github
-server
-xr
+
+# Generated exes
+/server
+/xr
+/xrconform
+
+# Makefile fake targets
 .cmds
 .test
 .image
@@ -8,5 +13,6 @@ xr
 .spec
 .push
 
+# Junk
 hostit
 old
