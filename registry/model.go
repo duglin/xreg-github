@@ -119,6 +119,7 @@ type ResourceModel struct {
 	ReadOnly         bool              `json:"readonly,omitempty"`
 	TypeMap          map[string]string `json:"typemap,omitempty"`
 	Attributes       Attributes        `json:"attributes,omitempty"`
+	MetaAttributes   Attributes        `json:"metaattributes,omitempty"`
 }
 
 // To be picky, let's Marshal the list of attributes with Spec defined ones
