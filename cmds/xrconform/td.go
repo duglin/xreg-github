@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/duglin/xreg-github/registry"
 )
 
 var PASS = 1
@@ -18,7 +20,7 @@ var MSG = 6 // Like LOG but will always be printed
 
 var StatusText = []string{"", "PASS", "FAIL", "WARN", "SKIP", "LOG", "MSG"}
 
-var FailFast = true
+var FailFast = false
 var IgnoreWarn = true
 var TestsRun = map[string]*TD{}
 
@@ -83,6 +85,8 @@ func NewTD(name string, parent ...*TD) *TD {
 		}
 		p.Logs = append(p.Logs, newLE)
 		p.AddStatus(PASS)
+
+		newTD.Props = p.Props
 	}
 
 	return newTD
@@ -158,11 +162,11 @@ func (td *TD) writeBody(out io.Writer, indent string, showLogs bool) {
 		}
 
 		if le.Type > 0 && le.Type < LOG {
-			str = PrettyPrint(indent, StatusText[le.Type]+": ", le.Text) + "\n"
+			str = PrettyPrint(indent, StatusText[le.Type]+": ", le.Text)
 		} else if le.Subtest == nil { // log or msg
 			// Show logs it's a MSG, they asked for all logs, or TD=FAIL
 			if le.Type == MSG || showLogs || td.Status == FAIL {
-				str = PrettyPrint(indent, "", le.Text) + "\n"
+				str = PrettyPrint(indent, "", le.Text)
 			}
 		} else { // subtest
 			if i == lastLog {
@@ -249,6 +253,9 @@ func (td *TD) Report(status int, args ...any) {
 		})
 	}
 	td.AddStatus(status)
+	if FailFast && status == FAIL {
+		td.Stop()
+	}
 }
 
 func (td *TD) Pass(args ...any)    { td.Report(PASS, args...) }
@@ -265,7 +272,7 @@ func (td *TD) DependsOn(fn TestFn) {
 		if prevTD.Status == FAIL {
 			td.FailNow("Dependency %q (cached), exiting", fn.Name())
 		} else {
-			td.Pass("Dependency %q (cached)", fn.Name())
+			td.Log("Dependency %q passed (cached)", fn.Name())
 		}
 	} else {
 		newTD := td.Run(fn)
@@ -307,35 +314,177 @@ func (td *TD) Run(fn TestFn) *TD {
 	return newTD
 }
 
+func (td *TD) Must(expr bool, args ...any) {
+	if !expr {
+		td.Fail(args...)
+	}
+	td.Pass(args...)
+}
+
+func (td *TD) MustEqual(exp any, got any, args ...any) {
+	if !reflect.DeepEqual(exp, got) {
+		td.Log("Exp(%T): %s", exp, ToJSON(exp))
+		td.Log("Got(%T): %s", got, ToJSON(got))
+		td.Fail(args...)
+	}
+	td.Pass(args...)
+}
+
+func (td *TD) GetProp(obj map[string]any, prop string) (any, bool, error) {
+	pp, err := registry.PropPathFromUI(prop)
+	if err != nil {
+		td.FailNow("Error in test prep: %s(%s)", prop, err)
+	}
+	return registry.ObjectGetProp(obj, pp)
+}
+
+func (td *TD) NoError(err error, args ...any) {
+	if err == nil {
+		return
+	}
+	td.Fail(args...)
+}
+
+func (td *TD) PropMustEqual(obj map[string]any, prop string, exp any) {
+	pp, err := registry.PropPathFromUI(prop)
+	if err != nil {
+		td.FailNow("Error in test prep: %s(%s)", prop, err)
+	}
+	res, _, err := registry.ObjectGetProp(obj, pp)
+	td.NoError(err, "Error getting prop(%s): %s", pp.UI(), err)
+	daInt, err := registry.AnyToUInt(res)
+	if err == nil {
+		res = daInt
+	}
+	if !reflect.DeepEqual(exp, res) {
+		td.Log("Exp(%T): %s", exp, ToJSON(exp))
+		td.Log("Got(%T): %s", res, ToJSON(res))
+		td.Fail("Wrong value for attribute %q", prop)
+	}
+	td.Pass("%q = %q", prop, exp)
+}
+
+func (td *TD) PropMustNotEqual(obj map[string]any, prop string, exp any) {
+	pp, err := registry.PropPathFromUI(prop)
+	if err != nil {
+		td.FailNow("Error in test prep: %s(%s)", prop, err)
+	}
+	res, _, err := registry.ObjectGetProp(obj, pp)
+	td.NoError(err, "Error getting prop(%s): %s", pp.UI(), err)
+	if registry.IsNil(res) {
+		td.Fail("Attribute %q must not be null", prop)
+		return
+	}
+	if reflect.DeepEqual(exp, res) {
+		td.Log("Exp(%T): %s", exp, ToJSON(exp))
+		td.Log("Got(%T): %s", res, ToJSON(res))
+		td.Fail("Wrong value for attribute %q", prop)
+	}
+	td.Pass("%q != %q", prop, exp)
+}
+
+func (td *TD) PropMustExist(obj map[string]any, prop string) {
+	pp, err := registry.PropPathFromUI(prop)
+	if err != nil {
+		td.FailNow("Error in test prep: %s(%s)", prop, err)
+	}
+	res, _, err := registry.ObjectGetProp(obj, pp)
+	td.NoError(err, "Error getting prop(%s): %s", pp.UI(), err)
+	if registry.IsNil(res) {
+		td.Fail("Attribute %q must not be null", prop)
+	}
+	td.Pass("%q must exist", prop)
+}
+
+func (td *TD) PropMustNotExist(obj map[string]any, prop string) {
+	pp, err := registry.PropPathFromUI(prop)
+	if err != nil {
+		td.FailNow("Error in test prep: %s(%s)", prop, err)
+	}
+	res, _, err := registry.ObjectGetProp(obj, pp)
+	td.NoError(err, "Error getting prop(%s): %s", pp.UI(), err)
+	if !registry.IsNil(res) {
+		td.Fail("Attribute %q must be null", prop)
+	}
+	td.Pass("%q must not exist", prop)
+}
+
+func (td *TD) Should(expr bool, args ...any) {
+	if !expr {
+		td.Warn(args...)
+	}
+	td.Pass(args...)
+}
+
+func (td *TD) ShouldEqual(exp any, got any, args ...any) {
+	if !reflect.DeepEqual(exp, got) {
+		td.Log("Exp: %s", ToJSON(exp))
+		td.Log("Got: %s", ToJSON(got))
+		td.Warn(args...)
+	}
+	td.Pass(args...)
+}
+
 func PrettyPrint(indent string, prefix string, text string) string {
-	width := 79
-	line := strings.TrimRight(indent+prefix+text, " ")
+	rIndent := []rune(indent)                     // rune-Indent
+	rPrefix := []rune(prefix)                     // rune-Prefix
+	rRest := []rune(strings.TrimRight(text, " ")) // rune-Rest-of-text
 
-	indent = indent + strings.Repeat(" ", len(prefix))
+	cIndent := append([]rune{}, rIndent...) // clean-Indent
+	cIndent = append(cIndent, []rune(strings.Repeat(" ", len(rPrefix)))...)
+	width := 79 - len(cIndent)
 
-	str := ""
+	// Just for first line, then use cIndent
+	rIndent = append(rIndent, rPrefix...)
 
-	for len(line) > width {
-		left := ""
-		chopAt := width // do not use width-1
-		for i := chopAt; i+1 > len(indent); i-- {
-			runeIt := ([]rune)(line)
-			if runeIt[i] == ' ' {
-				left = string(runeIt[:i])
-				line = strings.TrimLeft(string(runeIt[i+1:]), " ")
+	str := []rune{}
+	first := true
+
+	for len(rRest) > 0 || first {
+		first = false
+		chopAt := 0
+		lastSpace := -1
+		skip := false
+
+		for ; chopAt < len(rRest); chopAt++ {
+			if rRest[chopAt] == '\n' {
+				str = append(str, rIndent...)
+				tmp := strings.TrimRight(string(rRest[:chopAt]), " ") + "\n"
+				str = append(str, []rune(tmp)...)
+				rRest = rRest[chopAt+1:]
+				if len(rRest) == 0 {
+					// Make sure we go thru it one more time to add blank line
+					first = true
+				}
+				skip = true
+				break
+			}
+			if rRest[chopAt] == ' ' {
+				lastSpace = chopAt
+			}
+
+			// Normally we'd check this before the \n and ' ' but if the next
+			// char (the one we want to skip on at the end of the line) is a
+			// space then go ahead and break on that instead
+			if chopAt+1 > width {
 				break
 			}
 		}
-
-		if strings.Contains(indent, "└") {
-			indent = strings.ReplaceAll(indent, "└─", "  ")
-		} else {
-			indent = strings.ReplaceAll(indent, "├─", "│ ")
+		if !skip {
+			if chopAt+1 > width && lastSpace >= 0 {
+				chopAt = lastSpace
+			}
+			str = append(str, rIndent...)
+			tmp := strings.TrimRight(string(rRest[:chopAt]), " ")
+			str = append(str, []rune(tmp)...)
+			str = append(str, rune('\n'))
+			rRest = []rune(strings.TrimLeft(string(rRest[chopAt:]), " "))
 		}
+		rIndent = cIndent
 
-		line = indent + line
-		str += left + "\n"
+		tmp := strings.ReplaceAll(string(rIndent), "└─", "  ")
+		rIndent = []rune(strings.ReplaceAll(tmp, "├─", "│ "))
 	}
-	str += line
-	return str
+
+	return string(str)
 }

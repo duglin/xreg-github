@@ -1577,7 +1577,7 @@ func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
 	}
 	PanicIf(pp.Len() == 0, "Can't be zero w/non-nil val")
 
-	_, err := MaterializeProp(obj, pp, val, NewPP())
+	_, err := MaterializeProp(obj, pp, val, nil)
 	return err
 }
 
@@ -1592,6 +1592,10 @@ func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, e
 
 	var ok bool
 	var err error
+
+	if prev == nil {
+		prev = NewPP()
+	}
 
 	part := pp.Parts[0]
 	if index := part.Index; index >= 0 {

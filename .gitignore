@@ -8,6 +8,7 @@
 # Makefile fake targets
 /.cmds
 /.test
+/.utest
 /.image
 /.testimage
 /.spec

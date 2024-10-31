@@ -1,5 +1,7 @@
 all: mysql cmds test image run
 
+MAKEFLAGS  += --no-print-directory
+
 # Notes:
 # export VERBOSE=[0-9]
 # Override these env vars as needed:
@@ -13,6 +15,7 @@ GIT_COMMIT ?= $(shell git rev-list -1 HEAD)
 BUILDFLAGS := -ldflags -X=main.GitCommit=$(GIT_COMMIT)
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
+UTESTDIRS := $(shell find . -path ./tests -prune -o -name *_test.go -exec dirname {} \; | sort -u)
 
 export XR_MODEL_PATH=.:./spec:$(XR_SPEC)
 
@@ -22,10 +25,22 @@ cmds: .cmds
 
 qtest: .test
 
+utest: .utest
+.utest: export TESTING=1
+.utest: .cmds */*test.go
+	@make mysql waitformysql
+	@echo
+	@echo "# Unit Testing"
+	@go clean -testcache
+	@echo "go test -failfast $(UTESTDIRS)"
+	@for s in $(UTESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
+	@echo
+	@touch .utest
+
 test: .test .testimage
 .test: export TESTING=1
 .test: .cmds */*test.go
-	@make --no-print-directory mysql waitformysql
+	@make mysql waitformysql
 	@echo
 	@echo "# Testing"
 	@go clean -testcache
@@ -79,7 +94,7 @@ testimage: .testimage
 .testimage: .image
 	@echo
 	@echo "# Verifying the images"
-	@make --no-print-directory mysql waitformysql
+	@make mysql waitformysql
 	@misc/errOutput docker run -ti --network host \
 		$(IMAGE) --recreate --verify
 	@misc/errOutput docker run -ti --network host \
@@ -108,7 +123,7 @@ docker-all: image
 
 large:
 	# Run the server with a ton of data
-	@XR_LOAD_LARGE=1 make --no-print-directory run
+	@XR_LOAD_LARGE=1 make run
 
 docker: mysql image waitformysql
 	@echo

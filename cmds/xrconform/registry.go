@@ -1,7 +1,45 @@
 package main
 
-func TestAll(td *TD) {
-	td.DependsOn(TestXRegistry)
+import (
+	"errors"
+
+	"github.com/duglin/xreg-github/registry"
+)
+
+func TestRoot(td *TD) {
+	td.DependsOn(TestLoadModel)
+	xr := td.Props["xr"].(*XRegistry)
+
+	res := xr.Get("/")
+	if res.Error != nil || res.StatusCode != 200 {
+		td.Fail("'GET /' MUST return 200, not %d(%s)", res.StatusCode,
+			errors.Unwrap(res.Error))
+	}
+
+	td.Must(len(res.Body) > 0, "'GET /' MUST return a non-empty body")
+
+	if res.JSON == nil {
+		tmp := " <empty>"
+		if len(res.Body) > 0 {
+			tmp = "\n" + string(res.Body)
+		}
+		td.Fail("'GET /' MUST return a JSON body, not:%s", tmp)
+	}
+	td.Log("GET / returned 200 + JSON body")
+
+	td.PropMustEqual(res.JSON, "specversion", "0.5")
+	td.PropMustNotEqual(res.JSON, "registryid", "")
+	td.PropMustNotEqual(res.JSON, "self", "")
+	td.PropMustNotEqual(res.JSON, "epoch", "")
+	val, _, _ := td.GetProp(res.JSON, "epoch")
+	prop, err := registry.AnyToUInt(val)
+	td.Log("\"epoch\": (%T) %s", prop, ToJSON(prop))
+	td.NoError(err, "Attribute %q %s(%v)", "epoch", err, val)
+	td.Must(prop >= 0, "\"epoch\" must be >= 0")
+}
+
+func TestAll2(td *TD) {
+	td.DependsOn(TestSniffTest)
 	td.Run(TestRegistry1)
 	td.DependsOn(TestRegistry1a)
 	td.DependsOn(TestRegistry2)
@@ -15,7 +53,7 @@ func TestAll(td *TD) {
 }
 
 func TestRegistry0(td *TD) {
-	td.DependsOn(TestServer)
+	td.DependsOn(TestSniffTest)
 	td.Log("testreg0 log msg")
 }
 

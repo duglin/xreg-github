@@ -117,5 +117,12 @@ TODOs:
 - error w/o ?nested + children
 - Add content-disposition header for hasdoc resources
 - s/?resource/?attrib support
-- move epoch to be resource level
 - make sure ID only has valid chars
+- inline=model, requires ?nested. Make sure /meta requires ?nested too
+- meta sub-object
+- $meta -> $structure
+- remove "location" model attribute
+- remove ?resource ?attrib
+- add "compatibility" to resources
+- multi-delete must ignore all attributes except id and epoch
+

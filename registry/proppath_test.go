@@ -98,3 +98,94 @@ func TestAbstract(t *testing.T) {
 		}
 	}
 }
+
+/*
+func TestObjectSetProp(t *testing.T) {
+	type Test struct {
+		In    map[string]any
+		Prop  string
+		Value any
+		Exp   map[string]any
+	}
+
+	tests := []Test{
+		{
+			In:    map[string]any{},
+			Prop:  "foo",
+			Value: "bar",
+			Exp:   map[string]any{"foo": "bar"},
+		},
+		{
+			In:    map[string]any{},
+			Prop:  "foo",
+			Value: 5,
+			Exp:   map[string]any{"foo": 5},
+		},
+		{
+			In:    map[string]any{},
+			Prop:  "foo",
+			Value: map[string]any{"bar": "car"},
+			Exp:   map[string]any{"foo": map[string]any{"bar": "car"}},
+		},
+		{
+			In:    nil,
+			Prop:  "foo.bar",
+			Value: "rat",
+			Exp:   map[string]any{"foo": map[string]any{"bar": "rat"}},
+		},
+		{
+			In:    nil,
+			Prop:  "foo.bar",
+			Value: nil,
+			Exp:   map[string]any{"foo": map[string]any{}},
+		},
+		{
+			In:    map[string]any{},
+			Prop:  "foo[0]",
+			Value: "bar",
+			Exp:   map[string]any{"foo": []any{"bar"}},
+		},
+		{
+			In:    map[string]any{},
+			Prop:  "foo[1]",
+			Value: "bar",
+			Exp:   map[string]any{"foo": []any{nil, "bar"}},
+		},
+		{
+			In:    map[string]any{"foo": []any{nil, "bar"}},
+			Prop:  "foo[1]",
+			Value: map[string]any{"bar": "foo"},
+			Exp:   map[string]any{"foo": []any{nil, map[string]any{"bar": "foo"}}},
+		},
+		{
+			In:    nil,
+			Prop:  "foo[1].bar",
+			Value: 5,
+			Exp:   map[string]any{"foo": []any{nil, map[string]any{"bar": 5}}},
+		},
+		{
+			In:    map[string]any{},
+			Prop:  "foo[1].bar",
+			Value: 5,
+			Exp:   map[string]any{"foo": []any{nil, map[string]any{"bar": 5}}},
+		},
+	}
+
+	in := map[string]any{}
+	for i, test := range tests {
+		if test.In != nil {
+			// Don't use result from previous test
+			in = test.In
+		}
+		pp, _ := PropPathFromUI(test.Prop)
+		err := ObjectSetProp(in, pp, test.Value)
+		if err != nil {
+			t.Fatalf("Test(%d): %s - Err: %s", i, test.Prop, err)
+		}
+		if !reflect.DeepEqual(test.Exp, in) {
+			t.Fatalf("Test(%d): %s\nExp: %s\nGot: %s",
+				i, test.Prop, ToJSON(test.Exp), ToJSON(in))
+		}
+	}
+}
+*/
