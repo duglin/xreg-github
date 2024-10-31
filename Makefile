@@ -132,7 +132,7 @@ docker: mysql image waitformysql
 
 mysql:
 	@docker container inspect mysql > /dev/null 2>&1 || \
-	(echo "# Starting mysql" && \
+	(echo && echo "# Starting mysql" && \
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD="$(DBPASSWORD)" \
 		-p $(DBPORT):$(DBPORT) --name mysql mysql > /dev/null )
 		@ # -e MYSQL_USER=$(DBUSER) \
