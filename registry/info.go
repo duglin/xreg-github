@@ -29,8 +29,7 @@ type RequestInfo struct {
 	HasNested        bool
 	Inlines          []string        // TODO store a PropPaths instead
 	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
-	ShowModel        bool
-	ShowMeta         bool //	was $meta present
+	ShowMeta         bool            //	was $meta present
 
 	StatusCode int
 	SentStatus bool
@@ -43,9 +42,22 @@ func (info *RequestInfo) AddInline(path string) error {
 	// use "*" to inline all
 	// path = strings.TrimLeft(path, "/.") // To be nice
 
+	if path == "*" {
+		info.Inlines = append(info.Inlines, "*")
+		return nil
+	}
+
 	pp, err := PropPathFromUI(path)
 	if err != nil {
 		return err
+	}
+
+	// Check to make sure the requested inline attribute exists, else error
+
+	// Allow .model
+	if pp.Equals(NewPPP("model")) {
+		info.Inlines = append(info.Inlines, NewPPP("model").DB())
+		return nil
 	}
 
 	for _, group := range info.Registry.Model.Groups {
@@ -56,6 +68,7 @@ func (info *RequestInfo) AddInline(path string) error {
 		for _, res := range group.Resources {
 			if pp.Equals(NewPPP(group.Plural).P(res.Plural)) ||
 				pp.Equals(NewPPP(group.Plural).P(res.Plural).P(res.Singular)) ||
+				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("meta")) ||
 				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("versions")) ||
 				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("versions").P(res.Singular)) {
 
@@ -92,7 +105,9 @@ func (info *RequestInfo) ShouldInline(entityPath string) bool {
 	ePP, _ := PropPathFromDB(entityPath) // entity-PP
 	for _, path := range info.Inlines {
 		iPP, _ := PropPathFromDB(path) // Inline-PP
-		if iPP.Top() == "*" || ePP.Equals(iPP) || iPP.HasPrefix(ePP) {
+		// * doesn't include "model" because it's special, they need to
+		// be explicit if they want to include it
+		if (iPP.Top() == "*" && ePP.Top() != "model") || ePP.Equals(iPP) || iPP.HasPrefix(ePP) {
 			log.VPrintf(4, "Inline match: %q in %q", entityPath, path)
 			return true
 		}
@@ -124,7 +139,6 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		OriginalResponse: w,
 		Registry:         GetDefaultReg(tx),
 		BaseURL:          "http://" + r.Host,
-		ShowModel:        r.URL.Query().Has("model"),
 
 		extras: map[string]any{},
 	}
@@ -158,13 +172,10 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 	if r.URL.Query().Has("inline") {
 		// Only pick up inlining values if we're doing a GET, not write ops
 		if strings.EqualFold(r.Method, "GET") {
-			stopInline := false
 			for _, value := range r.URL.Query()["inline"] {
 				for _, p := range strings.Split(value, ",") {
 					if p == "" || p == "*" {
-						info.Inlines = []string{"*"}
-						stopInline = true
-						break
+						p = "*"
 					} else {
 						// if we're not at the root then we need to twiddle
 						// the inline path to add the HTTP Path as a prefix
@@ -182,14 +193,11 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 							}
 							p = absPP.Append(pPP).UI()
 						}
-						if err := info.AddInline(p); err != nil {
-							info.StatusCode = http.StatusBadRequest
-							return info, err
-						}
 					}
-				}
-				if stopInline {
-					break
+					if err := info.AddInline(p); err != nil {
+						info.StatusCode = http.StatusBadRequest
+						return info, err
+					}
 				}
 			}
 		}

@@ -95,9 +95,9 @@ testimage: .testimage
 	@echo
 	@echo "# Verifying the images"
 	@make mysql waitformysql
-	@misc/errOutput docker run -ti --network host \
+	@misc/errOutput docker run --network host \
 		$(IMAGE) --recreate --verify
-	@misc/errOutput docker run -ti --network host \
+	@misc/errOutput docker run --network host \
 		-e DBHOST=$(DBHOST) -e DBPORT=$(DBPORT) -e DBUSER=$(DBUSER) \
 		$(IMAGE) --recreate --verify
 	@touch .testimage
@@ -134,11 +134,11 @@ mysql:
 	@docker container inspect mysql > /dev/null 2>&1 || \
 	(echo && echo "# Starting mysql" && \
 	docker run -d --rm -ti -e MYSQL_ROOT_PASSWORD="$(DBPASSWORD)" \
-		-p $(DBPORT):$(DBPORT) --name mysql mysql > /dev/null )
+	    --network host --name mysql mysql --port $(DBPORT) > /dev/null )
 		@ # -e MYSQL_USER=$(DBUSER) \
 
 waitformysql:
-	@while ! docker run -ti --network host mysql mysqladmin \
+	@while ! docker run --network host mysql mysqladmin \
 		-h $(DBHOST) -P $(DBPORT) -s ping ;\
 	do \
 		echo "Waiting for mysql" ; \

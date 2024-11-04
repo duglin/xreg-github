@@ -1219,7 +1219,9 @@ var OrderedSpecProps = []*Attribute{
 			levels:    "0",
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
-				if info != nil && info.ShowModel {
+				// They need to explicitly ask for "model", ?inline=* won't
+				// do it
+				if info != nil && info.ShouldInline(NewPPP("model").DB()) {
 					model := info.Registry.Model
 					if model == nil {
 						model = &Model{}

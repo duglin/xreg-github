@@ -1,0 +1,26 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+
+env:
+  IMAGE: ghcr.io/duglin/xreg-github/xreg-server
+
+jobs:
+  build_test_push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: ghcr.io login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: build, test, push
+        run: make mysql test push
+

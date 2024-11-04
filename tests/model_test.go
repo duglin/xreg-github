@@ -72,7 +72,7 @@ func TestNoModel(t *testing.T) {
   }
 }
 `)
-	xCheckGet(t, reg, "?model", `{
+	xCheckGet(t, reg, "?inline=model", `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestNoModel",
   "self": "http://localhost:8181/",
@@ -2487,7 +2487,7 @@ func TestResourceModelCreate(t *testing.T) {
 	xNoErr(t, err)
 	g.AddResource("files", "f1", "v1")
 
-	xCheckGet(t, reg, "?model&inline=dirs.files", `{
+	xCheckGet(t, reg, "?inline=model,dirs.files", `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
@@ -2771,7 +2771,7 @@ func TestResourceModelCreate(t *testing.T) {
 	}
 
 	reg.Model.ApplyNewModel(newModel)
-	xCheckGet(t, reg, "?model&inline=dirs", `{
+	xCheckGet(t, reg, "?inline=model&inline=dirs", `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
@@ -3026,7 +3026,7 @@ func TestResourceModelCreate(t *testing.T) {
 	}
 
 	reg.Model.ApplyNewModel(newModel)
-	xCheckGet(t, reg, "?model&inline=dirs", `{
+	xCheckGet(t, reg, "?inline=model&inline=dirs", `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
@@ -3175,7 +3175,7 @@ func TestResourceModelCreate(t *testing.T) {
 		},
 	}
 	reg.Model.ApplyNewModel(newModel)
-	xCheckGet(t, reg, "?model&inline=", `{
+	xCheckGet(t, reg, "?inline=model&inline=", `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
@@ -3953,7 +3953,7 @@ func TestMultModel2Create(t *testing.T) {
 	//             v1.1
 	// /dirs2/f2/f2/v1
 
-	xCheckGet(t, reg, "?model&inline", `{
+	xCheckGet(t, reg, "?inline=model&inline", `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestMultModel2Create",
   "self": "http://localhost:8181/",

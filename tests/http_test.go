@@ -207,8 +207,8 @@ func TestHTTPModel(t *testing.T) {
 
 	// Check as part of Reg request
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "?model",
-		URL:        "?model",
+		Name:       "?inline=model",
+		URL:        "?inline=model",
 		Method:     "GET",
 		ReqHeaders: []string{},
 		ReqBody:    "",

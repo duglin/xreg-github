@@ -1,10 +1,19 @@
+[![CI](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml/badge.svg)](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml)
+
 # xreg-github
 
 Implementation of the xRegistry spec.
 
 Still a long way to go.
 
-To run it:
+To run the official image:
+```
+# You need to have Docker installed
+
+docker run -ti -p 8080:8080 ghcr.io/duglin/xreg-github/xreg-server-all
+```
+
+To build and run it locally:
 ```
 # You need to have Docker installed
 
@@ -125,4 +134,4 @@ TODOs:
 - remove ?resource ?attrib
 - add "compatibility" to resources
 - multi-delete must ignore all attributes except id and epoch
-
+- fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
