@@ -29,7 +29,7 @@ type RequestInfo struct {
 	HasNested        bool
 	Inlines          []string        // TODO store a PropPaths instead
 	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
-	ShowMeta         bool            //	was $meta present
+	ShowStructure    bool            //	was $structure present
 
 	StatusCode int
 	SentStatus bool
@@ -311,9 +311,9 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /GROUPs
-	if strings.HasSuffix(info.Parts[0], "$meta") {
+	if strings.HasSuffix(info.Parts[0], "$structure") {
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("$meta isn't allowed on %q", "/"+info.Parts[0])
+		return fmt.Errorf("$structure isn't allowed on %q", "/"+info.Parts[0])
 	}
 
 	gModel := (*GroupModel)(nil)
@@ -335,9 +335,9 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /GROUPs/gID
-	if strings.HasSuffix(info.Parts[1], "$meta") {
+	if strings.HasSuffix(info.Parts[1], "$structure") {
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("$meta isn't allowed on %q",
+		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:2], "/"))
 	}
 
@@ -350,9 +350,9 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /GROUPs/gID/RESOURCEs
-	if strings.HasSuffix(info.Parts[2], "$meta") {
+	if strings.HasSuffix(info.Parts[2], "$structure") {
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("$meta isn't allowed on %q",
+		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:3], "/"))
 	}
 
@@ -380,8 +380,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	// GROUPs/gID/RESOURCEs/rID
 	if len(info.Parts) == 4 {
-		info.ResourceUID, info.ShowMeta =
-			strings.CutSuffix(info.ResourceUID, "$meta")
+		info.ResourceUID, info.ShowStructure =
+			strings.CutSuffix(info.ResourceUID, "$structure")
 
 		if info.ResourceUID == "" {
 			info.StatusCode = http.StatusBadRequest
@@ -394,15 +394,15 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// GROUPs/gID/RESOURCEs/rID/???
-	if strings.HasSuffix(info.ResourceUID, "$meta") {
+	if strings.HasSuffix(info.ResourceUID, "$structure") {
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("$meta isn't allowed on %q",
+		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:4], "/"))
 	}
 
-	if strings.HasSuffix(info.Parts[4], "$meta") {
+	if strings.HasSuffix(info.Parts[4], "$structure") {
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("$meta isn't allowed on %q",
+		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:5], "/"))
 	}
 
@@ -424,8 +424,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 	info.Root += "/" + info.Parts[5]
 
 	if len(info.Parts) == 6 {
-		info.VersionUID, info.ShowMeta =
-			strings.CutSuffix(info.VersionUID, "$meta")
+		info.VersionUID, info.ShowStructure =
+			strings.CutSuffix(info.VersionUID, "$structure")
 
 		if info.VersionUID == "" {
 			info.StatusCode = http.StatusBadRequest

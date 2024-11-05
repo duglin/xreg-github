@@ -22,26 +22,26 @@ func TestTypeMap(t *testing.T) {
 	xNoErr(t, rm.RemoveTypeMap("foo/bar"))
 	xCheck(t, rm.TypeMap == nil, "should be nil")
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$meta",
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure",
 		`{"contenttype":"bad/bad", "file": "foo"}`, 201, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "bad/bad",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -49,7 +49,7 @@ func TestTypeMap(t *testing.T) {
   "filebase64": "Zm9v",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -57,9 +57,9 @@ func TestTypeMap(t *testing.T) {
 `)
 
 	xNoErr(t, rm.AddTypeMap("bad/bad", "json"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -67,7 +67,7 @@ func TestTypeMap(t *testing.T) {
   "file": "foo",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -76,9 +76,9 @@ func TestTypeMap(t *testing.T) {
 
 	xNoErr(t, rm.RemoveTypeMap("bad/bad"))
 	xNoErr(t, rm.AddTypeMap("bad/*", "json"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -86,7 +86,7 @@ func TestTypeMap(t *testing.T) {
   "file": "foo",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -94,9 +94,9 @@ func TestTypeMap(t *testing.T) {
 `)
 
 	xNoErr(t, rm.AddTypeMap("bad/b*", "json"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -104,7 +104,7 @@ func TestTypeMap(t *testing.T) {
   "file": "foo",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -112,9 +112,9 @@ func TestTypeMap(t *testing.T) {
 `)
 
 	xNoErr(t, rm.AddTypeMap("*/b*", "string"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -122,7 +122,7 @@ func TestTypeMap(t *testing.T) {
   "filebase64": "Zm9v",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -132,9 +132,9 @@ func TestTypeMap(t *testing.T) {
 	xNoErr(t, rm.RemoveTypeMap("bad/*"))
 	xNoErr(t, rm.RemoveTypeMap("bad/b*"))
 	xNoErr(t, rm.RemoveTypeMap("bad/bad"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
@@ -142,34 +142,34 @@ func TestTypeMap(t *testing.T) {
   "file": "foo",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$meta",
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$structure",
 		`{"file": "{\"foo\":\"bar\"}"}`,
 		200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "bad/bad",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -177,7 +177,7 @@ func TestTypeMap(t *testing.T) {
   "file": "{\"foo\":\"bar\"}",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -185,9 +185,9 @@ func TestTypeMap(t *testing.T) {
 `)
 
 	xNoErr(t, rm.AddTypeMap("*/b*", "json"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -197,7 +197,7 @@ func TestTypeMap(t *testing.T) {
   },
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -205,9 +205,9 @@ func TestTypeMap(t *testing.T) {
 `)
 
 	xNoErr(t, rm.AddTypeMap("*/b*", "binary"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -215,40 +215,40 @@ func TestTypeMap(t *testing.T) {
   "filebase64": "eyJmb28iOiJiYXIifQ==",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$meta",
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$structure",
 		`{"contenttype": null, "file": "foo\"bar"}`,
 		200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "filebase64": "Zm9vImJhcg==",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -257,27 +257,27 @@ func TestTypeMap(t *testing.T) {
 
 	// Force app/json to binary
 	xNoErr(t, rm.AddTypeMap("application/json", "binary"))
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$meta",
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$structure",
 		`{"file": "foo\"bar"}`,
 		200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "contenttype": "application/json",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -285,7 +285,7 @@ func TestTypeMap(t *testing.T) {
   "filebase64": "Zm9vImJhcg==",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
@@ -293,9 +293,9 @@ func TestTypeMap(t *testing.T) {
 `)
 
 	xNoErr(t, rm.RemoveTypeMap("application/json"))
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$meta?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", ``, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -303,7 +303,7 @@ func TestTypeMap(t *testing.T) {
   "file": "foo\"bar",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$meta",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
 
   "versionscount": 1,
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"

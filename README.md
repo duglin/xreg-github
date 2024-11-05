@@ -1,4 +1,5 @@
 [![CI](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml/badge.svg)](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml)
+[Images](https://github.com/duglin/?tab=packages&q=xreg)
 
 # xreg-github
 
@@ -42,11 +43,14 @@ $ make mysql-client
 See `misc/Dockefile-dev` for the minimal things you'll need to install.
 Useful Makefile targets:
 ```
-- make              : build, test and run the server locally
-- make all          : build, test and run the server locally
-- make run          : build the exes and run it (no tests)
-- make test         : build the exes and run tests, don't run
+- make              : build all, test and run the server (alias for 'all')
+- make all          : build all, test and run the server (reset the DB)
+- make run          : build server and run it (no tests, reset the DB)
+- make start        : build server and run it (no tests, do not reset the DB)
+- make test         : build all, images and run tests, don't run server
 - make clean        : erase all build artifacts, stop mysql. Basically, reset
+- make server       : build the server
+- make cmds         : build the exes (server and CLIs)
 - make image        : build the all Docker images
 - make push         : push the Docker images to DockerHub
 - make mysql        : just start mysql as a Docker container
@@ -129,7 +133,6 @@ TODOs:
 - make sure ID only has valid chars
 - inline=model, requires ?nested. Make sure /meta requires ?nested too
 - meta sub-object
-- $meta -> $structure
 - remove "location" model attribute
 - remove ?resource ?attrib
 - add "compatibility" to resources

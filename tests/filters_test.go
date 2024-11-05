@@ -149,11 +149,11 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version - match",
-			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&filter=versionid=v1",
+			URL:  "dirs/d1/files/f1/versions/v1$structure?inline&filter=versionid=v1",
 			Exp: `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
   "epoch": 1,
   "createdat": "2024-12-01T12:00:00Z",
   "modifiedat": "2024-12-01T12:00:00Z"
@@ -162,7 +162,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version - no match",
-			URL:  "dirs/d1/files/f1/versions/v1$meta?inline&oneline&filter=versionid=xxx",
+			URL:  "dirs/d1/files/f1/versions/v1$structure?inline&oneline&filter=versionid=xxx",
 			// Nothing, matched, so 404
 			Exp: `Not found`,
 		},
@@ -237,7 +237,7 @@ func TestBasicFilters(t *testing.T) {
       "files": {
         "f2": {
           "fileid": "f2",
-          "self": "http://localhost:8181/dirs/d2/files/f2$meta",
+          "self": "http://localhost:8181/dirs/d2/files/f2$structure",
           "epoch": 1,
           "labels": {
             "file1": "1elif"
@@ -246,13 +246,13 @@ func TestBasicFilters(t *testing.T) {
           "modifiedat": "2024-12-01T12:00:02Z",
 
           "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
 
           "versions": {
             "v1": {
               "fileid": "f2",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$structure",
               "epoch": 1,
               "createdat": "2024-12-01T12:00:02Z",
               "modifiedat": "2024-12-01T12:00:02Z"
@@ -260,7 +260,7 @@ func TestBasicFilters(t *testing.T) {
             "v1.1": {
               "fileid": "f2",
               "versionid": "v1.1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
               "epoch": 1,
               "isdefault": true,
               "labels": {
@@ -323,7 +323,7 @@ func TestBasicFilters(t *testing.T) {
       "files": {
         "f2": {
           "fileid": "f2",
-          "self": "http://localhost:8181/dirs/d2/files/f2$meta",
+          "self": "http://localhost:8181/dirs/d2/files/f2$structure",
           "epoch": 1,
           "labels": {
             "file1": "1elif"
@@ -332,13 +332,13 @@ func TestBasicFilters(t *testing.T) {
           "modifiedat": "2024-01-01T12:00:02Z",
 
           "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
 
           "versions": {
             "v1": {
               "fileid": "f2",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$meta",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$structure",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -346,7 +346,7 @@ func TestBasicFilters(t *testing.T) {
             "v1.1": {
               "fileid": "f2",
               "versionid": "v1.1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$meta",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
               "epoch": 1,
               "isdefault": true,
               "labels": {

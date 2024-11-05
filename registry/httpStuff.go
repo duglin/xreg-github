@@ -153,10 +153,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false &&
-		info.ShowMeta {
+		info.ShowStructure {
 		info.StatusCode = http.StatusBadRequest
-		err = fmt.Errorf("Specifying \"$meta\" for a Resource that has the " +
-			"model \"hasdocument\" value set to \"false\" is invalid")
+		err = fmt.Errorf("Specifying \"$structure\" for a Resource that has " +
+			"the model \"hasdocument\" value set to \"false\" is invalid")
 	}
 
 	if err == nil {
@@ -401,21 +401,21 @@ func (pw *PageWriter) Done() {
 		urlPath += fmt.Sprintf(`/<a href="%s?ui">%s</a>`, tmp, p)
 	}
 
-	metaswitch := ""
-	metatext := ""
-	metaButton := ""
-	if pw.Info.ShowMeta {
-		metaswitch = "true"
-		metatext = "Show document"
-		urlPath += fmt.Sprintf(`$<a href="%s$meta?ui">meta</a>`, tmp)
+	structureswitch := ""
+	structuretext := ""
+	structureButton := ""
+	if pw.Info.ShowStructure {
+		structureswitch = "true"
+		structuretext = "Show document"
+		urlPath += fmt.Sprintf(`$<a href="%s$structure?ui">structure</a>`, tmp)
 	} else {
-		metaswitch = "false"
-		metatext = "Show metadata"
+		structureswitch = "false"
+		structuretext = "Show structure"
 	}
 	if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
-		metaButton = fmt.Sprintf(`
-    <div><button id=meta onclick='metaswitch=!metaswitch ; apply()'>%s</button></div>
-`, metatext)
+		structureButton = fmt.Sprintf(`
+    <div><button id=structure onclick='structureswitch=!structureswitch ; apply()'>%s</button></div>
+`, structuretext)
 	}
 
 	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
@@ -473,7 +473,7 @@ func (pw *PageWriter) Done() {
     align-items: start ;
     padding: 2px ;
   }
-  #meta {
+  #structure {
     display: inline ;
     margin-bottom: 10px ;
   }
@@ -527,19 +527,19 @@ func (pw *PageWriter) Done() {
     <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
     <div style="display:ruby">
       <button onclick="apply()">Apply</button>`+
-		metaButton+`
+		structureButton+`
     </div>
   </div>
 </div>
 
 <script>
 
-var metaswitch = `+metaswitch+`;
+var structureswitch = `+structureswitch+`;
 
 function apply() {
   var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`"
 
-  if (metaswitch) loc += "$meta"
+  if (structureswitch) loc += "$structure"
   loc += "?ui"
 
   var filters = document.getElementById("filters").value
@@ -851,7 +851,7 @@ func HTTPGet(info *RequestInfo) error {
 	}
 
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.GetHasDocument() == false || info.ShowMeta)
+		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure)
 
 	if info.What == "Entity" && info.ResourceUID != "" && !metaInBody {
 		return HTTPGETContent(info)
@@ -954,7 +954,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	what := "Entity"
 
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.GetHasDocument() == false || info.ShowMeta)
+		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure)
 
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
@@ -1147,7 +1147,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	// a version and will return that back to the client
 
 	if len(info.Parts) == 3 {
-		// POST GROUPs/gID/RESOURCEs$meta + body:map[id]Resource
+		// POST GROUPs/gID/RESOURCEs$structure + body:map[id]Resource
 
 		objMap, err := IncomingObj2Map(IncomingObj)
 		if err != nil {
@@ -1198,7 +1198,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if len(info.Parts) == 4 && (method == "PUT" || method == "PATCH") {
-		// PUT GROUPs/gID/RESOURCEs/rID [$meta]
+		// PUT GROUPs/gID/RESOURCEs/rID [$structure]
 
 		propsID := "" // RESOURCEid
 		if v, ok := IncomingObj[info.ResourceModel.Singular+"id"]; ok {
@@ -1257,7 +1257,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if method == "POST" && len(info.Parts) == 4 {
-		// POST GROUPs/gID/RESOURCEs/rID[$meta], body=obj or doc
+		// POST GROUPs/gID/RESOURCEs/rID[$structure], body=obj or doc
 		propsID := "" // versionid
 		if v, ok := IncomingObj["versionid"]; ok {
 			if reflect.ValueOf(v).Kind() == reflect.String {
@@ -1286,11 +1286,11 @@ func HTTPPutPost(info *RequestInfo) error {
 		// Default to just returning the version
 	}
 
-	if info.ShowMeta && method == "POST" && len(info.Parts) == 5 {
-		// POST GROUPs/gID/RESOURCEs/rID/versions$meta - error
+	if info.ShowStructure && method == "POST" && len(info.Parts) == 5 {
+		// POST GROUPs/gID/RESOURCEs/rID/versions$structure - error
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Use of \"$meta\" on the \"versions\" collection " +
-			"is not allowed")
+		return fmt.Errorf("Use of \"$structure\" on the \"versions\" " +
+			" collection is not allowed")
 	}
 
 	if method == "POST" && len(info.Parts) == 5 {
@@ -1391,7 +1391,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if len(info.Parts) == 6 {
-		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [$meta]
+		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [$structure]
 		propsID := "" //versionid
 		if v, ok := IncomingObj["versionid"]; ok {
 			if reflect.ValueOf(v).Kind() == reflect.String {
@@ -1458,7 +1458,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.Parts[2], resourceUID}
 	info.What = "Entity"
 	info.GroupUID = groupUID
-	info.ResourceUID = resourceUID // needed for $meta in URLs
+	info.ResourceUID = resourceUID // needed for $structure in URLs
 
 	location := info.BaseURL + "/" + resource.Path
 	if originalLen > 4 || (originalLen == 4 && method == "POST") {
@@ -1467,8 +1467,8 @@ func HTTPPutPost(info *RequestInfo) error {
 		location += "/versions/" + version.UID
 	}
 
-	if info.ShowMeta { // not 100% sure this the right way/spot
-		location += "$meta"
+	if info.ShowStructure { // not 100% sure this the right way/spot
+		location += "$structure"
 	}
 
 	if isNew { // 201, else let it default to 200
@@ -2026,9 +2026,9 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	}
 
 	// len=5 is a special case where we know .../versions always has the
-	// metadata in the body so $meta isn't needed, and in fact an error
+	// metadata in the body so $structure isn't needed, and in fact an error
 
-	metaInBody := (info.ShowMeta ||
+	metaInBody := (info.ShowStructure ||
 		len(info.Parts) == 3 ||
 		len(info.Parts) == 5 ||
 		(info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false))
@@ -2044,7 +2044,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 						"value of \"false\" is invalid")
 				}
 				return nil, fmt.Errorf("Including \"xRegistry\" headers " +
-					"when \"$meta\" is used is invalid")
+					"when \"$structure\" is used is invalid")
 			}
 		}
 

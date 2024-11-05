@@ -193,7 +193,7 @@ testdev:
 	@echo "## Build, test and run the server all within the dev image"
 	docker run -ti -v /var/run/docker.sock:/var/run/docker.sock \
 		-e VERIFY=--verify --network host duglin/xreg-dev make clean all
-	@echo "## Done! Exited the dev image"
+	@echo "## Done! Exit the dev image testing"
 
 clean:
 	@echo "# Cleaning"

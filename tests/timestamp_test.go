@@ -113,19 +113,19 @@ func TestTimestampRegistry(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
           "epoch": 1,
           "createdat": "2024-01-01T12:00:03Z",
           "modifiedat": "2024-01-01T12:00:03Z",
 
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
 
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
               "epoch": 1,
               "isdefault": true,
               "createdat": "2024-01-01T12:00:03Z",
@@ -271,7 +271,7 @@ func TestTimestampRegistry(t *testing.T) {
 	// Test creating a dir/file/version and setting the version's times
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT reg - set ts",
-		URL:        "/dirs/d5/files/f5/versions/v99$meta",
+		URL:        "/dirs/d5/files/f5/versions/v99$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -283,7 +283,7 @@ func TestTimestampRegistry(t *testing.T) {
 		ResBody: `{
   "fileid": "f5",
   "versionid": "v99",
-  "self": "http://localhost:8181/dirs/d5/files/f5/versions/v99$meta",
+  "self": "http://localhost:8181/dirs/d5/files/f5/versions/v99$structure",
   "epoch": 1,
   "isdefault": true,
   "createdat": "1970-01-02T03:04:05Z",

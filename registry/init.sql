@@ -186,6 +186,7 @@ CREATE TABLE Resources (
     UNIQUE INDEX(RegistrySID,SID),
     INDEX(GroupSID, UID),
     INDEX(Path),
+    INDEX(RegistrySID),
     # INDEX(xRef),
     UNIQUE INDEX (GroupSID, ModelSID, UID)
 );
@@ -225,7 +226,6 @@ CREATE TABLE Props (
 
     PRIMARY KEY (EntitySID, PropName),
     INDEX (EntitySID),
-    INDEX (PropName),
     INDEX (RegistrySID, PropName)
 );
 

@@ -310,7 +310,7 @@ func TestSetLabels(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
           "epoch": 1,
           "labels": {
             "2nd": "3rd",
@@ -324,13 +324,13 @@ func TestSetLabels(t *testing.T) {
           "modifiedat": "2024-01-01T12:00:02Z",
 
           "defaultversionid": "v2",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
 
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
               "epoch": 1,
               "labels": {
                 "vv2": "v11"
@@ -341,7 +341,7 @@ func TestSetLabels(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
               "epoch": 1,
               "isdefault": true,
               "labels": {
@@ -395,7 +395,7 @@ func TestSetLabels(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$meta",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
           "epoch": 1,
           "labels": {
             "vv2": "v11"
@@ -405,13 +405,13 @@ func TestSetLabels(t *testing.T) {
 
           "defaultversionsticky": true,
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
 
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
               "epoch": 1,
               "isdefault": true,
               "labels": {
@@ -423,7 +423,7 @@ func TestSetLabels(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$meta",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
               "epoch": 1,
               "labels": {
                 "2nd": "3rd",

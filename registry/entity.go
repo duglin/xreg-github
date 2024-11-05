@@ -422,7 +422,7 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	}
 
 	// Since "xref" is also a Property on the Resources table we need to
-	// set it manually. We can do it lower down (closer to the DB funcs)
+	// set it manually. We can't do it lower down (closer to the DB funcs)
 	// because down there "xref" won't appear in NewObject when it's set to nil
 	/*
 		if e.Level == 2 && pp.Top() == "xref" {
@@ -892,14 +892,14 @@ var OrderedSpecProps = []*Attribute{
 					base = info.BaseURL
 				}
 				if e.Level > 1 {
-					meta := info != nil && (info.ShowMeta || info.ResourceUID == "" || len(info.Parts) == 5)
+					meta := info != nil && (info.ShowStructure || info.ResourceUID == "" || len(info.Parts) == 5)
 					_, rm := e.GetModels()
 					if rm.GetHasDocument() == false {
 						meta = false
 					}
 
 					if meta {
-						return base + "/" + e.Path + "$meta"
+						return base + "/" + e.Path + "$structure"
 					} else {
 						return base + "/" + e.Path
 					}
@@ -1189,14 +1189,14 @@ var OrderedSpecProps = []*Attribute{
 
 				tmp := base + "/" + e.Path + "/versions/" + val.(string)
 
-				meta := info != nil && (info.ShowMeta || info.ResourceUID == "")
+				meta := info != nil && (info.ShowStructure || info.ResourceUID == "")
 				_, rm := e.GetModels()
 				if rm.GetHasDocument() == false {
 					meta = false
 				}
 
 				if meta {
-					tmp += "$meta"
+					tmp += "$structure"
 				}
 				return tmp
 			},
