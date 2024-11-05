@@ -3,6 +3,7 @@ package registry
 import "os"
 
 var TESTING = (os.Getenv("TESTING") != "")
+var GitCommit = "<n/a>"
 
 const SPECVERSION = "0.5"
 const XREGSCHEMA = "xRegistry-json"

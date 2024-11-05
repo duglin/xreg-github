@@ -477,9 +477,16 @@ func (pw *PageWriter) Done() {
     display: inline ;
     margin-bottom: 10px ;
   }
+  #commit {
+    font-size: 12px ;
+    font-family: courier ;
+    position: fixed ;
+    bottom: 0 ;
+	z-index: 0 ;
+  }
   textarea {
     margin-bottom: 10px ;
-	min-width: 100%% ;
+    min-width: 100%% ;
   }
   #filters {
     display: block ;
@@ -512,7 +519,7 @@ func (pw *PageWriter) Done() {
   li {
     white-space: nowrap ;
     cursor: pointer ;
-	list-style-type: circle ;
+    list-style-type: circle ;
   }
 </style>
 <div id=left>
@@ -530,6 +537,9 @@ func (pw *PageWriter) Done() {
 		structureButton+`
     </div>
   </div>
+  <div id=commit><a target=_blank
+        href="http://github.com/duglin/xreg-github/tree/`+
+		GitCommit+`">Commit: `+fmt.Sprintf("%.12s", GitCommit)+`</a></div>
 </div>
 
 <script>

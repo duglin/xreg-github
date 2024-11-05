@@ -110,6 +110,7 @@ func main() {
 	}
 
 	registry.DB_Name = DBName
+	registry.GitCommit = GitCommit
 	// registry.DB_InitFunc = InitDB
 	InitDB()
 
