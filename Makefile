@@ -181,14 +181,18 @@ prof: server qtest
 	@go tool pprof -top -cum cpu.prof | sed -n '0,/flat/p;/xreg/p' | more
 	@rm -f cpu.prof mem.prof tests.test
 
-testdev:
+devimage:
 	@# See the misc/Dockerfile-dev for more info
-	@echo "# Make sure mysql isn't running"
-	-docker rm -f mysql > /dev/null 2>&1
 	@echo
 	@echo "# Build the dev image"
 	@misc/errOutput docker build -t duglin/xreg-dev --no-cache \
 		--build-arg GIT_COMMIT=$(GIT_COMMIT) -f misc/Dockerfile-dev .
+
+testdev: devimage
+	@# See the misc/Dockerfile-dev for more info
+	@echo
+	@echo "# Make sure mysql isn't running"
+	-docker rm -f mysql > /dev/null 2>&1
 	@echo
 	@echo "## Build, test and run the server all within the dev image"
 	docker run -ti -v /var/run/docker.sock:/var/run/docker.sock \
@@ -196,11 +200,12 @@ testdev:
 	@echo "## Done! Exit the dev image testing"
 
 clean:
+	@echo
 	@echo "# Cleaning"
 	@rm -f cpu.prof mem.prof
-	@rm -f server xr
+	@rm -f server xr xrconform
 	@rm -f .test .image .push
 	@go clean -cache -testcache
 	@-! which k3d > /dev/null || k3d cluster delete xreg > /dev/null 2>&1
 	@-docker rm -f mysql mysql-client > /dev/null 2>&1
-	@docker system prune -f > /dev/null
+	@-docker system prune -f -a --volumes > /dev/null

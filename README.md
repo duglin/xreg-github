@@ -116,7 +116,7 @@ TODOs:
 - add model tests for typemap - just that we can set via full model updates
 - support the DB vanishing for a while
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
-- support ?export
+- support ?export  /export
 - test xref more
 - support readonly - remove resource.readonly
 - remove "readonly" attribute from model Resources, add to Resource
@@ -138,3 +138,4 @@ TODOs:
 - add "compatibility" to resources
 - multi-delete must ignore all attributes except id and epoch
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
+- add support for inline=endpoints.*

@@ -21,5 +21,8 @@ RUN apk add make git bash docker
 WORKDIR /go/src/github.com/duglin/xreg-github
 COPY . ./
 
+# Erase any built files from the COPY so we have a clean env
+RUN make clean
+
 # Pull down all of the go packages just so we don't need to do it later
 RUN go get ./...

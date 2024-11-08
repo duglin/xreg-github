@@ -12686,3 +12686,771 @@ func TestHTTPVersionIDs(t *testing.T) {
 	}`, 400, "The \"versionid\" attribute must be set to \"v1\", not \"vx\"\n")
 
 }
+
+func TestHTTPRecursiveData(t *testing.T) {
+	reg := NewRegistry("TestHTTPRecursiveData")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModelSimple("files", "file")
+
+	// Converting the RESOURCE attributes from JSON into byte array tests
+
+	xHTTP(t, reg, "PATCH", "/?nested", `{
+  "dirs": {
+    "d1": {
+      "files": {
+        "f1": {
+	      "file": { "foo": "bar" },
+          "versions": {
+		    "v1": {
+			  "file": { "bar": "foo" }
+			}
+          }
+	    },
+	    "f2": {
+	      "file": "string"
+	    },
+	    "f3": {
+	      "file": 42
+	    },
+	    "f4": {
+	      "file": [ "foo" ]
+	    },
+	    "f5": {
+	      "filebase64": "YmluYXJ5Cg=="
+	    }
+      }
+	}
+  }
+}`, 200,
+		`{
+  "specversion": "0.5",
+  "registryid": "TestHTTPRecursiveData",
+  "self": "http://localhost:8181/",
+  "epoch": 2,
+  "createdat": "2024-11-07T15:53:55.28040091Z",
+  "modifiedat": "2024-11-07T15:53:55.294594572Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline", ``, 200, `{
+  "specversion": "0.5",
+  "registryid": "TestHTTPRecursiveData",
+  "self": "http://localhost:8181/",
+  "epoch": 2,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:02Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "epoch": 1,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "contenttype": "application/json",
+          "file": {
+            "bar": "foo"
+          },
+
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "contenttype": "application/json",
+              "file": {
+                "bar": "foo"
+              }
+            }
+          },
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+        },
+        "f2": {
+          "fileid": "f2",
+          "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+          "epoch": 1,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "contenttype": "application/json",
+          "file": "string",
+
+          "defaultversionid": "1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+
+          "versions": {
+            "1": {
+              "fileid": "f2",
+              "versionid": "1",
+              "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "contenttype": "application/json",
+              "file": "string"
+            }
+          },
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
+        },
+        "f3": {
+          "fileid": "f3",
+          "self": "http://localhost:8181/dirs/d1/files/f3$structure",
+          "epoch": 1,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "contenttype": "application/json",
+          "file": 42,
+
+          "defaultversionid": "1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/1$structure",
+
+          "versions": {
+            "1": {
+              "fileid": "f3",
+              "versionid": "1",
+              "self": "http://localhost:8181/dirs/d1/files/f3/versions/1$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "contenttype": "application/json",
+              "file": 42
+            }
+          },
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f3/versions"
+        },
+        "f4": {
+          "fileid": "f4",
+          "self": "http://localhost:8181/dirs/d1/files/f4$structure",
+          "epoch": 1,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "contenttype": "application/json",
+          "file": [
+            "foo"
+          ],
+
+          "defaultversionid": "1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f4/versions/1$structure",
+
+          "versions": {
+            "1": {
+              "fileid": "f4",
+              "versionid": "1",
+              "self": "http://localhost:8181/dirs/d1/files/f4/versions/1$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "contenttype": "application/json",
+              "file": [
+                "foo"
+              ]
+            }
+          },
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f4/versions"
+        },
+        "f5": {
+          "fileid": "f5",
+          "self": "http://localhost:8181/dirs/d1/files/f5$structure",
+          "epoch": 1,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "filebase64": "YmluYXJ5Cg==",
+
+          "defaultversionid": "1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$structure",
+
+          "versions": {
+            "1": {
+              "fileid": "f5",
+              "versionid": "1",
+              "self": "http://localhost:8181/dirs/d1/files/f5/versions/1$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "filebase64": "YmluYXJ5Cg=="
+            }
+          },
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f5/versions"
+        }
+      },
+      "filescount": 5,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
+    }
+  },
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
+
+	xHTTP(t, reg, "PATCH", "/?nested", `{
+  "dirs": {
+    "d1": {
+      "files": {
+        "f1": {
+	      "file": { "foo": "bar" },
+          "versions": {
+		    "v1": {
+			  "file": { "bar": "foo" }
+			}
+          }
+	    },
+	    "f2": {
+	      "file": "string"
+	    }
+      }
+	}
+  }
+}`, 200,
+		`{
+  "specversion": "0.5",
+  "registryid": "TestHTTPRecursiveData",
+  "self": "http://localhost:8181/",
+  "epoch": 3,
+  "createdat": "2024-11-07T15:53:55.28040091Z",
+  "modifiedat": "2024-11-07T15:53:55.294594572Z",
+
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline", ``, 200, `{
+  "specversion": "0.5",
+  "registryid": "TestHTTPRecursiveData",
+  "self": "http://localhost:8181/",
+  "epoch": 3,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:02Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "epoch": 1,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "contenttype": "application/json",
+          "file": {
+            "bar": "foo"
+          },
+
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "contenttype": "application/json",
+              "file": {
+                "bar": "foo"
+              }
+            }
+          },
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+        },
+        "f2": {
+          "fileid": "f2",
+          "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+          "epoch": 1,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "contenttype": "application/json",
+          "file": "string",
+
+          "defaultversionid": "1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+
+          "versions": {
+            "1": {
+              "fileid": "f2",
+              "versionid": "1",
+              "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "contenttype": "application/json",
+              "file": "string"
+            }
+          },
+          "versionscount": 1,
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
+        }
+      },
+      "filescount": 2,
+      "filesurl": "http://localhost:8181/dirs/d1/files"
+    }
+  },
+  "dirscount": 1,
+  "dirsurl": "http://localhost:8181/dirs"
+}
+`)
+
+	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
+
+	xHTTP(t, reg, "POST", "/dirs?nested", `{
+  "d1": {
+    "files": {
+      "f1": {
+	    "file": { "foo": "bar" },
+        "versions": {
+		  "v1": {
+			"file": { "bar": "foo" }
+		  }
+        }
+	  },
+	  "f2": {
+	    "file": "string"
+	  }
+    }
+  }
+}`, 200,
+		`{
+  "d1": {
+    "dirid": "d1",
+    "self": "http://localhost:8181/dirs/d1",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+
+    "filescount": 2,
+    "filesurl": "http://localhost:8181/dirs/d1/files"
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs?inline", ``, 200, `{
+  "d1": {
+    "dirid": "d1",
+    "self": "http://localhost:8181/dirs/d1",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+
+    "files": {
+      "f1": {
+        "fileid": "f1",
+        "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+        "epoch": 1,
+        "createdat": "YYYY-MM-DDTHH:MM:01Z",
+        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "contenttype": "application/json",
+        "file": {
+          "bar": "foo"
+        },
+
+        "defaultversionid": "v1",
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+        "versions": {
+          "v1": {
+            "fileid": "f1",
+            "versionid": "v1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+            "epoch": 1,
+            "isdefault": true,
+            "createdat": "YYYY-MM-DDTHH:MM:01Z",
+            "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+            "contenttype": "application/json",
+            "file": {
+              "bar": "foo"
+            }
+          }
+        },
+        "versionscount": 1,
+        "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+      },
+      "f2": {
+        "fileid": "f2",
+        "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+        "epoch": 1,
+        "createdat": "YYYY-MM-DDTHH:MM:01Z",
+        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "contenttype": "application/json",
+        "file": "string",
+
+        "defaultversionid": "1",
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+
+        "versions": {
+          "1": {
+            "fileid": "f2",
+            "versionid": "1",
+            "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+            "epoch": 1,
+            "isdefault": true,
+            "createdat": "YYYY-MM-DDTHH:MM:01Z",
+            "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+            "contenttype": "application/json",
+            "file": "string"
+          }
+        },
+        "versionscount": 1,
+        "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
+      }
+    },
+    "filescount": 2,
+    "filesurl": "http://localhost:8181/dirs/d1/files"
+  }
+}
+`)
+
+	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1?nested", `{
+  "files": {
+    "f1": {
+	  "file": { "foo": "bar" },
+      "versions": {
+	    "v1": {
+	      "file": { "bar": "foo" }
+	    }
+      }
+	},
+	"f2": {
+	  "file": "string"
+    }
+  }
+}`, 201,
+		`{
+  "dirid": "d1",
+  "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+
+  "filescount": 2,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1?inline", ``, 200, `{
+  "dirid": "d1",
+  "self": "http://localhost:8181/dirs/d1",
+  "epoch": 1,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+
+  "files": {
+    "f1": {
+      "fileid": "f1",
+      "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:01Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "contenttype": "application/json",
+      "file": {
+        "bar": "foo"
+      },
+
+      "defaultversionid": "v1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+      "versions": {
+        "v1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "YYYY-MM-DDTHH:MM:01Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+          "contenttype": "application/json",
+          "file": {
+            "bar": "foo"
+          }
+        }
+      },
+      "versionscount": 1,
+      "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+    },
+    "f2": {
+      "fileid": "f2",
+      "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:01Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "contenttype": "application/json",
+      "file": "string",
+
+      "defaultversionid": "1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+
+      "versions": {
+        "1": {
+          "fileid": "f2",
+          "versionid": "1",
+          "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "YYYY-MM-DDTHH:MM:01Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+          "contenttype": "application/json",
+          "file": "string"
+        }
+      },
+      "versionscount": 1,
+      "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
+    }
+  },
+  "filescount": 2,
+  "filesurl": "http://localhost:8181/dirs/d1/files"
+}
+`)
+
+	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files?nested", `{
+  "f1": {
+	"file": { "foo": "bar" },
+    "versions": {
+	  "v1": {
+	    "file": { "bar": "foo" }
+	  }
+    }
+  },
+  "f2": {
+	"file": "string"
+  }
+}`, 200,
+		`{
+  "f1": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "contenttype": "application/json",
+
+    "defaultversionid": "v1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+  },
+  "f2": {
+    "fileid": "f2",
+    "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "contenttype": "application/json",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files?inline", ``, 200, `{
+  "f1": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "contenttype": "application/json",
+    "file": {
+      "bar": "foo"
+    },
+
+    "defaultversionid": "v1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+    "versions": {
+      "v1": {
+        "fileid": "f1",
+        "versionid": "v1",
+        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "epoch": 1,
+        "isdefault": true,
+        "createdat": "YYYY-MM-DDTHH:MM:01Z",
+        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "contenttype": "application/json",
+        "file": {
+          "bar": "foo"
+        }
+      }
+    },
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+  },
+  "f2": {
+    "fileid": "f2",
+    "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "contenttype": "application/json",
+    "file": "string",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+
+    "versions": {
+      "1": {
+        "fileid": "f2",
+        "versionid": "1",
+        "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+        "epoch": 1,
+        "isdefault": true,
+        "createdat": "YYYY-MM-DDTHH:MM:01Z",
+        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "contenttype": "application/json",
+        "file": "string"
+      }
+    },
+    "versionscount": 1,
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions"
+  }
+}
+`)
+
+	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure?nested", `{
+  "file": { "foo": "bar" },
+  "versions": {
+	"v1": {
+	  "file": { "bar": "foo" }
+	}
+  }
+}`, 201,
+		`{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "epoch": 1,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "contenttype": "application/json",
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline", ``, 200, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "epoch": 1,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "contenttype": "application/json",
+  "file": {
+    "bar": "foo"
+  },
+
+  "defaultversionid": "v1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+
+  "versions": {
+    "v1": {
+      "fileid": "f1",
+      "versionid": "v1",
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+      "epoch": 1,
+      "isdefault": true,
+      "createdat": "YYYY-MM-DDTHH:MM:01Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "contenttype": "application/json",
+      "file": {
+        "bar": "foo"
+      }
+    }
+  },
+  "versionscount": 1,
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+}
+`)
+
+	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?nested", `{
+  "v1": {
+	"file": { "bar": "foo" }
+  }
+}`, 200,
+		`{
+  "v1": {
+    "fileid": "f1",
+    "versionid": "v1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+    "epoch": 1,
+    "isdefault": true,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "contenttype": "application/json"
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?inline", ``, 200, `{
+  "v1": {
+    "fileid": "f1",
+    "versionid": "v1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+    "epoch": 1,
+    "isdefault": true,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "contenttype": "application/json",
+    "file": {
+      "bar": "foo"
+    }
+  }
+}
+`)
+
+}

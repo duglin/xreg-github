@@ -255,6 +255,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 					fmt.Errorf("Key %q in attribute %q doesn't "+
 						"appear to be of type %q", verID, plural, singular)
 			}
+
 			_, _, err := r.UpsertVersionWithObject(verID, verObj, addType)
 			if err != nil {
 				return nil, false, err
