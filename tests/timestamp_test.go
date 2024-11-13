@@ -1,7 +1,10 @@
 package tests
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"net/http"
 	"testing"
 
 	"github.com/duglin/xreg-github/registry"
@@ -300,4 +303,66 @@ func TestTimestampRegistry(t *testing.T) {
 	xNoErr(t, err)
 	xCheckEqual(t, "", v.Get("createdat"), "1970-01-02T03:04:05Z")
 	xCheckEqual(t, "", v.Get("modifiedat"), "2000-05-04T03:02:01Z")
+}
+
+func TestTimestampParsing(t *testing.T) {
+	reg := NewRegistry("TestTimestampParsing")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "reg shouldn't be nil")
+
+	// Check basic GET first
+	xCheckGet(t, reg, "/",
+		`{
+  "specversion": "`+registry.SPECVERSION+`",
+  "registryid": "TestTimestampParsing",
+  "self": "http://localhost:8181/",
+  "epoch": 1,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z"
+}
+`)
+
+	tests := []struct {
+		timestamp string
+		code      int
+		value     string
+	}{
+		{"xxx", 400, ""},
+		{"2024-07-04T12:01:02", 200, "2024-07-04T12:01:02Z"},
+		{"2024-07-04T12:00:01Z", 200, "2024-07-04T12:00:01Z"},
+		{"2024-07-04T12:00:01+07:00", 200, "2024-07-04T12:00:01+07:00"},
+		{"2024-07-04T12:00:01-07:00", 200, "2024-07-04T12:00:01-07:00"},
+		{"2024-07-04T12:00:01", 200, "2024-07-04T12:00:01Z"},
+	}
+
+	for _, test := range tests {
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}}
+		buf := []byte(`{"modifiedat":"` + test.timestamp + `"}`)
+		body := bytes.NewReader(buf)
+		req, err := http.NewRequest("PATCH", "http://localhost:8181/", body)
+		xNoErr(t, err)
+
+		res, err := client.Do(req)
+		if res != nil {
+			buf, _ = io.ReadAll(res.Body)
+		}
+
+		xNoErr(t, err)
+		if res.StatusCode != test.code {
+			t.Logf("TS: %#v", test)
+			t.Fatalf(fmt.Sprintf("Expected status %d, got %d\n%s",
+				test.code, res.StatusCode, string(buf)))
+		}
+
+		if test.code != 200 {
+			continue
+		}
+
+		reg.Refresh()
+		xCheckEqual(t, "", reg.Get("modifiedat"), "--"+test.value)
+		xNoErr(t, reg.Commit())
+	}
 }

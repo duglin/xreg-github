@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 	// "net/url"
 	"io"
 	// "maps"
@@ -751,4 +752,33 @@ func FindModelFile(name string) (string, error) {
 	}
 
 	return "", fmt.Errorf("Can't find %q in %q", name, paths)
+}
+
+func ConvertStrToTime(str string) (time.Time, error) {
+	TSformats := []string{
+		time.RFC3339,
+		// time.RFC3339Nano,
+		"2006-01-02T15:04:05.000000000Z07:00",
+		"2006-01-02T15:04:05+07:00",
+		"2006-01-02T15:04:05+07",
+		"2006-01-02T15:04:05",
+	}
+
+	for _, tfs := range TSformats {
+		if t, err := time.Parse(tfs, str); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("Invalid RFC3339 timestamp: %s", str)
+}
+
+func NormalizeStrTime(str string) (string, error) {
+	t, err := ConvertStrToTime(str)
+	if err != nil {
+		return "", err
+	}
+
+	str = t.Format(time.RFC3339Nano)
+	return str, nil
 }

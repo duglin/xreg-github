@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	log "github.com/duglin/dlog"
 	_ "github.com/go-sql-driver/mysql"
@@ -1106,8 +1105,16 @@ var OrderedSpecProps = []*Attribute{
 				}
 				// Still no value, so use "now"
 				if IsNil(ca) {
-					e.NewObject["createdat"] = e.tx.CreateTime
+					ca = e.tx.CreateTime
 				}
+
+				var err error
+				t := ""
+				if t, err = NormalizeStrTime(ca.(string)); err != nil {
+					return err
+				}
+				e.NewObject["createdat"] = t
+
 				return nil
 			},
 		},
@@ -1127,8 +1134,16 @@ var OrderedSpecProps = []*Attribute{
 				// If there's no value, or it's the same as the existing
 				// value, set to "now"
 				if IsNil(ma) || (ma == e.Object["modifiedat"]) {
-					e.NewObject["modifiedat"] = e.tx.CreateTime
+					ma = e.tx.CreateTime
 				}
+
+				var err error
+				t := ""
+				if t, err = NormalizeStrTime(ma.(string)); err != nil {
+					return err
+				}
+				e.NewObject["modifiedat"] = t
+
 				return nil
 			},
 		},
@@ -2061,7 +2076,8 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 			return fmt.Errorf("Attribute %q must be a timestamp", path.UI())
 		}
 		str := val.(string)
-		_, err := time.Parse(time.RFC3339, str)
+
+		_, err := ConvertStrToTime(str)
 		if err != nil {
 			return fmt.Errorf("Attribute %q is a malformed timestamp",
 				path.UI())
