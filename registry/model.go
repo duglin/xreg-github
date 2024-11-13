@@ -44,7 +44,7 @@ type Attributes map[string]*Attribute // AttrName->Attr
 // that we can just copy them over in one statement in SetSpecPropsFields()
 // and so that if we add more we don't need to remember to update that func
 type AttrInternals struct {
-	levels     string // show only for these levels, ""==all
+	types      string // show only for these eTypes, ""==all
 	dontStore  bool   // don't store this prop in the DB
 	httpHeader string // custom HTTP header name, not xRegistry-xxx
 
@@ -132,27 +132,27 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 
 	// Hack!
 	// attribute "$singular" holds the singular name of the entity.
-	// attribute "$level" hold the xReg level of the entity.
+	// attribute "$type" hold the xReg Type of the entity.
 	// Couldn't find a better way to pass this info all the way down.
 	singular := ""
-	level := -1
+	eType := -1
 	if attr, ok := attrsCopy["$singular"]; ok {
 		singular = attr.Description
 		delete(attrsCopy, "$singular")
 	}
-	if attr, ok := attrsCopy["$level"]; ok {
-		levelStr := attr.Description
-		delete(attrsCopy, "$level")
-		if levelStr != "" {
-			level = int(levelStr[0] - '0')
+	if attr, ok := attrsCopy["$type"]; ok {
+		typeStr := attr.Description
+		delete(attrsCopy, "$type")
+		if typeStr != "" {
+			eType = int(typeStr[0] - '0')
 		}
 	}
 	// end of hack
 
 	buf.WriteString("{")
 	for _, specProp := range OrderedSpecProps {
-		if level >= 0 && !specProp.InLevel(level) {
-			// log.Printf("Skipping: %s  L: %d", specProp.Name, level)
+		if eType >= 0 && !specProp.InType(eType) {
+			// log.Printf("Skipping: %s  L: %d", specProp.Name, eType)
 			// continue
 		}
 
@@ -282,7 +282,7 @@ func (m *Model) SetPointers() {
 	}
 }
 
-// Total hack. Need a way to pass in the Singular and Level info from the
+// Total hack. Need a way to pass in the Singular and eType info from the
 // model down into the serialization routines.
 func (m *Model) SetSingular() {
 	m.Attributes["$singular"] = &Attribute{
@@ -290,8 +290,8 @@ func (m *Model) SetSingular() {
 		Type:        STRING,
 		Description: "registry",
 	}
-	m.Attributes["$level"] = &Attribute{
-		Name:        "$level",
+	m.Attributes["$type"] = &Attribute{
+		Name:        "$type",
 		Type:        STRING,
 		Description: "0",
 	}
@@ -302,8 +302,8 @@ func (m *Model) SetSingular() {
 			Type:        STRING,
 			Description: gm.Singular,
 		}
-		gm.Attributes["$level"] = &Attribute{
-			Name:        "$level",
+		gm.Attributes["$type"] = &Attribute{
+			Name:        "$type",
 			Type:        STRING,
 			Description: "1",
 		}
@@ -314,8 +314,8 @@ func (m *Model) SetSingular() {
 				Type:        STRING,
 				Description: rm.Singular,
 			}
-			rm.Attributes["$level"] = &Attribute{
-				Name:        "$level",
+			rm.Attributes["$type"] = &Attribute{
+				Name:        "$type",
 				Type:        STRING,
 				Description: "2",
 			}
@@ -1283,9 +1283,9 @@ func (a *Attribute) GetStrict() bool {
 	return a.Strict == nil || *a.Strict == true
 }
 
-func (a *Attribute) InLevel(level int) bool {
-	return a.internals.levels == "" ||
-		strings.ContainsRune(a.internals.levels, rune('0'+level))
+func (a *Attribute) InType(eType int) bool {
+	return a.internals.types == "" ||
+		strings.ContainsRune(a.internals.types, rune('0'+byte(eType)))
 }
 
 func (a *Attribute) IsScalar() bool {
@@ -1396,7 +1396,7 @@ func (m *Model) Verify() error {
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Registry level attribute, then skip it
-		if !specProp.InLevel(0) {
+		if !specProp.InType(ENTITY_REGISTRY) {
 			continue
 		}
 
@@ -1450,7 +1450,7 @@ func (m *Model) GetBaseAttributes() Attributes {
 	// TODO Check for conflicts
 	/*
 	   for _, specProp := range OrderedSpecProps {
-	       if specProp.InLevel(level) {
+	       if specProp.InType(eType) {
 	           attrs[specProp.Name] = specProp
 	       }
 	   }
@@ -1485,7 +1485,7 @@ func (gm *GroupModel) Verify(gmName string) error {
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Group level attribute, then skip it
-		if !specProp.InLevel(1) {
+		if !specProp.InType(ENTITY_GROUP) {
 			continue
 		}
 
@@ -1556,7 +1556,7 @@ func (gm *GroupModel) GetBaseAttributes() Attributes {
 	// TODO Check for conflicts
 	/*
 	   for _, specProp := range OrderedSpecProps {
-	       if specProp.InLevel(level) {
+	       if specProp.InType(eType) {
 	           attrs[specProp.Name] = specProp
 	       }
 	   }
@@ -1592,7 +1592,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 
 	for _, specProp := range OrderedSpecProps {
 		// If it's not a Resource level attribute, then skip it
-		if !specProp.InLevel(3) && !specProp.InLevel(2) {
+		if !specProp.InType(ENTITY_VERSION) && !specProp.InType(ENTITY_RESOURCE) {
 			continue
 		}
 
@@ -1671,7 +1671,7 @@ func (rm *ResourceModel) VerifyData() error {
 	group := (*Group)(nil)
 	resource := (*Resource)(nil)
 	for _, e := range entities {
-		if e.Level == 1 {
+		if e.Type == ENTITY_GROUP {
 			group = &Group{Entity: *e, Registry: reg}
 		} else {
 			PanicIf(group == nil, "Group can't be nil")
@@ -1723,7 +1723,7 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 	// TODO Check for conflicts
 	/*
 	   for _, specProp := range OrderedSpecProps {
-	       if specProp.InLevel(level) {
+	       if specProp.InType(eType) {
 	           attrs[specProp.Name] = specProp
 	       }
 	   }
@@ -1920,7 +1920,7 @@ func (rm *ResourceModel) MapContentType(ct string) string {
 }
 
 type LevelData struct {
-	// AttrNames is the list of known attribute names for a certain level
+	// AttrNames is the list of known attribute names for a certain eType
 	// an entity (basically the Attributes list + ifValues). We use this to know
 	// if an IfValue SiblingAttribute would conflict if another attribute's name
 	AttrNames map[string]bool

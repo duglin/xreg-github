@@ -30,10 +30,10 @@ type Entity struct {
 
 	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
-	Level    int // 0=registry, 1=group, 2=resource, 3=version
-	Path     string
-	Abstract string
-	EpochSet bool `json:"-"` // Has epoch been updated this transaction?
+	Type     int    // ENTITY_REGISTRY(0)/GROUP(1)/RESOURCE(2)/VERSION(3)/...
+	Path     string // [GROUPS/gID[/RESOURCES/rID[/versions/vID]]]
+	Abstract string // [GROUPS[/RESOURCES[/versions]]]
+	EpochSet bool   `json:"-"` // Has epoch been updated this transaction?
 }
 
 type EntitySetter interface {
@@ -223,8 +223,8 @@ func RawEntityFromPath(tx *Tx, regID string, path string, anyCase bool) (*Entity
 	log.VPrintf(3, ">Enter: RawEntityFromPath(%s)", path)
 	defer log.VPrintf(3, "<Exit: RawEntityFromPath")
 
-	// RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-	//   0     1      2      3       4     5    6       7         8       9    10
+	// RegSID,Type,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1     2      3       4     5    6       7         8       9    10
 
 	caseExpr := ""
 	if anyCase {
@@ -234,7 +234,7 @@ func RawEntityFromPath(tx *Tx, regID string, path string, anyCase bool) (*Entity
 	results, err := Query(tx, `
 		SELECT
             e.RegSID as RegSID,
-            e.Level as Level,
+            e.Type as Type,
             e.Plural as Plural,
             e.Singular as Singular,
             e.eSID as eSID,
@@ -285,8 +285,8 @@ func RawEntitiesFromQuery(tx *Tx, regID string, query string, args ...any) ([]*E
 	log.VPrintf(3, ">Enter: RawEntititiesFromQuery(%s)", query)
 	defer log.VPrintf(3, "<Exit: RawEntitiesFromQuery")
 
-	// RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-	//   0     1      2     3        4    5     6         7        8     9     10
+	// RegSID,Type,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1     2     3        4    5     6         7        8     9     10
 
 	if query != "" {
 		query = "AND (" + query + ") "
@@ -295,7 +295,7 @@ func RawEntitiesFromQuery(tx *Tx, regID string, query string, args ...any) ([]*E
 	results, err := Query(tx, `
 		SELECT
             e.RegSID as RegSID,
-            e.Level as Level,
+            e.Type as Type,
             e.Plural as Plural,
             e.Singular as Singular,
             e.eSID as eSID,
@@ -425,7 +425,7 @@ func (e *Entity) JustSet(pp *PropPath, val any) error {
 	// set it manually. We can't do it lower down (closer to the DB funcs)
 	// because down there "xref" won't appear in NewObject when it's set to nil
 	/*
-		if e.Level == 2 && pp.Top() == "xref" {
+		if e.Type == ENTITY_RESOURCE && pp.Top() == "xref" {
 			// Handles both val=nil and non-nil cases
 			err := DoOneTwo(e.tx, `UPDATE Resources SET xRef=? WHERE SID=?`,
 				val, e.DbSID)
@@ -659,8 +659,8 @@ func (e *Entity) SetFromDBName(name string, val *string, propType string) error 
 func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 	entity := (*Entity)(nil)
 
-	// RegSID,Level,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-	//   0     1      2     3        4     5   6         7        8       9    10
+	// RegSID,Type,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
+	//   0     1     2     3        4     5   6         7        8       9    10
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		// log.Printf("Row(%d): %#v", len(row), row)
 		if log.GetVerbose() >= 4 {
@@ -674,7 +674,7 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 			}
 			log.Printf("Row: %s)", str)
 		}
-		level := int((*row[1]).(int64))
+		eType := int((*row[1]).(int64))
 		plural := NotNilString(row[2])
 		uid := NotNilString(row[5])
 
@@ -688,7 +688,7 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 				Singular: NotNilString(row[3]),
 				UID:      uid,
 
-				Level:    level,
+				Type:     eType,
 				Path:     NotNilString(row[9]),
 				Abstract: NotNilString(row[10]),
 			}
@@ -696,7 +696,7 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 			// If the next row isn't part of the current Entity then
 			// push it back into the result set so we'll grab it the next time
 			// we're called. And exit.
-			if entity.Level != level || entity.Plural != plural || entity.UID != uid {
+			if entity.Type != eType || entity.Plural != plural || entity.UID != uid {
 				results.Push()
 				break
 			}
@@ -719,14 +719,14 @@ func readNextEntity(tx *Tx, results *Result) (*Entity, error) {
 	return entity, nil
 }
 
-func CalcSpecProps(level int, singular string) ([]*Attribute, map[string]*Attribute) {
-	// Use level < 0 to not check the level of the prop
+func CalcSpecProps(eType int, singular string) ([]*Attribute, map[string]*Attribute) {
+	// Use eType < 0 to not check the type of the prop
 	// Use singular = "" to not twiddle any "singular" specific logic
 	resMap := map[string]*Attribute{}
 	resArr := []*Attribute{}
 
 	for _, prop := range OrderedSpecProps {
-		if level >= 0 && !prop.InLevel(level) {
+		if eType >= 0 && !prop.InType(eType) {
 			continue
 		}
 
@@ -747,6 +747,14 @@ func CalcSpecProps(level int, singular string) ([]*Attribute, map[string]*Attrib
 	return resArr, resMap
 }
 
+func StrTypes(types ...int) string {
+	res := strings.Builder{}
+	for _, eType := range types {
+		res.WriteByte('0' + byte(eType))
+	}
+	return res.String()
+}
+
 // This allows for us to choose the order and define custom logic per prop
 var OrderedSpecProps = []*Attribute{
 	{
@@ -757,7 +765,7 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			levels:    "0",
+			types:     StrTypes(ENTITY_REGISTRY),
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				return SPECVERSION
@@ -780,20 +788,20 @@ var OrderedSpecProps = []*Attribute{
 		Location:       "both",
 
 		internals: AttrInternals{
-			levels:    "",
+			types:     "",
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
 				singular := e.Singular
 				// PanicIf(singular == "", "singular is '' :  %v", e)
-				if e.Level == 3 {
+				if e.Type == ENTITY_VERSION {
 					_, rm := AbstractToModels(e.Registry, e.Abstract)
 					singular = rm.Singular
 				}
 				singular += "id"
 
 				oldID := any(e.UID)
-				if e.Level == 3 {
+				if e.Type == ENTITY_VERSION {
 					// Grab rID from /GROUPs/gID/RESOURCEs/rID/versions/vID
 					parts := strings.Split(e.Path, "/")
 					oldID = parts[3]
@@ -818,13 +826,13 @@ var OrderedSpecProps = []*Attribute{
 			updateFn: func(e *Entity) error {
 				// Make sure the ID is always set
 				singular := e.Singular
-				if e.Level == 3 {
+				if e.Type == ENTITY_VERSION {
 					_, rm := AbstractToModels(e.Registry, e.Abstract)
 					singular = rm.Singular
 				}
 				singular += "id"
 
-				if e.Level == 3 {
+				if e.Type == ENTITY_VERSION {
 					// Versions shouldn't store the RESOURCEid
 					delete(e.NewObject, singular)
 				} else {
@@ -845,7 +853,7 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			levels:    "3",
+			types:     StrTypes(ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
@@ -884,14 +892,14 @@ var OrderedSpecProps = []*Attribute{
 		Location:       "both",
 
 		internals: AttrInternals{
-			levels:    "",
+			types:     "",
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
 				if info != nil {
 					base = info.BaseURL
 				}
-				if e.Level > 1 {
+				if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 					meta := info != nil && (info.ShowStructure || info.ResourceUID == "" || len(info.Parts) == 5)
 					_, rm := e.GetModels()
 					if rm.GetHasDocument() == false {
@@ -916,8 +924,8 @@ var OrderedSpecProps = []*Attribute{
 		Location: "resource",
 
 		internals: AttrInternals{
-			levels: "2",
-			getFn:  nil,
+			types: StrTypes(ENTITY_RESOURCE),
+			getFn: nil,
 			checkFn: func(e *Entity) error {
 				return nil
 			},
@@ -933,7 +941,7 @@ var OrderedSpecProps = []*Attribute{
 		// Location:       "resource",
 
 		internals: AttrInternals{
-			levels:    "013",
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
@@ -990,7 +998,7 @@ var OrderedSpecProps = []*Attribute{
 			Location: "resource",
 
 			internals: AttrInternals{
-				levels:    "2",
+				types:    StrTypes(ENTITY_RESOURCE),
 				dontStore: false,
 				getFn:     nil,
 				checkFn:   nil,
@@ -1003,7 +1011,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			levels:    "",
+			types:     "",
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1016,7 +1024,7 @@ var OrderedSpecProps = []*Attribute{
 		ReadOnly: true,
 
 		internals: AttrInternals{
-			levels:    "3",
+			types:     StrTypes(ENTITY_VERSION),
 			dontStore: true,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1033,7 +1041,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			levels:    "",
+			types:     "",
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1045,7 +1053,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: URL,
 
 		internals: AttrInternals{
-			levels:    "",
+			types:     "",
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1060,7 +1068,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 
 		internals: AttrInternals{
-			levels:    "",
+			types:     "",
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1072,7 +1080,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: URI,
 
 		internals: AttrInternals{
-			levels:    "123",
+			types:     StrTypes(ENTITY_GROUP, ENTITY_RESOURCE, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1085,7 +1093,7 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			levels:    "013",
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1110,7 +1118,7 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			levels:    "013",
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1130,7 +1138,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			levels:     "23",
+			types:      StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
 			dontStore:  false,
 			httpHeader: "Content-Type",
 			getFn:      nil,
@@ -1145,7 +1153,7 @@ var OrderedSpecProps = []*Attribute{
 		Location: "resource",
 
 		internals: AttrInternals{
-			levels:    "2",
+			types:     StrTypes(ENTITY_RESOURCE),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1160,7 +1168,7 @@ var OrderedSpecProps = []*Attribute{
 		Location: "resource",
 
 		internals: AttrInternals{
-			levels:    "2",
+			types:     StrTypes(ENTITY_RESOURCE),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1175,7 +1183,7 @@ var OrderedSpecProps = []*Attribute{
 		Location: "resource",
 
 		internals: AttrInternals{
-			levels:    "2",
+			types:     StrTypes(ENTITY_RESOURCE),
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				val := e.Object["defaultversionid"]
@@ -1216,7 +1224,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 
 		internals: AttrInternals{
-			levels:    "0",
+			types:     StrTypes(ENTITY_REGISTRY),
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				// They need to explicitly ask for "model", ?inline=* won't
@@ -1267,11 +1275,11 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	for _, prop := range OrderedSpecProps {
 		name := prop.Name
 		if name == "id" {
-			if e.Level != 3 {
+			if e.Type != ENTITY_VERSION {
 				// versionid has it's own special entry
 				name = e.Singular + "id"
 			} else {
-				// at level 3 id=RESOURCEid
+				// for versions, id=RESOURCEid
 				_, rm := AbstractToModels(e.Registry, e.Abstract)
 				name = rm.Singular + "id"
 			}
@@ -1280,11 +1288,11 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		attr, ok := attrs[name]
 		if !ok {
 			delete(daObj, name)
-			continue // not allowed at this level so skip it
+			continue // not allowed at this eType so skip it
 		}
 
 		// Before "default*" attributes, add extensions and "resource*"
-		if e.Level == 2 && prop.Name == "defaultversionsticky" {
+		if e.Type == ENTITY_RESOURCE && prop.Name == "defaultversionsticky" {
 			for _, objKey := range SortedKeys(daObj) {
 				attrKey := objKey
 				if attrKey == e.Singular+"id" {
@@ -1362,7 +1370,7 @@ func (e *Entity) Save() error {
 	defer log.VPrintf(3, "<Exit: Save")
 
 	// TODO remove at some point when we're sure it's safe
-	if SpecProps["epoch"].InLevel(e.Level) && IsNil(e.NewObject["epoch"]) {
+	if SpecProps["epoch"].InType(e.Type) && IsNil(e.NewObject["epoch"]) {
 		log.Printf("Save.NewObject:\n%s", ToJSON(e.NewObject))
 		panic("Epoch is nil")
 	}
@@ -1467,8 +1475,8 @@ func (e *Entity) AddCalcProps(info *RequestInfo) map[string]any {
 
 	// Regardless of the type of entity, set the generated properties
 	for _, prop := range OrderedSpecProps {
-		// Only generate props that are for this level, and have a Fn
-		if prop.internals.getFn == nil || !prop.InLevel(e.Level) {
+		// Only generate props that are for this eType, and have a Fn
+		if prop.internals.getFn == nil || !prop.InType(e.Type) {
 			continue
 		}
 
@@ -1492,7 +1500,7 @@ func (e *Entity) AddCalcProps(info *RequestInfo) map[string]any {
 // This will remove all Collection related attributes from the entity.
 // While this is an Entity.Func, we allow callers to pass in the Object
 // data to use instead of the e.Object/NewObject so that we'll use this
-// Entity's Level (which tells us which collections it has), on the 'obj'.
+// Entity's Type (which tells us which collections it has), on the 'obj'.
 // This is handy for cases where we need to remove the Resource's collections
 // from a Version's Object - like on  a PUT to /GROUPs/gID/RESOURECEs/rID
 // where we're passing in what looks like a Resource entity, but we're
@@ -1512,15 +1520,15 @@ func (e *Entity) RemoveCollections(obj Object) {
 // Array of plural/singular pairs
 func (e *Entity) GetCollections() [][2]string {
 	result := [][2]string{}
-	switch e.Level {
-	case 0:
+	switch e.Type {
+	case ENTITY_REGISTRY:
 		gs := e.Registry.Model.Groups
 		keys := SortedKeys(gs)
 		for _, k := range keys {
 			result = append(result, [2]string{gs[k].Plural, gs[k].Singular})
 		}
 		return result
-	case 1:
+	case ENTITY_GROUP:
 		gm, _ := e.GetModels()
 		rs := gm.Resources
 		keys := SortedKeys(rs)
@@ -1528,13 +1536,13 @@ func (e *Entity) GetCollections() [][2]string {
 			result = append(result, [2]string{rs[k].Plural, rs[k].Singular})
 		}
 		return result
-	case 2:
+	case ENTITY_RESOURCE:
 		result = append(result, [2]string{"versions", "version"})
 		return result
-	case 3:
+	case ENTITY_VERSION:
 		return nil
 	}
-	panic(fmt.Sprintf("bad level: %d", e.Level))
+	panic(fmt.Sprintf("bad type: %d", e.Type))
 	return nil
 }
 
@@ -1659,7 +1667,7 @@ func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, e
 // avoid traversing the entity more than once, we will tweak things if needed.
 // For example, if a missing attribute has a Default value then we'll add it.
 func (e *Entity) Validate() error {
-	if e.Level == 2 {
+	if e.Type == ENTITY_RESOURCE {
 		// Skip Resources // TODO DUG - would prefer to not do this
 		return nil
 	}
@@ -1674,7 +1682,7 @@ func (e *Entity) Validate() error {
 	return e.ValidateObject(e.NewObject, attrs, NewPP())
 }
 
-// This should be called after all level-specific calculated properties have
+// This should be called after all type-specific calculated properties have
 // been removed - such as collections
 func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) error {
 
@@ -1711,7 +1719,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 		}
 	}
 
-	// For top-level entities, get the list of possible collections
+	// For Registry entities, get the list of possible collections
 	collections := [][2]string{}
 	if path.Len() == 0 {
 		collections = e.GetCollections()
@@ -1761,7 +1769,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			if key == "id" {
 				tmp := origAttrs["$singular"]
 				if tmp != nil {
-					if e.Level == 3 {
+					if e.Type == ENTITY_VERSION {
 						key = "versionid"
 					} else {
 						key = tmp.Description + "id"
@@ -1788,7 +1796,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				}
 			}
 
-			// GetAttributes already added IfValues for top-level attributes
+			// GetAttributes already added IfValues for Registry attributes
 			if path.Len() >= 1 && len(attr.IfValues) > 0 {
 				valStr := fmt.Sprintf("%v", val)
 				for ifValStr, ifValueData := range attr.IfValues {
@@ -2110,7 +2118,7 @@ func PrepUpdateEntity(e *Entity) error {
 			}
 		*/
 
-		if attr.InLevel(e.Level) && attr.internals.updateFn != nil {
+		if attr.InType(e.Type) && attr.internals.updateFn != nil {
 			if err := attr.internals.updateFn(e); err != nil {
 				return err
 			}

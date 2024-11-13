@@ -686,7 +686,7 @@ func CreateDB(name string) error {
 
 	for _, cmd := range strings.Split(initDB, ";") {
 		cmd = strings.TrimSpace(cmd)
-		cmd = strings.Replace(cmd, "@", ";", -1) // Can't use ; in file
+		cmd = ReplaceVariables(cmd)
 		if cmd == "" {
 			continue
 		}
@@ -698,6 +698,26 @@ func CreateDB(name string) error {
 	}
 
 	return nil
+}
+
+func ReplaceVariables(str string) string {
+	if str == "" {
+		return str
+	}
+
+	vars := [][2]string{
+		{"@", ";"}, // can't use ; in file
+		{"$ENTITY_REGISTRY", StrTypes(ENTITY_REGISTRY)},
+		{"$ENTITY_GROUP", StrTypes(ENTITY_GROUP)},
+		{"$ENTITY_RESOURCE", StrTypes(ENTITY_RESOURCE)},
+		{"$ENTITY_VERSION", StrTypes(ENTITY_VERSION)},
+		{"$DB_IN", string(DB_IN)},
+	}
+
+	for _, vs := range vars {
+		str = strings.Replace(str, vs[0], vs[1], -1)
+	}
+	return str
 }
 
 func DeleteDB(name string) error {

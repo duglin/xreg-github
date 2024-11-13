@@ -167,7 +167,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 				Singular: rModel.Singular,
 				UID:      id,
 
-				Level:    2,
+				Type:     ENTITY_RESOURCE,
 				Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
 				Abstract: g.Plural + string(DB_IN) + rType,
 			},
@@ -431,7 +431,7 @@ func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string,
 				Singular: rModel.Singular,
 				UID:      id,
 
-				Level:    2,
+				Type:     ENTITY_RESOURCE,
 				Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
 				Abstract: g.Plural + string(DB_IN) + rType,
 			},

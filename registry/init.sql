@@ -242,7 +242,7 @@ FROM Resources AS sR
 JOIN ModelEntities AS sRM ON (sRM.SID=sR.ModelSID)
 JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND
     tR.Path=(SELECT PropValue FROM Props WHERE
-             EntitySID=sR.SID AND PropName='xref,'));
+             EntitySID=sR.SID AND PropName='xref$DB_IN'));
 # JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND tR.Path=sR.xRef);
 
 CREATE VIEW xRefVersions AS
@@ -275,7 +275,7 @@ END ;
 CREATE VIEW Entities AS
 SELECT                          # Gather Registries
     r.SID AS RegSID,
-    0 AS Level,
+    $ENTITY_REGISTRY AS Type,
     'registries' AS Plural,
     'registry' AS Singular,
     NULL AS ParentSID,
@@ -287,7 +287,7 @@ FROM Registries AS r
 
 UNION SELECT                            # Gather Groups
     g.RegistrySID AS RegSID,
-    1 AS Level,
+    $ENTITY_GROUP AS Type,
     m.Plural AS Plural,
     m.Singular AS Singular,
     g.RegistrySID AS ParentSID,
@@ -300,7 +300,7 @@ JOIN ModelEntities AS m ON (m.SID=g.ModelSID)
 
 UNION SELECT                    # Add Resources
     m.RegistrySID AS RegSID,
-    2 AS Level,
+    $ENTITY_RESOURCE AS Type,
     m.Plural AS Plural,
     m.Singular AS Singular,
     r.GroupSID AS ParentSID,
@@ -313,7 +313,7 @@ JOIN ModelEntities AS m ON (m.SID=r.ModelSID)
 
 UNION SELECT                    # Add Versions (including xref'd versions)
     v.RegistrySID AS RegSID,
-    3 AS Level,
+    $ENTITY_VERSION AS Type,
     'versions' AS Plural,
     'version' AS Singular,
     v.ResourceSID AS ParentSID,
@@ -335,8 +335,8 @@ SELECT                            # Iterate over the xRef Resources
 FROM xRefSrc2TgtResources AS R
 JOIN Props AS P ON (              # Grab the Target Resource's attributes
     P.EntitySID=R.TargetSID AND
-    P.PropName<>CONCAT(R.Singular,'id,') AND
-    P.PropName<>'xref,'
+    P.PropName<>CONCAT(R.Singular,'id$DB_IN') AND
+    P.PropName<>'xref$DB_IN'
 )
 UNION SELECT
     R.RegistrySID,
@@ -349,7 +349,7 @@ JOIN Props AS P ON (
     P.EntitySID IN (
         SELECT eSID FROM Entities WHERE ParentSID=R.TargetSID
     ) AND
-    P.PropName<>'xref,'
+    P.PropName<>'xref$DB_IN'
 )
 ;
 
@@ -376,11 +376,8 @@ FROM EffectiveProps AS p
 JOIN EffectiveVersions AS v ON (p.EntitySID=v.SID)
 JOIN Resources AS r ON (r.SID=v.ResourceSID)
 JOIN EffectiveProps AS p1 ON (p1.EntitySID=r.SID)
-WHERE p1.PropName='defaultVersionId,' AND v.UID=p1.PropValue AND
-      p.PropName<>'versionid,' ;     # Don't include this
-# NOTE!!! if DB_IN changes then the above 2 lines MUST change
-# TODO move the creation of this into the code then we can dynamically
-# use DB_IN instead of hard-coding the "," in here
+WHERE p1.PropName='defaultVersionId$DB_IN' AND v.UID=p1.PropValue AND
+      p.PropName<>'versionid$DB_IN' ;     # Don't include this
 
 CREATE VIEW AllProps AS
 SELECT * FROM EffectiveProps
@@ -388,24 +385,24 @@ UNION SELECT * FROM DefaultProps
 UNION SELECT                    # Add in "isdefault", which is calculated
   v.RegSID,
   v.eSID,
-  'isdefault,',
+  'isdefault$DB_IN',
   'true',
   'boolean'
 FROM Entities AS v
 JOIN EffectiveProps AS p ON (
   p.EntitySID=v.ParentSID AND
-  p.PropName='defaultversionid,'
+  p.PropName='defaultversionid$DB_IN'
   AND p.PropValue=v.UID )
 UNION SELECT                   # Add in "RESOURCEid", which is calculated
   v.RegSID,
   v.eSID,
-  CONCAT(rm.Singular, 'id,'),
+  CONCAT(rm.Singular, 'id$DB_IN'),
   r.UID,
   'string'
 FROM Entities AS v
 JOIN Resources AS r ON (r.SID=v.ParentSID)
 JOIN ModelEntities AS rm ON (rm.SID=r.ModelSID)
-WHERE v.Level=3 ;
+WHERE v.Type=$ENTITY_VERSION;
 
 CREATE VIEW xRefResources AS
 SELECT
@@ -421,7 +418,7 @@ JOIN Resources AS R ON (R.SID=xR.SourceSID) ;
 CREATE VIEW FullTree AS
 SELECT
     RegSID,
-    Level,
+    Type,
     Plural,
     Singular,
     ParentSID,

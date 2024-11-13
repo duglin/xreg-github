@@ -30,7 +30,7 @@ func RemoveResourceAttributes(singular string, obj map[string]any) {
 	// attrArray, _ := CalcSpecProps(-1, singular)
 
 	for _, attr := range OrderedSpecProps { // attrArray {
-		if attr.InLevel(2) && !attr.InLevel(3) {
+		if attr.InType(ENTITY_RESOURCE) && !attr.InType(ENTITY_VERSION) {
 			name := attr.Name
 			if name == "id" {
 				name = singular + "id"
@@ -299,7 +299,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 				Singular: "version",
 				UID:      id,
 
-				Level:    3,
+				Type:     ENTITY_VERSION,
 				Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
 				Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
 			},

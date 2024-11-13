@@ -15,8 +15,8 @@ import (
 type JsonWriter struct {
 	info        *RequestInfo
 	indent      string
-	collPaths   []string   // [level] URL path to the root of Colls
-	unusedColls [][]string // [level][remaining coll names on this level]
+	collPaths   []string   // [eType] URL path to the root of Colls
+	unusedColls [][]string // [eType][remaining coll names on this eType]
 
 	results *Result // results of DB query
 	Entity  *Entity // Current row in the DB results
@@ -109,24 +109,26 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 	jw.Indent()
 
 	extra := ""
-	myLevel := 0
+	myAbstract := "-"
 	myPlural := ""
 	count := 0
 
 	for jw.Entity != nil {
-		if myLevel == 0 {
-			myLevel = jw.Entity.Level
+		if myAbstract == "-" {
+			myAbstract = jw.Entity.Abstract
 			myPlural = jw.Entity.Plural
 		}
 
-		if jw.Entity.Level > myLevel { // Process a child
+		if strings.HasPrefix(jw.Entity.Abstract, myAbstract+string(DB_IN)) {
+			// Process a child
 			if _, err := jw.NextEntity(); err != nil {
 				return count, err
 			}
 			continue
 		}
 
-		if jw.Entity.Level < myLevel || jw.Entity.Plural != myPlural {
+		if strings.HasPrefix(myAbstract, jw.Entity.Abstract+string(DB_IN)) ||
+			jw.Entity.Plural != myPlural {
 			// Stop on a new parent or a new sibling collection
 			break
 		}
@@ -159,9 +161,11 @@ func (jw *JsonWriter) WriteEntity() error {
 	}
 
 	extra := "" // stuff to go at end of line during next print - eg: ,
-	myLevel := jw.Entity.Level
+	myType := jw.Entity.Type
+	myAbstract := jw.Entity.Abstract
+
 	if log.GetVerbose() > 3 {
-		log.VPrintf(4, "Level: %d", myLevel)
+		log.VPrintf(4, "eType: %d", myType)
 		log.VPrintf(4, "JW:\n%s\n", ToJSON(jw))
 		log.VPrintf(4, "JW.Obj:\n%s\n", ToJSON(jw.Entity.Object))
 		log.VPrintf(4, "JW.NObj:\n%s\n", ToJSON(jw.Entity.NewObject))
@@ -177,7 +181,7 @@ func (jw *JsonWriter) WriteEntity() error {
 		}
 
 		// Hate it but do it anyway
-		if e.Level == 2 && strings.HasPrefix(key, "defaultversion") {
+		if e.Type == ENTITY_RESOURCE && strings.HasPrefix(key, "defaultversion") {
 			if IsNil(info.extras["DidDefaultSpace"]) {
 				info.extras["DidDefaultSpace"] = true
 
@@ -208,8 +212,8 @@ func (jw *JsonWriter) WriteEntity() error {
 	}
 
 	// Add resource content properties
-	// if myLevel >= 2 {   // we do level=2 above in the "hate it" section
-	if myLevel == 3 {
+	// if myType == ENTITY_RESOURCE ||  // we do resources in "hate it" section
+	if myType == ENTITY_VERSION {
 		err = SerializeResourceContents(jw, jw.Entity, jw.info, &extra)
 		if err != nil {
 			return err
@@ -221,19 +225,22 @@ func (jw *JsonWriter) WriteEntity() error {
 		extra += "\n" // just because it looks nicer with a blank line
 	}
 
-	jw.LoadCollections(myLevel) // load the list of current collections
+	jw.LoadCollections(myType) // load the list of current collections
 	if _, err := jw.NextEntity(); err != nil {
 		return err
 	}
 
-	for jw.Entity != nil && jw.Entity.Level > myLevel {
-		extra = jw.WritePreCollections(extra, jw.Entity.Plural, myLevel)
+	for jw.Entity != nil &&
+		(myAbstract == "" ||
+			strings.HasPrefix(jw.Entity.Abstract, myAbstract+string(DB_IN))) {
+
+		extra = jw.WritePreCollections(extra, jw.Entity.Plural, myType)
 
 		if extra, err = jw.WriteCollectionHeader(extra); err != nil {
 			return err
 		}
 	}
-	extra = jw.WritePostCollections(extra, myLevel)
+	extra = jw.WritePostCollections(extra, myType)
 
 	// And finally done with this Entity
 	jw.Outdent()
@@ -243,7 +250,7 @@ func (jw *JsonWriter) WriteEntity() error {
 }
 
 func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, extra *string) error {
-	PanicIf(e.Level != 2 && e.Level != 3, "Bad level: %d", e.Level)
+	PanicIf(e.Type != ENTITY_RESOURCE && e.Type != ENTITY_VERSION, "Bad eType: %d", e.Type)
 	// Add the "resource*" props
 	_, rm := jw.Entity.GetModels()
 	singular := rm.Singular
@@ -321,39 +328,39 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 	return nil
 }
 
-func (jw *JsonWriter) LoadCollections(level int) {
+func (jw *JsonWriter) LoadCollections(eType int) {
 	names := []string{}
-	if level == 0 {
+	if eType == ENTITY_REGISTRY {
 		if jw.info.Registry.Model != nil && jw.info.Registry.Model.Groups != nil {
 
 			names = SortedKeys(jw.info.Registry.Model.Groups)
 		}
-	} else if level == 1 {
+	} else if eType == ENTITY_GROUP {
 		gName, _ := strings.CutSuffix(jw.Entity.Abstract, IN_STR)
 		names = SortedKeys(jw.info.Registry.Model.Groups[gName].Resources)
-	} else if level == 2 {
+	} else if eType == ENTITY_RESOURCE {
 		names = []string{"versions"}
-	} else if level == 3 {
+	} else if eType == ENTITY_VERSION {
 		names = []string{} // no children of versions
 	} else {
-		panic("Too many levels")
+		panic(fmt.Sprintf("Unknown eType: %d", eType))
 	}
-	jw.unusedColls[level] = names
+	jw.unusedColls[eType] = names
 
 	p := jw.Entity.Path + "/"
 	if p == "/" {
 		p = ""
 	}
-	jw.collPaths[level] = p
+	jw.collPaths[eType] = p
 }
 
-func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int) string {
-	for i, collName := range jw.unusedColls[level] {
+func (jw *JsonWriter) WritePreCollections(extra string, plural string, eType int) string {
+	for i, collName := range jw.unusedColls[eType] {
 		if collName == plural {
-			jw.unusedColls[level] = jw.unusedColls[level][i+1:]
+			jw.unusedColls[eType] = jw.unusedColls[eType][i+1:]
 			break
 		}
-		p := Path2Abstract(jw.collPaths[level] + collName)
+		p := Path2Abstract(jw.collPaths[eType] + collName)
 		if jw.info.ShouldInline(p) {
 			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
 			extra = ","
@@ -361,15 +368,15 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, level int
 
 		jw.Printf("%s\n%s\"%scount\": 0,\n", extra, jw.indent, collName)
 		jw.Printf("%s\"%surl\": \"%s/%s%s\"", jw.indent, collName,
-			jw.info.BaseURL, jw.collPaths[level], collName)
+			jw.info.BaseURL, jw.collPaths[eType], collName)
 		extra = ","
 	}
 	return extra
 }
 
-func (jw *JsonWriter) WritePostCollections(extra string, level int) string {
-	for _, collName := range jw.unusedColls[level] {
-		p := Path2Abstract(jw.collPaths[level] + collName)
+func (jw *JsonWriter) WritePostCollections(extra string, eType int) string {
+	for _, collName := range jw.unusedColls[eType] {
+		p := Path2Abstract(jw.collPaths[eType] + collName)
 		if jw.info.ShouldInline(p) {
 			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
 			extra = ","
@@ -377,12 +384,12 @@ func (jw *JsonWriter) WritePostCollections(extra string, level int) string {
 
 		jw.Printf("%s\n%s\"%scount\": 0,\n", extra, jw.indent, collName)
 		jw.Printf("%s\"%surl\": \"%s/%s%s\"", jw.indent, collName,
-			jw.info.BaseURL, jw.collPaths[level], collName)
+			jw.info.BaseURL, jw.collPaths[eType], collName)
 		extra = ","
 	}
 
-	jw.collPaths[level] = ""
-	jw.unusedColls[level] = nil
+	jw.collPaths[eType] = ""
+	jw.unusedColls[eType] = nil
 	return extra
 }
 
