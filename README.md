@@ -1,9 +1,10 @@
 [![CI](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml/badge.svg)](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml)
-[Images](https://github.com/duglin/?tab=packages&q=xreg)
 
 # xreg-github
 
-Implementation of the xRegistry spec.
+Implementation of the [xRegistry](https://xregistry.io) spec.
+A live version is available at
+[https://xregistry.soaphub.org?ui](https://xregistry.soaphub.org?ui) too.
 
 Still a long way to go.
 
