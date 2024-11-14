@@ -20,6 +20,8 @@ RUN make cmds
 # FROM scratch
 FROM mysql
 
+LABEL org.opencontainers.image.source https://github.com/duglin/xreg-github
+
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt \
 	/etc/ssl/certs/ca-certificates.crt
 

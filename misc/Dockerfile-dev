@@ -5,6 +5,8 @@
 
 FROM golang:alpine
 
+LABEL org.opencontainers.image.source https://github.com/duglin/xreg-github
+
 ARG GIT_COMMIT
 
 # Minimal tools - docker is just for the client, it assumes we'll use the
