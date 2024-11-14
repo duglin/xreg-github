@@ -135,7 +135,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	if !objIsVer {
 		// If obj is for the resource then save and delete the versions
 		// collection (and it's attributes) so we don't try to save them
-		// as extensions on the Version
+		// as extensions on the Resource
 		var ok bool
 		val, _ := obj["versions"]
 		if !IsNil(val) {

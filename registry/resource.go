@@ -17,10 +17,21 @@ type Resource struct {
 // We used to use a "." as a prefix to know - may still need to at some point
 var specialResourceAttrs = map[string]bool{
 	// "id":                   true,
-	"defaultversionid":     true,
-	"defaultversionsticky": true,
-	"#nextversionid":       true,
-	"xref":                 true,
+	"#nextversionid": true,
+}
+
+func isResourceOnly(name string) bool {
+	if attr := SpecProps[name]; attr != nil {
+		if attr.InType(ENTITY_RESOURCE) && !attr.InType(ENTITY_VERSION) {
+			return true
+		}
+	}
+
+	if specialResourceAttrs[name] {
+		return true
+	}
+
+	return false
 }
 
 // Remove any attributes that appear on Resources but not Versions.
@@ -59,7 +70,7 @@ func (r *Resource) Get(name string) any {
 		return xref.Get(name)
 	}
 
-	if specialResourceAttrs[name] {
+	if isResourceOnly(name) {
 		return r.Entity.Get(name)
 	}
 
@@ -108,7 +119,8 @@ func (r *Resource) GetXref() (string, *Resource, error) {
 
 func (r *Resource) SetCommit(name string, val any) error {
 	log.VPrintf(4, "Set: r(%s).SetCommit(%s,%v)", r.UID, name, val)
-	if name == r.Singular+"id" || specialResourceAttrs[name] {
+
+	if name == r.Singular+"id" || isResourceOnly(name) {
 		return r.Entity.SetCommit(name, val)
 	}
 
@@ -122,7 +134,8 @@ func (r *Resource) SetCommit(name string, val any) error {
 
 func (r *Resource) JustSet(name string, val any) error {
 	log.VPrintf(4, "JustSet: r(%s).JustSet(%s,%v)", r.UID, name, val)
-	if name == r.Singular+"id" || specialResourceAttrs[name] {
+
+	if name == r.Singular+"id" || isResourceOnly(name) {
 		return r.Entity.JustSet(NewPPP(name), val)
 	}
 
@@ -136,7 +149,8 @@ func (r *Resource) JustSet(name string, val any) error {
 
 func (r *Resource) SetSave(name string, val any) error {
 	log.VPrintf(4, "SetSave: r(%s).SetSave(%s,%v)", r.UID, name, val)
-	if name == r.Singular+"id" || specialResourceAttrs[name] {
+
+	if name == r.Singular+"id" || isResourceOnly(name) {
 		return r.Entity.SetSave(name, val)
 	}
 
