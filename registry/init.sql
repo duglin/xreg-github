@@ -195,8 +195,23 @@ CREATE TRIGGER ResourcesTrigger BEFORE DELETE ON Resources
 FOR EACH ROW
 BEGIN
     DELETE FROM Props WHERE EntitySID=OLD.SID @
+    DELETE FROM Metas WHERE ResourceSID=OLD.SID @
     DELETE FROM Versions WHERE ResourceSID=OLD.SID @
 END ;
+
+CREATE TABLE Metas (
+    SID             VARCHAR(64) NOT NULL,   # System ID
+    RegistrySID     VARCHAR(64) NOT NULL,
+    ResourceSID     VARCHAR(64) NOT NULL,   # System ID
+    Path            VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
+    Abstract        VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
+
+    PRIMARY KEY (SID),
+    UNIQUE INDEX(RegistrySID,SID),
+    INDEX(ResourceSID),
+    INDEX(Path),
+    INDEX(RegistrySID)
+);
 
 CREATE TABLE Versions (
     SID                 VARCHAR(64) NOT NULL,   # System ID

@@ -13,6 +13,10 @@ type Resource struct {
 	Group *Group
 }
 
+type Meta struct {
+	Entity
+}
+
 // These attributes are on the Resource not the Version
 // We used to use a "." as a prefix to know - may still need to at some point
 var specialResourceAttrs = map[string]bool{

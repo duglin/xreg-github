@@ -15,8 +15,8 @@ import (
 type JsonWriter struct {
 	info        *RequestInfo
 	indent      string
-	collPaths   []string   // [eType] URL path to the root of Colls
-	unusedColls [][]string // [eType][remaining coll names on this eType]
+	collPaths   map[int]string   // [eType] URL path to the root of Colls
+	unusedColls map[int][]string // [eType][remaining coll names on this eType]
 
 	results *Result // results of DB query
 	Entity  *Entity // Current row in the DB results
@@ -27,8 +27,8 @@ func NewJsonWriter(info *RequestInfo, results *Result) *JsonWriter {
 	return &JsonWriter{
 		info:        info,
 		indent:      "",
-		collPaths:   make([]string, 4),
-		unusedColls: make([][]string, 4),
+		collPaths:   map[int]string{},
+		unusedColls: map[int][]string{},
 		results:     results,
 		hasData:     false,
 	}
@@ -388,8 +388,8 @@ func (jw *JsonWriter) WritePostCollections(extra string, eType int) string {
 		extra = ","
 	}
 
-	jw.collPaths[eType] = ""
-	jw.unusedColls[eType] = nil
+	delete(jw.collPaths, eType)
+	delete(jw.unusedColls, eType)
 	return extra
 }
 
