@@ -70,7 +70,7 @@ func TestXrefBasic(t *testing.T) {
 }
 `)
 
-	xNoErr(t, f1.SetSave("description", "testing xref"))
+	xNoErr(t, f1.SetSaveDefault("description", "testing xref"))
 	xCheckEqual(t, "", fx.Get("description"), "testing xref")
 
 	v1, err := f1.FindVersion("v1", false)

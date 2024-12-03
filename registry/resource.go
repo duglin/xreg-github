@@ -57,6 +57,9 @@ func RemoveResourceAttributes(singular string, obj map[string]any) {
 	}
 }
 
+var _ EntitySetter = &Resource{}
+var _ EntitySetter = &Meta{}
+
 func (r *Resource) Get(name string) any {
 	log.VPrintf(4, "Get: r(%s).Get(%s)", r.UID, name)
 
@@ -126,18 +129,22 @@ func (r *Resource) GetXref() (string, *Resource, error) {
 	return xref, res, nil
 }
 
+func (m *Meta) SetCommit(name string, val any) error {
+	log.VPrintf(4, "SetCommitMeta: m(%s).Set(%s,%v)", m.UID, name, val)
+
+	return m.Entity.eSetCommit(name, val)
+}
+
 func (r *Resource) SetCommitMeta(name string, val any) error {
 	log.VPrintf(4, "SetCommitMeta: r(%s).Set(%s,%v)", r.UID, name, val)
 
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
-	return meta.Entity.SetCommit(name, val)
+	return meta.SetCommit(name, val)
 }
 
-func (r *Resource) SetCommitResource(name string, val any) error {
-	log.VPrintf(4, "SetCommitResource: r(%s).Set(%s,%v)", r.UID, name, val)
-
-	return r.Entity.SetCommit(name, val)
+func (r *Resource) SetCommit(name string, val any) error {
+	return r.SetCommitDefault(name, val)
 }
 
 func (r *Resource) SetCommitDefault(name string, val any) error {
@@ -149,43 +156,20 @@ func (r *Resource) SetCommitDefault(name string, val any) error {
 	return v.SetCommit(name, val)
 }
 
-func (r *Resource) oldSetCommit(name string, val any) error {
-	log.VPrintf(4, "Set: r(%s).SetCommit(%s,%v)", r.UID, name, val)
-
-	if name == r.Singular+"id" || isResourceOnly(name) {
-		if m, err := r.FindMeta(false); err != nil {
-			return err
-		} else {
-			if err = m.SetSave(name, val); err != nil {
-				return err
-			}
-		}
-		return r.Entity.SetCommit(name, val)
-	}
-
-	v, err := r.GetDefault()
-	if err != nil {
-		panic(err)
-	}
-
-	return v.SetCommit(name, val)
-}
-
 func (m *Meta) JustSet(name string, val any) error {
 	log.VPrintf(4, "JustSet: m(%s).JustSet(%s,%v)", m.Resource.UID, name, val)
-	return m.Entity.JustSet(NewPPP(name), val)
+	return m.Entity.eJustSet(NewPPP(name), val)
 }
 
 func (r *Resource) JustSetMeta(name string, val any) error {
 	log.VPrintf(4, "JustSetMeta: r(%s).Set(%s,%v)", r.UID, name, val)
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
-	return meta.Entity.JustSet(NewPPP(name), val)
+	return meta.Entity.eJustSet(NewPPP(name), val)
 }
 
-func (r *Resource) JustSetResource(name string, val any) error {
-	log.VPrintf(4, "JustSetResource: r(%s).Set(%s,%v)", r.UID, name, val)
-	return r.Entity.JustSet(NewPPP(name), val)
+func (r *Resource) JustSet(name string, val any) error {
+	return r.JustSetDefault(name, val)
 }
 
 func (r *Resource) JustSetDefault(name string, val any) error {
@@ -195,29 +179,9 @@ func (r *Resource) JustSetDefault(name string, val any) error {
 	return v.JustSet(name, val)
 }
 
-func (r *Resource) oldJustSet(name string, val any) error {
-	log.VPrintf(4, "JustSet: r(%s).JustSet(%s,%v)", r.UID, name, val)
-
-	if name == r.Singular+"id" || isResourceOnly(name) {
-		if m, err := r.FindMeta(false); err != nil {
-			return err
-		} else {
-			if err = m.JustSet(name, val); err != nil {
-				return err
-			}
-		}
-		return r.Entity.JustSet(NewPPP(name), val)
-	}
-
-	v, err := r.GetDefault()
-	PanicIf(err != nil, "%s", err)
-
-	return v.JustSet(name, val)
-}
-
 func (m *Meta) SetSave(name string, val any) error {
 	log.VPrintf(4, "SetSave: m(%s).SetSave(%s,%v)", m.Resource.UID, name, val)
-	return m.Entity.SetSave(name, val)
+	return m.Entity.eSetSave(name, val)
 }
 
 func (r *Resource) SetSaveMeta(name string, val any) error {
@@ -225,37 +189,24 @@ func (r *Resource) SetSaveMeta(name string, val any) error {
 
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "%s", err)
-	return meta.Entity.SetSave(name, val)
+	return meta.Entity.eSetSave(name, val)
 }
 
+// Should only ever be used for "id"
 func (r *Resource) SetSaveResource(name string, val any) error {
 	log.VPrintf(4, "SetSaveResource: r(%s).Set(%s,%v)", r.UID, name, val)
 
-	return r.Entity.SetSave(name, val)
+	PanicIf(name != r.Singular+"id", "You shouldn't be using this")
+
+	return r.Entity.eSetSave(name, val)
+}
+
+func (r *Resource) SetSave(name string, val any) error {
+	return r.SetSave(name, val)
 }
 
 func (r *Resource) SetSaveDefault(name string, val any) error {
 	log.VPrintf(4, "SetSaveDefault: r(%s).Set(%s,%v)", r.UID, name, val)
-
-	v, err := r.GetDefault()
-	PanicIf(err != nil, "%s", err)
-
-	return v.SetSave(name, val)
-}
-
-func (r *Resource) oldSetSave(name string, val any) error {
-	log.VPrintf(4, "SetSave: r(%s).SetSave(%s,%v)", r.UID, name, val)
-
-	if name == r.Singular+"id" || isResourceOnly(name) {
-		if m, err := r.FindMeta(false); err != nil {
-			return err
-		} else {
-			if err = m.SetSave(name, val); err != nil {
-				return err
-			}
-		}
-		return r.Entity.SetSave(name, val)
-	}
 
 	v, err := r.GetDefault()
 	PanicIf(err != nil, "%s", err)
@@ -358,8 +309,8 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 	// already set
 	if newDefault != nil && meta.Get("defaultversionid") == newDefault.UID {
 		// But make sure we're sticky, could just be a coincidence
-		if r.Get("defaultversionsticky") != true {
-			return r.SetSave("defaultversionsticky", true)
+		if meta.Get("defaultversionsticky") != true {
+			return meta.SetSave("defaultversionsticky", true)
 		}
 		return nil
 	}
@@ -818,7 +769,21 @@ func (r *Resource) Delete() error {
 	log.VPrintf(3, ">Enter: Resource.Delete(%s)", r.UID)
 	defer log.VPrintf(3, "<Exit: Resource.Delete")
 
+	meta, err := r.FindMeta(false)
+	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
+
+	if err = meta.Delete(); err != nil {
+		return err
+	}
+
 	return DoOne(r.tx, `DELETE FROM Resources WHERE SID=?`, r.DbSID)
+}
+
+func (m *Meta) Delete() error {
+	log.VPrintf(3, ">Enter: Meta.Delete(%s)", m.UID)
+	defer log.VPrintf(3, "<Exit: Meta.Delete")
+
+	return DoOne(m.tx, `DELETE FROM Metas WHERE SID=?`, m.DbSID)
 }
 
 func (r *Resource) GetVersions() ([]*Version, error) {

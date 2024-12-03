@@ -155,21 +155,23 @@ func GetRegistryNames() []string {
 	return res
 }
 
+var _ EntitySetter = &Registry{}
+
 func (reg *Registry) Get(name string) any {
 	return reg.Entity.Get(name)
 }
 
 // Technically this should be called SetValidateSave
 func (reg *Registry) SetCommit(name string, val any) error {
-	return reg.Entity.SetCommit(name, val)
+	return reg.Entity.eSetCommit(name, val)
 }
 
 func (reg *Registry) JustSet(name string, val any) error {
-	return reg.Entity.JustSet(NewPPP(name), val)
+	return reg.Entity.eJustSet(NewPPP(name), val)
 }
 
 func (reg *Registry) SetSave(name string, val any) error {
-	return reg.Entity.SetSave(name, val)
+	return reg.Entity.eSetSave(name, val)
 }
 
 func (reg *Registry) Delete() error {

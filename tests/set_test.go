@@ -61,7 +61,7 @@ func TestSetResource(t *testing.T) {
 
 	// Make sure setting it on the version is seen by res.Default and res
 	namePP := NewPP().P("name").UI()
-	file.SetSave(namePP, "myName")
+	file.SetSaveDefault(namePP, "myName")
 	ver, _ := file.FindVersion("v1", false)
 	val := ver.Get(namePP)
 	if val != "myName" {
@@ -241,11 +241,11 @@ func TestSetLabels(t *testing.T) {
 	dir.Refresh()
 	xJSONCheck(t, dir.Get(labels.P("d1").UI()), nil)
 
-	err = file.SetSave(labels.P("f1").UI(), "foo")
+	err = file.SetSaveDefault(labels.P("f1").UI(), "foo")
 	xNoErr(t, err)
 	file.Refresh()
 	xJSONCheck(t, file.Get(labels.P("f1").UI()), "foo")
-	err = file.SetSave(labels.P("f1").UI(), nil)
+	err = file.SetSaveDefault(labels.P("f1").UI(), nil)
 	xNoErr(t, err)
 	file.Refresh()
 	xJSONCheck(t, file.Get(labels.P("f1").UI()), nil)
@@ -262,12 +262,12 @@ func TestSetLabels(t *testing.T) {
 	xJSONCheck(t, ver.Get(labels.P("v1").UI()), nil)
 
 	dir.SetSave(labels.P("dd").UI(), "dd.foo")
-	file.SetSave(labels.P("ff").UI(), "ff.bar")
+	file.SetSaveDefault(labels.P("ff").UI(), "ff.bar")
 
-	file.SetSave(labels.P("dd-ff").UI(), "dash")
-	file.SetSave(labels.P("dd-ff-ff").UI(), "dashes")
-	file.SetSave(labels.P("dd_ff").UI(), "under")
-	file.SetSave(labels.P("dd.ff").UI(), "dot")
+	file.SetSaveDefault(labels.P("dd-ff").UI(), "dash")
+	file.SetSaveDefault(labels.P("dd-ff-ff").UI(), "dashes")
+	file.SetSaveDefault(labels.P("dd_ff").UI(), "under")
+	file.SetSaveDefault(labels.P("dd.ff").UI(), "dot")
 
 	ver2.Refresh() // very important since ver2 is not stale
 	err = ver.SetSave(labels.P("vv").UI(), 987.234)

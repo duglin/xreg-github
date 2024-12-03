@@ -11,20 +11,29 @@ type Group struct {
 	Registry *Registry
 }
 
+var _ EntitySetter = &Group{}
+
 func (g *Group) Get(name string) any {
 	return g.Entity.Get(name)
 }
 
 func (g *Group) SetCommit(name string, val any) error {
-	return g.Entity.SetCommit(name, val)
+	return g.Entity.eSetCommit(name, val)
 }
 
 func (g *Group) JustSet(name string, val any) error {
-	return g.Entity.JustSet(NewPPP(name), val)
+	return g.Entity.eJustSet(NewPPP(name), val)
 }
 
 func (g *Group) SetSave(name string, val any) error {
-	return g.Entity.SetSave(name, val)
+	return g.Entity.eSetSave(name, val)
+}
+
+func (g *Group) Delete() error {
+	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.UID)
+	defer log.VPrintf(3, "<Exit: Group.Delete")
+
+	return DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
 }
 
 func (g *Group) FindResource(rType string, id string, anyCase bool) (*Resource, error) {
@@ -326,11 +335,4 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	*/
 
 	return r, isNew, err
-}
-
-func (g *Group) Delete() error {
-	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.UID)
-	defer log.VPrintf(3, "<Exit: Group.Delete")
-
-	return DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
 }

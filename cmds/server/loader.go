@@ -610,22 +610,22 @@ func LoadDocStore(reg *registry.Registry) *registry.Registry {
 	g.SetSave("labels.group", "g1")
 
 	r, _ := g.AddResource("formats", "json", "v1")
-	r.SetSave("contenttype", "application/json")
-	r.SetSave("format", `{"prop": "A document 1"}`)
+	r.SetSaveDefault("contenttype", "application/json")
+	r.SetSaveDefault("format", `{"prop": "A document 1"}`)
 
 	r, _ = g.AddResource("formats", "xml", "v1")
-	r.SetSave("contenttype", "application/xml")
-	r.SetSave("format", `<elem title="A document 1"/>`)
+	r.SetSaveDefault("contenttype", "application/xml")
+	r.SetSaveDefault("format", `<elem title="A document 1"/>`)
 
 	g, _ = reg.AddGroup("documents", "mydoc2")
 
 	r, _ = g.AddResource("formats", "json", "v1")
-	r.SetSave("contenttype", "application/json")
-	r.SetSave("format", `{"prop": "A document 2"}`)
+	r.SetSaveDefault("contenttype", "application/json")
+	r.SetSaveDefault("format", `{"prop": "A document 2"}`)
 
 	r, _ = g.AddResource("formats", "xml", "v1")
-	r.SetSave("contenttype", "application/xml")
-	r.SetSave("format", `<elem title="A document 2"/>`)
+	r.SetSaveDefault("contenttype", "application/xml")
+	r.SetSaveDefault("format", `<elem title="A document 2"/>`)
 
 	// End of model
 

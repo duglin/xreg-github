@@ -768,7 +768,7 @@ FROM FullTree WHERE RegSID=? AND `
 			return fmt.Errorf("Resource %q not found", info.ResourceUID)
 		}
 		meta, err := resource.FindMeta(false)
-		PanicIf(err != nil, "", err)
+		PanicIf(err != nil, "%s", err)
 
 		vID := meta.Get("defaultversionid").(string)
 		for {
@@ -1900,7 +1900,7 @@ func HTTPDelete(info *RequestInfo) error {
 			}
 		}
 		nextDefault := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
-		err = version.Delete(nextDefault)
+		err = version.DeleteSetNextVersion(nextDefault)
 
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
@@ -2154,7 +2154,7 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 				singular, id, version.Get(singular))
 		}
 
-		err = version.Delete(nextDefault)
+		err = version.DeleteSetNextVersion(nextDefault)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err

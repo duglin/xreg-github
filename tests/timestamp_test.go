@@ -156,7 +156,7 @@ func TestTimestampRegistry(t *testing.T) {
 	xCheckEqual(t, "", reg.Get("createdat"), regCreate)
 	xCheckEqual(t, "", reg.Get("modifiedat"), regMod)
 
-	xNoErr(t, f.SetSave("description", "myfile"))
+	xNoErr(t, f.SetSaveDefault("description", "myfile"))
 
 	xCheckEqual(t, "", dCTime, d.Get("createdat"))
 	xCheckEqual(t, "", dMTime, d.Get("modifiedat"))

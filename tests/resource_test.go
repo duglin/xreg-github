@@ -97,10 +97,10 @@ func TestResourceSet(t *testing.T) {
 
 	// /dirs/d1/f1/v1
 
-	xNoErr(t, f1.SetSave("name", "myName"))
-	xNoErr(t, f1.SetSave("epoch", 68))
-	xNoErr(t, f1.SetSave("ext1", "someext"))
-	xNoErr(t, f1.SetSave("ext2", 123))
+	xNoErr(t, f1.SetSaveDefault("name", "myName"))
+	xNoErr(t, f1.SetSaveDefault("epoch", 68))
+	xNoErr(t, f1.SetSaveDefault("ext1", "someext"))
+	xNoErr(t, f1.SetSaveDefault("ext2", 123))
 
 	// Make sure the props on the resource weren't set
 	xCheck(t, f1.Entity.Get("name") == nil, "name should be nil")
@@ -147,10 +147,10 @@ func TestResourceRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 	reg.Commit()
 
-	err = f1.SetSave("clireq", nil)
+	err = f1.SetSaveDefault("clireq", nil)
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 
-	err = f1.SetSave("clireq", "again")
+	err = f1.SetSaveDefault("clireq", "again")
 	xNoErr(t, err)
 }
 

@@ -22,7 +22,7 @@ func TestBasicFilters(t *testing.T) {
 	f.AddVersion("v1.1")
 
 	reg.SetSave("labels.reg1", "1ger")
-	f.SetSave("labels.file1", "1elif")
+	f.SetSaveDefault("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1
 	//            /v2
@@ -388,11 +388,11 @@ func TestANDORFilters(t *testing.T) {
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
 	f.AddVersion("v2")
-	f.SetSave("name", "f1")
+	f.SetSaveDefault("name", "f1")
 	d, _ = reg.AddGroup("dirs", "d2")
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
-	f.SetSave("name", "f2")
+	f.SetSaveDefault("name", "f2")
 
 	gm, err = reg.Model.AddGroupModel("schemagroups", "schemagroup")
 	xNoErr(t, err)
@@ -405,7 +405,7 @@ func TestANDORFilters(t *testing.T) {
 	s.AddVersion("v2.0")
 
 	reg.SetSave("labels.reg1", "1ger")
-	f.SetSave("labels.file1", "1elif")
+	f.SetSaveDefault("labels.file1", "1elif")
 
 	// /dirs/d1/f1/v1     f1.name=f1
 	//            /v2
@@ -506,14 +506,14 @@ func TestWildcards(t *testing.T) {
 	d, _ := reg.AddGroup("dirs", "d1")
 	f, _ := d.AddResource("files", "f1", "v1")
 	f.AddVersion("v2")
-	f.SetSave("name", "f1")
+	f.SetSaveDefault("name", "f1")
 	d, _ = reg.AddGroup("dirs", "d2")
 	f, _ = d.AddResource("files", "f2", "v1")
 	f.AddVersion("v1.1")
-	f.SetSave("name", "f123")
+	f.SetSaveDefault("name", "f123")
 	f, _ = d.AddResource("files", "f3", "v1")
 	f.AddVersion("v1.1")
-	f.SetSave("name", "g%d")
+	f.SetSaveDefault("name", "g%d")
 	f, _ = d.AddResource("files", "f4", "v1") // No name at all
 
 	tests := []struct {

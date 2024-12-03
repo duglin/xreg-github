@@ -38,7 +38,9 @@ type Entity struct {
 type EntitySetter interface {
 	Get(name string) any
 	SetCommit(name string, val any) error // Should never be used
+	JustSet(name string, val any) error
 	SetSave(name string, val any) error
+	Delete() error
 }
 
 func GoToOurType(val any) string {
@@ -364,18 +366,18 @@ func (e *Entity) Refresh() error {
 // Should never be used because the act of committing should be done
 // by the caller once all of the changes are done. This is a holdover from
 // before we had transaction support - once we're sure, delete it
-func (e *Entity) SetCommit(path string, val any) error {
+func (e *Entity) eSetCommit(path string, val any) error {
 	log.VPrintf(3, ">Enter: SetCommit(%s=%v)", path, val)
 	defer log.VPrintf(3, "<Exit Set")
 
-	err := e.SetSave(path, val)
+	err := e.eSetSave(path, val)
 	Must(e.tx.Conditional(err))
 
 	return err
 }
 
 // Set, Validate and Save to DB but not Commit
-func (e *Entity) SetSave(path string, val any) error {
+func (e *Entity) eSetSave(path string, val any) error {
 	log.VPrintf(3, ">Enter: SetSave(%s=%v)", path, val)
 	defer log.VPrintf(3, "<Exit Set")
 
@@ -389,7 +391,7 @@ func (e *Entity) SetSave(path string, val any) error {
 }
 
 // Set the prop in the Entity but don't Validate or Save to the DB
-func (e *Entity) JustSet(pp *PropPath, val any) error {
+func (e *Entity) eJustSet(pp *PropPath, val any) error {
 	log.VPrintf(3, ">Enter: JustSet([%d] %s.%s=%v)", e.Type, e.UID, pp.UI(), val)
 	defer log.VPrintf(3, "<Exit: JustSet")
 
@@ -482,7 +484,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 		}
 	}()
 
-	if err := e.JustSet(pp, val); err != nil {
+	if err := e.eJustSet(pp, val); err != nil {
 		return err
 	}
 

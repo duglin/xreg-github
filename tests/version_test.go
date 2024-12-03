@@ -73,7 +73,7 @@ func TestCreateVersion(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, vt == nil, "Find version xxx should have failed")
 
-	err = v2.Delete("")
+	err = v2.DeleteSetNextVersion("")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f1":{"versions":{"v1":{},"v1.1":{}}}}}}}`)
@@ -115,14 +115,14 @@ func TestCreateVersion(t *testing.T) {
 `)
 	vt, err = f1.FindVersion("v2", false)
 	xNoErr(t, err)
-	err = vt.Delete("")
+	err = vt.DeleteSetNextVersion("")
 	xNoErr(t, err)
 	xJSONCheck(t, f1.Get("defaultversionid"), "v3")
 
 	vt, err = f1.FindVersion("v3", false)
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "Can't be nil")
-	err = vt.Delete("")
+	err = vt.DeleteSetNextVersion("")
 	xNoErr(t, err)
 	xJSONCheck(t, f1.Get("defaultversionid"), "v1")
 
@@ -134,25 +134,25 @@ func TestCreateVersion(t *testing.T) {
 	vt, err = f1.FindVersion("v1", false)
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "should not be nil")
-	err = vt.Delete("")
+	err = vt.DeleteSetNextVersion("")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f1":{"versions":{"v1.1":{},"v3":{}}}}}}}`)
 
-	err = vt.Delete("v2")
+	err = vt.DeleteSetNextVersion("v2")
 	xCheckErr(t, err, `Can't find next default Version "v2"`)
 
 	vt, err = f1.FindVersion("v1.1", false)
 	xNoErr(t, err)
 	xCheck(t, vt != nil, "should not be nil")
 
-	err = vt.Delete("v1.1")
+	err = vt.DeleteSetNextVersion("v1.1")
 	xCheckErr(t, err, `Can't set defaultversionid to Version being deleted`)
 
 	vt, err = f1.AddVersion("v4")
 	xNoErr(t, err)
 
-	err = vt.Delete("v3")
+	err = vt.DeleteSetNextVersion("v3")
 	xNoErr(t, err)
 
 	xCheckGet(t, reg, "dirs/d2/files",
@@ -282,7 +282,7 @@ func TestDefaultVersion(t *testing.T) {
 }
 `)
 
-	err := v1.Delete("")
+	err := v1.DeleteSetNextVersion("")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "dirs/d1/files/f1$structure",
 		`{
@@ -301,9 +301,9 @@ func TestDefaultVersion(t *testing.T) {
 }
 `)
 
-	err = v3.Delete("v1")
+	err = v3.DeleteSetNextVersion("v1")
 	xCheckErr(t, err, "Can't find next default Version \"v1\"")
-	err = v3.Delete("v2")
+	err = v3.DeleteSetNextVersion("v2")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "dirs/d1/files/f1$structure",
 		`{
@@ -322,7 +322,7 @@ func TestDefaultVersion(t *testing.T) {
 }
 `)
 
-	err = v2.Delete("")
+	err = v2.DeleteSetNextVersion("")
 	xNoErr(t, err)
 	xCheckGet(t, reg, "dirs/d1/files/f1$structure",
 		`{
@@ -340,7 +340,7 @@ func TestDefaultVersion(t *testing.T) {
 }
 `)
 
-	xNoErr(t, v4.Delete(""))
+	xNoErr(t, v4.DeleteSetNextVersion(""))
 	xCheckGet(t, reg, "dirs/d1/files/f1$structure",
 		`{
   "fileid": "f1",
@@ -357,7 +357,7 @@ func TestDefaultVersion(t *testing.T) {
 }
 `)
 
-	xNoErr(t, v5.Delete(""))
+	xNoErr(t, v5.DeleteSetNextVersion(""))
 	xCheckGet(t, reg, "dirs/d1/files/f1$structure", "Not found\n")
 }
 

@@ -11,20 +11,26 @@ type Version struct {
 	Resource *Resource
 }
 
+var _ EntitySetter = &Version{}
+
 func (v *Version) Get(name string) any {
 	return v.Entity.Get(name)
 }
 
 func (v *Version) SetCommit(name string, val any) error {
-	return v.Entity.SetCommit(name, val)
+	return v.Entity.eSetCommit(name, val)
 }
 
 func (v *Version) JustSet(name string, val any) error {
-	return v.Entity.JustSet(NewPPP(name), val)
+	return v.Entity.eJustSet(NewPPP(name), val)
 }
 
 func (v *Version) SetSave(name string, val any) error {
-	return v.Entity.SetSave(name, val)
+	return v.Entity.eSetSave(name, val)
+}
+
+func (v *Version) Delete() error {
+	panic("Should never call this directly")
 }
 
 // JustDelete will delete the Version w/o any additional logic like
@@ -39,7 +45,7 @@ func (v *Version) JustDelete() error {
 	return nil
 }
 
-func (v *Version) Delete(nextVersionID string) error {
+func (v *Version) DeleteSetNextVersion(nextVersionID string) error {
 	log.VPrintf(3, ">Enter: Version.Delete(%s, %s)", v.UID, nextVersionID)
 	defer log.VPrintf(3, "<Exit: Version.Delete")
 
