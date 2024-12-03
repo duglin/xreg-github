@@ -77,8 +77,11 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Entity.Plural
 	myURL := fmt.Sprintf("%s/%s", jw.info.BaseURL, path.Dir(jw.Entity.Path))
 
+	jw.Printf("%s\n%s\"%surl\": %q,\n", extra, jw.indent, myPlural, myURL)
+	extra = ""
+
 	saveWriter := jw.info.HTTPWriter
-	saveExtra := extra
+	// saveExtra := extra
 
 	// TODO optimize this to avoid the ioutil.Discard and just count the
 	// children from the result set instead
@@ -86,8 +89,7 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 		jw.info.HTTPWriter = DefaultDiscardWriter
 	}
 
-	jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Entity.Plural)
-	extra = ","
+	jw.Printf("%s%q: ", jw.indent, jw.Entity.Plural)
 	count, err := jw.WriteCollection()
 	if err != nil {
 		return "", err
@@ -95,11 +97,12 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 
 	if jw.info.HTTPWriter == DefaultDiscardWriter {
 		jw.info.HTTPWriter = saveWriter
-		extra = saveExtra
+		// extra = saveExtra
+	} else {
+		extra = ",\n"
 	}
 
-	jw.Printf("%s\n%s\"%scount\": %d,\n", extra, jw.indent, myPlural, count)
-	jw.Printf("%s\"%surl\": %q", jw.indent, myPlural, myURL)
+	jw.Printf("%s%s\"%scount\": %d", extra, jw.indent, myPlural, count)
 
 	return ",", nil
 }
@@ -165,10 +168,10 @@ func (jw *JsonWriter) WriteEntity() error {
 	myAbstract := jw.Entity.Abstract
 
 	if log.GetVerbose() > 3 {
-		log.VPrintf(4, "eType: %d", myType)
-		log.VPrintf(4, "JW:\n%s\n", ToJSON(jw))
-		log.VPrintf(4, "JW.Obj:\n%s\n", ToJSON(jw.Entity.Object))
-		log.VPrintf(4, "JW.NObj:\n%s\n", ToJSON(jw.Entity.NewObject))
+		log.VPrintf(0, "eType: %d", myType)
+		log.VPrintf(0, "JW:\n%s\n", ToJSON(jw))
+		log.VPrintf(0, "JW.Obj:\n%s\n", ToJSON(jw.Entity.Object))
+		log.VPrintf(0, "JW.NObj:\n%s\n", ToJSON(jw.Entity.NewObject))
 	}
 
 	jw.Printf("{")
@@ -181,23 +184,21 @@ func (jw *JsonWriter) WriteEntity() error {
 		}
 
 		// Hate it but do it anyway
-		if e.Type == ENTITY_RESOURCE && strings.HasPrefix(key, "defaultversion") {
-			if IsNil(info.extras["DidDefaultSpace"]) {
-				info.extras["DidDefaultSpace"] = true
-
-				err := SerializeResourceContents(jw, e, info, &extra)
-				if err != nil {
-					return err
-				}
-
-				// Add space before "defaultversion..."
-				jw.Printf("%s\n", extra)
-				extra = ""
+		if e.Type == ENTITY_RESOURCE && key == "metaurl" {
+			err := SerializeResourceContents(jw, e, info, &extra)
+			if err != nil {
+				return err
 			}
 
-			if key == "defaultversionurl" {
-				delete(info.extras, "DidDefaultSpace")
-			}
+			// Add space before "metaurl"
+			jw.Printf("%s\n", extra)
+			extra = ""
+		}
+
+		if e.Type == ENTITY_META && key == "defaultversionid" {
+			// Add space before "defaultversionid"
+			jw.Printf("%s\n", extra)
+			extra = ""
 		}
 
 		buf, _ := json.MarshalIndent(val, jw.indent, "  ")
@@ -221,7 +222,8 @@ func (jw *JsonWriter) WriteEntity() error {
 	}
 
 	// Now show all of the nested collections
-	if extra != "" {
+	if extra != "" && myType != ENTITY_RESOURCE {
+		// Resources already added the \n before "metaurl"
 		extra += "\n" // just because it looks nicer with a blank line
 	}
 
@@ -230,6 +232,28 @@ func (jw *JsonWriter) WriteEntity() error {
 		return err
 	}
 
+	// If next entity is 'meta' then skip it.
+	// Note, we're getting lucky that "meta" comes before "versions".
+	// We really should fix this.
+	if jw.Entity != nil && jw.Entity.Type == ENTITY_META {
+		p, _ := PropPathFromPath(jw.Entity.Abstract)
+		if jw.info.ShouldInline(p.DB()) {
+			jw.Printf("%s\n%s%q: ", extra, jw.indent, "meta")
+			if err := jw.WriteEntity(); err != nil {
+				return err
+			}
+			extra = ","
+			// We don't need to call "jw.NextEntity()" because the WriteEntity()
+			// call above would have already done it for us.
+		} else {
+			// Skip "meta" entity
+			if _, err = jw.NextEntity(); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Loop thru all of this entity's children
 	for jw.Entity != nil &&
 		(myAbstract == "" ||
 			strings.HasPrefix(jw.Entity.Abstract, myAbstract+string(DB_IN))) {
@@ -340,6 +364,8 @@ func (jw *JsonWriter) LoadCollections(eType int) {
 		names = SortedKeys(jw.info.Registry.Model.Groups[gName].Resources)
 	} else if eType == ENTITY_RESOURCE {
 		names = []string{"versions"}
+	} else if eType == ENTITY_META {
+		names = []string{}
 	} else if eType == ENTITY_VERSION {
 		names = []string{} // no children of versions
 	} else {
@@ -361,14 +387,15 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, eType int
 			break
 		}
 		p := Path2Abstract(jw.collPaths[eType] + collName)
+
+		jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
+			collName, jw.info.BaseURL, jw.collPaths[eType], collName)
+
 		if jw.info.ShouldInline(p) {
-			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
-			extra = ","
+			jw.Printf("%s\"%s\": {},\n", jw.indent, collName)
 		}
 
-		jw.Printf("%s\n%s\"%scount\": 0,\n", extra, jw.indent, collName)
-		jw.Printf("%s\"%surl\": \"%s/%s%s\"", jw.indent, collName,
-			jw.info.BaseURL, jw.collPaths[eType], collName)
+		jw.Printf("%s\"%scount\": 0", jw.indent, collName)
 		extra = ","
 	}
 	return extra
@@ -377,14 +404,15 @@ func (jw *JsonWriter) WritePreCollections(extra string, plural string, eType int
 func (jw *JsonWriter) WritePostCollections(extra string, eType int) string {
 	for _, collName := range jw.unusedColls[eType] {
 		p := Path2Abstract(jw.collPaths[eType] + collName)
+
+		jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
+			collName, jw.info.BaseURL, jw.collPaths[eType], collName)
+
 		if jw.info.ShouldInline(p) {
-			jw.Printf("%s\n%s\"%s\": {}", extra, jw.indent, collName)
-			extra = ","
+			jw.Printf("%s\"%s\": {},\n", jw.indent, collName)
 		}
 
-		jw.Printf("%s\n%s\"%scount\": 0,\n", extra, jw.indent, collName)
-		jw.Printf("%s\"%surl\": \"%s/%s%s\"", jw.indent, collName,
-			jw.info.BaseURL, jw.collPaths[eType], collName)
+		jw.Printf("%s\"%scount\": 0", jw.indent, collName)
 		extra = ","
 	}
 

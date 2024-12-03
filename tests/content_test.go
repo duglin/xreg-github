@@ -70,7 +70,8 @@ func TestResourceContents(t *testing.T) {
 		Headers: nil,
 	})
 
-	v2, _ := f1.AddVersion("v2")
+	v2, err := f1.AddVersion("v2")
+	xNoErr(t, err)
 	v2.SetSave("#resource", "This is version 2")
 
 	CompareContentMeta(t, reg, &Test{
@@ -186,7 +187,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 	}
 
 	if test.Body == "" || test.Body[0] != '*' {
-		xCheckEqual(t, "", string(resBody), test.Body)
+		xCheckEqual(t, "body", string(resBody), test.Body)
 	} else {
 		if !strings.Contains(string(resBody), test.Body[1:]) {
 			t.Fatalf("Unexpected body for %q\nGot:\n%s\nExpected:\n%s",
@@ -234,11 +235,11 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 			str := ""
 			str = fmt.Sprintf("%v", propValue)
 			if name == "self" || name == "defaultversionurl" {
-				xCheckEqual(t, "", value[0]+"$structure", str)
+				xCheckEqual(t, propName, value[0]+"$structure", str)
 				break
 			}
 
-			xCheckEqual(t, "", value[0], str)
+			xCheckEqual(t, propName, value[0], str)
 			break
 		}
 		if !foundIt {

@@ -119,6 +119,7 @@ TODOs:
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
 - support ?export  /export
 - test xref more
+  - in particular PATCH on an xref resource where body doesn't have xref
 - support readonly - remove resource.readonly
 - remove "readonly" attribute from model Resources, add to Resource
 - format is optional in schema spec
@@ -140,3 +141,5 @@ TODOs:
 - multi-delete must ignore all attributes except id and epoch
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
 - add support for inline=endpoints.*
+- ban the use of ^ in ifvalue VALUES for now
+- support ETag/If-Match

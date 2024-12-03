@@ -406,17 +406,36 @@ func (info *RequestInfo) ParseRequestURL() error {
 			"/"+strings.Join(info.Parts[:5], "/"))
 	}
 
-	if info.Parts[4] != "versions" {
+	if info.Parts[4] != "versions" && info.Parts[4] != "meta" {
 		info.StatusCode = http.StatusNotFound
-		return fmt.Errorf("Expected \"versions\", got: %s", info.Parts[4])
+		return fmt.Errorf("Expected \"versions\" or \"meta\", got: %s",
+			info.Parts[4])
 	}
 
-	// GROUPs/gID/RESOURCEs/rID/versions
-	info.Root += "/versions"
-	info.Abstract += "/versions"
+	// GROUPs/gID/RESOURCEs/rID/[meta|versions]
 	if len(info.Parts) == 5 {
-		info.What = "Coll"
-		return nil
+		if info.Parts[4] == "meta" {
+			// GROUPs/gID/RESOURCEs/rID/meta
+			info.Root += "/meta"
+			info.Abstract += "/meta"
+			info.What = "Entity"
+			return nil
+		}
+
+		// GROUPs/gID/RESOURCEs/rID/versions
+		info.Root += "/versions"
+		info.Abstract += "/versions"
+		if len(info.Parts) == 5 {
+			info.What = "Coll"
+			return nil
+		}
+
+	}
+
+	if info.Parts[4] != "versions" {
+		// GROUPs/gID/RESOURCEs/rID/meta/???
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("URL is too long")
 	}
 
 	// GROUPs/gID/RESOURCEs/rID/versions/vID

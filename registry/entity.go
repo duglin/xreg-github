@@ -390,7 +390,7 @@ func (e *Entity) SetSave(path string, val any) error {
 
 // Set the prop in the Entity but don't Validate or Save to the DB
 func (e *Entity) JustSet(pp *PropPath, val any) error {
-	log.VPrintf(3, ">Enter: JustSet(%s.%s=%v)", e.UID, pp.UI(), val)
+	log.VPrintf(3, ">Enter: JustSet([%d] %s.%s=%v)", e.Type, e.UID, pp.UI(), val)
 	defer log.VPrintf(3, "<Exit: JustSet")
 
 	// Assume no other edits are pending
@@ -456,7 +456,7 @@ func (e *Entity) ValidateAndSave() error {
 	e.tx.NewTx()
 
 	if log.GetVerbose() > 2 {
-		log.VPrintf(0, "Validating %s/%s e.Object:\n%s\n\ne.NewObject:\n%s",
+		log.VPrintf(0, "Validating %s/%s\ne.Object:\n%s\n\ne.NewObject:\n%s",
 			e.Abstract, e.UID, ToJSON(e.Object), ToJSON(e.NewObject))
 	}
 
@@ -784,23 +784,22 @@ var OrderedSpecProps = []*Attribute{
 		Type:           STRING,
 		Immutable:      true,
 		ServerRequired: true,
-		Location:       "both",
 
 		internals: AttrInternals{
-			types:     "",
+			types:     "", // Yes even ENTITY_RESOURCE
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
 				singular := e.Singular
 				// PanicIf(singular == "", "singular is '' :  %v", e)
-				if e.Type == ENTITY_VERSION {
+				if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
 					_, rm := AbstractToModels(e.Registry, e.Abstract)
 					singular = rm.Singular
 				}
 				singular += "id"
 
 				oldID := any(e.UID)
-				if e.Type == ENTITY_VERSION {
+				if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
 					// Grab rID from /GROUPs/gID/RESOURCEs/rID/versions/vID
 					parts := strings.Split(e.Path, "/")
 					oldID = parts[3]
@@ -825,7 +824,7 @@ var OrderedSpecProps = []*Attribute{
 			updateFn: func(e *Entity) error {
 				// Make sure the ID is always set
 				singular := e.Singular
-				if e.Type == ENTITY_VERSION {
+				if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
 					_, rm := AbstractToModels(e.Registry, e.Abstract)
 					singular = rm.Singular
 				}
@@ -852,6 +851,7 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
+			// types:     StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
 			types:     StrTypes(ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
@@ -888,10 +888,10 @@ var OrderedSpecProps = []*Attribute{
 		Type:           URL,
 		ReadOnly:       true,
 		ServerRequired: true,
-		Location:       "both",
 
 		internals: AttrInternals{
-			types:     "",
+			types: "", // Yes even ENTITY_RESOURCE
+			// types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
@@ -918,12 +918,11 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "xref",
-		Type:     URL,
-		Location: "resource",
+		Name: "xref",
+		Type: URL,
 
 		internals: AttrInternals{
-			types: StrTypes(ENTITY_RESOURCE),
+			types: StrTypes(ENTITY_META),
 			getFn: nil,
 			checkFn: func(e *Entity) error {
 				return nil
@@ -937,10 +936,9 @@ var OrderedSpecProps = []*Attribute{
 		Name:           "epoch",
 		Type:           UINTEGER,
 		ServerRequired: true,
-		// Location:       "resource",
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn: func(e *Entity) error {
@@ -978,8 +976,8 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				// This assumes that ALL entities must have an Epoch property
-				// that we wnt to set. At one point this wasn't true for
-				// Resources but hopefully that's no loner true
+				// that we want to set. At one point this wasn't true for
+				// Resources but hopefully that's no longer true
 
 				oldEpoch := e.Object["epoch"]
 				epoch := NotNilInt(&oldEpoch)
@@ -994,10 +992,9 @@ var OrderedSpecProps = []*Attribute{
 		{
 			Name: "readonly",
 			Type: BOOLEAN,
-			Location: "resource",
 
 			internals: AttrInternals{
-				types:    StrTypes(ENTITY_RESOURCE),
+				types:    StrTypes(ENTITY_META),
 				dontStore: false,
 				getFn:     nil,
 				checkFn:   nil,
@@ -1010,7 +1007,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			types:     "",
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1040,7 +1037,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			types:     "",
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1052,7 +1049,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: URL,
 
 		internals: AttrInternals{
-			types:     "",
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1067,7 +1064,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 
 		internals: AttrInternals{
-			types:     "",
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1079,7 +1076,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: URI,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_GROUP, ENTITY_RESOURCE, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1153,7 +1150,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			types:      StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			types:      StrTypes(ENTITY_VERSION),
 			dontStore:  false,
 			httpHeader: "Content-Type",
 			getFn:      nil,
@@ -1162,43 +1159,55 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "defaultversionsticky",
-		Type:     BOOLEAN,
-		ReadOnly: true,
-		Location: "resource",
+		Name:           "metaurl",
+		Type:           URL,
+		ReadOnly:       true,
+		ServerRequired: true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_RESOURCE),
 			dontStore: false,
-			getFn:     nil,
-			checkFn:   nil,
-			updateFn:  nil,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				base := ""
+				if info != nil {
+					base = info.BaseURL
+				}
+				return base + "/" + e.Path + "/meta"
+			},
+			checkFn:  nil,
+			updateFn: nil,
 		},
 	},
 	{
-		Name:     "defaultversionid",
-		Type:     STRING,
-		ReadOnly: true,
-		// ServerRequired: true,
-		Location: "resource",
+		Name: "defaultversionid",
+		Type: STRING,
+		// ReadOnly: true,
+		ServerRequired: true,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_RESOURCE),
+			types:     StrTypes(ENTITY_META),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
-			updateFn:  nil,
+			updateFn: func(e *Entity) error {
+				// Make sure it has a value, if not copy from existing
+				newVal := e.NewObject["defaultversionid"]
+				if IsNil(newVal) {
+					oldVal := e.Object["defaultversionid"]
+					e.NewObject["defaultversionid"] = oldVal
+				}
+				return nil
+			},
 		},
 	},
 	{
-		Name:     "defaultversionurl",
-		Type:     URL,
-		ReadOnly: true,
-		// ServerRequired: true,
-		Location: "resource",
+		Name:           "defaultversionurl",
+		Type:           URL,
+		ReadOnly:       true,
+		ServerRequired: true,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_RESOURCE),
+			types:     StrTypes(ENTITY_META),
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				val := e.Object["defaultversionid"]
@@ -1225,6 +1234,19 @@ var OrderedSpecProps = []*Attribute{
 			},
 			checkFn:  nil,
 			updateFn: nil,
+		},
+	},
+	{
+		Name:     "defaultversionsticky",
+		Type:     BOOLEAN,
+		ReadOnly: true,
+
+		internals: AttrInternals{
+			types:     StrTypes(ENTITY_META),
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
 		},
 	},
 	{
@@ -1276,6 +1298,8 @@ func init() {
 //     as defined by OrderedSpecProps
 func (e *Entity) SerializeProps(info *RequestInfo,
 	fn func(*Entity, *RequestInfo, string, any, *Attribute) error) error {
+	log.VPrintf(3, ">Enter: SerializeProps(%s/%s)", e.Abstract, e.UID)
+	defer log.VPrintf(3, "<Exit: SerializeProps")
 
 	daObj := e.AddCalcProps(info)
 	attrs := e.GetAttributes(e.Object)
@@ -1284,13 +1308,14 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		log.VPrintf(0, "SerProps.Entity: %s", ToJSON(e))
 		log.VPrintf(0, "SerProps.Obj: %s", ToJSON(e.Object))
 		log.VPrintf(0, "SerProps daObj: %s", ToJSON(daObj))
+		log.VPrintf(0, "SerProps attrs:\n%s", ToJSON(attrs))
 	}
 
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
 		name := prop.Name
 		if name == "id" {
-			if e.Type != ENTITY_VERSION {
+			if e.Type != ENTITY_VERSION && e.Type != ENTITY_META {
 				// versionid has it's own special entry
 				name = e.Singular + "id"
 			} else {
@@ -1306,23 +1331,28 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 			continue // not allowed at this eType so skip it
 		}
 
-		// Before "default*" attributes, add extensions and "resource*"
-		if e.Type == ENTITY_RESOURCE && prop.Name == "defaultversionsticky" {
+		// Before metaurl/defaultversionid attrs, add extensions & RESOURCE*
+		if (e.Type == ENTITY_RESOURCE && prop.Name == "metaurl") ||
+			(e.Type == ENTITY_META && prop.Name == "defaultversionid") {
+
 			for _, objKey := range SortedKeys(daObj) {
 				attrKey := objKey
 				if attrKey == e.Singular+"id" {
 					attrKey = "id"
 				}
 
+				// Skip spec defined properties, assume we'll add them later
 				if SpecProps[attrKey] != nil {
 					continue
 				}
+
 				val, _ := daObj[objKey]
 				attr := attrs[attrKey]
 				delete(daObj, objKey)
 				if attr == nil {
 					attr = attrs["*"]
-					PanicIf(attrKey[0] != '#' && attr == nil, "Can't find attr for %q", attrKey)
+					PanicIf(attrKey[0] != '#' && attr == nil,
+						"Can't find attr for %q", attrKey)
 				}
 
 				if err := fn(e, info, objKey, val, attr); err != nil {
@@ -1331,7 +1361,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 			}
 		}
 
-		// Should be a no-op for Resources
+		// Should be a no-op for Resources.
 		if val, ok := daObj[name]; ok {
 			if !IsNil(val) {
 				cleanup := false
@@ -1369,7 +1399,8 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		attr := attrs[attrKey]
 		if attr == nil {
 			attr = attrs["*"]
-			PanicIf(attrKey[0] != '#' && attr == nil, "Can't find attr for %q", attrKey)
+			PanicIf(attrKey[0] != '#' && attr == nil,
+				"Can't find attr for %q", attrKey)
 		}
 
 		if err := fn(e, info, objKey, val, attr); err != nil {
@@ -1387,7 +1418,7 @@ func (e *Entity) Save() error {
 	// TODO remove at some point when we're sure it's safe
 	if SpecProps["epoch"].InType(e.Type) && IsNil(e.NewObject["epoch"]) {
 		log.Printf("Save.NewObject:\n%s", ToJSON(e.NewObject))
-		panic("Epoch is nil")
+		panic("Epoch is nil: " + e.Path)
 	}
 
 	if log.GetVerbose() > 2 {
@@ -1554,6 +1585,8 @@ func (e *Entity) GetCollections() [][2]string {
 	case ENTITY_RESOURCE:
 		result = append(result, [2]string{"versions", "version"})
 		return result
+	case ENTITY_META:
+		return nil
 	case ENTITY_VERSION:
 		return nil
 	}
@@ -1577,13 +1610,27 @@ func (e *Entity) GetBaseAttributes() Attributes {
 	// Add attributes from the model (core and user-defined)
 	gm, rm := e.GetModels()
 
-	if gm == nil {
+	if e.Type == ENTITY_REGISTRY {
 		return e.Registry.Model.GetBaseAttributes()
 	}
-	if rm == nil {
+
+	if e.Type == ENTITY_GROUP {
 		return gm.GetBaseAttributes()
 	}
-	return rm.GetBaseAttributes()
+
+	if e.Type == ENTITY_RESOURCE {
+		return rm.GetBaseAttributes()
+	}
+
+	if e.Type == ENTITY_META {
+		return rm.GetBaseMetaAttributes()
+	}
+
+	if e.Type == ENTITY_VERSION {
+		return rm.GetBaseAttributes()
+	}
+
+	panic(fmt.Sprintf("Bad type: %v", e.Type))
 }
 
 // Given a PropPath and a value this will add the necessary golang data
@@ -1692,7 +1739,9 @@ func (e *Entity) Validate() error {
 
 	if log.GetVerbose() > 2 {
 		log.VPrintf(0, "========")
-		log.VPrintf(0, "Validating:\n%s", ToJSON(e.NewObject))
+		log.VPrintf(0, "Validating(%d/%s):\n%s",
+			e.Type, e.UID, ToJSON(e.NewObject))
+		log.VPrintf(0, "Attrs: %v", SortedKeys(attrs))
 	}
 	return e.ValidateObject(e.NewObject, attrs, NewPP())
 }
@@ -1847,6 +1896,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 					}
 				}
 
+				// Now we can skip it
 				delete(objKeys, key)
 				continue
 			}

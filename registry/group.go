@@ -2,7 +2,6 @@ package registry
 
 import (
 	"fmt"
-	"strings"
 
 	log "github.com/duglin/dlog"
 )
@@ -81,6 +80,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			rType, id, err)
 	}
 
+	// Can this ever happen??
 	if r != nil && r.UID != id {
 		return nil, false, fmt.Errorf("Attempting to create a Resource with "+
 			"a \"%sid\" of %q, when one already exists as %q",
@@ -100,33 +100,25 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			id, rType)
 	}
 
-	xref := ""
-	var xrefAny any
-	hasXref := false
+	metaObj := (map[string]any)(nil)
+	metaObjAny, hasMeta := obj["meta"]
 
-	if xrefAny, hasXref = obj["xref"]; hasXref {
+	if hasMeta && !objIsVer {
+		delete(obj, "meta")
+	}
+
+	if hasMeta {
 		if objIsVer {
-			return nil, false, fmt.Errorf("Can't create a Version with " +
-				"the 'xref' attribute")
+			return nil, false, fmt.Errorf("Can't include a Version with a " +
+				"\"meta\" attribute")
 		}
 
-		if IsNil(xrefAny) {
-			// Do nothing - leave it there so we can null it out later
-		} else {
-			xref, _ = xrefAny.(string)
-			xref = strings.TrimSpace(xref)
-			parts := strings.Split(xref, "/")
-			if len(parts) != 4 {
-				return nil, false, fmt.Errorf("'xref' (%s) must be of the "+
-					"form: GROUPs/gID/RESOURCEs/rID", xref)
-			}
-
-			// Erase all attributes except id and xref
-			obj = map[string]any{
-				rModel.Singular + "id": id,
-				"xref":                 xref,
-			}
+		if IsNil(metaObjAny) {
+			// Convert "null" to empty {}
+			metaObjAny = map[string]any{}
 		}
+
+		metaObj = metaObjAny.(map[string]any)
 	}
 
 	// List of versions in the incoming request
@@ -151,6 +143,19 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		delete(obj, "versions")
 		delete(obj, "versionscount")
 		delete(obj, "versionsurl")
+	} else {
+		if _, ok := obj["versions"]; ok {
+			return nil, false, fmt.Errorf("Can't create a Version with a " +
+				"\"versions\" attribute")
+		}
+		if _, ok := obj["versionscount"]; ok {
+			return nil, false, fmt.Errorf("Can't create a Version with a " +
+				"\"versionscount\" attribute")
+		}
+		if _, ok := obj["versionsurl"]; ok {
+			return nil, false, fmt.Errorf("Can't create a Version with a " +
+				"\"versionsurl\" attribute")
+		}
 	}
 
 	isNew := (r == nil)
@@ -174,6 +179,23 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			Group: g,
 		}
 
+		m := &Meta{
+			Entity: Entity{
+				tx: g.tx,
+
+				Registry: g.Registry,
+				DbSID:    NewUUID(),
+				Plural:   "metas",
+				Singular: "meta",
+				UID:      r.UID,
+
+				Type:     ENTITY_META,
+				Path:     r.Path + "/meta",
+				Abstract: r.Abstract + string(DB_IN) + "meta",
+			},
+			Resource: r,
+		}
+
 		err = DoOne(r.tx, `
         INSERT INTO Resources(SID, UID, RegistrySID, GroupSID, ModelSID, Path, Abstract)
         SELECT ?,?,?,?,SID,?,?
@@ -194,44 +216,32 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			return nil, false, fmt.Errorf("Error adding Resource: %s", err)
 		}
 
+		err = DoOne(r.tx, `
+        INSERT INTO Metas(SID, RegistrySID, ResourceSID, Path, Abstract)
+        SELECT ?,?,?,?,?`,
+			m.DbSID, g.Registry.DbSID, r.DbSID,
+			m.Path, m.Abstract)
+		if err != nil {
+			return nil, false, fmt.Errorf("Error adding Meta: %s", err)
+		}
+
+		err = m.JustSet(r.Singular+"id", r.UID)
+		if err != nil {
+			return nil, false, err
+		}
+
 		// Use the ID passed as an arg, not from the metadata, as the true
 		// ID. If the one in the metadata differs we'll flag it down below
-		err = r.JustSet(r.Singular+"id", r.UID)
+		err = r.SetSaveResource(r.Singular+"id", r.UID)
 		if err != nil {
 			return nil, false, err
 		}
 
-		err = r.SetSave("#nextversionid", 1)
+		r.tx.AddMeta(m)
+
+		err = m.JustSet("#nextversionid", 1)
 		if err != nil {
 			return nil, false, err
-		}
-	}
-
-	if hasXref {
-		if IsNil(xrefAny) || xref == "" {
-			delete(obj, "xref")
-			err = r.SetSave("xref", nil)
-			if err != nil {
-				return nil, false, err
-			}
-			hasXref = false
-		} else {
-			err = r.SetSave("xref", xref)
-			if err != nil {
-				return nil, false, err
-			}
-
-			vers, err := r.GetVersions()
-			if err != nil {
-				return nil, false, err
-			}
-			for _, ver := range vers {
-				if err = ver.JustDelete(); err != nil {
-					return nil, false, err
-				}
-			}
-
-			return r, isNew, nil
 		}
 	}
 
@@ -263,64 +273,16 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 	}
 
-	// Now process the defaultversionsticky and defaultversionid attributes.
-	// Start with current sticky value
-	sticky := (r.Get("defaultversionsticky") == true)
-
-	// If there's an incoming obj and it changes 'sticky' then use it
-	if !r.tx.IgnoreDefaultVersionSticky && !IsNil(obj) {
-		stickyAny, ok := obj["defaultversionsticky"]
-		if ok && (stickyAny != true && stickyAny != false && !IsNil(stickyAny)) {
-			return nil, false, fmt.Errorf("'defaultversionsticky' must be " +
-				"a boolean or null")
-		}
-
-		if addType == ADD_PATCH {
-			if ok {
-				sticky = (stickyAny == true)
-			}
-		} else {
-			sticky = (stickyAny == true)
-		}
+	meta, _, err := r.UpsertMetaWithObject(metaObj, addType)
+	if err != nil {
+		return nil, false, err
 	}
 
-	// DefaultVersionID will only apply if sticky is set, otherwise
-	// we'll just use the latest Version
-	defVerID := r.GetAsString("defaultversionid")
-	if sticky {
-		if !r.tx.IgnoreDefaultVersionID && !IsNil(obj) {
-			// TODO - should this take into account "patch" like above?
-			defAny, ok := obj["defaultversionid"]
-			if ok {
-				if IsNil(defAny) {
-					defVerID = "" // Use latest
-				} else {
-					v, err := r.FindVersion(defAny.(string), false)
-					if err != nil {
-						return nil, false, err
-					}
-					if IsNil(v) {
-						return nil, false,
-							fmt.Errorf("Can't find version %q", defAny)
-					}
-					defVerID = defAny.(string)
-				}
-			}
-		}
-	}
-
-	if defVerID == "" {
-		// Use latest
-		vIDs, err := r.GetVersionIDs()
-		Must(err)
-
-		if len(vIDs) > 0 {
-			defVerID = vIDs[0]
-		}
-	}
+	defVerID := meta.GetAsString("defaultversionid")
 
 	if !objIsVer {
-		delete(obj, r.Singular+"id") // Clear any ID there since it's the Resource's
+		// Clear any ID there since it's the Resource's
+		delete(obj, r.Singular+"id")
 	}
 
 	// If the passed-in vID is empty then use the defaultVersion
@@ -348,212 +310,20 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	}
 
 	// Make sure defaultversionid is set appropriately
-	if !sticky {
-		// Not sticky == always use latest
-		if err := r.SetDefault(nil); err != nil {
-			return nil, false, err
-		}
-	} else {
-		// Note that vID can be "", in which case use latest
-		if err := r.SetDefaultID(vID); err != nil {
-			return nil, false, err
-		}
-	}
-
-	return r, isNew, err
-}
-
-// Return: *Resource, isNew, error
-func (g *Group) oldUpsertResourceWithObject(rType string, id string, vID string, obj Object, addType AddType, doChildren bool, objIsVer bool) (*Resource, bool, error) {
-	log.VPrintf(3, ">Enter: UpsertResourceWithObject(%s,%s)", rType, id)
-	defer log.VPrintf(3, "<Exit: UpsertResourceWithObject")
-
-	rModel := g.Registry.Model.Groups[g.Plural].Resources[rType]
-	if rModel == nil {
-		return nil, false, fmt.Errorf("Unknown Resource type (%s) for Group %q",
-			rType, g.Plural)
-	}
-
-	r, err := g.FindResource(rType, id, true)
-	if err != nil {
-		return nil, false, fmt.Errorf("Error checking for Resource(%s) %q: %s",
-			rType, id, err)
-	}
-
-	if r != nil && r.UID != id {
-		return nil, false, fmt.Errorf("Attempting to create a Resource with "+
-			"a \"%sid\" of %q, when one already exists as %q",
-			rModel.Singular, id, r.UID)
-	}
-
-	if obj != nil && !IsNil(obj[r.Singular+"id"]) && !objIsVer {
-		if id != obj[r.Singular+"id"] {
-			return nil, false,
-				fmt.Errorf(`The "%sid" attribute must be set `+
-					`to %q, not %q`, r.Singular, id, obj[r.Singular+"id"])
-		}
-	}
-
-	if addType == ADD_ADD && r != nil {
-		return nil, false, fmt.Errorf("Resource %q of type %q already exists",
-			id, rType)
-	}
-
-	versions := map[string]any(nil)
-	if !objIsVer {
-		// If obj is for the resource then save and delete the versions
-		// collection (and it's attributes) so we don't try to save them
-		// as extensions on the Version
-		var ok bool
-		val, _ := obj["versions"]
-		if !IsNil(val) {
-			versions, ok = val.(map[string]any)
-			if !ok {
-				return nil, false,
-					fmt.Errorf("Attribute %q doesn't appear to be of a "+
-						"map of %q", "versions", "versions")
+	// TODO I don't think this is right, so comment out for now
+	/*
+		if !sticky {
+			// Not sticky == always use latest
+			if err := r.SetDefault(nil); err != nil {
+				return nil, false, err
 			}
-			delete(obj, "versions")
-			delete(obj, "versionscount")
-			delete(obj, "versionsurl")
-		}
-	}
-
-	isNew := (r == nil)
-	if r == nil {
-		r = &Resource{
-			Entity: Entity{
-				tx: g.tx,
-
-				Registry: g.Registry,
-				DbSID:    NewUUID(),
-				Plural:   rType,
-				Singular: rModel.Singular,
-				UID:      id,
-
-				Type:     ENTITY_RESOURCE,
-				Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
-				Abstract: g.Plural + string(DB_IN) + rType,
-			},
-			Group: g,
-		}
-
-		err = DoOne(r.tx, `
-        INSERT INTO Resources(SID, UID, RegistrySID, GroupSID, ModelSID, Path, Abstract)
-        SELECT ?,?,?,?,SID,?,?
-        FROM ModelEntities
-        WHERE RegistrySID=?
-          AND ParentSID IN (
-            SELECT SID FROM ModelEntities
-            WHERE RegistrySID=?
-            AND ParentSID IS NULL
-            AND Plural=?)
-            AND Plural=?`,
-			r.DbSID, r.UID, g.Registry.DbSID, g.DbSID,
-			g.Plural+"/"+g.UID+"/"+rType+"/"+r.UID, g.Plural+string(DB_IN)+rType,
-			g.Registry.DbSID,
-			g.Registry.DbSID, g.Plural,
-			rType)
-		if err != nil {
-			err = fmt.Errorf("Error adding Resource: %s", err)
-			return nil, false, err
-		}
-
-		// Use the ID passed as an arg, not from the metadata, as the true
-		// ID. If the one in the metadata differs we'll flag it down below
-		err = r.JustSet(r.Singular+"id", r.UID)
-		if err != nil {
-			return nil, false, err
-		}
-
-		err = r.SetSave("#nextversionid", 1)
-		if err != nil {
-			return nil, false, err
-		}
-
-		if !objIsVer {
-			delete(obj, r.Singular+"id") // Clear any ID there since it's the Resource's
-		}
-
-		// We only process the Resource level attributes if we're not
-		// processing children, or there is no versions(children), or
-		// the default version isn't part of the versions collections
-		def := ""
-		defAny := obj["defaultversionid"]
-		if !IsNil(defAny) {
-			def = defAny.(string)
-		}
-		if !doChildren || IsNil(versions) || (def != "" && versions[def] == nil) {
-			// _, err = r.AddVersionWithObject(vID, obj)
-			_, _, err = r.UpsertVersionWithObject(vID, obj, ADD_UPSERT)
-
-			if err != nil {
+		} else {
+			// Note that vID can be "", in which case use latest
+			if err := r.SetDefaultID(vID); err != nil {
 				return nil, false, err
 			}
 		}
-	} else {
-		v, err := r.GetDefault()
-		if err != nil {
-			return nil, false, err
-		}
-
-		// We only process the Resource level attributes if we're not
-		// processing children, or there is no versions(children), or
-		// the default version isn't part of the versions collections
-		if !doChildren || IsNil(versions) || versions[v.UID] == nil {
-			if obj != nil {
-				// If there's a doc but no "contenttype" value then:
-				// - if existing entity doesn't have one, set it
-				// - if existing entity does have one then only override it
-				//   if we're not doing PATCH (PUT/POST are compelte overrides)
-				if eval, ok := obj["#-contenttype"]; ok && !IsNil(eval) {
-					if _, ok = obj["contenttype"]; !ok {
-						val := v.Get("contenttype")
-						if IsNil(val) || addType != ADD_PATCH {
-							obj["contenttype"] = eval
-						}
-					}
-				}
-
-				v.NewObject = obj
-				// if !objIsVer {
-				v.NewObject["versionid"] = v.UID // ID is Resource's, switch to Version's
-				// }
-
-				if addType == ADD_PATCH {
-					// Copy existing props if the incoming obj doesn't set them
-					for k, val := range v.Object {
-						if _, ok := v.NewObject[k]; !ok {
-							v.NewObject[k] = val
-						}
-					}
-				}
-
-				err = v.ValidateAndSave()
-				if err != nil {
-					return nil, false, err
-				}
-			}
-		}
-	}
-
-	if !objIsVer && doChildren && !IsNil(versions) {
-		plural := "versions"
-		singular := "version"
-
-		for verID, val := range versions {
-			verObj, ok := val.(map[string]any)
-			if !ok {
-				return nil, false,
-					fmt.Errorf("Key %q in attribute %q doesn't "+
-						"appear to be of type %q", verID, plural, singular)
-			}
-			_, _, err := r.UpsertVersionWithObject(verID, verObj, addType)
-			if err != nil {
-				return nil, false, err
-			}
-		}
-	}
+	*/
 
 	return r, isNew, err
 }

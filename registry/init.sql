@@ -79,12 +79,14 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     Plural            VARCHAR(64),
     Attributes        JSON,               # Until we use the Attributes table
 
-    MaxVersions       INT,      # For Resources
-    SetVersionId      BOOL,     # For Resources
-    SetDefaultSticky  BOOL,     # For Resources
-    HasDocument       BOOL,     # For Resources
-    ReadOnly          BOOL,     # For Resources
+    # For Resources
+    MaxVersions       INT,
+    SetVersionId      BOOL,
+    SetDefaultSticky  BOOL,
+    HasDocument       BOOL,
+    ReadOnly          BOOL,
     TypeMap           JSON,
+    MetaAttributes    JSON,
 
     PRIMARY KEY(SID),
     UNIQUE INDEX (RegistrySID, ParentSID, Plural),
@@ -326,6 +328,18 @@ UNION SELECT                    # Add Resources
 FROM Resources AS r
 JOIN ModelEntities AS m ON (m.SID=r.ModelSID)
 
+UNION SELECT                    # Add Metas
+    metas.RegistrySID AS RegSID,
+    $ENTITY_META AS Type,
+    'metas' AS Plural,
+    'meta' AS Singular,
+    metas.ResourceSID AS ParentSID,
+    metas.SID AS eSID,
+    'meta',
+    metas.Abstract,
+    metas.Path
+FROM Metas AS metas
+
 UNION SELECT                    # Add Versions (including xref'd versions)
     v.RegistrySID AS RegSID,
     $ENTITY_VERSION AS Type,
@@ -383,20 +397,28 @@ CREATE TABLE ResourceContents (
 CREATE VIEW DefaultProps AS
 SELECT
     p.RegistrySID,
-    r.SID AS EntitySID,
+    m.ResourceSID AS EntitySID,
     p.PropName,
     p.PropValue,
     p.PropType
 FROM EffectiveProps AS p
 JOIN EffectiveVersions AS v ON (p.EntitySID=v.SID)
-JOIN Resources AS r ON (r.SID=v.ResourceSID)
-JOIN EffectiveProps AS p1 ON (p1.EntitySID=r.SID)
-WHERE p1.PropName='defaultVersionId$DB_IN' AND v.UID=p1.PropValue AND
-      p.PropName<>'versionid$DB_IN' ;     # Don't include this
+JOIN Metas AS m ON (m.ResourceSID=v.ResourceSID)
+JOIN EffectiveProps AS p1 ON (p1.EntitySID=m.SID)
+WHERE p1.PropName='defaultVersionId$DB_IN' AND v.UID=p1.PropValue
+
+UNION SELECT
+    m.RegistrySID,
+    m.ResourceSID,
+    'isdefault$DB_IN',
+    'true',
+    'boolean'
+FROM Metas AS m ;
 
 CREATE VIEW AllProps AS
 SELECT * FROM EffectiveProps
 UNION SELECT * FROM DefaultProps
+
 UNION SELECT                    # Add in "isdefault", which is calculated
   v.RegSID,
   v.eSID,
@@ -404,10 +426,12 @@ UNION SELECT                    # Add in "isdefault", which is calculated
   'true',
   'boolean'
 FROM Entities AS v
+JOIN Metas AS m ON (m.ResourceSID=v.ParentSID)
 JOIN EffectiveProps AS p ON (
-  p.EntitySID=v.ParentSID AND
+  p.EntitySID=m.SID AND
   p.PropName='defaultversionid$DB_IN'
   AND p.PropValue=v.UID )
+
 UNION SELECT                   # Add in "RESOURCEid", which is calculated
   v.RegSID,
   v.eSID,
@@ -445,7 +469,7 @@ SELECT
     PropType,
     Abstract
 FROM Entities
-LEFT JOIN AllProps ON (AllProps.EntitySID=Entities.eSID)
+JOIN AllProps ON (AllProps.EntitySID=Entities.eSID)
 ORDER by Path, PropName;
 
 CREATE VIEW Leaves AS
@@ -453,4 +477,18 @@ SELECT eSID FROM Entities
 WHERE eSID NOT IN (
     SELECT DISTINCT ParentSID FROM Entities WHERE ParentSID IS NOT NULL
 );
+
+# Just for debugging purposes
+CREATE VIEW VerboseProps AS
+SELECT
+    p.RegistrySID,
+    p.EntitySID,
+    e.Abstract,
+    e.Path,
+    p.PropName,
+    p.PropValue,
+    p.PropType
+FROM Props as p
+JOIN Entities as e ON (e.eSID=p.EntitySID)
+ORDER by Path ;
 

@@ -138,6 +138,7 @@ type Tx struct {
 	// Registries map[string]*Registry // reg.UID
 	// Groups     map[string]*Group    // reg.DbSID+g.UID
 	// Resources  map[string]*Resource // reg.DbSID+g.DbSID+r.UID
+	Metas    map[string]*Meta    // reg.DbSID+g.DbSID+r.DbSID  1:1(Res:Meta)
 	Versions map[string]*Version // reg.DbSID+g.DbSID+r.DbSID+v.UID
 
 	// For debugging
@@ -205,6 +206,7 @@ func (tx *Tx) NewTx() error {
 	// } else {
 	// tx.CreateTime = time.Now().Format(time.RFC3339)
 	// }
+	tx.Metas = map[string]*Meta{}
 	tx.Versions = map[string]*Version{}
 	tx.uuid = NewUUID()
 	tx.stack = GetStack()
@@ -229,6 +231,7 @@ func (tx *Tx) Commit() error {
 	TXsMutex.Unlock()
 	tx.tx = nil
 	tx.CreateTime = ""
+	tx.Metas = nil
 	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
 	tx.uuid = ""
 
@@ -250,6 +253,7 @@ func (tx *Tx) Rollback() error {
 	TXsMutex.Unlock()
 	tx.tx = nil
 	tx.CreateTime = ""
+	tx.Metas = nil
 	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
 	tx.uuid = ""
 
@@ -276,6 +280,23 @@ func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
 	return ps, err
 }
 
+func (tx *Tx) AddMeta(m *Meta) {
+	if tx.Metas == nil {
+		tx.Metas = map[string]*Meta{}
+	}
+	tx.Metas[m.Resource.Group.Registry.DbSID+
+		m.Resource.Group.DbSID+
+		m.Resource.DbSID] = m
+}
+
+func (tx *Tx) GetMeta(r *Resource) *Meta {
+	if tx.Metas == nil {
+		return nil
+	}
+	key := r.Group.Registry.DbSID + r.Group.DbSID + r.DbSID
+	return tx.Metas[key]
+}
+
 func (tx *Tx) AddVersion(v *Version) {
 	if tx.Versions == nil {
 		tx.Versions = map[string]*Version{}
@@ -287,6 +308,9 @@ func (tx *Tx) AddVersion(v *Version) {
 }
 
 func (tx *Tx) GetVersion(r *Resource, vID string) *Version {
+	if tx.Versions == nil {
+		return nil
+	}
 	key := r.Group.Registry.DbSID + r.Group.DbSID + r.DbSID + vID
 	return tx.Versions[key]
 }
@@ -710,6 +734,7 @@ func ReplaceVariables(str string) string {
 		{"$ENTITY_REGISTRY", StrTypes(ENTITY_REGISTRY)},
 		{"$ENTITY_GROUP", StrTypes(ENTITY_GROUP)},
 		{"$ENTITY_RESOURCE", StrTypes(ENTITY_RESOURCE)},
+		{"$ENTITY_META", StrTypes(ENTITY_META)},
 		{"$ENTITY_VERSION", StrTypes(ENTITY_VERSION)},
 		{"$DB_IN", string(DB_IN)},
 	}

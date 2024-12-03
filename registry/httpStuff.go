@@ -376,6 +376,20 @@ func (pw *PageWriter) Done() {
 	inlines := ""
 	inlineCount := 0
 
+	if pw.Info.IsInlineSet("*") {
+		checked = " checked"
+	}
+	except := ""
+	if len(pw.Info.Parts) == 0 {
+		except = " except: model"
+	}
+	inlines += fmt.Sprintf(`
+    <div class=inlines>
+      <input id=inline%d type='checkbox' value='*'`+checked+`/>* (all%s)
+    </div>`, inlineCount, except)
+	inlineCount++
+	checked = ""
+
 	if pw.Info.IsInlineSet(NewPPP("model").DB()) {
 		checked = " checked"
 	}
@@ -387,15 +401,6 @@ func (pw *PageWriter) Done() {
 		inlineCount++
 	}
 	checked = ""
-
-	if pw.Info.IsInlineSet("*") {
-		checked = " checked"
-	}
-	inlines += fmt.Sprintf(`
-    <div class=inlines>
-      <input id=inline%d type='checkbox' value='*'`+checked+`/>* (all - except 'model')
-    </div>`, inlineCount)
-	inlineCount++
 
 	pp, _ := PropPathFromPath(pw.Info.Abstract)
 	for _, inline := range inlineOptions {
@@ -555,6 +560,7 @@ func (pw *PageWriter) Done() {
 		structureButton+`
     </div>
   </div>
+  <div style="height:12px"></div> <!-- buffer for "Commmit:" line -->
   <div id=commit><a target=_blank
         href="http://github.com/duglin/xreg-github/tree/`+
 		GitCommit+`">Commit: `+fmt.Sprintf("%.12s", GitCommit)+`</a></div>
@@ -645,6 +651,8 @@ func GetResourceModelInlines(rm *ResourceModel) []string {
 		res = append(res, rm.Singular)
 	}
 
+	res = append(res, "meta")
+
 	res = append(res, "versions")
 	for _, inline := range GetVersionModelInlines(rm) {
 		res = append(res, "versions."+inline)
@@ -701,6 +709,8 @@ FROM FullTree WHERE RegSID=? AND `
 
 	path := strings.Join(info.Parts, "/")
 
+	// TODO consider excluding the META object from the query instead of
+	// dropping it via the if-statement below in the versioncount logic
 	if info.VersionUID == "" {
 		query += `(Path=? OR Path LIKE ?)`
 		args = append(args, path, path+"/%")
@@ -737,9 +747,38 @@ FROM FullTree WHERE RegSID=? AND `
 	if info.VersionUID == "" {
 		// We're on a Resource, so go find the default Version and count
 		// how many versions there are for the VersionsCount attribute
-		vID := entity.Get("defaultversionid").(string)
+		group, err := info.Registry.FindGroup(info.GroupType, info.GroupUID, false)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error finding group(%s): %s", info.GroupUID, err)
+		}
+		if group == nil {
+			info.StatusCode = http.StatusNotFound
+			return fmt.Errorf("Group %q not found", info.GroupUID)
+		}
+
+		resource, err := group.FindResource(info.ResourceType, info.ResourceUID, false)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf("Error finding resource(%s): %s",
+				info.ResourceUID, err)
+		}
+		if resource == nil {
+			info.StatusCode = http.StatusNotFound
+			return fmt.Errorf("Resource %q not found", info.ResourceUID)
+		}
+		meta, err := resource.FindMeta(false)
+		PanicIf(err != nil, "", err)
+
+		vID := meta.Get("defaultversionid").(string)
 		for {
 			v, err := readNextEntity(info.tx, results)
+
+			if v != nil && v.Type == ENTITY_META {
+				// Skip the "meta" subobject
+				continue
+			}
+
 			if v == nil && version == nil {
 				info.StatusCode = http.StatusInternalServerError
 				return fmt.Errorf("Can't find version: %s : %s", vID, err)
@@ -878,16 +917,20 @@ func HTTPGet(info *RequestInfo) error {
 		return HTTPGETModel(info)
 	}
 
+	// 'metaInBody' tells us whether xReg metadata should be in the http
+	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure)
+		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure ||
+			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
+	// Return the Resource's document
 	if info.What == "Entity" && info.ResourceUID != "" && !metaInBody {
 		return HTTPGETContent(info)
 	}
 
-	err := SerializeQuery(info, []string{strings.Join(info.Parts, "/")},
+	// Serialize the xReg metadata
+	return SerializeQuery(info, []string{strings.Join(info.Parts, "/")},
 		info.What, info.Filters)
-	return err
 }
 
 func SerializeQuery(info *RequestInfo, paths []string, what string,
@@ -982,7 +1025,8 @@ func HTTPPutPost(info *RequestInfo) error {
 	what := "Entity"
 
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure)
+		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure ||
+			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
@@ -1005,9 +1049,10 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	// POST /groups/gID/resources/rID?setdefaultversiond is special in that
-	// it only moves the "default" point, nothing else is meant to be done
+	// it only moves the "default" pointer, nothing else is meant to be done
 	if metaInBody && len(info.Parts) == 4 && method == "POST" && body == nil {
-		if _, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]; ok {
+		_, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]
+		if ok {
 			return HTTPSetDefaultVersionID(info)
 		}
 	}
@@ -1032,6 +1077,11 @@ func HTTPPutPost(info *RequestInfo) error {
 	if len(info.Parts) == 2 && method == "POST" {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("POST not allowed on a group")
+	}
+
+	if len(info.Parts) == 5 && info.Parts[4] == "meta" && method == "POST" {
+		info.StatusCode = http.StatusMethodNotAllowed
+		return fmt.Errorf("POST not allowed on a 'meta'")
 	}
 
 	if len(info.Parts) == 6 && method == "POST" {
@@ -1189,7 +1239,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	// URL: /GROUPs/gID/RESOURCEs/rID/versions[/vID]
 	// ////////////////////////////////////////////////////////////////
 
-	// If there isn't an explicit "return" when this assumes we're left with
+	// If there isn't an explicit "return" then this assumes we're left with
 	// a version and will return that back to the client
 
 	if len(info.Parts) == 3 {
@@ -1343,6 +1393,57 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 		// Default to just returning the version
 	}
+
+	// GROUPs/gID/RESOURCEs/rID/meta
+	if len(info.Parts) > 4 && info.Parts[4] == "meta" {
+		// PUT /GROUPs/gID/RESOURCEs/rID/meta
+		addType := ADD_UPSERT
+		if method == "PATCH" {
+			addType = ADD_PATCH
+		}
+
+		if resource == nil {
+			propsID := "" // RESOURCEid
+			if v, ok := IncomingObj[info.ResourceModel.Singular+"id"]; ok {
+				if reflect.ValueOf(v).Kind() == reflect.String {
+					propsID = NotNilString(&v)
+				}
+			}
+
+			if propsID != "" && propsID != resourceUID {
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("The \"%sid\" attribute must be set to %q, "+
+					"not %q", info.ResourceModel.Singular, resourceUID, propsID)
+			}
+
+			// Implicitly create the resource
+			resource, _, err = group.UpsertResourceWithObject(
+				// TODO check to see if "" should be propsID
+				info.ResourceType, resourceUID, "", map[string]any{},
+				ADD_ADD, false, false)
+			if err != nil {
+				info.StatusCode = http.StatusBadRequest
+				return err
+			}
+		}
+
+		// Technically, this will always "update" not "insert"
+		meta, _, err := resource.UpsertMetaWithObject(IncomingObj, addType)
+		if err != nil {
+			info.StatusCode = http.StatusBadRequest
+			return err
+		}
+
+		// Return HTTP GET of 'meta'
+		return SerializeQuery(info, []string{meta.Path}, "Entity", nil)
+	}
+
+	// Just double-check
+	if len(info.Parts) > 4 {
+		PanicIf(info.Parts[4] != "versions", "Not 'versions': %s"+info.Parts[4])
+	}
+
+	// GROUPs/gID/RESOURCEs/rID/versions...
 
 	if info.ShowStructure && method == "POST" && len(info.Parts) == 5 {
 		// POST GROUPs/gID/RESOURCEs/rID/versions$structure - error
@@ -2092,6 +2193,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	// len=5 is a special case where we know .../versions always has the
 	// metadata in the body so $structure isn't needed, and in fact an error
 
+	// GROUPS/gID/RESOURCES/rID/meta|versions/vID
 	metaInBody := (info.ShowStructure ||
 		len(info.Parts) == 3 ||
 		len(info.Parts) == 5 ||

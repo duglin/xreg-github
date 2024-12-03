@@ -68,7 +68,6 @@ type Attribute struct {
 	Immutable      bool      `json:"immutable,omitempty"`
 	ClientRequired bool      `json:"clientrequired,omitempty"`
 	ServerRequired bool      `json:"serverrequired,omitempty"`
-	Location       string    `json:"location,omitempty"`
 	Default        any       `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
@@ -704,7 +703,7 @@ func LoadModel(reg *Registry) *Model {
         SELECT
             SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
 			MaxVersions, SetVersionId, SetDefaultSticky, HasDocument, ReadOnly,
-			TypeMap
+			TypeMap, MetaAttributes
         FROM ModelEntities
         WHERE RegistrySID=?
         ORDER BY ParentSID ASC`, reg.DbSID)
@@ -717,13 +716,16 @@ func LoadModel(reg *Registry) *Model {
 
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		attrs := (Attributes)(nil)
+		metaAttrs := (Attributes)(nil)
 		if row[5] != nil {
-			// json.Unmarshal([]byte(NotNilString(row[5])), &attrs)
 			Unmarshal([]byte(NotNilString(row[5])), &attrs)
 		}
 		typemap := map[string]string(nil)
 		if row[11] != nil {
 			Unmarshal([]byte(NotNilString(row[11])), &typemap)
+		}
+		if row[12] != nil {
+			Unmarshal([]byte(NotNilString(row[12])), &metaAttrs)
 		}
 
 		if *row[2] == nil { // ParentSID nil -> new Group
@@ -758,9 +760,11 @@ func LoadModel(reg *Registry) *Model {
 					HasDocument:      PtrBool(NotNilBoolDef(row[9], HASDOCUMENT)),
 					ReadOnly:         NotNilBoolDef(row[10], READONLY),
 					TypeMap:          typemap,
+					MetaAttributes:   metaAttrs,
 				}
 
 				r.Attributes.SetSpecPropsFields(r.Singular)
+				r.MetaAttributes.SetSpecPropsFields(r.Singular)
 
 				g.Resources[r.Plural] = r
 			}
@@ -1109,31 +1113,83 @@ func (rm *ResourceModel) Save() error {
 	attrs := string(buf)
 	buf, _ = json.Marshal(rm.TypeMap)
 	typemap := string(buf)
+	buf, _ = json.Marshal(rm.MetaAttributes)
+	metaAttrs := string(buf)
 
 	err := DoZeroTwo(rm.GroupModel.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, MaxVersions,
 			Attributes,
-			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap,
+			MetaAttributes)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
             ParentSID=?, Plural=?, Singular=?,
 			Attributes=?,
-            MaxVersions=?, SetVersionId=?, SetDefaultSticky=?, HasDocument=?, ReadOnly=?, TypeMap=?`,
+            MaxVersions=?, SetVersionId=?, SetDefaultSticky=?, HasDocument=?, ReadOnly=?, TypeMap=?,
+			MetaAttributes=?`,
 		rm.SID, rm.GroupModel.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.MaxVersions,
 		attrs,
 		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap,
+		metaAttrs,
 
 		rm.GroupModel.SID, rm.Plural, rm.Singular,
 		attrs,
-		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap)
+		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap,
+		metaAttrs)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
 		return err
 	}
 	return err
+}
+
+func (rm *ResourceModel) AddMetaAttr(name, daType string) (*Attribute, error) {
+	return rm.AddMetaAttribute(&Attribute{Name: name, Type: daType})
+}
+
+func (rm *ResourceModel) AddMetaAttrMap(name string, item *Item) (*Attribute, error) {
+	return rm.AddMetaAttribute(&Attribute{Name: name, Type: MAP, Item: item})
+}
+
+func (rm *ResourceModel) AddMetaAttrObj(name string) (*Attribute, error) {
+	return rm.AddMetaAttribute(&Attribute{Name: name, Type: OBJECT})
+}
+
+func (rm *ResourceModel) AddMetaAttrArray(name string, item *Item) (*Attribute, error) {
+	return rm.AddMetaAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
+}
+
+func (rm *ResourceModel) AddMetaAttribute(attr *Attribute) (*Attribute, error) {
+	if attr == nil {
+		return nil, nil
+	}
+
+	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
+		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	}
+
+	if rm.MetaAttributes == nil {
+		rm.MetaAttributes = Attributes{}
+	}
+
+	oldVal := rm.MetaAttributes[attr.Name]
+	rm.MetaAttributes[attr.Name] = attr
+
+	if attr.Registry == nil {
+		attr.Registry = rm.GroupModel.Registry
+	}
+	attr.Item.SetRegistry(rm.GroupModel.Registry)
+
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(rm.MetaAttributes, attr.Name, oldVal)
+		return nil, err
+	}
+
+	return attr, nil
 }
 
 func (rm *ResourceModel) AddAttr(name, daType string) (*Attribute, error) {
@@ -1195,6 +1251,22 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	return attr, nil
+}
+
+func (rm *ResourceModel) DelMetaAttribute(name string) error {
+	if rm.MetaAttributes == nil {
+		return nil
+	}
+
+	oldVal := rm.MetaAttributes[name]
+	delete(rm.MetaAttributes, name)
+
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		ResetMap(rm.MetaAttributes, name, oldVal)
+		return err
+	}
+	return nil
 }
 
 func (rm *ResourceModel) DelAttribute(name string) error {
@@ -1380,7 +1452,8 @@ func (m *Model) Verify() error {
 		}
 	}
 	if !found {
-		m.Schemas = append([]string{XREGSCHEMA + "/" + SPECVERSION}, m.Schemas...)
+		m.Schemas = append([]string{XREGSCHEMA + "/" + SPECVERSION},
+			m.Schemas...)
 	}
 	sort.Strings(m.Schemas)
 
@@ -1402,10 +1475,8 @@ func (m *Model) Verify() error {
 
 		if specProp.Name == "id" {
 			specProp = specProp.Clone("registryid")
-			specProp.Location = ""
 		} else {
 			specProp = specProp.Clone("")
-			specProp.Location = ""
 		}
 
 		modelAttr, ok := m.Attributes[specProp.Name]
@@ -1491,10 +1562,8 @@ func (gm *GroupModel) Verify(gmName string) error {
 
 		if specProp.Name == "id" {
 			specProp = specProp.Clone(gm.Singular + "id")
-			specProp.Location = ""
 		} else {
 			specProp = specProp.Clone("")
-			specProp.Location = ""
 		}
 
 		modelAttr, ok := gm.Attributes[specProp.Name]
@@ -1590,27 +1659,44 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		rm.Attributes = Attributes{}
 	}
 
-	for _, specProp := range OrderedSpecProps {
-		// If it's not a Resource level attribute, then skip it
-		if !specProp.InType(ENTITY_VERSION) && !specProp.InType(ENTITY_RESOURCE) {
-			continue
-		}
+	if rm.MetaAttributes == nil {
+		rm.MetaAttributes = Attributes{}
+	}
 
+	for _, specProp := range OrderedSpecProps {
 		if specProp.Name == "id" {
 			specProp = specProp.Clone(rm.Singular + "id")
 		}
 
-		modelAttr, ok := rm.Attributes[specProp.Name]
-		if !ok {
-			// Missing in model, so add it
-			rm.Attributes[specProp.Name] = specProp
-			continue
+		if specProp.InType(ENTITY_VERSION) {
+			modelAttr, ok := rm.Attributes[specProp.Name]
+			if !ok {
+				// Missing in model, so add it
+				rm.Attributes[specProp.Name] = specProp
+			} else {
+				// It's there but make sure it's not changed in a bad way
+				if err := EnsureAttrOK(modelAttr, specProp); err != nil {
+					return err
+				}
+			}
 		}
 
-		// It's there but make sure it's not changed in a bad way
-		if err := EnsureAttrOK(modelAttr, specProp); err != nil {
-			return err
+		if specProp.InType(ENTITY_META) {
+			modelAttr, ok := rm.MetaAttributes[specProp.Name]
+			if !ok {
+				// Missing in model, so add it
+				rm.MetaAttributes[specProp.Name] = specProp
+			} else {
+				// It's there but make sure it's not changed in a bad way
+				if err := EnsureAttrOK(modelAttr, specProp); err != nil {
+					return err
+				}
+			}
 		}
+
+		// Note that ENTITY_RESOURCE shouldn't ever really happen, and if it
+		// does, we're making the assumption that it's a prop we can ignore,
+		// like "metaurl"
 	}
 
 	ld := &LevelData{
@@ -1715,6 +1801,23 @@ func (rm *ResourceModel) VerifyAndSave() error {
 	return rm.Save()
 }
 
+func (rm *ResourceModel) GetBaseMetaAttributes() Attributes {
+	attrs := Attributes{}
+	maps.Copy(attrs, rm.MetaAttributes)
+
+	// Add xReg defined attributes
+	// TODO Check for conflicts
+	/*
+	   for _, specProp := range OrderedSpecProps {
+	       if specProp.InType(eType) {
+	           attrs[specProp.Name] = specProp
+	       }
+	   }
+	*/
+
+	return attrs
+}
+
 func (rm *ResourceModel) GetBaseAttributes() Attributes {
 	attrs := Attributes{}
 	maps.Copy(attrs, rm.Attributes)
@@ -1731,6 +1834,19 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 
 	singular := rm.Singular
 	hasDoc := rm.GetHasDocument() == true
+
+	// Find all Resource level attributes (not Meta) so we can show them
+	// mixed in with the Default Version attributes - e.g. metaurl
+	for _, specProp := range OrderedSpecProps {
+		if specProp.Name == "id" {
+			// Skip "id"
+			continue
+		}
+
+		if specProp.InType(ENTITY_RESOURCE) && IsNil(attrs[specProp.Name]) {
+			attrs[specProp.Name] = specProp
+		}
+	}
 
 	// Add the RESOURCExxx attributes (for resources and versions)
 	if hasDoc && singular != "" {
