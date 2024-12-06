@@ -520,7 +520,8 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 		specPropName = "id"
 	}
 
-	if sp, ok := SpecProps[specPropName]; ok && sp.internals.dontStore {
+	specProp, ok := SpecProps[specPropName]
+	if ok && specProp.internals.dontStore {
 		return nil
 	}
 
@@ -554,6 +555,13 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 			// Fall thru to normal processing so we save a placeholder
 			// attribute in the resource
 		}
+	}
+
+	// Convert specDefined BOOLEAN value "false" to "nil" so it doesn't
+	// appear in the DB at all. If this is too broad then just do it for
+	// "defaultversionsticky" in resources.go as we're copying attributes.
+	if !IsNil(specProp) && val == false && GoToOurType(val) == BOOLEAN {
+		val = nil
 	}
 
 	if IsNil(val) {
@@ -1009,7 +1017,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1039,7 +1047,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1051,7 +1059,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: URL,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1066,7 +1074,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1078,7 +1086,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: URI,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_GROUP, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
@@ -1221,7 +1229,10 @@ var OrderedSpecProps = []*Attribute{
 					base = info.BaseURL
 				}
 
-				tmp := base + "/" + e.Path + "/versions/" + val.(string)
+				parts := strings.Split(e.Path, "/")
+				rPath := strings.Join(parts[:len(parts)-1], "/")
+
+				tmp := base + "/" + rPath + "/versions/" + val.(string)
 
 				meta := info != nil && (info.ShowStructure || info.ResourceUID == "")
 				_, rm := e.GetModels()

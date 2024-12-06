@@ -48,8 +48,8 @@ func TestCreateGroup(t *testing.T) {
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
-  "filescount": 1,
-  "filesurl": "http://localhost:8181/dirs/d1/files"
+  "filesurl": "http://localhost:8181/dirs/d1/files",
+  "filescount": 1
 }
 `)
 	xCheckGet(t, reg, "/dirs/xxx", "Not found\n")

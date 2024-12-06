@@ -282,10 +282,16 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 	}
 
-	meta, _, err := r.UpsertMetaWithObject(metaObj, addType)
-	if err != nil {
-		return nil, false, err
+	// Process the "meta" sub-object if there
+	if !IsNil(metaObj) {
+		_, _, err := r.UpsertMetaWithObject(metaObj, addType)
+		if err != nil {
+			return nil, false, err
+		}
 	}
+
+	meta, err := r.FindMeta(false)
+	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
 	defVerID := meta.GetAsString("defaultversionid")
 
@@ -294,9 +300,33 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		delete(obj, r.Singular+"id")
 	}
 
-	// If the passed-in vID is empty then use the defaultVersion
+	attrVersionID := ""
+	if val, ok := obj["versionid"]; ok {
+		attrVersionID = NotNilString(&val)
+	}
+
+	// If both vID and attrVersionID are set, they MUST match if obj is
+	// the Resource, not a new Version.
+	// Not sure this can ever happen, but just in case...
+	if !objIsVer && vID != "" && attrVersionID != "" {
+		return nil, false, fmt.Errorf("The desired \"versionid\"(%s) must "+
+			"match the \"versionid\" attribute(%s)", vID, attrVersionID)
+	}
+
+	// If the passed-in vID is empty, and we're new, look for "versionid"
+	if vID == "" && isNew && attrVersionID != "" {
+		vID = attrVersionID
+	}
+
+	// if vID is still empty, then use the defaultversionid
 	if vID == "" {
 		vID = defVerID
+	}
+
+	if defVerID != "" && attrVersionID != "" && attrVersionID != defVerID {
+		return nil, false, fmt.Errorf("When \"versionid\"(%s) is "+
+			"present it must match the \"defaultversionid\"(%s)",
+			attrVersionID, defVerID)
 	}
 
 	// Update the appropriate Version (vID), but only if the versionID

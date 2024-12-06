@@ -581,9 +581,13 @@ FROM FullTree WHERE RegSID=?`
 AND
 (
 eSID IN ( -- eSID from query
-  WITH RECURSIVE cte(eSID,ParentSID,Path) AS (
-    SELECT eSID,ParentSID,Path FROM Entities
+  -- Find all entities that match the filters, and then grab all parents
+  -- This "RECURSIVE" stuff finds all parents
+  WITH RECURSIVE cte(eSID,Type,ParentSID,Path) AS (
+    -- This defines the init set of rows of the query. We'll recurse later on
+    SELECT eSID,Type,ParentSID,Path FROM Entities
     WHERE eSID in ( -- start of the OR Filter groupings`
+		// This section will find all matching entities
 		firstOr := true
 		for _, OrFilters := range filters {
 			if !firstOr {
@@ -592,8 +596,8 @@ eSID IN ( -- eSID from query
 			}
 			firstOr = false
 			query += `
-      -- start of one Filter AND grouping (expre1 AND expr2)
-      -- below find SIDs of interest (then find their leaves)
+      -- start of one Filter AND grouping (expr1 AND expr2).
+	  -- Find all SIDs for the leaves for entities (SIDs) of interest.
       SELECT list.eSID FROM (
         SELECT count(*) as cnt,e2.eSID,e2.Path FROM Entities AS e1
         RIGHT JOIN (
@@ -616,38 +620,79 @@ eSID IN ( -- eSID from query
 						check = "PropValue=?"
 					} else {
 						args = append(args, value)
-						check = "((PropType<>'string' AND PropValue=?) OR (PropType='string' AND PropValue LIKE ?))"
+						check = "((PropType<>'string' AND PropValue=?) OR " +
+							"(PropType='string' AND PropValue LIKE ?))"
 					}
 				} else {
 					check = "PropValue IS NOT NULL"
 				}
 				// BINARY means case-sensitive for that operand
 				query += `
-          SELECT eSID,Path FROM FullTree
+          SELECT eSID,Type,Path FROM FullTree
           WHERE
             RegSID=? AND
-            (BINARY CONCAT(IF(Abstract<>'',CONCAT(Abstract,'` + string(DB_IN) + `'),''),PropName)=? AND
+            (BINARY CONCAT(IF(Abstract<>'',` +
+					`CONCAT(Abstract,'` + string(DB_IN) + `'),''),
+               PropName)=?
+               AND
                ` + check + `)`
 			} // end of AndFilter
 			query += `
           -- end of expr1
-        ) AS res ON ( res.eSID=e1.eSID )
+        ) AS result ON ( result.eSID=e1.eSID )
+        -- For each result found, find all Leaves under the matching entity.
+        -- The Leaves that show up 'cnt' times, where cnt is the # of
+        -- expressions in each filter (the ANDs), are branches to return.
+        -- Note we return the Path of each Leaf, not the path of the matching
+        -- entity. The entity that matches isn't important.
         JOIN Entities AS e2 ON (
-          (e2.Path=res.Path OR e2.Path LIKE
-             CONCAT(IF(res.Path<>'',CONCAT(res.Path,'/'),''),'%'))
+          (
+            (
+              -- Non-meta objects, just compare the Path
+              result.Type<>` + StrTypes(ENTITY_META) + ` AND
+              ( e2.Path=result.Path OR
+			    e2.Path LIKE CONCAT(IF(result.Path<>'',CONCAT(result.Path,'/'),''),'%')
+              )
+            )
+            OR
+            (
+              -- For 'meta' objects, compare it's parent's Path
+              result.Type=` + StrTypes(ENTITY_META) + ` AND
+              ( e2.Path=TRIM(TRAILING '/meta' FROM result.Path) OR
+                e2.Path LIKE CONCAT(TRIM(TRAILING 'meta' FROM result.Path),'%')
+              )
+            )
+          )
           AND e2.eSID IN (SELECT * from Leaves)
         ) GROUP BY e2.eSID
         -- end of RIGHT JOIN
       ) as list
-      WHERE list.cnt=?
+      WHERE list.cnt=?   -- cnt is the # of operands in the AND filter
       -- end of one Filter AND grouping (expr1 AND expr2 ...)`
 			args = append(args, andCount)
 		} // end of OrFilter
 
 		query += `
     ) -- end of all OR Filter groupings
-    UNION ALL SELECT e.eSID,e.ParentSID,e.Path FROM Entities AS e
-    INNER JOIN cte ON e.eSID=cte.ParentSID)
+
+    -- This is the recusive part of the query.
+    -- Find all of the parents (and 'meta' sub-objects) of the found
+	-- entities, up to root of Reg.
+    UNION DISTINCT SELECT
+      e.eSID,e.Type,e.ParentSID,e.Path
+    FROM Entities AS e
+    INNER JOIN cte ON
+      (
+	    -- Find its parent
+        e.eSID=cte.ParentSID
+        OR
+		-- If this is a Resource, grab its 'meta' sub-object
+        ( cte.Type=` + StrTypes(ENTITY_RESOURCE) + ` AND
+          e.Type=` + StrTypes(ENTITY_META) + ` AND
+          e.ParentSID=cte.eSID
+        )
+      )
+  )
   SELECT DISTINCT eSID FROM cte )
 )
 ORDER BY Path ;

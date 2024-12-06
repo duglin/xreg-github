@@ -281,7 +281,7 @@ func (r *Resource) GetNewest() (*Version, error) {
 	Must(err)
 
 	if len(vIDs) > 0 {
-		return r.FindVersion(vIDs[0], false)
+		return r.FindVersion(vIDs[len(vIDs)-1], false)
 	}
 	return nil, nil
 }
@@ -444,8 +444,9 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 			}
 		}
 
-		// Make sure we preverse these system owned attributes
-		list := []string{"#nextversionid", "epoch", "defaultversionid"}
+		// Mure sure these attributes are present in NewObject, and if not
+		// grab them from the previous version of NewObject or Object
+		list := []string{"#nextversionid", "epoch"} //, "defaultversionid"}
 		for _, key := range list {
 			if tmp, ok := meta.NewObject[key]; !ok {
 				if tmp, ok = existingNewObj[key]; ok {
@@ -537,7 +538,8 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 			return nil, false, fmt.Errorf("Can't find version %q", defaultVersionID)
 		}
 
-		meta.NewObject["defaultversionid"] = defaultVersionID
+		meta.JustSet(r.Singular+"id", r.UID)
+		meta.JustSet("defaultversionid", defaultVersionID)
 	}
 
 	if err = meta.ValidateAndSave(); err != nil {

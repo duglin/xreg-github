@@ -143,3 +143,6 @@ TODOs:
 - add support for inline=endpoints.*
 - ban the use of ^ in ifvalue VALUES for now
 - support ETag/If-Match
+- update epoch/modifiedat of parent when nested entity is added/removed
+- ?nested isn't needed to update `model` or `meta` attributes
+- DELETE on /meta should fail - in spec too

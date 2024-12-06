@@ -413,7 +413,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// GROUPs/gID/RESOURCEs/rID/[meta|versions]
-	if len(info.Parts) == 5 {
+	if len(info.Parts) >= 5 {
 		if info.Parts[4] == "meta" {
 			// GROUPs/gID/RESOURCEs/rID/meta
 			info.Root += "/meta"

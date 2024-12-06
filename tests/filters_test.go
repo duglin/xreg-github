@@ -48,41 +48,41 @@ func TestBasicFilters(t *testing.T) {
   "createdat": "2024-12-01T12:00:00Z",
   "modifiedat": "2024-12-01T12:00:01Z",
 
-  "dirscount": 2,
-  "dirsurl": "http://localhost:8181/dirs"
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirscount": 2
 }
 `,
 		},
 		{
 			Name: "Inline - No Filter",
 			URL:  "?inline&oneline",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "2 leaves match",
 			URL:  "?inline&oneline&filter=dirs.files.versions.versionid=v1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{}}}}}}}`,
 		},
 		{
 			Name: "Just one leaf - v2",
 			URL:  "?inline&oneline&filter=dirs.files.versions.versionid=v2",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v2":{}}}}}}}`,
 		},
 		{
 			Name: "filter at file level",
 			URL:  "?inline&oneline&filter=dirs.files.fileid=f2",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "get groups, filter at resource level",
 			URL:  "dirs?inline&oneline&filter=files.fileid=f2",
-			Exp:  `{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}`,
+			Exp:  `{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}`,
 		},
 		{ // Test some filtering at the root of the GET
 			Name: "Get/filter root - match ",
 			URL:  "?inline&oneline&filter=registryid=TestBasicFilters",
 			// Return entire tree
-			Exp: `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp: `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "Get/filter root, no match",
@@ -94,7 +94,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get root, filter group coll - match",
 			URL:  "?inline&oneline&filter=dirs.dirid=d1",
 			// Just root + dirs/d1
-			Exp: `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}}}`,
+			Exp: `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}}}`,
 		},
 		{
 			Name: "Get root, filter group coll - no match",
@@ -106,7 +106,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter group coll - match",
 			URL:  "dirs?inline&oneline&filter=dirid=d1",
 			// dirs coll with just d1
-			Exp: `{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}}`,
+			Exp: `{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}}`,
 		},
 		{
 			Name: "Get/filter group coll - no match",
@@ -117,7 +117,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get/filter group entity - match",
 			URL:  "dirs/d1?inline&oneline&filter=dirid=d1",
 			// entire d1 group
-			Exp: `{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}`,
+			Exp: `{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}`,
 		},
 		{
 			Name: "Get/filter group entity - no match",
@@ -129,7 +129,7 @@ func TestBasicFilters(t *testing.T) {
 			Name: "Get group entity, filter resource - match",
 			URL:  "dirs/d1?inline&oneline&filter=files.fileid=f1",
 			// entire d1
-			Exp: `{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}`,
+			Exp: `{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}`,
 		},
 		{
 			Name: "Get group entity, filter resource - no match",
@@ -188,8 +188,8 @@ func TestBasicFilters(t *testing.T) {
   "createdat": "2024-12-01T12:00:00Z",
   "modifiedat": "2024-12-01T12:00:01Z",
 
-  "dirscount": 2,
-  "dirsurl": "http://localhost:8181/dirs"
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirscount": 2
 }
 `,
 		},
@@ -207,8 +207,8 @@ func TestBasicFilters(t *testing.T) {
   "createdat": "2024-12-01T12:00:00Z",
   "modifiedat": "2024-12-01T12:00:01Z",
 
-  "dirscount": 1,
-  "dirsurl": "http://localhost:8181/dirs"
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirscount": 1
 }
 `,
 		},
@@ -226,6 +226,7 @@ func TestBasicFilters(t *testing.T) {
   "createdat": "2024-12-01T12:00:01Z",
   "modifiedat": "2024-12-01T12:00:02Z",
 
+  "dirsurl": "http://localhost:8181/dirs",
   "dirs": {
     "d2": {
       "dirid": "d2",
@@ -234,20 +235,30 @@ func TestBasicFilters(t *testing.T) {
       "createdat": "2024-12-01T12:00:02Z",
       "modifiedat": "2024-12-01T12:00:02Z",
 
+      "filesurl": "http://localhost:8181/dirs/d2/files",
       "files": {
         "f2": {
           "fileid": "f2",
+          "versionid": "v1.1",
           "self": "http://localhost:8181/dirs/d2/files/f2$structure",
           "epoch": 1,
+          "isdefault": true,
           "labels": {
             "file1": "1elif"
           },
           "createdat": "2024-12-01T12:00:02Z",
           "modifiedat": "2024-12-01T12:00:02Z",
 
-          "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
+          "metaurl": "http://localhost:8181/dirs/d2/files/f2/meta",
+          "meta": {
+            "fileid": "f2",
+            "self": "http://localhost:8181/dirs/d2/files/f2/meta",
+            "epoch": 1,
 
+            "defaultversionid": "v1.1",
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
             "v1": {
               "fileid": "f2",
@@ -270,16 +281,13 @@ func TestBasicFilters(t *testing.T) {
               "modifiedat": "2024-12-01T12:00:02Z"
             }
           },
-          "versionscount": 2,
-          "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions"
+          "versionscount": 2
         }
       },
-      "filescount": 1,
-      "filesurl": "http://localhost:8181/dirs/d2/files"
+      "filescount": 1
     }
   },
-  "dirscount": 1,
-  "dirsurl": "http://localhost:8181/dirs"
+  "dirscount": 1
 }
 `,
 		},
@@ -312,6 +320,7 @@ func TestBasicFilters(t *testing.T) {
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
+  "dirsurl": "http://localhost:8181/dirs",
   "dirs": {
     "d2": {
       "dirid": "d2",
@@ -320,20 +329,30 @@ func TestBasicFilters(t *testing.T) {
       "createdat": "2024-01-01T12:00:02Z",
       "modifiedat": "2024-01-01T12:00:02Z",
 
+      "filesurl": "http://localhost:8181/dirs/d2/files",
       "files": {
         "f2": {
           "fileid": "f2",
+          "versionid": "v1.1",
           "self": "http://localhost:8181/dirs/d2/files/f2$structure",
           "epoch": 1,
+          "isdefault": true,
           "labels": {
             "file1": "1elif"
           },
           "createdat": "2024-01-01T12:00:02Z",
           "modifiedat": "2024-01-01T12:00:02Z",
 
-          "defaultversionid": "v1.1",
-          "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
+          "metaurl": "http://localhost:8181/dirs/d2/files/f2/meta",
+          "meta": {
+            "fileid": "f2",
+            "self": "http://localhost:8181/dirs/d2/files/f2/meta",
+            "epoch": 1,
 
+            "defaultversionid": "v1.1",
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
             "v1": {
               "fileid": "f2",
@@ -356,16 +375,13 @@ func TestBasicFilters(t *testing.T) {
               "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
-          "versionscount": 2,
-          "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions"
+          "versionscount": 2
         }
       },
-      "filescount": 1,
-      "filesurl": "http://localhost:8181/dirs/d2/files"
+      "filescount": 1
     }
   },
-  "dirscount": 1,
-  "dirsurl": "http://localhost:8181/dirs"
+  "dirscount": 1
 }
 `,
 		},
@@ -422,7 +438,7 @@ func TestANDORFilters(t *testing.T) {
 		{
 			Name: "AND same obj/level - match",
 			URL:  "?oneline&inline&filter=dirs.files.fileid=f1,dirs.files.name=f1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "AND same obj/level - no match",
@@ -432,22 +448,22 @@ func TestANDORFilters(t *testing.T) {
 		{
 			Name: "OR same obj/level - match",
 			URL:  "?oneline&inline&filter=dirs.files.fileid=f1&filter=dirs.files.name=f1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "multi result 2 levels down - match",
 			URL:  "?oneline&inline&filter=dirs.files.versions.versionid=v1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}},"schemagroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - match",
 			URL:  "dirs?oneline&inline&filter=files.versions.versionid=v1",
-			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{}}}}}}`,
+			Exp:  `{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{}}}}}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - match",
 			URL:  "dirs?oneline&inline&filter=files.versions.versionid=v1*",
-			Exp:  `{"d1":{"files":{"f1":{"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}`,
+			Exp:  `{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}`,
 		},
 		{
 			Name: "path + multi result 2 levels down - no match",
@@ -459,32 +475,32 @@ func TestANDORFilters(t *testing.T) {
 		{
 			Name: "dirs and s - match both",
 			URL:  "?oneline&inline&filter=dirs.dirid=d1&filter=schemagroups.schemagroupid=sg1",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"meta":{},"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirs and s - match first",
 			URL:  "?oneline&inline&filter=dirs.dirid=d1&filter=schemagroups.schemagroupid=xxx",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "dirs and s - match second",
 			URL:  "?oneline&inline&filter=dirs.dirid=xxx&filter=schemagroups.schemagroupid=sg1",
-			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
+			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"meta":{},"versions":{"v1.0":{},"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and sOR - match first",
 			URL:  "?oneline&inline&filter=dirs.files.fileid=f1,dirs.files.versions.versionid=v2&filter=schemagroups.schemas.versions.versionid=v1.0,schemagroups.schemas.versions.versionid=v2.0",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemagroups":{}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v2":{}}}}}},"schemagroups":{}}`,
 		},
 		{
 			Name: "dirsOR and sOR - match second",
-			URL:  "?oneline&inline&filter=dirs.files.fileid=f1,dirs.files.versions.versionid=xxx&filter=schemagroups.schemas.versions.versionid=v2.0,schemagroups.schemas.defaultversionid=v2.0",
-			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
+			URL:  "?oneline&inline&filter=dirs.files.fileid=f1,dirs.files.versions.versionid=xxx&filter=schemagroups.schemas.versions.versionid=v2.0,schemagroups.schemas.meta.defaultversionid=v2.0",
+			Exp:  `{"dirs":{},"schemagroups":{"sg1":{"schemas":{"s1":{"meta":{},"versions":{"v2.0":{}}}}}}}`,
 		},
 		{
 			Name: "dirsOR and sOR - both match",
-			URL:  "?oneline&inline&filter=dirs.files.fileid=f1,dirs.files.versions.versionid=v2&filter=schemagroups.schemas.versions.versionid=v2.0,schemagroups.schemas.defaultversionid=v2.0",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"versions":{"v2.0":{}}}}}}}`,
+			URL:  "?oneline&inline&filter=dirs.files.fileid=f1,dirs.files.versions.versionid=v2&filter=schemagroups.schemas.versions.versionid=v2.0,schemagroups.schemas.meta.defaultversionid=v2.0",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v2":{}}}}}},"schemagroups":{"sg1":{"schemas":{"s1":{"meta":{},"versions":{"v2.0":{}}}}}}}`,
 		},
 	}
 
@@ -524,72 +540,72 @@ func TestWildcards(t *testing.T) {
 		{
 			Name: "wildcard at start",
 			URL:  "?oneline&inline&filter=dirs.files.name=*3",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "wildcard at end - 1",
 			URL:  "?oneline&inline&filter=dirs.files.name=f*",
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "wildcard at end - 2",
 			URL:  "?oneline&inline&filter=dirs.files.name=f12*",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "wildcard at both ends - 1",
 			URL:  "?oneline&inline&filter=dirs.files.name=*f12*",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "wildcard at both ends - 2",
 			URL:  "?oneline&inline&filter=dirs.files.name=*12*",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "wildcard at both ends - 3",
 			URL:  "?oneline&inline&filter=dirs.files.name=*3*",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "double wildcard - 1",
 			URL:  "?oneline&inline&filter=dirs.files.name=**3",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "double wildcard - 2",
 			URL:  "?oneline&inline&filter=dirs.files.name=**2**",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "double wildcard - 3",
 			URL:  "?oneline&inline&filter=dirs.files.name=f**3",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "multi-wildcard - 1",
 			URL:  "?oneline&inline&filter=dirs.files.name=f*1*2*3",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "multi-wildcard - 2",
 			URL:  "?oneline&inline&filter=dirs.files.name=*f*1*2*3",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "multi-wildcard - 3",
 			URL:  "?oneline&inline&filter=dirs.files.name=f*1*2*3*",
-			Exp:  `{"dirs":{"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "escape - 1",
 			URL:  "?oneline&inline&filter=dirs.files.name=g%25d",
-			Exp:  `{"dirs":{"d2":{"files":{"f3":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f3":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "escape - 2",
 			URL:  "?oneline&inline&filter=dirs.files.name=g*d",
-			Exp:  `{"dirs":{"d2":{"files":{"f3":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d2":{"files":{"f3":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "escape - 3",
@@ -599,17 +615,17 @@ func TestWildcards(t *testing.T) {
 		{
 			Name: "all - 1",
 			URL:  "?oneline&inline&filter=dirs.files.name", // name must be set
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}},"f3":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}},"f3":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "all - 2",
 			URL:  "?oneline&inline&filter=dirs.files.name=*", // name must be set
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}},"f3":{"versions":{"v1":{},"v1.1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}},"f3":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
 		{
 			Name: "all - 3",
 			URL:  "?oneline&inline", // verify same as name=* + f4
-			Exp:  `{"dirs":{"d1":{"files":{"f1":{"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"versions":{"v1":{},"v1.1":{}}},"f3":{"versions":{"v1":{},"v1.1":{}}},"f4":{"versions":{"v1":{}}}}}}}`,
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}},"f3":{"meta":{},"versions":{"v1":{},"v1.1":{}}},"f4":{"meta":{},"versions":{"v1":{}}}}}}}`,
 		},
 		{
 			Name: "fail - 1",
