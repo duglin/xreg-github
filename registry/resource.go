@@ -90,11 +90,15 @@ func (r *Resource) Get(name string) any {
 	if err != nil {
 		panic(err)
 	}
+	PanicIf(v == nil, "No default version for %q", r.UID)
 	return v.Entity.Get(name)
 }
 
 func (r *Resource) GetXref() (string, *Resource, error) {
-	tmp := r.Entity.Get("xref")
+	meta, err := r.FindMeta(false)
+	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
+
+	tmp := meta.Entity.Get("xref")
 	if IsNil(tmp) {
 		return "", nil, nil
 	}
@@ -202,7 +206,7 @@ func (r *Resource) SetSaveResource(name string, val any) error {
 }
 
 func (r *Resource) SetSave(name string, val any) error {
-	return r.SetSave(name, val)
+	return r.SetSaveDefault(name, val)
 }
 
 func (r *Resource) SetSaveDefault(name string, val any) error {
@@ -320,15 +324,11 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 			return err
 		}
 
-		vIDs, err := r.GetVersionIDs()
+		newDefault, err = r.GetNewest()
 		if err != nil {
 			return err
 		}
 
-		newDefault, err = r.FindVersion(vIDs[len(vIDs)-1], false)
-		if err != nil {
-			return err
-		}
 		PanicIf(newDefault == nil, "No newest: %s", r.UID)
 	} else {
 		if err := meta.JustSet("defaultversionsticky", true); err != nil {
@@ -361,7 +361,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 	xref := ""
 
 	if obj != nil {
-		xrefAny, hasXref := obj["xref"]
+		xrefAny, hasXref = obj["xref"]
 		if hasXref {
 			if IsNil(xrefAny) {
 				// Do nothing - leave it there so we can null it out later
@@ -430,6 +430,13 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		}
 	}
 
+	attrsToKeep := []string{
+		r.Singular + "id",
+		"#nextversionid",
+		"#epoch", // Last used epoch so we can restore it when xref is cleared
+		"epoch"}
+	//, "defaultversionid"
+
 	// Apply properties
 	if obj != nil {
 		existingNewObj := meta.NewObject
@@ -446,8 +453,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 
 		// Mure sure these attributes are present in NewObject, and if not
 		// grab them from the previous version of NewObject or Object
-		list := []string{"#nextversionid", "epoch"} //, "defaultversionid"}
-		for _, key := range list {
+		for _, key := range attrsToKeep {
 			if tmp, ok := meta.NewObject[key]; !ok {
 				if tmp, ok = existingNewObj[key]; ok {
 					meta.NewObject[key] = tmp
@@ -459,7 +465,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 	}
 
 	// Make sure we always have an ID
-	if IsNil(meta.Get(r.Singular + "id")) {
+	if IsNil(meta.NewObject[r.Singular+"id"]) {
 		meta.JustSet(r.Singular+"id", r.UID)
 	}
 
@@ -479,16 +485,46 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 				meta.JustSet("#nextversionid", 1)
 			}
 
+			if IsNil(meta.NewObject["epoch"]) {
+				tmp := meta.Get("#epoch")
+				if !IsNil(tmp) {
+					meta.NewObject["epoch"] = tmp
+				} else {
+					meta.NewObject["epoch"] = 1
+				}
+			}
+
+			/*
+				defVerIDany := meta.NewObject["defaultversionid"]
+				err = r.SetDefaultID(NotNilString(&defVerIDany))
+				if err != nil {
+					return nil, false, err
+				}
+			*/
+
 			if err = meta.Save(); err != nil {
 				return nil, false, err
 			}
 		} else {
 			// Clear all existing attributes except ID
-			for k, _ := range meta.Object {
-				if k != meta.Singular+"id" {
+			for k, _ := range meta.NewObject {
+				delIt := true
+				for _, tmp := range attrsToKeep {
+					if tmp == k {
+						delIt = false
+						break
+					}
+				}
+				if delIt {
 					meta.JustSet(k, nil)
 				}
 			}
+			// Erase from DB to make sure we grab the xref target one,
+			// saving current one if there
+			if tmp := meta.Get("epoch"); !IsNil(tmp) {
+				meta.JustSet("#epoch", tmp)
+			}
+			meta.JustSet("epoch", nil)
 
 			if err = meta.SetSave("xref", xref); err != nil {
 				return nil, false, err
@@ -499,6 +535,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 			if err != nil {
 				return nil, false, err
 			}
+
 			for _, ver := range vers {
 				if err = ver.JustDelete(); err != nil {
 					return nil, false, err
@@ -509,11 +546,16 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		}
 	}
 
+	// Save current epoch if we need it later
+	if tmp := meta.Get("epoch"); !IsNil(tmp) {
+		meta.JustSet("#epoch", tmp)
+	}
+
 	// Process "defaultversion" attributes. Order of processing:
 	// - defaultversionsticky, if there
 	// - defaultversionid, if defaultversionsticky is set
 
-	stickyAny := meta.Get("defaultversionsticky")
+	stickyAny := meta.NewObject["defaultversionsticky"]
 	if !IsNil(stickyAny) && stickyAny != true && stickyAny != false {
 		return nil, false, fmt.Errorf("'defaultversionsticky' must be a " +
 			"boolean or null")
@@ -535,7 +577,8 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		v, err := r.FindVersion(defaultVersionID, false)
 		Must(err)
 		if defaultVersionID != "" && IsNil(v) {
-			return nil, false, fmt.Errorf("Can't find version %q", defaultVersionID)
+			return nil, false,
+				fmt.Errorf("Can't find version %q", defaultVersionID)
 		}
 
 		meta.JustSet(r.Singular+"id", r.UID)

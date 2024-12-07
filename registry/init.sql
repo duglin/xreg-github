@@ -215,6 +215,12 @@ CREATE TABLE Metas (
     INDEX(RegistrySID)
 );
 
+CREATE TRIGGER MetasTrigger BEFORE DELETE ON Metas
+FOR EACH ROW
+BEGIN
+    DELETE FROM Props WHERE EntitySID=OLD.SID @
+END ;
+
 CREATE TABLE Versions (
     SID                 VARCHAR(64) NOT NULL,   # System ID
     UID                 VARCHAR(64) NOT NULL,   # User defined
@@ -256,10 +262,11 @@ SELECT
     tR.SID as TargetSID,
     tR.Path as TargetPath
 FROM Resources AS sR
+JOIN Metas AS sM ON (sM.ResourceSID=sR.SID)
 JOIN ModelEntities AS sRM ON (sRM.SID=sR.ModelSID)
 JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND
     tR.Path=(SELECT PropValue FROM Props WHERE
-             EntitySID=sR.SID AND PropName='xref$DB_IN'));
+             EntitySID=sM.SID AND PropName='xref$DB_IN'));
 # JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND tR.Path=sR.xRef);
 
 CREATE VIEW xRefVersions AS
@@ -355,6 +362,19 @@ FROM EffectiveVersions AS v ;
 # Calculate the raw Props that need to be duplicated due to xRefs.
 # This assumes other calculated props (like isDefault) will be done later
 CREATE VIEW xRefProps AS
+SELECT
+    R.RegistrySID,
+	Ms.SID AS EntitySID,
+	P.PropName,
+	P.PropValue,
+	P.PropType
+FROM xRefSrc2TgtResources AS R
+JOIN Metas AS Ms ON (Ms.ResourceSID=R.SourceSID)
+JOIN Metas AS Mt ON (Mt.ResourceSID=R.TargetSID)
+JOIN Props AS P ON (P.EntitySID=Mt.SID AND
+       P.PropName NOT IN ('xref$DB_IN',CONCAT(R.Singular,'id$DB_IN')))
+
+/*
 SELECT                            # Iterate over the xRef Resources
     R.RegistrySID,
     R.SourceSID AS EntitySID,
@@ -367,7 +387,9 @@ JOIN Props AS P ON (              # Grab the Target Resource's attributes
     P.PropName<>CONCAT(R.Singular,'id$DB_IN') AND
     P.PropName<>'xref$DB_IN'
 )
-UNION SELECT
+*/
+
+UNION SELECT                      # Find all Version attributes (not meta)
     R.RegistrySID,
     CONCAT(R.SourceSID, '-', P.EntitySID),
     P.PropName,
@@ -376,7 +398,8 @@ UNION SELECT
 FROM xRefSrc2TgtResources AS R
 JOIN Props AS P ON (
     P.EntitySID IN (
-        SELECT eSID FROM Entities WHERE ParentSID=R.TargetSID
+        SELECT eSID FROM Entities WHERE ParentSID=R.TargetSID AND
+                                        Type=$ENTITY_VERSION
     ) AND
     P.PropName<>'xref$DB_IN'
 )
@@ -406,6 +429,22 @@ JOIN EffectiveVersions AS v ON (p.EntitySID=v.SID)
 JOIN Metas AS m ON (m.ResourceSID=v.ResourceSID)
 JOIN EffectiveProps AS p1 ON (p1.EntitySID=m.SID)
 WHERE p1.PropName='defaultVersionId$DB_IN' AND v.UID=p1.PropValue
+
+/*
+SELECT
+    m.RegistrySID,
+	m.ResourceSID AS EntitySID,
+	p.PropName,
+	p.PropValue,
+	p.PropType
+FROM Metas m
+JOIN EffectiveProps AS dvp ON (dvp.EntitySID=m.SID AND
+     dvp.PropName='defaultVersionId,')
+JOIN EffectiveVersions AS v ON (m.ResourceSID=v.ResourceSID
+     AND v.UID=dvp.PropValue)
+JOIN EffectiveProps AS p ON (p.EntitySID=v.SID)
+*/
+
 
 UNION SELECT
     m.RegistrySID,

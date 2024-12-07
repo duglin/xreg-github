@@ -362,6 +362,7 @@ func TestBasicTypes(t *testing.T) {
   "reguint1": 0,
   "reguint2": 333,
 
+  "dirsurl": "http://localhost:8181/dirs",
   "dirs": {
     "d1": {
       "dirid": "d1",
@@ -381,11 +382,14 @@ func TestBasicTypes(t *testing.T) {
       "dirstring1": "str2",
       "dirstring2": "",
 
+      "filesurl": "http://localhost:8181/dirs/d1/files",
       "files": {
         "f1": {
           "fileid": "f1",
+          "versionid": "v1",
           "self": "http://localhost:8181/dirs/d1/files/f1$structure",
           "epoch": 1,
+          "isdefault": true,
           "createdat": "2024-01-01T12:00:04Z",
           "modifiedat": "2024-01-01T12:00:02Z",
           "filebool1": true,
@@ -400,9 +404,16 @@ func TestBasicTypes(t *testing.T) {
           "filestring1": "str4",
           "filestring2": "",
 
-          "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "meta": {
+            "fileid": "f1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "epoch": 1,
 
+            "defaultversionid": "v1",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
@@ -425,12 +436,10 @@ func TestBasicTypes(t *testing.T) {
               "filestring2": ""
             }
           },
-          "versionscount": 1,
-          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+          "versionscount": 1
         }
       },
-      "filescount": 1,
-      "filesurl": "http://localhost:8181/dirs/d1/files"
+      "filescount": 1
     },
     "dir2": {
       "dirid": "dir2",
@@ -445,13 +454,12 @@ func TestBasicTypes(t *testing.T) {
       "dirmapint": {},
       "dirobj": {},
 
+      "filesurl": "http://localhost:8181/dirs/dir2/files",
       "files": {},
-      "filescount": 0,
-      "filesurl": "http://localhost:8181/dirs/dir2/files"
+      "filescount": 0
     }
   },
-  "dirscount": 2,
-  "dirsurl": "http://localhost:8181/dirs"
+  "dirscount": 2
 }
 `)
 }

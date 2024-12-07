@@ -342,7 +342,6 @@ func (e *Entity) Refresh() error {
 	defer results.Close()
 
 	if err != nil {
-		log.Printf("Error refreshing props(%s): %s", e.DbSID, err)
 		return fmt.Errorf("Error refreshing props(%s): %s", e.DbSID, err)
 	}
 
@@ -608,7 +607,6 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	}
 
 	if err != nil {
-		log.Printf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
 		return fmt.Errorf("Error updating prop(%s/%v): %s", pp.UI(), val, err)
 	}
 
@@ -1201,11 +1199,20 @@ var OrderedSpecProps = []*Attribute{
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
 				// Make sure it has a value, if not copy from existing
+				xRef := e.NewObject["xref"]
+				PanicIf(xRef == "", "xref is ''")
+
+				/* Really should check this
 				newVal := e.NewObject["defaultversionid"]
-				if IsNil(newVal) {
-					oldVal := e.Object["defaultversionid"]
-					e.NewObject["defaultversionid"] = oldVal
-				}
+				PanicIf(IsNil(xRef) && IsNil(newVal), "defverid is nil")
+				*/
+
+				/*
+					if IsNil(xRef) && IsNil(newVal) {
+						oldVal := e.Object["defaultversionid"]
+						e.NewObject["defaultversionid"] = oldVal
+					}
+				*/
 				return nil
 			},
 		},
@@ -1430,8 +1437,10 @@ func (e *Entity) Save() error {
 
 	// TODO remove at some point when we're sure it's safe
 	if SpecProps["epoch"].InType(e.Type) && IsNil(e.NewObject["epoch"]) {
-		log.Printf("Save.NewObject:\n%s", ToJSON(e.NewObject))
-		panic("Epoch is nil: " + e.Path)
+		// Only an xref'd "meta" is allowed to not have an 'epoch'
+		if e.Type != ENTITY_META || IsNil(e.NewObject["xref"]) {
+			PanicIf(true, "Epoch is nil(%s):%s", e.Path, ToJSON(e.NewObject))
+		}
 	}
 
 	if log.GetVerbose() > 2 {
@@ -1449,7 +1458,6 @@ func (e *Entity) Save() error {
 
 	err := Do(e.tx, `DELETE FROM Props WHERE EntitySID=?`, e.DbSID)
 	if err != nil {
-		log.Printf("Error deleting all props %s", err)
 		return fmt.Errorf("Error deleting all prop: %s", err)
 	}
 

@@ -286,12 +286,22 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	if !IsNil(metaObj) {
 		_, _, err := r.UpsertMetaWithObject(metaObj, addType)
 		if err != nil {
+			if isNew {
+				// Needed if doing local func calls to create the Resource
+				// and we don't commit/rollback the tx upon failure
+				r.Delete()
+			}
 			return nil, false, err
 		}
 	}
 
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
+
+	if !IsNil(meta.Get("xref")) {
+		// All versions should have been deleted alread so just return
+		return r, isNew, nil
+	}
 
 	defVerID := meta.GetAsString("defaultversionid")
 

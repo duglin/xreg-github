@@ -146,3 +146,7 @@ TODOs:
 - update epoch/modifiedat of parent when nested entity is added/removed
 - ?nested isn't needed to update `model` or `meta` attributes
 - DELETE on /meta should fail - in spec too
+- test for PUT with "versions" on an existing resource/xref - should igore
+  the versions
+- test clearing xref and setting defver attrs, via res and via meta directly
+- test incorrect epoch in meta, via res and via meta

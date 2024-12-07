@@ -44,22 +44,22 @@ func TestCreateResource(t *testing.T) {
 	xCheckGet(t, reg, "/dirs/d1/files/f1$structure",
 		`{
   "fileid": "f1",
+  "versionid": "v2",
   "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
+  "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
 
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
-
-  "versionscount": 2,
-  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions"
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 2
 }
 `)
 	xCheckGet(t, reg, "/dirs/d1/files/xxx", "Not found\n")
 	xCheckGet(t, reg, "dirs/d1/files/xxx", "Not found\n")
-	xCheckGet(t, reg, "/dirs/d1/files/xxx/yyy", "Expected \"versions\", got: yyy\n")
-	xCheckGet(t, reg, "dirs/d1/files/xxx/yyy", "Expected \"versions\", got: yyy\n")
+	xCheckGet(t, reg, "/dirs/d1/files/xxx/yyy", "Expected \"versions\" or \"meta\", got: yyy\n")
+	xCheckGet(t, reg, "dirs/d1/files/xxx/yyy", "Expected \"versions\" or \"meta\", got: yyy\n")
 
 	ft, err = d1.FindResource("files", "f1", false)
 	xNoErr(t, err)
