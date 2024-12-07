@@ -57,13 +57,13 @@ func InitDB() {
 		os.Setenv("XR_MODEL_PATH", ".:"+paths+
 			"://raw.githubusercontent.com/xregistry/spec/main")
 
-		// reg = LoadCESample(nil)
-		reg = LoadDirsSample(nil)
-		// LoadEndpointsSample(nil)
-		// LoadMessagesSample(nil)
-		// LoadSchemasSample(nil)
-		// LoadAPIGuru(nil, "APIs-guru", "openapi-directory")
-		// LoadDocStore(nil)
+		reg = LoadCESample(nil)
+		LoadDirsSample(nil)
+		LoadEndpointsSample(nil)
+		LoadMessagesSample(nil)
+		LoadSchemasSample(nil)
+		LoadAPIGuru(nil, "APIs-guru", "openapi-directory")
+		LoadDocStore(nil)
 		if os.Getenv("XR_LOAD_LARGE") != "" {
 			go LoadLargeSample(nil)
 		}
