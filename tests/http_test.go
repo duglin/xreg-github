@@ -44,6 +44,11 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 
 	// t.Logf("Test: %s", test.Name)
 	// t.Logf(">> %s %s  (%s)", test.Method, test.URL, registry.GetStack()[1])
+
+	if test.Name != "" {
+		test.Name += ": "
+	}
+
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -52,8 +57,11 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 	if test.ReqBody != "" {
 		body = bytes.NewReader([]byte(test.ReqBody))
 	}
-	req, err := http.NewRequest(test.Method, "http://localhost:8181/"+test.URL, body)
+	req, err := http.NewRequest(test.Method,
+		"http://localhost:8181/"+test.URL, body)
 	xNoErr(t, err)
+
+	// Add all request headers to the outbound message
 	for _, header := range test.ReqHeaders {
 		name, value, _ := strings.Cut(header, ":")
 		name = strings.TrimSpace(name)
@@ -69,13 +77,18 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 
 	xNoErr(t, err)
 	xCheck(t, res.StatusCode == test.Code,
-		fmt.Sprintf("Expected status %d, got %d\n%s", test.Code, res.StatusCode, string(resBody)))
+		fmt.Sprintf("Expected status %d, got %d\n%s",
+			test.Code, res.StatusCode, string(resBody)))
 
 	// t.Logf("%v\n%s", res.Header, string(resBody))
-	testHeaders := map[string]bool{}
+	testHeaders := map[string]string{}
 
-	seenTS := map[string]string{}
-	replaceFunc := func(input string) string {
+	// This stuff is for masking timestamps. Need to make sure that we
+	// process the expected and result timestamps in the same order, so
+	// use 2 different "seenTS" maps
+	testSeenTS := map[string]string{}
+	resSeenTS := map[string]string{}
+	replaceFunc := func(input string, seenTS map[string]string) string {
 		if val, ok := seenTS[input]; ok {
 			return val
 		}
@@ -83,61 +96,97 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 		seenTS[input] = val
 		return val
 	}
+	testReplaceFunc := func(input string) string {
+		return replaceFunc(input, testSeenTS)
+	}
+	resReplaceFunc := func(input string) string {
+		return replaceFunc(input, resSeenTS)
+	}
 	TSre := savedREs[TSREGEXP]
 
-	// Do expected headers first
-	for i, _ := range test.ResHeaders {
-		val := test.ResHeaders[i]
-		test.ResHeaders[i] = TSre.ReplaceAllStringFunc(val, replaceFunc)
+	// Parse expected headers - split and lowercase the name
+	for _, v := range test.ResHeaders {
+		name, value, _ := strings.Cut(v, ":")
+		name = strings.ToLower(name)
+		testHeaders[name] = strings.TrimSpace(value)
 	}
-	// reset, and then do actual response headers
-	seenTS = map[string]string{}
-	for _, key := range registry.SortedKeys(res.Header) {
-		if strings.HasSuffix(key, "at") {
-			if resVal := res.Header.Get(key); resVal != "" {
-				resVal = TSre.ReplaceAllStringFunc(resVal, replaceFunc)
-				res.Header.Set(key, resVal)
-			}
+
+	// Extract the response headers - lowercase the name.
+	// Save the complete list for error reporting (gotHeaders)
+	resHeaders := map[string]string{}
+	gotHeaders := ""
+
+	for name, vals := range res.Header {
+		value := ""
+		if len(vals) > 0 {
+			value = vals[0]
 		}
+
+		name = strings.ToLower(name)
+		resHeaders[name] = strings.TrimSpace(value)
+		gotHeaders += fmt.Sprintf("\n%s: %s", name, value)
 	}
 
-	for _, header := range test.ResHeaders {
-		name, value, _ := strings.Cut(header, ":")
-		name = strings.TrimSpace(name)
-		value = strings.TrimSpace(value)
-		testHeaders[strings.ToLower(name)] = true
+	// Parse the headerMasks, if any so we can quickly use them later on
+	headerMasks := []*regexp.Regexp{}
+	headerReplace := []string{}
+	for _, mask := range test.HeaderMasks {
+		var re *regexp.Regexp
+		search, replace, _ := strings.Cut(mask, "||")
+		if re = savedREs[search]; re == nil {
+			re = regexp.MustCompile(search)
+			savedREs[search] = re
+		}
+		headerMasks = append(headerMasks, re)
+		headerReplace = append(headerReplace, replace)
+	}
 
-		resValue := res.Header.Get(name)
-
-		for _, mask := range test.HeaderMasks {
-			var re *regexp.Regexp
-			search, replace, _ := strings.Cut(mask, "||")
-			if re = savedREs[search]; re == nil {
-				re = regexp.MustCompile(search)
-				savedREs[search] = re
+	for name, value := range testHeaders {
+		// Make sure headers that start with '-' are NOT in the response
+		if name[0] == '-' {
+			if _, ok := resHeaders[name[1:]]; ok {
+				t.Errorf("%sHeader '%s: %s' should not be "+
+					"present\n\nGot headers:%s",
+					test.Name, name[1:], value, gotHeaders)
+				t.FailNow()
 			}
+			continue
+		}
 
-			value = re.ReplaceAllString(value, replace)
-			resValue = re.ReplaceAllString(resValue, replace)
+		resValue, ok := resHeaders[name]
+		if !ok {
+			t.Errorf("%s\nMissing header: %s: %s\n\nGot headers:%s",
+				test.Name, name, value, gotHeaders)
+			t.FailNow()
+		}
+
+		// Mask timestamps
+		if strings.HasSuffix(name, "at") {
+			value = TSre.ReplaceAllStringFunc(value, testReplaceFunc)
+			resValue = TSre.ReplaceAllStringFunc(resValue, resReplaceFunc)
+		}
+
+		first := true // only mask the expected value once
+		for i, re := range headerMasks {
+			if first {
+				value = re.ReplaceAllString(value, headerReplace[i])
+				first = false
+			}
+			resValue = re.ReplaceAllString(resValue, headerReplace[i])
 		}
 
 		xCheckEqual(t, "Header:"+name+"\n", resValue, value)
+		// Delete the response header so we'll know if there are any
+		// unexpected xregistry- headers left around
+		delete(resHeaders, name)
 	}
 
 	// Make sure we don't have any extra xReg headers
-	for k, _ := range res.Header {
-		k = strings.ToLower(k)
-		if !strings.HasPrefix(k, "xregistry-") {
+	for name, _ := range resHeaders {
+		if !strings.HasPrefix(name, "xregistry-") {
 			continue
 		}
-		if testHeaders[k] == true {
-			continue
-		}
-		str := ""
-		for k, v := range res.Header {
-			str += fmt.Sprintf("%s:%s\n", k, v[0])
-		}
-		t.Errorf("%s:\nExtra header(%s)\nGot:\n%s", test.Name, k, str)
+		t.Errorf("%s\nExtra header(%s)\nGot:%s", test.Name, name, gotHeaders)
 		t.FailNow()
 	}
 
@@ -1764,7 +1813,7 @@ func TestHTTPRegistry(t *testing.T) {
   "self": 123
 }`,
 		Code:       400,
-		ResHeaders: []string{"application/json"},
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
 		ResBody: `Attribute "self" must be a url
 `,
 	})
@@ -1778,7 +1827,7 @@ func TestHTTPRegistry(t *testing.T) {
   "registryid": 123
 }`,
 		Code:       400,
-		ResHeaders: []string{"application/json"},
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
 		ResBody:    "Attribute \"registryid\" must be a string\n",
 	})
 
@@ -1791,7 +1840,7 @@ func TestHTTPRegistry(t *testing.T) {
   "registryid": "foo"
 }`,
 		Code:       400,
-		ResHeaders: []string{"application/json"},
+		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
 		ResBody: `The "registryid" attribute must be set to "TestHTTPRegistry", not "foo"
 `,
 	})
@@ -1805,7 +1854,7 @@ func TestHTTPRegistry(t *testing.T) {
   "documentation": "docs"
 }`,
 		Code:       200,
-		ResHeaders: []string{"application/json"},
+		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestHTTPRegistry",
@@ -1827,7 +1876,7 @@ func TestHTTPRegistry(t *testing.T) {
   "self": null
 }`,
 		Code:       200,
-		ResHeaders: []string{"application/json"},
+		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestHTTPRegistry",
@@ -1852,7 +1901,7 @@ func TestHTTPRegistry(t *testing.T) {
   }
 }`,
 		Code:       200,
-		ResHeaders: []string{"application/json"},
+		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestHTTPRegistry",
@@ -1881,7 +1930,7 @@ func TestHTTPRegistry(t *testing.T) {
   }
 }`,
 		Code:       200,
-		ResHeaders: []string{"application/json"},
+		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestHTTPRegistry",
@@ -13067,8 +13116,8 @@ func TestHTTPRecursiveData(t *testing.T) {
   "registryid": "TestHTTPRecursiveData",
   "self": "http://localhost:8181/",
   "epoch": 2,
-  "createdat": "YYYY-MM-DDTHH:MM:01Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirsurl": "http://localhost:8181/dirs",
   "dirs": {
@@ -13076,8 +13125,8 @@ func TestHTTPRecursiveData(t *testing.T) {
       "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
-      "createdat": "YYYY-MM-DDTHH:MM:02Z",
-      "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "filesurl": "http://localhost:8181/dirs/d1/files",
       "files": {
@@ -13087,8 +13136,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f1$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:02Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
           "contenttype": "application/json",
           "file": {
             "bar": "foo"
@@ -13111,8 +13160,8 @@ func TestHTTPRecursiveData(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:02Z",
-              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z",
               "contenttype": "application/json",
               "file": {
                 "bar": "foo"
@@ -13127,8 +13176,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f2$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:02Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
           "contenttype": "application/json",
           "file": "string",
 
@@ -13149,8 +13198,8 @@ func TestHTTPRecursiveData(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:02Z",
-              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z",
               "contenttype": "application/json",
               "file": "string"
             }
@@ -13163,8 +13212,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f3$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:02Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
           "contenttype": "application/json",
           "file": 42,
 
@@ -13185,8 +13234,8 @@ func TestHTTPRecursiveData(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f3/versions/1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:02Z",
-              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z",
               "contenttype": "application/json",
               "file": 42
             }
@@ -13199,8 +13248,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f4$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:02Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
           "contenttype": "application/json",
           "file": [
             "foo"
@@ -13223,8 +13272,8 @@ func TestHTTPRecursiveData(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f4/versions/1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:02Z",
-              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z",
               "contenttype": "application/json",
               "file": [
                 "foo"
@@ -13239,8 +13288,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f5$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:02Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
           "filebase64": "YmluYXJ5Cg==",
 
           "metaurl": "http://localhost:8181/dirs/d1/files/f5/meta",
@@ -13260,8 +13309,8 @@ func TestHTTPRecursiveData(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f5/versions/1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:02Z",
-              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z",
               "filebase64": "YmluYXJ5Cg=="
             }
           },
@@ -13314,8 +13363,8 @@ func TestHTTPRecursiveData(t *testing.T) {
   "registryid": "TestHTTPRecursiveData",
   "self": "http://localhost:8181/",
   "epoch": 3,
-  "createdat": "YYYY-MM-DDTHH:MM:01Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirsurl": "http://localhost:8181/dirs",
   "dirs": {
@@ -13323,8 +13372,8 @@ func TestHTTPRecursiveData(t *testing.T) {
       "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
-      "createdat": "YYYY-MM-DDTHH:MM:02Z",
-      "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "filesurl": "http://localhost:8181/dirs/d1/files",
       "files": {
@@ -13334,8 +13383,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f1$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:02Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
           "contenttype": "application/json",
           "file": {
             "bar": "foo"
@@ -13358,8 +13407,8 @@ func TestHTTPRecursiveData(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:02Z",
-              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z",
               "contenttype": "application/json",
               "file": {
                 "bar": "foo"
@@ -13374,8 +13423,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f2$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:02Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
           "contenttype": "application/json",
           "file": "string",
 
@@ -13396,8 +13445,8 @@ func TestHTTPRecursiveData(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "YYYY-MM-DDTHH:MM:02Z",
-              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z",
               "contenttype": "application/json",
               "file": "string"
             }
@@ -13436,8 +13485,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "dirid": "d1",
     "self": "http://localhost:8181/dirs/d1",
     "epoch": 1,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
 
     "filesurl": "http://localhost:8181/dirs/d1/files",
     "filescount": 2
@@ -13450,8 +13499,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "dirid": "d1",
     "self": "http://localhost:8181/dirs/d1",
     "epoch": 1,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
 
     "filesurl": "http://localhost:8181/dirs/d1/files",
     "files": {
@@ -13461,8 +13510,8 @@ func TestHTTPRecursiveData(t *testing.T) {
         "self": "http://localhost:8181/dirs/d1/files/f1$structure",
         "epoch": 1,
         "isdefault": true,
-        "createdat": "YYYY-MM-DDTHH:MM:01Z",
-        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "createdat": "2024-01-01T12:00:01Z",
+        "modifiedat": "2024-01-01T12:00:01Z",
         "contenttype": "application/json",
         "file": {
           "bar": "foo"
@@ -13485,8 +13534,8 @@ func TestHTTPRecursiveData(t *testing.T) {
             "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
             "epoch": 1,
             "isdefault": true,
-            "createdat": "YYYY-MM-DDTHH:MM:01Z",
-            "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+            "createdat": "2024-01-01T12:00:01Z",
+            "modifiedat": "2024-01-01T12:00:01Z",
             "contenttype": "application/json",
             "file": {
               "bar": "foo"
@@ -13501,8 +13550,8 @@ func TestHTTPRecursiveData(t *testing.T) {
         "self": "http://localhost:8181/dirs/d1/files/f2$structure",
         "epoch": 1,
         "isdefault": true,
-        "createdat": "YYYY-MM-DDTHH:MM:01Z",
-        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "createdat": "2024-01-01T12:00:01Z",
+        "modifiedat": "2024-01-01T12:00:01Z",
         "contenttype": "application/json",
         "file": "string",
 
@@ -13523,8 +13572,8 @@ func TestHTTPRecursiveData(t *testing.T) {
             "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
             "epoch": 1,
             "isdefault": true,
-            "createdat": "YYYY-MM-DDTHH:MM:01Z",
-            "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+            "createdat": "2024-01-01T12:00:01Z",
+            "modifiedat": "2024-01-01T12:00:01Z",
             "contenttype": "application/json",
             "file": "string"
           }
@@ -13558,8 +13607,8 @@ func TestHTTPRecursiveData(t *testing.T) {
   "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
   "epoch": 1,
-  "createdat": "YYYY-MM-DDTHH:MM:01Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "filesurl": "http://localhost:8181/dirs/d1/files",
   "filescount": 2
@@ -13570,8 +13619,8 @@ func TestHTTPRecursiveData(t *testing.T) {
   "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
   "epoch": 1,
-  "createdat": "YYYY-MM-DDTHH:MM:01Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "filesurl": "http://localhost:8181/dirs/d1/files",
   "files": {
@@ -13581,8 +13630,8 @@ func TestHTTPRecursiveData(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/f1$structure",
       "epoch": 1,
       "isdefault": true,
-      "createdat": "YYYY-MM-DDTHH:MM:01Z",
-      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
       "contenttype": "application/json",
       "file": {
         "bar": "foo"
@@ -13605,8 +13654,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:01Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+          "createdat": "2024-01-01T12:00:01Z",
+          "modifiedat": "2024-01-01T12:00:01Z",
           "contenttype": "application/json",
           "file": {
             "bar": "foo"
@@ -13621,8 +13670,8 @@ func TestHTTPRecursiveData(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/f2$structure",
       "epoch": 1,
       "isdefault": true,
-      "createdat": "YYYY-MM-DDTHH:MM:01Z",
-      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
       "contenttype": "application/json",
       "file": "string",
 
@@ -13643,8 +13692,8 @@ func TestHTTPRecursiveData(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "YYYY-MM-DDTHH:MM:01Z",
-          "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+          "createdat": "2024-01-01T12:00:01Z",
+          "modifiedat": "2024-01-01T12:00:01Z",
           "contenttype": "application/json",
           "file": "string"
         }
@@ -13678,8 +13727,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
     "epoch": 1,
     "isdefault": true,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
     "contenttype": "application/json",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -13692,8 +13741,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/f2$structure",
     "epoch": 1,
     "isdefault": true,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
     "contenttype": "application/json",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/f2/meta",
@@ -13710,8 +13759,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
     "epoch": 1,
     "isdefault": true,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
     "contenttype": "application/json",
     "file": {
       "bar": "foo"
@@ -13734,8 +13783,8 @@ func TestHTTPRecursiveData(t *testing.T) {
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
         "epoch": 1,
         "isdefault": true,
-        "createdat": "YYYY-MM-DDTHH:MM:01Z",
-        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "createdat": "2024-01-01T12:00:01Z",
+        "modifiedat": "2024-01-01T12:00:01Z",
         "contenttype": "application/json",
         "file": {
           "bar": "foo"
@@ -13750,8 +13799,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/f2$structure",
     "epoch": 1,
     "isdefault": true,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
     "contenttype": "application/json",
     "file": "string",
 
@@ -13772,8 +13821,8 @@ func TestHTTPRecursiveData(t *testing.T) {
         "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
         "epoch": 1,
         "isdefault": true,
-        "createdat": "YYYY-MM-DDTHH:MM:01Z",
-        "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+        "createdat": "2024-01-01T12:00:01Z",
+        "modifiedat": "2024-01-01T12:00:01Z",
         "contenttype": "application/json",
         "file": "string"
       }
@@ -13799,8 +13848,8 @@ func TestHTTPRecursiveData(t *testing.T) {
   "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "isdefault": true,
-  "createdat": "YYYY-MM-DDTHH:MM:01Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -13815,8 +13864,8 @@ func TestHTTPRecursiveData(t *testing.T) {
   "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "isdefault": true,
-  "createdat": "YYYY-MM-DDTHH:MM:01Z",
-  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
   "file": {
     "bar": "foo"
@@ -13839,8 +13888,8 @@ func TestHTTPRecursiveData(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
       "epoch": 1,
       "isdefault": true,
-      "createdat": "YYYY-MM-DDTHH:MM:01Z",
-      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
       "contenttype": "application/json",
       "file": {
         "bar": "foo"
@@ -13865,8 +13914,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
     "epoch": 1,
     "isdefault": true,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
     "contenttype": "application/json"
   }
 }
@@ -13879,8 +13928,8 @@ func TestHTTPRecursiveData(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
     "epoch": 1,
     "isdefault": true,
-    "createdat": "YYYY-MM-DDTHH:MM:01Z",
-    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
     "contenttype": "application/json",
     "file": {
       "bar": "foo"

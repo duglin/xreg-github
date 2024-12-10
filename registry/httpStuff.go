@@ -1079,7 +1079,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("POST not allowed on a group")
 	}
 
-	if len(info.Parts) == 5 && info.Parts[4] == "meta" && method == "POST" {
+	if len(info.Parts) >= 5 && info.Parts[4] == "meta" && method == "POST" {
 		info.StatusCode = http.StatusMethodNotAllowed
 		return fmt.Errorf("POST not allowed on a 'meta'")
 	}
@@ -1403,6 +1403,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		if resource == nil {
+			isNew = true
 			propsID := "" // RESOURCEid
 			if v, ok := IncomingObj[info.ResourceModel.Singular+"id"]; ok {
 				if reflect.ValueOf(v).Kind() == reflect.String {
@@ -1435,6 +1436,11 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Return HTTP GET of 'meta'
+		if isNew { // 201, else let it default to 200
+			info.AddHeader("Location", info.BaseURL+"/"+meta.Path)
+			info.StatusCode = http.StatusCreated
+		}
+
 		return SerializeQuery(info, []string{meta.Path}, "Entity", nil)
 	}
 
@@ -1873,6 +1879,12 @@ func HTTPDelete(info *RequestInfo) error {
 
 		info.StatusCode = http.StatusNoContent
 		return nil
+	}
+
+	if len(info.Parts) == 5 && info.Parts[4] == "meta" {
+		// DELETE /GROUPs/gID/RESOURCEs/rID/meta
+		info.StatusCode = http.StatusMethodNotAllowed
+		return fmt.Errorf(`DELETE is not allowed on a "meta"`)
 	}
 
 	if len(info.Parts) == 5 {

@@ -415,6 +415,12 @@ func (info *RequestInfo) ParseRequestURL() error {
 	// GROUPs/gID/RESOURCEs/rID/[meta|versions]
 	if len(info.Parts) >= 5 {
 		if info.Parts[4] == "meta" {
+			if len(info.Parts) > 5 {
+				// GROUPs/gID/RESOURCEs/rID/meta/???
+				info.StatusCode = http.StatusBadRequest
+				return fmt.Errorf("URL is too long")
+			}
+
 			// GROUPs/gID/RESOURCEs/rID/meta
 			info.Root += "/meta"
 			info.Abstract += "/meta"
@@ -430,12 +436,6 @@ func (info *RequestInfo) ParseRequestURL() error {
 			return nil
 		}
 
-	}
-
-	if info.Parts[4] != "versions" {
-		// GROUPs/gID/RESOURCEs/rID/meta/???
-		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("URL is too long")
 	}
 
 	// GROUPs/gID/RESOURCEs/rID/versions/vID
