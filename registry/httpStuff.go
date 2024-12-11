@@ -22,25 +22,6 @@ type Server struct {
 	HTTPServer *http.Server
 }
 
-var DefaultRegDbSID string
-
-func GetDefaultReg(tx *Tx) *Registry {
-	if tx == nil {
-		var err error
-		tx, err = NewTx()
-		Must(err)
-	}
-
-	reg, err := FindRegistryBySID(tx, DefaultRegDbSID)
-	Must(err)
-
-	if reg != nil {
-		tx.Registry = reg
-	}
-
-	return reg
-}
-
 func NewServer(port int) *Server {
 	server := &Server{
 		Port: port,
@@ -115,10 +96,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Explicit Commit() is required, else we'll always rollback
 		tx.Rollback()
 	}()
-
-	if DefaultRegDbSID == "" {
-		panic("No registry specified")
-	}
 
 	saveVerbose := log.GetVerbose()
 	if tmp := r.URL.Query().Get("verbose"); tmp != "" {

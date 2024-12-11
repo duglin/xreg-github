@@ -153,7 +153,9 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 
 	info.HTTPWriter = DefaultHTTPWriter(info)
 
-	defer func() { log.VPrintf(3, "Info:\n%s\n", ToJSON(info)) }()
+	if log.GetVerbose() > 2 {
+		defer func() { log.VPrintf(3, "Info:\n%s\n", ToJSON(info)) }()
+	}
 
 	if tmp := r.Header.Get("xRegistry~User"); tmp != "" {
 		tx.User = tmp

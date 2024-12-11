@@ -172,7 +172,7 @@ k3dserver: k3d image
 	kubectl apply -f misc/deploy.yaml
 	sleep 2 ; kubectl logs -f xreg-server
 
-prof: server qtest
+prof: server
 	@# May need to install: apt-get install graphviz
 	NO_DELETE_REGISTRY=1 \
 		go test -cpuprofile cpu.prof -memprofile mem.prof -bench . \

@@ -15,6 +15,29 @@ type Registry struct {
 	Model *Model
 }
 
+var DefaultRegDbSID string
+
+func GetDefaultReg(tx *Tx) *Registry {
+	if DefaultRegDbSID == "" {
+		panic("No registry specified")
+	}
+
+	if tx == nil {
+		var err error
+		tx, err = NewTx()
+		Must(err)
+	}
+
+	reg, err := FindRegistryBySID(tx, DefaultRegDbSID)
+	Must(err)
+
+	if reg != nil {
+		tx.Registry = reg
+	}
+
+	return reg
+}
+
 func (r *Registry) Rollback() error {
 	if r != nil {
 		return r.tx.Rollback()
