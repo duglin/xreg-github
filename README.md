@@ -150,3 +150,7 @@ TODOs:
   the versions
 - test clearing xref and setting defver attrs, via res and via meta directly
 - test incorrect epoch in meta, via res and via meta
+- test to ensure meta epoch changes as versions are added/removed
+- test the timestamps in meta. Should change as versions are added/removed.
+- add timestampts in meta
+- test versionid as http header in resource create cases

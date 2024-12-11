@@ -996,20 +996,6 @@ var OrderedSpecProps = []*Attribute{
 			},
 		},
 	},
-	/*
-		{
-			Name: "readonly",
-			Type: BOOLEAN,
-
-			internals: AttrInternals{
-				types:    StrTypes(ENTITY_META),
-				dontStore: false,
-				getFn:     nil,
-				checkFn:   nil,
-				updateFn:  nil,
-			},
-		},
-	*/
 	{
 		Name: "name",
 		Type: STRING,
@@ -1153,6 +1139,20 @@ var OrderedSpecProps = []*Attribute{
 			},
 		},
 	},
+	/*
+		{
+			Name: "readonly",
+			Type: BOOLEAN,
+
+			internals: AttrInternals{
+				types:    StrTypes(ENTITY_META),
+				dontStore: false,
+				getFn:     nil,
+				checkFn:   nil,
+				updateFn:  nil,
+			},
+		},
+	*/
 	{
 		Name: "contenttype",
 		Type: STRING,
