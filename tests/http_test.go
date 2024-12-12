@@ -14043,3 +14043,74 @@ func TestHTTPRecursiveData(t *testing.T) {
 `)
 
 }
+
+func TestHTTPDefVer(t *testing.T) {
+	reg := NewRegistry("TestHTTPDefVer")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModelSimple("files", "file")
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "PUT file + versionid header",
+		URL:    "/dirs/d1/files/f1",
+		Method: "PUT",
+		ReqHeaders: []string{
+			`xRegistry-versionid: v1`,
+		},
+		ReqBody:     `pick me`,
+		Code:        201,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"xRegistry-fileid: f1",
+			"xRegistry-versionid: v1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1",
+			"xRegistry-epoch: 1",
+			"xRegistry-isdefault: true",
+			"xRegistry-createdat: 2024-01-01T12:00:01Z",
+			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-metaurl: http://localhost:8181/dirs/d1/files/f1/meta",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1/versions",
+			"xRegistry-versionscount: 1",
+			"Content-Length: 7",
+			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/v1",
+			"Content-Type: text/plain; charset=utf-8",
+			"Location: http://localhost:8181/dirs/d1/files/f1",
+		},
+		ResBody: `pick me`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "POST file + versionid header",
+		URL:    "/dirs/d1/files",
+		Method: "POST",
+		ReqBody: `{
+		  "f2": {
+		    "versionid": "v1"
+		  }
+        }`,
+		Code:        200,
+		HeaderMasks: []string{},
+		ResHeaders: []string{
+			"Content-Type: application/json",
+		},
+		ResBody: `{
+  "f2": {
+    "fileid": "f2",
+    "versionid": "v1",
+    "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+    "epoch": 1,
+    "isdefault": true,
+    "createdat": "2024-12-12T21:53:22.592492247Z",
+    "modifiedat": "2024-12-12T21:53:22.592492247Z",
+
+    "metaurl": "http://localhost:8181/dirs/d1/files/f2/meta",
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
+    "versionscount": 1
+  }
+}
+`,
+	})
+
+}
