@@ -91,6 +91,9 @@ func (e *Entity) Get(path string) any {
 
 func (e *Entity) GetAsString(path string) string {
 	val := e.Get(path)
+	if IsNil(val) {
+		return ""
+	}
 	str, _ := val.(string)
 	// PanicIf(!ok, fmt.Sprintf("Val: %v  T: %T", val, val))
 	return str
@@ -978,6 +981,11 @@ var OrderedSpecProps = []*Attribute{
 				return nil
 			},
 			updateFn: func(e *Entity) error {
+				if e.Type == ENTITY_META && e.GetAsString("xref") != "" {
+					e.NewObject["epoch"] = nil
+					return nil
+				}
+
 				// If we already set Epoch in this Tx, just exit
 				if e.EpochSet {
 					return nil
@@ -1083,11 +1091,22 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
+				if e.Type == ENTITY_META && e.GetAsString("xref") != "" {
+					e.NewObject["createdat"] = nil
+
+					// If for some reason there is no saved createTime
+					// assume this is a new meta so save 'now'
+					if IsNil(e.NewObject["#createdat"]) {
+						e.NewObject["#createdat"] = e.tx.CreateTime
+					}
+					return nil
+				}
+
 				ca, ok := e.NewObject["createdat"]
 				// If not there use the existing value, if present
 				if !ok {
@@ -1116,11 +1135,16 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_VERSION),
+			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
+				if e.Type == ENTITY_META && e.GetAsString("xref") != "" {
+					e.NewObject["modifiedat"] = nil
+					return nil
+				}
+
 				ma := e.NewObject["modifiedat"]
 				// If there's no value, or it's the same as the existing
 				// value, set to "now"
@@ -1525,7 +1549,13 @@ func (e *Entity) Save() error {
 
 	err = traverse(NewPP(), newObj, e.NewObject)
 	if err == nil {
-		e.Object = newObj
+		// Copy 'newObj', removing all 'nil' attributes
+		e.Object = map[string]any{}
+		for k, v := range newObj {
+			if !IsNil(v) {
+				e.Object[k] = v
+			}
+		}
 		e.NewObject = nil
 	}
 	return err

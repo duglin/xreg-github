@@ -94,6 +94,8 @@ func TestBasicInline(t *testing.T) {
             "fileid": "f1",
             "self": "http://localhost:8181/dirs/d1/files/f1/meta",
             "epoch": 1,
+            "createdat": "2024-01-01T12:00:02Z",
+            "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v2",
             "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure"
@@ -146,6 +148,8 @@ func TestBasicInline(t *testing.T) {
             "fileid": "f2",
             "self": "http://localhost:8181/dirs/d2/files/f2/meta",
             "epoch": 1,
+            "createdat": "2024-01-01T12:00:02Z",
+            "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1.1",
             "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
@@ -202,6 +206,8 @@ func TestBasicInline(t *testing.T) {
             "fileid": "f2",
             "self": "http://localhost:8181/dirs2/d2/files/f2/meta",
             "epoch": 1,
+            "createdat": "2024-01-01T12:00:02Z",
+            "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
             "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$structure"

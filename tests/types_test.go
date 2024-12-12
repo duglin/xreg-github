@@ -409,6 +409,8 @@ func TestBasicTypes(t *testing.T) {
             "fileid": "f1",
             "self": "http://localhost:8181/dirs/d1/files/f1/meta",
             "epoch": 1,
+            "createdat": "2024-01-01T12:00:04Z",
+            "modifiedat": "2024-01-01T12:00:04Z",
 
             "defaultversionid": "v1",
             "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"

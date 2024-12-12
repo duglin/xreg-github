@@ -36,6 +36,10 @@ func TestXrefBasic(t *testing.T) {
 	}, false, false)
 	xNoErr(t, err)
 
+	// Grab #createdat so we can make sure it's used when we remove 'xref'
+	meta, _ := fx.FindMeta(false)
+	oldCreatedAt := meta.Get("#createdat")
+
 	// Make sure the Resource doesn't have any versions in the DB.
 	// Use fx.GetVersions() will grab from xref target so don't use that
 	rows, err = reg.Query("select * from Versions where ResourceSID=?",
@@ -97,6 +101,8 @@ func TestXrefBasic(t *testing.T) {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
       "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
@@ -134,6 +140,8 @@ func TestXrefBasic(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
       "xref": "dirs/d1/files/f1",
       "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure"
@@ -172,6 +180,13 @@ func TestXrefBasic(t *testing.T) {
 	xNoErr(t, err)
 	xCheckEqual(t, "", len(rows), 1)
 
+	meta, _ = fx.FindMeta(false)
+	if meta.Get("createdat") != oldCreatedAt {
+		t.Errorf("CreatedAt has wrong value, should be %q, not %q",
+			oldCreatedAt, meta.Get("createdat"))
+		t.FailNow()
+	}
+
 	xHTTP(t, reg, "GET", "/dirs/d1/files?inline", "", 200, `{
   "f1": {
     "fileid": "f1",
@@ -189,6 +204,8 @@ func TestXrefBasic(t *testing.T) {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
       "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
@@ -222,7 +239,9 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
-      "epoch": 3,
+      "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:03Z",
 
       "defaultversionid": "1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure"
@@ -276,6 +295,8 @@ func TestXrefBasic(t *testing.T) {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
       "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
@@ -313,6 +334,8 @@ func TestXrefBasic(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
       "xref": "dirs/d1/files/f1",
       "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure"
@@ -365,6 +388,8 @@ func TestXrefBasic(t *testing.T) {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
       "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
@@ -400,7 +425,9 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
-      "epoch": 5,
+      "epoch": 2,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:03Z",
 
       "defaultversionid": "1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure"

@@ -27,6 +27,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 1,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -48,6 +50,8 @@ func TestMetaSimple(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 1,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -116,6 +120,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f12",
   "self": "http://localhost:8181/dirs/d1/files/f12/meta",
   "epoch": 1,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f12/versions/1"
@@ -139,6 +145,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f2",
   "self": "http://localhost:8181/dirs/d1/files/f2/meta",
   "epoch": 1,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -163,6 +171,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f21",
   "self": "http://localhost:8181/dirs/d1/files/f21/meta",
   "epoch": 1,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -183,6 +193,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f2",
   "self": "http://localhost:8181/dirs/d1/files/f2/meta",
   "epoch": 2,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1"
@@ -204,6 +216,8 @@ func TestMetaSimple(t *testing.T) {
     "fileid": "f2",
     "self": "http://localhost:8181/dirs/d1/files/f2/meta",
     "epoch": 2,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1"
@@ -236,6 +250,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f21",
   "self": "http://localhost:8181/dirs/d1/files/f21/meta",
   "epoch": 2,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -257,6 +273,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 2,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -277,6 +295,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f21",
   "self": "http://localhost:8181/dirs/d1/files/f21/meta",
   "epoch": 3,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -298,6 +318,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 3,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "zzz",
 
   "defaultversionid": "1",
@@ -319,6 +341,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f21",
   "self": "http://localhost:8181/dirs/d1/files/f21/meta",
   "epoch": 4,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "aaa",
 
   "defaultversionid": "1",
@@ -357,6 +381,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 4,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -374,6 +400,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f21",
   "self": "http://localhost:8181/dirs/d1/files/f21/meta",
   "epoch": 5,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1"
@@ -391,6 +419,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 5,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "zz1",
 
   "defaultversionid": "1",
@@ -409,6 +439,8 @@ func TestMetaSimple(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 6,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -476,6 +508,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 1,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
 
     "defaultversionid": "v1.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0"
@@ -562,6 +596,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 2,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0"
@@ -630,6 +666,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 2,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0"
@@ -681,6 +719,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 2,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0"
@@ -732,6 +772,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 3,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -762,6 +804,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 3,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -793,6 +837,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 4,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v2.0",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -820,6 +866,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 4,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:04Z",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -867,6 +915,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 4,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:04Z",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -888,6 +938,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 5,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -914,6 +966,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 5,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -935,6 +989,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 6,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -961,6 +1017,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 6,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
@@ -981,6 +1039,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 7,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v1.0",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0",
@@ -1008,6 +1068,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 7,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "v1.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0",
@@ -1030,6 +1092,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 8,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -1057,6 +1121,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 8,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
     "foo": "bar",
 
     "defaultversionid": "1",
@@ -1079,6 +1145,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 9,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
 
   "defaultversionid": "v1.0",
@@ -1107,6 +1175,8 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "epoch": 9,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
     "foo": "bar",
 
     "defaultversionid": "v1.0",
@@ -1130,6 +1200,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 10,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -1149,6 +1221,8 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 11,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -1167,10 +1241,32 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "epoch": 12,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
 }
+`,
+	})
+
+	// Update/PUT meta - bad epoch
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:     "/dirs/d1/files/f1/meta",
+		Method:  "PUT",
+		ReqBody: `{"epoch": 1}`,
+		Code:    400,
+		ResBody: `Attribute "epoch"(1) doesn't match existing value (12)
+`,
+	})
+
+	// Update/PUT resource - bad epoch
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:     "/dirs/d1/files/f1",
+		Method:  "PUT",
+		ReqBody: `{"meta":{"epoch": 1}}`,
+		Code:    400,
+		ResBody: `Attribute "epoch"(1) doesn't match existing value (12)
 `,
 	})
 

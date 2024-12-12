@@ -238,6 +238,7 @@ func (r *Resource) FindMeta(anyCase bool) (*Meta, error) {
 	}
 
 	m := &Meta{Entity: *ent, Resource: r}
+	r.tx.AddMeta(m)
 	return m, nil
 }
 
@@ -434,7 +435,9 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		r.Singular + "id",
 		"#nextversionid",
 		"#epoch", // Last used epoch so we can restore it when xref is cleared
-		"epoch"}
+		"epoch",
+		"#createdat",
+		"#modifiedat"}
 	//, "defaultversionid"
 
 	// Apply properties
@@ -477,21 +480,30 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 				return nil, false, err
 			}
 
-			hasXref = false
-
 			// If xref was previously set then make sure we reset
 			// our nextversionid counter to 1
 			if !IsNil(meta.Object["xref"]) {
 				meta.JustSet("#nextversionid", 1)
 			}
 
-			if IsNil(meta.NewObject["epoch"]) {
-				tmp := meta.Get("#epoch")
-				if !IsNil(tmp) {
-					meta.NewObject["epoch"] = tmp
-				} else {
-					meta.NewObject["epoch"] = 1
-				}
+			meta.JustSet("epoch", meta.Object["#epoch"])
+			meta.JustSet("#epoch", nil)
+
+			// We have to fake out the updateFn to think the existing values
+			// are the # values
+			meta.Object["epoch"] = meta.Object["#epoch"]
+
+			meta.EpochSet = false
+
+			if IsNil(meta.NewObject["createdat"]) {
+				meta.JustSet("createdat", meta.Object["#createdat"])
+				meta.JustSet("#createdat", nil)
+				meta.Object["createdat"] = meta.Object["#createdat"]
+			}
+			if IsNil(meta.NewObject["modifiedat"]) {
+				meta.JustSet("modifiedat", meta.Object["#modifiedat"])
+				meta.JustSet("#modifiedat", nil)
+				meta.Object["modifiedat"] = meta.Object["#modifiedat"]
 			}
 
 			/*
@@ -502,13 +514,23 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 				}
 			*/
 
-			if err = meta.Save(); err != nil {
+			if err = meta.ValidateAndSave(); err != nil {
 				return nil, false, err
 			}
 		} else {
 			// Clear all existing attributes except ID
+			meta.JustSet("#epoch", meta.Object["epoch"])
+			meta.JustSet("epoch", nil)
+			meta.JustSet("#createdat", meta.Object["createdat"])
+			meta.JustSet("createdat", nil)
+			meta.JustSet("#modifiedat", meta.Object["modifiedat"])
+			meta.JustSet("modifiedat", nil)
+
 			for k, _ := range meta.NewObject {
 				delIt := true
+				if k[0] == '#' {
+					continue
+				}
 				for _, tmp := range attrsToKeep {
 					if tmp == k {
 						delIt = false
@@ -519,12 +541,6 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 					meta.JustSet(k, nil)
 				}
 			}
-			// Erase from DB to make sure we grab the xref target one,
-			// saving current one if there
-			if tmp := meta.Get("epoch"); !IsNil(tmp) {
-				meta.JustSet("#epoch", tmp)
-			}
-			meta.JustSet("epoch", nil)
 
 			if err = meta.SetSave("xref", xref); err != nil {
 				return nil, false, err
@@ -544,11 +560,6 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 
 			return meta, isNew, nil
 		}
-	}
-
-	// Save current epoch if we need it later
-	if tmp := meta.Get("epoch"); !IsNil(tmp) {
-		meta.JustSet("#epoch", tmp)
 	}
 
 	// Process "defaultversion" attributes. Order of processing:

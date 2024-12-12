@@ -254,6 +254,8 @@ func TestBasicFilters(t *testing.T) {
             "fileid": "f2",
             "self": "http://localhost:8181/dirs/d2/files/f2/meta",
             "epoch": 1,
+            "createdat": "2024-12-01T12:00:02Z",
+            "modifiedat": "2024-12-01T12:00:02Z",
 
             "defaultversionid": "v1.1",
             "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
@@ -348,6 +350,8 @@ func TestBasicFilters(t *testing.T) {
             "fileid": "f2",
             "self": "http://localhost:8181/dirs/d2/files/f2/meta",
             "epoch": 1,
+            "createdat": "2024-01-01T12:00:02Z",
+            "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1.1",
             "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
