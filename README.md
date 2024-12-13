@@ -132,7 +132,6 @@ TODOs:
 - add "validation" attribute - schema
 - error w/o ?nested + children
 - Add content-disposition header for hasdoc resources
-- s/?resource/?attrib support
 - make sure ID only has valid chars
 - inline=model, requires ?nested. Make sure /meta requires ?nested too
 - meta sub-object
