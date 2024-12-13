@@ -94,8 +94,12 @@ func (e *Entity) GetAsString(path string) string {
 	if IsNil(val) {
 		return ""
 	}
+
+	if tmp := reflect.ValueOf(val).Kind(); tmp != reflect.String {
+		panic(fmt.Sprintf("Not a string - got %T(%v)", val, val))
+	}
+
 	str, _ := val.(string)
-	// PanicIf(!ok, fmt.Sprintf("Val: %v  T: %T", val, val))
 	return str
 }
 

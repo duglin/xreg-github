@@ -279,8 +279,7 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 	_, rm := jw.Entity.GetModels()
 	singular := rm.Singular
 
-	if val := jw.Entity.Get("#resourceURL"); val != nil {
-		url := val.(string)
+	if url := jw.Entity.GetAsString("#resourceURL"); url != "" {
 		jw.Printf("%s\n%s%q: %q", *extra, jw.indent, singular+"url", url)
 		*extra = ","
 	} else {
@@ -294,8 +293,7 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 				PanicIf(!ok, "Can't convert to []byte: %s", val)
 			}
 
-			if val := jw.Entity.Get("#resourceProxyURL"); val != nil {
-				url := val.(string)
+			if url := jw.Entity.GetAsString("#resourceProxyURL"); url != "" {
 				resp, err := http.Get(url)
 				if err != nil {
 					data = []byte("GET error:" + err.Error())

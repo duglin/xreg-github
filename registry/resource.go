@@ -272,13 +272,13 @@ func (r *Resource) GetDefault() (*Version, error) {
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
-	val := meta.Get("defaultversionid")
-	if IsNil(val) {
+	val := meta.GetAsString("defaultversionid")
+	if val == "" {
 		return nil, nil
 		// panic("No default is set")
 	}
 
-	return r.FindVersion(val.(string), false)
+	return r.FindVersion(val, false)
 }
 
 func (r *Resource) GetNewest() (*Version, error) {

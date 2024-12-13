@@ -120,6 +120,7 @@ TODOs:
 - support ?export  /export
 - test xref more
   - in particular PATCH on an xref resource where body doesn't have xref
+  - testing doing a PUT/POST/PATCH on an xref - fail? ignore attrs?
 - support readonly - remove resource.readonly
 - remove "readonly" attribute from model Resources, add to Resource
 - format is optional in schema spec
@@ -145,7 +146,6 @@ TODOs:
 - support ETag/If-Match
 - update epoch/modifiedat of parent when nested entity is added/removed
 - ?nested isn't needed to update `model` or `meta` attributes
-- DELETE on /meta should fail - in spec too
 - test for PUT with "versions" on an existing resource/xref - should igore
   the versions
 - test clearing xref and setting defver attrs, via res and via meta directly

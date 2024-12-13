@@ -747,7 +747,7 @@ FROM FullTree WHERE RegSID=? AND `
 		meta, err := resource.FindMeta(false)
 		PanicIf(err != nil, "%s", err)
 
-		vID := meta.Get("defaultversionid").(string)
+		vID := meta.GetAsString("defaultversionid")
 		for {
 			v, err := readNextEntity(info.tx, results)
 
@@ -818,12 +818,11 @@ FROM FullTree WHERE RegSID=? AND `
 	info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
 
 	url := ""
-	if val := entity.Get("#resourceURL"); val != nil {
+	if url = entity.GetAsString("#resourceURL"); url != "" {
 		gModel := info.Registry.Model.Groups[info.GroupType]
 		rModel := gModel.Resources[info.ResourceType]
 		singular := rModel.Singular
 
-		url = val.(string)
 		info.AddHeader("xRegistry-"+singular+"url", url)
 
 		if info.StatusCode == 0 {
@@ -838,9 +837,7 @@ FROM FullTree WHERE RegSID=? AND `
 		return nil
 	}
 
-	if val := entity.Get("#resourceProxyURL"); val != nil {
-		url = val.(string)
-	}
+	url = entity.GetAsString("#resourceProxyURL")
 
 	log.VPrintf(3, "#resourceProxyURL: %s", url)
 	if url != "" {
