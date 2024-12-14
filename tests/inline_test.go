@@ -49,7 +49,7 @@ func TestBasicInline(t *testing.T) {
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirsurl": "http://localhost:8181/dirs",
   "dirscount": 2,
@@ -67,7 +67,7 @@ func TestBasicInline(t *testing.T) {
   "self": "http://localhost:8181/",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "dirsurl": "http://localhost:8181/dirs",
   "dirs": {

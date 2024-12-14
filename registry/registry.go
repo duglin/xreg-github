@@ -368,6 +368,13 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error {
 	reg.NewObject = obj
 
+	// TODO - remove this and let only happen at the end
+	// Make sure we always have an ID
+	if IsNil(reg.NewObject["registryid"]) {
+		reg.EnsureNewObject()
+		reg.NewObject["registryid"] = reg.UID
+	}
+
 	if doChildren {
 		colls := reg.GetCollections()
 		for _, coll := range colls {
@@ -398,6 +405,7 @@ func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error 
 		}
 	}
 
+	reg.EnsureNewObject()
 	if addType == ADD_PATCH {
 		// Copy existing props over if the incoming obj doesn't set them
 		for k, val := range reg.Object {
@@ -409,6 +417,7 @@ func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error 
 
 	// Make sure we always have an ID
 	if IsNil(reg.NewObject["registryid"]) {
+		reg.EnsureNewObject()
 		reg.NewObject["registryid"] = reg.UID
 	}
 
@@ -512,6 +521,10 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 		// Use the ID passed as an arg, not from the metadata, as the true
 		// ID. If the one in the metadata differs we'll flag it down below
 		if err = g.JustSet(g.Singular+"id", g.UID); err != nil {
+			return nil, false, err
+		}
+
+		if err = g.Registry.Touch(); err != nil {
 			return nil, false, err
 		}
 	}

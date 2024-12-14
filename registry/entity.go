@@ -73,6 +73,18 @@ func (e *Entity) ToString() string {
 	return str
 }
 
+func (e *Entity) Touch() error {
+	/*
+		log.Printf("Touch: %s\ne.Obj: %s\nNew: %s",
+			e.UID, ToJSON(e.Object), ToJSON(e.NewObject))
+	*/
+
+	e.EnsureNewObject()
+	// TODO DUG - remove this and let the tx.commit do it.
+	// we may be prematurely validating/saving it
+	return e.ValidateAndSave()
+}
+
 func (e *Entity) EnsureNewObject() {
 	if e.NewObject == nil {
 		if e.Object == nil {
@@ -105,6 +117,9 @@ func (e *Entity) GetAsString(path string) string {
 
 func (e *Entity) GetAsInt(path string) int {
 	val := e.Get(path)
+	if IsNil(val) {
+		return -1
+	}
 	i, ok := val.(int)
 	PanicIf(!ok, fmt.Sprintf("Val: %v  T: %T", val, val))
 	return i
@@ -365,6 +380,7 @@ func (e *Entity) Refresh() error {
 			return err
 		}
 	}
+	e.EpochSet = false
 	return nil
 }
 
@@ -850,7 +866,20 @@ var OrderedSpecProps = []*Attribute{
 					delete(e.NewObject, singular)
 				} else {
 					if IsNil(e.NewObject[singular]) {
+						// e.NewObject[singular] = e.UID
+						// TODO - remove the previous line once we
+						// have Touch() stop calling validateandsave.
+						// Also, registry.Update should ensure the ID is set
+						// before creating the Group. E.g. it should copy
+						// it from reg.Object
+						log.Printf(`%q is nil on %q - that's bad, fix it!`,
+							singular, e.UID)
+						log.Printf("e.Obj: %s\nNew: %s",
+							ToJSON(e.Object), ToJSON(e.NewObject))
 						ShowStack()
+						log.Printf(`========`)
+						panic(fmt.Sprintf(`%q is nil - that's bad, fix it!`,
+							singular))
 						return fmt.Errorf(`%q is nil - that's bad, fix it!`,
 							singular)
 					}

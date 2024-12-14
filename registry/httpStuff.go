@@ -1800,7 +1800,8 @@ func HTTPDelete(info *RequestInfo) error {
 		// DELETE /GROUPs/gID
 		if epochInt >= 0 {
 			if e := group.Get("epoch"); e != epochInt {
-				return fmt.Errorf(`Epoch value for %q must be %d`, group.UID, e)
+				return fmt.Errorf(`Epoch value for %q must be %d not %d`,
+					group.UID, e, epochInt)
 			}
 		}
 		if err = group.Delete(); err != nil {
@@ -1835,12 +1836,19 @@ func HTTPDelete(info *RequestInfo) error {
 		return fmt.Errorf(`Resource %q not found`, info.ResourceUID)
 	}
 
+	meta, err := resource.FindMeta(false)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return fmt.Errorf(`Error finding resource %q: %s`,
+			info.ResourceUID, err)
+	}
+
 	if len(info.Parts) == 4 {
 		// DELETE /GROUPs/gID/RESOURCEs/rID
 		if epochInt >= 0 {
-			if e := resource.Get("epoch"); e != epochInt {
-				return fmt.Errorf(`Epoch value for %q must be %d`,
-					resource.UID, e)
+			if e := meta.Get("epoch"); e != epochInt {
+				return fmt.Errorf(`Epoch value for %q must be %d not %d`,
+					resource.UID, e, epochInt)
 			}
 		}
 		err = resource.Delete()
@@ -1881,8 +1889,8 @@ func HTTPDelete(info *RequestInfo) error {
 		// DELETE /GROUPs/gID/RESOURCEs/rID/versions/vID
 		if epochInt >= 0 {
 			if e := version.Get("epoch"); e != epochInt {
-				return fmt.Errorf(`Epoch value for Version %q must be %d`,
-					info.VersionUID, e)
+				return fmt.Errorf(`Epoch value for %q must be %d not %d`,
+					info.VersionUID, e, epochInt)
 			}
 		}
 		nextDefault := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
@@ -1971,15 +1979,15 @@ func HTTPDeleteGroups(info *RequestInfo) error {
 					id)
 			}
 			if tmpInt != group.Get("epoch") {
-				return fmt.Errorf(`Epoch value for %q must be %d`,
-					id, group.Get("epoch"))
+				return fmt.Errorf(`Epoch value for %q must be %d not %d`,
+					id, group.Get("epoch"), tmpInt)
 			}
 		}
 
 		singular := group.Singular + "id"
 		if tmp, ok := entry[singular]; ok && tmp != id {
-			return fmt.Errorf(`%q value for %q must be %q`,
-				singular, id, id)
+			return fmt.Errorf(`%q value for %q must be %q not "%v"`,
+				singular, id, id, tmp)
 		}
 
 		err = group.Delete()
@@ -2038,22 +2046,48 @@ func HTTPDeleteResources(info *RequestInfo) error {
 			continue
 		}
 
-		if tmp, ok := entry["epoch"]; ok {
-			tmpInt, err := AnyToUInt(tmp)
-			if err != nil {
-				return fmt.Errorf(`Epoch value for %q must be a uinteger`,
-					id)
-			}
-			if tmpInt != group.Get("epoch") {
-				return fmt.Errorf(`Epoch value for %q must be %d`,
-					id, group.Get("epoch"))
-			}
+		meta, err := resource.FindMeta(false)
+		if err != nil {
+			info.StatusCode = http.StatusInternalServerError
+			return fmt.Errorf(`Error finding resource %q: %s`, id, err)
 		}
 
 		singular := resource.Singular + "id"
+
+		if metaJSON, ok := entry["meta"]; ok {
+			metaMap, ok := metaJSON.(map[string]any)
+			if !ok {
+				if err != nil {
+					info.StatusCode = http.StatusBadRequest
+					return fmt.Errorf(`"meta" isn't a map`)
+				}
+			}
+
+			if tmp, ok := metaMap[singular]; ok && tmp != id {
+				return fmt.Errorf(`%q value for %q must be %q not "%v"`,
+					singular, id, id, tmp)
+			}
+
+			if tmp, ok := metaMap["epoch"]; ok {
+				tmpInt, err := AnyToUInt(tmp)
+				if err != nil {
+					return fmt.Errorf(`Epoch value for %q must be a uinteger`,
+						id)
+				}
+				if tmpInt != meta.Get("epoch") {
+					return fmt.Errorf(`Epoch value for %q must be %d not %d`,
+						id, meta.Get("epoch"), tmpInt)
+				}
+			}
+		} else {
+			if _, ok := entry["epoch"]; ok {
+				return fmt.Errorf(`"epoch" should be under a "meta" map`)
+			}
+		}
+
 		if tmp, ok := entry[singular]; ok && tmp != id {
-			return fmt.Errorf(`%q value for %q must be %q`,
-				singular, id, id)
+			return fmt.Errorf(`%q value for %q must be %q not "%v"`,
+				singular, id, id, tmp)
 		}
 
 		err = resource.Delete()
@@ -2128,16 +2162,16 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 					id)
 			}
 			if tmpInt != group.Get("epoch") {
-				return fmt.Errorf(`Epoch value for %q must be %d`,
-					id, group.Get("epoch"))
+				return fmt.Errorf(`Epoch value for %q must be %d not %d`,
+					id, group.Get("epoch"), tmpInt)
 			}
 		}
 
 		singular := version.Singular + "id"
 		if tmp, ok := entry[singular]; ok && tmp != version.Get(singular) {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf(`%q value for %q must be %q`,
-				singular, id, version.Get(singular))
+			return fmt.Errorf(`%q value for %q must be %q not "%v"`,
+				singular, id, version.Get(singular), tmp)
 		}
 
 		err = version.DeleteSetNextVersion(nextDefault)

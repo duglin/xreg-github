@@ -30,13 +30,17 @@ func (v *Version) SetSave(name string, val any) error {
 }
 
 func (v *Version) Delete() error {
-	panic("Should never call this directly")
+	panic("Should never call this directly - try DeleteSetNextVersion")
 }
 
 // JustDelete will delete the Version w/o any additional logic like
 // "defaultversionid" manipulation.
 // Used when xref on the Resource is set.
 func (v *Version) JustDelete() error {
+	if err := v.Resource.Touch(); err != nil {
+		return err
+	}
+
 	// Zero is ok if it's already been deleted
 	err := DoZeroOne(v.tx, `DELETE FROM Versions WHERE SID=?`, v.DbSID)
 	if err != nil {

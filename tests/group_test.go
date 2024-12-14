@@ -101,6 +101,7 @@ func TestGroupRequiredFields(t *testing.T) {
 	_, err = reg.AddGroup("dirs", "d1")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 	reg.Rollback()
+	reg.Refresh()
 
 	g1, err := reg.AddGroupWithObject("dirs", "d1",
 		registry.Object{"clireq": "test"}, false)

@@ -100,7 +100,7 @@ func TestTimestampRegistry(t *testing.T) {
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "description": "my docs",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -111,8 +111,8 @@ func TestTimestampRegistry(t *testing.T) {
       "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
-      "createdat": "2024-01-01T12:00:03Z",
-      "modifiedat": "2024-01-01T12:00:03Z",
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z",
 
       "filesurl": "http://localhost:8181/dirs/d1/files",
       "files": {
@@ -122,16 +122,16 @@ func TestTimestampRegistry(t *testing.T) {
           "self": "http://localhost:8181/dirs/d1/files/f1$structure",
           "epoch": 1,
           "isdefault": true,
-          "createdat": "2024-01-01T12:00:03Z",
-          "modifiedat": "2024-01-01T12:00:03Z",
+          "createdat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:02Z",
 
           "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
           "meta": {
             "fileid": "f1",
             "self": "http://localhost:8181/dirs/d1/files/f1/meta",
             "epoch": 1,
-            "createdat": "2024-01-01T12:00:03Z",
-            "modifiedat": "2024-01-01T12:00:03Z",
+            "createdat": "2024-01-01T12:00:02Z",
+            "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
             "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
@@ -144,8 +144,8 @@ func TestTimestampRegistry(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
               "epoch": 1,
               "isdefault": true,
-              "createdat": "2024-01-01T12:00:03Z",
-              "modifiedat": "2024-01-01T12:00:03Z"
+              "createdat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:02Z"
             }
           },
           "versionscount": 1
@@ -213,7 +213,7 @@ func TestTimestampRegistry(t *testing.T) {
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
-  "epoch": 2,
+  "epoch": 3,
   "createdat": "1970-01-02T03:04:05Z",
   "modifiedat": "2000-05-04T03:02:01Z",
 
@@ -241,7 +241,7 @@ func TestTimestampRegistry(t *testing.T) {
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
-  "epoch": 3,
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
 

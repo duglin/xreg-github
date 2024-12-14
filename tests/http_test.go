@@ -4525,6 +4525,344 @@ func TestHTTPVersions(t *testing.T) {
 
 }
 
+func TestHTTPEpochTimesAddRemove(t *testing.T) {
+	reg := NewRegistry("TestHTTPEpochTimesAddRemove")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+	xNoErr(t, reg.Commit())
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+	xNoErr(t, reg.Commit())
+	reg.Refresh()
+	regEpoch := reg.GetAsInt("epoch")
+	regCreated := reg.GetAsString("createdat")
+	regModified := reg.GetAsString("modifiedat")
+
+	xCheck(t, regEpoch == 1, "regEpoch should be 1")
+	xCheck(t, !IsNil(regCreated), "regCreated should not be nil")
+	xCheck(t, regModified == regCreated, "reg created != modified")
+	xCheck(t, regModified != "", "reg modified is ''")
+	xCheck(t, regCreated != "", "reg created is ''")
+
+	d1, _ := reg.AddGroup("dirs", "d1")
+	xNoErr(t, reg.Commit())
+	reg.Refresh()
+	d1.Refresh()
+
+	d1Epoch := d1.GetAsInt(NewPP().P("epoch").UI())
+	d1Created := d1.GetAsString(NewPP().P("createdat").UI())
+	d1Modified := d1.GetAsString(NewPP().P("modifiedat").UI())
+
+	xCheckEqual(t, "", reg.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", reg.GetAsString("createdat"), "--"+regCreated)
+	xCheckGreater(t, "", reg.GetAsString("modifiedat"), regModified)
+
+	xCheckEqual(t, "", d1Epoch, 1)
+	xCheckEqual(t, "", reg.GetAsString("modifiedat"), "--"+d1Created)
+	xCheckEqual(t, "", reg.GetAsString("modifiedat"), "--"+d1Modified)
+
+	regEpoch = reg.GetAsInt("epoch")
+	regModified = reg.GetAsString("modifiedat")
+
+	f1, _ := d1.AddResource("files", "f1", "v1")
+	xNoErr(t, reg.Commit())
+	reg.Refresh()
+	d1.Refresh()
+	f1.Refresh()
+	v1, _ := f1.FindVersion("v1", false)
+	m1, _ := f1.FindMeta(false)
+
+	xCheckEqual(t, "", reg.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", reg.GetAsString("createdat"), "--"+regCreated)
+	xCheckEqual(t, "", reg.GetAsString("modifiedat"), "--"+regModified)
+
+	xCheckEqual(t, "", d1.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", d1.GetAsString("createdat"), "--"+d1Created)
+	xCheckGreater(t, "", d1.GetAsString("modifiedat"), d1Modified)
+
+	d1Epoch = d1.GetAsInt("epoch")
+	d1Modified = d1.GetAsString("modifiedat")
+
+	xCheckEqual(t, "", m1.GetAsInt("epoch"), 1)
+	xCheckEqual(t, "", m1.GetAsString("createdat"), "--"+d1Modified)
+	xCheckEqual(t, "", m1.GetAsString("modifiedat"), "--"+d1Modified)
+
+	m1Created := m1.GetAsString("createdat")
+	m1Modified := m1.GetAsString("modifiedat")
+
+	xCheckEqual(t, "", v1.GetAsInt("epoch"), 1)
+	xCheckEqual(t, "", v1.GetAsString("createdat"), "--"+d1Modified)
+	xCheckEqual(t, "", v1.GetAsString("modifiedat"), "--"+d1Modified)
+
+	v1Created := v1.GetAsString("createdat")
+	v1Modified := v1.GetAsString("modifiedat")
+
+	v2, _ := f1.AddVersion("v2")
+	xNoErr(t, reg.Commit())
+	reg.Refresh()
+	d1.Refresh()
+	f1.Refresh()
+	m1.Refresh()
+	v1.Refresh()
+
+	xCheckEqual(t, "", reg.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", reg.GetAsString("createdat"), "--"+regCreated)
+	xCheckEqual(t, "", reg.GetAsString("modifiedat"), "--"+regModified)
+
+	xCheckEqual(t, "", d1.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", d1.GetAsString("createdat"), "--"+d1Created)
+	xCheckEqual(t, "", d1.GetAsString("modifiedat"), "--"+d1Modified)
+
+	xCheckEqual(t, "", m1.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", m1.GetAsString("createdat"), "--"+m1Created)
+	xCheckGreater(t, "", m1.GetAsString("modifiedat"), m1Modified)
+
+	m1Modified = m1.GetAsString("modifiedat")
+
+	xCheckEqual(t, "", v1.GetAsInt("epoch"), 1)
+	xCheckEqual(t, "", v1.GetAsString("createdat"), "--"+v1Created)
+	xCheckEqual(t, "", v1.GetAsString("modifiedat"), "--"+v1Modified)
+
+	xCheckEqual(t, "", v2.GetAsInt("epoch"), 1)
+	xCheckEqual(t, "", v2.GetAsString("createdat"), "--"+m1.GetAsString("modifiedat"))
+	xCheckEqual(t, "", v2.GetAsString("modifiedat"), "--"+m1.GetAsString("modifiedat"))
+
+	xHTTP(t, reg, "GET", "/?inline", ``, 200, `{
+  "specversion": "0.5",
+  "registryid": "TestHTTPEpochTimesAddRemove",
+  "self": "http://localhost:8181/",
+  "epoch": 2,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "epoch": 2,
+      "createdat": "YYYY-MM-DDTHH:MM:02Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:03Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "versionid": "v2",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "YYYY-MM-DDTHH:MM:04Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:04Z",
+
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "meta": {
+            "fileid": "f1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "epoch": 2,
+            "createdat": "YYYY-MM-DDTHH:MM:03Z",
+            "modifiedat": "YYYY-MM-DDTHH:MM:04Z",
+
+            "defaultversionid": "v2",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "epoch": 1,
+              "createdat": "YYYY-MM-DDTHH:MM:03Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:03Z"
+            },
+            "v2": {
+              "fileid": "f1",
+              "versionid": "v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:04Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:04Z"
+            }
+          },
+          "versionscount": 2
+        }
+      },
+      "filescount": 1
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	// Now do DELETE up the tree
+
+	v2.DeleteSetNextVersion("")
+	xNoErr(t, reg.Commit())
+	reg.Refresh()
+	d1.Refresh()
+	f1.Refresh()
+	m1.Refresh()
+	v1.Refresh()
+
+	xCheckEqual(t, "", reg.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", reg.GetAsString("createdat"), "--"+regCreated)
+	xCheckEqual(t, "", reg.GetAsString("modifiedat"), "--"+regModified)
+
+	xCheckEqual(t, "", d1.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", d1.GetAsString("createdat"), "--"+d1Created)
+	xCheckEqual(t, "", d1.GetAsString("modifiedat"), "--"+d1Modified)
+
+	xCheckEqual(t, "", m1.GetAsInt("epoch"), 3)
+	xCheckEqual(t, "", m1.GetAsString("createdat"), "--"+m1Created)
+	xCheckGreater(t, "", m1.GetAsString("modifiedat"), m1Modified)
+
+	m1Modified = m1.GetAsString("modifiedat")
+
+	xCheckEqual(t, "", v1.GetAsInt("epoch"), 1)
+	xCheckEqual(t, "", v1.GetAsString("createdat"), "--"+v1Created)
+	xCheckEqual(t, "", v1.GetAsString("modifiedat"), "--"+v1Modified)
+
+	v1.DeleteSetNextVersion("")
+	xNoErr(t, reg.Commit())
+	reg.Refresh()
+	d1.Refresh()
+
+	xCheckEqual(t, "", reg.GetAsInt("epoch"), 2)
+	xCheckEqual(t, "", reg.GetAsString("createdat"), "--"+regCreated)
+	xCheckEqual(t, "", reg.GetAsString("modifiedat"), "--"+regModified)
+
+	xCheckEqual(t, "", d1.GetAsInt("epoch"), 3)
+	xCheckEqual(t, "", d1.GetAsString("createdat"), "--"+d1Created)
+	xCheckGreater(t, "", d1.GetAsString("modifiedat"), d1Modified)
+
+	d1.Delete()
+	xNoErr(t, reg.Commit())
+	reg.Refresh()
+
+	xCheckEqual(t, "", reg.GetAsInt("epoch"), 3)
+	xCheckEqual(t, "", reg.GetAsString("createdat"), "--"+regCreated)
+	xCheckGreater(t, "", reg.GetAsString("modifiedat"), regModified)
+
+	xHTTP(t, reg, "GET", "/?inline", ``, 200, `{
+  "specversion": "0.5",
+  "registryid": "TestHTTPEpochTimesAddRemove",
+  "self": "http://localhost:8181/",
+  "epoch": 3,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {},
+  "dirscount": 0
+}
+`)
+
+	// Now add everything at once, epoch=1 and times are same
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/?nested",
+		Method: "PUT",
+		ReqBody: `{
+          "dirs": {
+            "d1": {
+              "files": {
+	            "f1": {
+                  "versions": {
+                    "v1": {},
+                    "v2": {}
+                  }
+                }
+              }
+            }
+          }
+        }`,
+		Code: 200,
+		ResBody: `{
+  "specversion": "0.5",
+  "registryid": "TestHTTPEpochTimesAddRemove",
+  "self": "http://localhost:8181/",
+  "epoch": 4,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirscount": 1
+}
+`,
+	})
+
+	xHTTP(t, reg, "GET", "/?inline", ``, 200, `{
+  "specversion": "0.5",
+  "registryid": "TestHTTPEpochTimesAddRemove",
+  "self": "http://localhost:8181/",
+  "epoch": 4,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:02Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "versionid": "v2",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "meta": {
+            "fileid": "f1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "epoch": 1,
+            "createdat": "YYYY-MM-DDTHH:MM:02Z",
+            "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+            "defaultversionid": "v2",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "epoch": 1,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z"
+            },
+            "v2": {
+              "fileid": "f1",
+              "versionid": "v2",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z"
+            }
+          },
+          "versionscount": 2
+        }
+      },
+      "filescount": 1
+    }
+  },
+  "dirscount": 1
+}
+`)
+}
 func TestHTTPEnum(t *testing.T) {
 	reg := NewRegistry("TestHTTPEnum")
 	defer PassDeleteReg(t, reg)
@@ -5906,7 +6244,7 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d3?epoch=2x", "", 400,
 		"Epoch value \"2x\" must be an UINTEGER\n")
 	xHTTP(t, reg, "DELETE", "/dirs/d3?epoch=2", "", 400,
-		"Epoch value for \"d3\" must be 1\n")
+		"Epoch value for \"d3\" must be 1 not 2\n")
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:    "DELETE /dirs - d3 err",
@@ -5914,7 +6252,7 @@ func TestHTTPDelete(t *testing.T) {
 		Method:  "DELETE",
 		ReqBody: `{"d3": {"epoch":2}}`,
 		Code:    400,
-		ResBody: `Epoch value for "d3" must be 1
+		ResBody: `Epoch value for "d3" must be 1 not 2
 `,
 	})
 
@@ -5927,7 +6265,7 @@ func TestHTTPDelete(t *testing.T) {
 		Method:  "DELETE",
 		ReqBody: `{"d3":{"dirid": "xx", "epoch":1}}`,
 		Code:    400,
-		ResBody: `"dirid" value for "d3" must be "d3"
+		ResBody: `"dirid" value for "d3" must be "d3" not "xx"
 `,
 	})
 
@@ -6153,29 +6491,76 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f3?epoch=2x", "", 400,
 		"Epoch value \"2x\" must be an UINTEGER\n")
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f3?epoch=2", "", 400,
-		"Epoch value for \"f3\" must be 1\n")
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f3?epoch=1", "", 204, "")
+		"Epoch value for \"f3\" must be 1 not 2\n")
+
+	// Bump epoch of f3
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f3/meta", "", 200, `{
+  "fileid": "f3",
+  "self": "http://localhost:8181/dirs/d1/files/f3/meta",
+  "epoch": 2,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "defaultversionid": "v3.1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/v3.1"
+}
+`)
+
+	// Bump epoch of f2
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f2/meta", "", 200, `{
+  "fileid": "f2",
+  "self": "http://localhost:8181/dirs/d1/files/f2/meta",
+  "epoch": 2,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "defaultversionid": "v2.1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/v2.1"
+}
+`)
+
+	/*
+		"f2": { "meta": { "epoch": 2}, "versions": { "v2.1": { "epoch": 1,
+		"f3": { "meta": { "epoch": 2}, "versions": { "v3.1": { "epoch": 1,
+		"f4": { "meta": { "epoch": 1}, "versions": { "v4.1": { "epoch": 1,
+		"f5": { "meta": { "epoch": 1}, "versions": { "v5.1": { "epoch": 1,
+		"f6": { "meta": { "epoch": 1}, "versions": { "v6.1": { "epoch": 1,
+	*/
+
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f3?epoch=2", "", 204, "")
 
 	// DELETE - testing ids in body
 	_, err := d1.AddResource("files", "f3", "v1")
 	xNoErr(t, err)
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f3":{"fileid":"fx"}}`,
-		400, `"fileid" value for "f3" must be "f3"
+		400, `"fileid" value for "f3" must be "f3" not "fx"
+`)
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f3":{"meta":{"fileid":"fx"}}}`,
+		400, `"fileid" value for "f3" must be "f3" not "fx"
+`)
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f3":{"epoch":"2"}}`,
+		400, `"epoch" should be under a "meta" map
 `)
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f3":{"fileid":"f3"}}`,
 		204, ``)
 
 	// DELETE /dirs/d1/files/f3 - bad epoch in body
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f2":{"epoch":"1x"}}`, 400,
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
+		`{"f2":{"meta":{"epoch":"1x"}}}`, 400,
 		"Epoch value for \"f2\" must be a uinteger\n")
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f2":{"epoch":2}}`, 400,
-		"Epoch value for \"f2\" must be 1\n")
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f2":{"epoch":1}}`, 204, "")
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"fx":{"epoch":1}}`, 204, "")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
+		`{"f2":{"meta":{"epoch":4}}}`, 400,
+		"Epoch value for \"f2\" must be 2 not 4\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
+		`{"f2":{"epoch":99,"meta":{"epoch":2}}}`, 204, "") // ignore top 'epoch'
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
+		`{"fx":{"meta":{"epoch":1}}}`, 204, "")
 
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f2":{},"f4":{"epoch":3}}`,
-		400, "Epoch value for \"f4\" must be 1\n")
-	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{"f4":{},"f5":{"epoch":1}}`,
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
+		`{"f2":{},"f4":{"meta":{"epoch":3}}}`,
+		400, "Epoch value for \"f4\" must be 1 not 3\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
+		`{"f4":{},"f5":{"meta":{"epoch":1}}}`,
 		204, "")
 
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{}`, 204, "") // no-op
@@ -6255,7 +6640,7 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v2?epoch=2x", "", 400,
 		"Epoch value \"2x\" must be an UINTEGER\n")
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v2?epoch=2", "", 400,
-		"Epoch value for Version \"v2\" must be 1\n")
+		"Epoch value for \"v2\" must be 1 not 2\n")
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/v2?epoch=1", "", 204, "")
 
 	// DELETE /dirs/d1/files/f1/versions/v4 - bad epoch in body
@@ -6264,7 +6649,7 @@ func TestHTTPDelete(t *testing.T) {
 		"Epoch value for \"v4\" must be a uinteger\n")
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions",
 		`{"v4":{"epoch":2}}`, 400,
-		"Epoch value for \"v4\" must be 1\n")
+		"Epoch value for \"v4\" must be 1 not 2\n")
 
 	// DELETE - bad IDs
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions",
@@ -6272,7 +6657,7 @@ func TestHTTPDelete(t *testing.T) {
 	f1.AddVersion("v4")
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions",
 		`{"v4":{"versionid":2}}`, 400,
-		`"versionid" value for "v4" must be "v4"
+		`"versionid" value for "v4" must be "v4" not "2"
 `)
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions",
 		`{"v4":{"fileid":"fx","versionid":"v4"}}`, 204, "") // ignore fileid
@@ -6284,7 +6669,7 @@ func TestHTTPDelete(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions",
 		`{"v6":{},"v7":{"epoch":3}}`, // v6 will still be around
-		400, "Epoch value for \"v7\" must be 1\n")
+		400, "Epoch value for \"v7\" must be 1 not 3\n")
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions",
 		`{"v7":{},"v8":{"epoch":1}}`,
 		204, "")
@@ -6305,9 +6690,9 @@ func TestHTTPDelete(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 1,
+    "epoch": 7,
     "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "v5",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$structure",
@@ -6388,7 +6773,7 @@ func TestHTTPDelete(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 2,
+    "epoch": 9,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -6449,9 +6834,9 @@ func TestHTTPDelete(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 3,
+    "epoch": 10,
     "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "v10",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10$structure",
@@ -6464,8 +6849,8 @@ func TestHTTPDelete(t *testing.T) {
       "versionid": "v1",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
       "epoch": 1,
-      "createdat": "2024-01-01T12:00:02Z",
-      "modifiedat": "2024-01-01T12:00:02Z"
+      "createdat": "2024-01-01T12:00:03Z",
+      "modifiedat": "2024-01-01T12:00:03Z"
     },
     "v10": {
       "fileid": "f1",
@@ -6504,9 +6889,9 @@ func TestHTTPDelete(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 3,
+    "epoch": 11,
     "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "v10",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v10$structure",
@@ -6519,8 +6904,8 @@ func TestHTTPDelete(t *testing.T) {
       "versionid": "v1",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
       "epoch": 1,
-      "createdat": "2024-01-01T12:00:02Z",
-      "modifiedat": "2024-01-01T12:00:02Z"
+      "createdat": "2024-01-01T12:00:03Z",
+      "modifiedat": "2024-01-01T12:00:03Z"
     },
     "v10": {
       "fileid": "f1",
@@ -6542,16 +6927,16 @@ func TestHTTPDelete(t *testing.T) {
   "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "epoch": 1,
   "isdefault": true,
-  "createdat": "2024-01-01T12:00:02Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 4,
-    "createdat": "2024-01-01T12:00:01Z",
-    "modifiedat": "2024-01-01T12:00:04Z",
+    "epoch": 12,
+    "createdat": "2024-01-01T12:00:02Z",
+    "modifiedat": "2024-01-01T12:00:03Z",
 
     "defaultversionid": "v1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
@@ -6565,16 +6950,16 @@ func TestHTTPDelete(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
       "epoch": 1,
       "isdefault": true,
-      "createdat": "2024-01-01T12:00:02Z",
-      "modifiedat": "2024-01-01T12:00:02Z"
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z"
     },
     "v10": {
       "fileid": "f1",
       "versionid": "v10",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v10$structure",
       "epoch": 1,
-      "createdat": "2024-01-01T12:00:01Z",
-      "modifiedat": "2024-01-01T12:00:01Z"
+      "createdat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:02Z"
     }
   },
   "versionscount": 2
@@ -6633,7 +7018,7 @@ func TestHTTPRequiredFields(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestHTTPRequiredFields",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "description": "testing",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -6862,7 +7247,6 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "versionscount": 1
 }
 `)
-
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/dirs/d1/files",
 		Method: "POST",
@@ -6900,9 +7284,9 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 		ResBody: `{
   "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
-  "epoch": 1,
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "barsurl": "http://localhost:8181/dirs/d1/bars",
   "bars": {
@@ -10089,6 +10473,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	reg.Commit()
 	reg.Refresh()
+	regCre := reg.GetAsString("createdat")
 	regMod := reg.GetAsString("modifiedat")
 
 	// Test PATCHing the Registry
@@ -10099,7 +10484,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
   "registryid": "TestHTTPRegistryPatch",
   "self": "http://localhost:8181/",
   "epoch": 1,
-  "createdat": "`+regMod+`",
+  "createdat": "`+regCre+`",
   "modifiedat": "`+regMod+`",
 
   "dirsurl": "http://localhost:8181/dirs",
@@ -10121,7 +10506,8 @@ func TestHTTPRegistryPatch(t *testing.T) {
 `)
 
 	reg.Refresh()
-	xCheck(t, reg.GetAsString("modifiedat") != regMod, "Should be diff")
+	xCheckEqual(t, "", reg.GetAsString("createdat"), regCre)
+	xCheckNotEqual(t, "", reg.GetAsString("modifiedat"), regMod)
 
 	xHTTP(t, reg, "PATCH", "/", `{
 	  "description": "testing"
@@ -13435,7 +13821,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "specversion": "0.5",
   "registryid": "TestHTTPRecursiveData",
   "self": "http://localhost:8181/",
-  "epoch": 3,
+  "epoch": 4,
   "createdat": "2024-11-07T15:53:55.28040091Z",
   "modifiedat": "2024-11-07T15:53:55.294594572Z",
 
@@ -13448,7 +13834,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "specversion": "0.5",
   "registryid": "TestHTTPRecursiveData",
   "self": "http://localhost:8181/",
-  "epoch": 3,
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
