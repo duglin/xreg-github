@@ -299,7 +299,7 @@ func TestBasicTypes(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestBasicTypes",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "reganyarrayint": [

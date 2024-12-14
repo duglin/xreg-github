@@ -218,6 +218,14 @@ func (r *Resource) SetSaveDefault(name string, val any) error {
 	return v.SetSave(name, val)
 }
 
+func (r *Resource) Touch() error {
+	meta, err := r.FindMeta(false)
+	if err != nil {
+		return err
+	}
+	return meta.Touch()
+}
+
 func (r *Resource) FindMeta(anyCase bool) (*Meta, error) {
 	log.VPrintf(3, ">Enter: FindMeta(%v)", anyCase)
 	defer log.VPrintf(3, "<Exit: FindMeta")
@@ -764,9 +772,13 @@ func (r *Resource) AddVersionWithObject(id string, obj Object) (*Version, error)
 func (r *Resource) GetVersionIDs() ([]string, error) {
 	// Get the list of Version IDs for this Resource (oldest first)
 	results, err := Query(r.tx, `
-			SELECT UID,Counter FROM Versions
-			WHERE ResourceSID=? ORDER BY Counter ASC`,
-		r.DbSID)
+			SELECT v.UID,p.PropValue FROM Versions AS v
+			JOIN EffectiveProps as p
+			  ON (p.EntitySID=v.SID AND
+			      p.PropName='createdat`+string(DB_IN)+`')
+			WHERE v.RegistrySID=? AND v.ResourceSID=?
+			  ORDER BY p.PropValue ASC, v.UID ASC`,
+		r.Registry.DbSID, r.DbSID)
 	defer results.Close()
 
 	if err != nil {
@@ -829,6 +841,10 @@ func (r *Resource) Delete() error {
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
 	if err = meta.Delete(); err != nil {
+		return err
+	}
+
+	if err = r.Group.Touch(); err != nil {
 		return err
 	}
 

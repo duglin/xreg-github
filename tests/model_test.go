@@ -2649,6 +2649,7 @@ func TestResourceModelCreate(t *testing.T) {
 
 	// Rollback since the previous "newModel" erased too much
 	xNoErr(t, reg.Rollback())
+	reg.Refresh()
 	reg.LoadModel()
 
 	g, err := reg.AddGroup("dirs", "dir1")
@@ -2659,9 +2660,9 @@ func TestResourceModelCreate(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -2967,9 +2968,9 @@ func TestResourceModelCreate(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -3246,9 +3247,9 @@ func TestResourceModelCreate(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -3395,9 +3396,9 @@ func TestResourceModelCreate(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestResourceModels",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -4243,6 +4244,8 @@ func TestMultModel2Create(t *testing.T) {
 	reg := NewRegistry("TestMultModel2Create")
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg create didn't work")
+	reg.Commit()
+	reg.Refresh()
 
 	gm, _ := reg.Model.AddGroupModel("dirs1", "dir1")
 	gm.AddResourceModel("files", "file", 2, true, false, true)
@@ -4269,9 +4272,9 @@ func TestMultModel2Create(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestMultModel2Create",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/duglin/xreg-github/registry"
@@ -368,9 +369,9 @@ func TestDefaultVersion(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 4,
+    "epoch": 5,
     "createdat": "2024-01-01T12:00:02Z",
-    "modifiedat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:03Z",
 
     "defaultversionid": "v4",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v4$structure",
@@ -399,7 +400,7 @@ func TestDefaultVersion(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 5,
+    "epoch": 6,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -428,7 +429,7 @@ func TestDefaultVersion(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 6,
+    "epoch": 7,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:03Z",
 
@@ -455,7 +456,7 @@ func TestDefaultVersion(t *testing.T) {
   "meta": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "epoch": 6,
+    "epoch": 8,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:03Z",
 
@@ -628,6 +629,7 @@ func TestVersionRequiredFields(t *testing.T) {
 	_, err = f1.AddVersion("v2")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
 	reg.Rollback()
+	reg.Refresh()
 
 	v1, _, err := f1.UpsertVersionWithObject("v2", registry.Object{"clireq": "test"}, registry.ADD_ADD)
 	xNoErr(t, err)
@@ -638,4 +640,87 @@ func TestVersionRequiredFields(t *testing.T) {
 
 	err = v1.SetSave("clireq", "again")
 	xNoErr(t, err)
+}
+
+func TestVersionOrdering(t *testing.T) {
+	// Make sure that "latest" is based on "createdat" first and then
+	// case insensitive "ID"s (smallest == oldest)
+	reg := NewRegistry("TestVersionOrdering")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "can't create reg")
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, false)
+	d1, _ := reg.AddGroup("dirs", "d1")
+	f1, _ := d1.AddResource("files", "f1", "z5")
+	f1.AddVersion("v2")
+	f1.AddVersion("v9")
+	f1.AddVersion("V3")
+	f1.AddVersion("V1")
+	f1.AddVersion("Z1")
+	f1.AddVersion("v5")
+
+	t0 := "2020-01-02T12:00:00Z"
+	t1 := "2024-01-02T12:00:00Z"
+	t2 := "2023-11-22T01:02:03Z"
+	t9 := "2025-01-02T12:00:00Z"
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1?nested", `{
+	  "versions": {
+	    "z5": { "createdat": "`+t1+`","modifiedat":"`+t2+`" },
+	    "v2": { "createdat": "`+t1+`","modifiedat":"`+t2+`" },
+	    "V3": { "createdat": "`+t0+`","modifiedat":"`+t2+`" },
+	    "V1": { "createdat": "`+t9+`","modifiedat":"`+t2+`" },
+	    "Z1": { "createdat": "`+t1+`","modifiedat":"`+t2+`" },
+	    "v9": { "createdat": "`+t1+`","modifiedat":"`+t2+`" },
+	    "v5": { "createdat": "`+t1+`","modifiedat":"`+t2+`" }
+	  }
+    }`, 200, `--{
+  "fileid": "f1",
+  "versionid": "v5",
+  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "epoch": 2,
+  "isdefault": true,
+  "createdat": "`+t1+`",
+  "modifiedat": "`+t2+`",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 7
+}
+`)
+	ids := []string{"v5", "V1", "z5", "Z1", "v9", "v2", "V3"}
+
+	for i, id := range ids {
+		xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/"+id, ``, 204, ``)
+		if i == len(ids)-1 {
+			break
+		}
+
+		ct := t1
+		if id == "v5" {
+			ct = t9
+		}
+		if id == "v2" {
+			ct = t0
+		}
+
+		xHTTP(t, reg, "GET", "/dirs/d1/files/f1", ``, 200, fmt.Sprintf(`--{
+  "fileid": "f1",
+  "versionid": "%s",
+  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "epoch": 2,
+  "isdefault": true,
+  "createdat": "`+ct+`",
+  "modifiedat": "`+t2+`",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": %d
+}
+`, ids[i+1], 6-i))
+	}
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1", ``, 404, `Not found
+`)
+
 }

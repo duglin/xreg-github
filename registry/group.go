@@ -33,6 +33,10 @@ func (g *Group) Delete() error {
 	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.UID)
 	defer log.VPrintf(3, "<Exit: Group.Delete")
 
+	if err := g.Registry.Touch(); err != nil {
+		return err
+	}
+
 	return DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
 }
 
@@ -186,6 +190,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 				Abstract: g.Plural + string(DB_IN) + rType,
 			},
 			Group: g,
+		}
+
+		if err = g.Touch(); err != nil {
+			return nil, false, err
 		}
 
 		m := &Meta{

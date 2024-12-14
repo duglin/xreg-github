@@ -134,9 +134,6 @@ TODOs:
 - Add content-disposition header for hasdoc resources
 - make sure ID only has valid chars
 - inline=model, requires ?nested. Make sure /meta requires ?nested too
-- meta sub-object
-- remove "location" model attribute
-- remove ?resource ?attrib
 - add "compatibility" to resources
 - multi-delete must ignore all attributes except id and epoch
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7

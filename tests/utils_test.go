@@ -186,6 +186,32 @@ func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string
 	xCheckEqual(t, "URL: "+url+"\n", buf.String(), expected)
 }
 
+func xCheckNotEqual(t *testing.T, extra string, gotAny any, expAny any) {
+	t.Helper()
+
+	exp := fmt.Sprintf("%v", expAny)
+	got := fmt.Sprintf("%v", gotAny)
+
+	if exp != got {
+		return
+	}
+
+	t.Fatalf("Should differ, but they're both:\n%s", exp)
+}
+
+func xCheckGreater(t *testing.T, extra string, newAny any, oldAny any) {
+	t.Helper()
+
+	New := fmt.Sprintf("%v", newAny)
+	Old := fmt.Sprintf("%v", oldAny)
+
+	if New > Old {
+		return
+	}
+
+	t.Fatalf("New not > Old:\nOld:\n%s\n\nNew:\n%s", Old, New)
+}
+
 func xCheckEqual(t *testing.T, extra string, gotAny any, expAny any) {
 	t.Helper()
 	pos := 0
@@ -299,4 +325,8 @@ func ShowStack() {
 			break
 		}
 	}
+}
+
+func IsNil(v any) bool {
+	return registry.IsNil(v)
 }
