@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	// "maps"
 	"os"
 	"reflect"
 	"regexp"
@@ -135,11 +136,7 @@ type Tx struct {
 	// Also, consider having Commit() just automatically call ValidateAndSave
 	// for all entities in the Tx - then people don't need to call save
 	// explicitly
-	// Registries map[string]*Registry // reg.UID
-	// Groups     map[string]*Group    // reg.DbSID+g.UID
-	// Resources  map[string]*Resource // reg.DbSID+g.DbSID+r.UID
-	Metas    map[string]*Meta    // reg.DbSID+g.DbSID+r.DbSID  1:1(Res:Meta)
-	Versions map[string]*Version // reg.DbSID+g.DbSID+r.DbSID+v.UID
+	Cache map[string]*Entity // e.Path
 
 	// For debugging
 	uuid  string   // just a unique ID for the TXs map key
@@ -206,8 +203,7 @@ func (tx *Tx) NewTx() error {
 	// } else {
 	// tx.CreateTime = time.Now().Format(time.RFC3339)
 	// }
-	tx.Metas = map[string]*Meta{}
-	tx.Versions = map[string]*Version{}
+	tx.Cache = map[string]*Entity{}
 	tx.uuid = NewUUID()
 	tx.stack = GetStack()
 	TXsMutex.Lock()
@@ -216,10 +212,71 @@ func (tx *Tx) NewTx() error {
 	return nil
 }
 
+func (tx *Tx) AddToCache(e *Entity) {
+	PanicIf(IsNil(e.Self), "Self is nil, %s/%s", e.Singular, e.UID)
+	tx.Cache[e.Registry.UID+"/"+e.Path] = e
+}
+
+func (tx *Tx) RemoveFromCache(e *Entity) {
+	delete(tx.Cache, e.Registry.UID+"/"+e.Path)
+}
+
+func (tx *Tx) WriteCache(force bool) error {
+	for _, e := range tx.Cache {
+		PanicIf(!force && e.NewObject != nil, "Entity %s/%q not saved",
+			e.Singular, e.UID)
+		if !force && e.NewObject != nil {
+			log.Printf("%s: %s", e.Singular, e.UID)
+			ShowStack()
+		}
+		if err := e.ValidateAndSave(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Only call from tests
+func (tx *Tx) SaveCommitRefresh() error {
+	// savedCache := maps.Clone(tx.Cache)
+
+	if err := tx.WriteCache(true); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	/*
+		// Reload all cached entities so the tests don't need to do it themselves
+		log.Printf("cache size: %d", len(savedCache))
+		for _, e := range savedCache {
+			log.Printf("  Refresh: %s/%s", e.Singular, e.UID)
+			Must(e.Refresh())
+		}
+	*/
+
+	return nil
+}
+
+func (tx *Tx) SaveAllAndCommit() error {
+	if err := tx.WriteCache(true); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 func (tx *Tx) Commit() error {
 	if tx.tx == nil {
 		return nil
 	}
+
+	if err := tx.WriteCache(true); err != nil {
+		return err
+	}
+
 	err := tx.tx.Commit()
 	Must(err)
 	if err != nil {
@@ -231,8 +288,7 @@ func (tx *Tx) Commit() error {
 	TXsMutex.Unlock()
 	tx.tx = nil
 	tx.CreateTime = ""
-	tx.Metas = nil
-	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
+	tx.Cache = nil
 	tx.uuid = ""
 
 	return nil
@@ -253,8 +309,7 @@ func (tx *Tx) Rollback() error {
 	TXsMutex.Unlock()
 	tx.tx = nil
 	tx.CreateTime = ""
-	tx.Metas = nil
-	tx.Versions = nil // force a NPE if someone tries to use it outside of a tx
+	tx.Cache = nil
 	tx.uuid = ""
 
 	return nil
@@ -280,39 +335,49 @@ func (tx *Tx) Prepare(query string) (*sql.Stmt, error) {
 	return ps, err
 }
 
-func (tx *Tx) AddMeta(m *Meta) {
-	if tx.Metas == nil {
-		tx.Metas = map[string]*Meta{}
+func (tx *Tx) AddRegistry(r *Registry) { tx.AddToCache(&r.Entity) }
+func (tx *Tx) GetRegistry(rID string) *Registry {
+	entry, ok := tx.Cache[rID]
+	if !ok {
+		return nil
 	}
-	tx.Metas[m.Resource.Group.Registry.DbSID+
-		m.Resource.Group.DbSID+
-		m.Resource.DbSID] = m
+	return (entry.Self).(*Registry)
 }
 
+func (tx *Tx) AddGroup(g *Group) { tx.AddToCache(&g.Entity) }
+func (tx *Tx) GetGroup(r *Registry, plural string, gID string) *Group {
+	entry, ok := tx.Cache[r.Registry.UID+"/"+plural+"/"+gID]
+	if !ok {
+		return nil
+	}
+	return (entry.Self).(*Group)
+}
+
+func (tx *Tx) AddResource(r *Resource) { tx.AddToCache(&r.Entity) }
+func (tx *Tx) GetResource(g *Group, plural string, rID string) *Resource {
+	entry, ok := tx.Cache[g.Registry.UID+"/"+g.Path+"/"+plural+"/"+rID]
+	if !ok {
+		return nil
+	}
+	return (entry.Self).(*Resource)
+}
+
+func (tx *Tx) AddMeta(m *Meta) { tx.AddToCache(&m.Entity) }
 func (tx *Tx) GetMeta(r *Resource) *Meta {
-	if tx.Metas == nil {
+	entry, ok := tx.Cache[r.Registry.UID+"/"+r.Path+"/meta"]
+	if !ok {
 		return nil
 	}
-	key := r.Group.Registry.DbSID + r.Group.DbSID + r.DbSID
-	return tx.Metas[key]
+	return (entry.Self).(*Meta)
 }
 
-func (tx *Tx) AddVersion(v *Version) {
-	if tx.Versions == nil {
-		tx.Versions = map[string]*Version{}
-	}
-	tx.Versions[v.Resource.Group.Registry.DbSID+
-		v.Resource.Group.DbSID+
-		v.Resource.DbSID+
-		v.UID] = v
-}
-
+func (tx *Tx) AddVersion(v *Version) { tx.AddToCache(&v.Entity) }
 func (tx *Tx) GetVersion(r *Resource, vID string) *Version {
-	if tx.Versions == nil {
+	entry, ok := tx.Cache[r.Registry.UID+"/"+r.Path+"/versions/"+vID]
+	if !ok {
 		return nil
 	}
-	key := r.Group.Registry.DbSID + r.Group.DbSID + r.DbSID + vID
-	return tx.Versions[key]
+	return (entry.Self).(*Version)
 }
 
 type Result struct {

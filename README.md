@@ -147,3 +147,6 @@ TODOs:
 - test clearing xref and setting defver attrs, via res and via meta directly
 - test to ensure meta epoch changes as versions are added/removed
 - test the timestamps in meta. Should change as versions are added/removed.
+- remove entities from cache upon delete
+- test creating a resource + lots of versions w/o ?defaultversionid-should fail
+  - PUT ../f1   POST .../f1/versions   POT .../versions

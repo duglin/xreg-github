@@ -4244,7 +4244,7 @@ func TestMultModel2Create(t *testing.T) {
 	reg := NewRegistry("TestMultModel2Create")
 	defer PassDeleteReg(t, reg)
 	xCheck(t, reg != nil, "reg create didn't work")
-	reg.Commit()
+	reg.SaveAllAndCommit()
 	reg.Refresh()
 
 	gm, _ := reg.Model.AddGroupModel("dirs1", "dir1")

@@ -33,9 +33,7 @@ func (g *Group) Delete() error {
 	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.UID)
 	defer log.VPrintf(3, "<Exit: Group.Delete")
 
-	if err := g.Registry.Touch(); err != nil {
-		return err
-	}
+	g.Registry.Touch()
 
 	return DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
 }
@@ -55,7 +53,10 @@ func (g *Group) FindResource(rType string, id string, anyCase bool) (*Resource, 
 		return nil, nil
 	}
 
-	return &Resource{Entity: *ent, Group: g}, nil
+	r := &Resource{Entity: *ent, Group: g}
+	r.Self = r
+	r.tx.AddResource(r)
+	return r, nil
 }
 
 func (g *Group) AddResource(rType string, id string, vID string) (*Resource, error) {
@@ -191,10 +192,11 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			},
 			Group: g,
 		}
+		r.Self = r
 
-		if err = g.Touch(); err != nil {
-			return nil, false, err
-		}
+		r.tx.AddResource(r)
+
+		g.Touch()
 
 		m := &Meta{
 			Entity: Entity{
@@ -212,6 +214,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			},
 			Resource: r,
 		}
+		m.Self = m
 
 		err = DoOne(r.tx, `
         INSERT INTO Resources(SID, UID, RegistrySID, GroupSID, ModelSID, Path, Abstract)
@@ -287,6 +290,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			if err != nil {
 				return nil, false, err
 			}
+		}
+
+		if err := r.EnsureLatest(); err != nil {
+			return nil, false, err
 		}
 	}
 

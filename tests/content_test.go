@@ -14,7 +14,6 @@ import (
 func TestResourceContents(t *testing.T) {
 	reg := NewRegistry("TestResourceContents")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -53,7 +52,6 @@ func TestResourceContents(t *testing.T) {
 
 	f1.SetSaveDefault("#resource", "Hello there")
 
-	f1.Refresh()
 	xCheckEqual(t, "", NotNilString(f1.Get("#resource")), "Hello there")
 
 	CompareContentMeta(t, reg, &Test{
@@ -139,7 +137,7 @@ type Test struct {
 
 func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 	t.Helper()
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 
 	u := test.URL
 

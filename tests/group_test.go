@@ -10,7 +10,6 @@ import (
 func TestCreateGroup(t *testing.T) {
 	reg := NewRegistry("TestCreateGroup")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -96,7 +95,7 @@ func TestGroupRequiredFields(t *testing.T) {
 		ServerRequired: true,
 	})
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	_, err = reg.AddGroup("dirs", "d1")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
@@ -106,7 +105,7 @@ func TestGroupRequiredFields(t *testing.T) {
 	g1, err := reg.AddGroupWithObject("dirs", "d1",
 		registry.Object{"clireq": "test"}, false)
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	err = g1.SetSave("clireq", nil)
 	xCheckErr(t, err, "Required property \"clireq\" is missing")

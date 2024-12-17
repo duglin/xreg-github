@@ -38,33 +38,52 @@ func addModelCmd(parent *cobra.Command) {
 func modelNormalizeFunc(cmd *cobra.Command, args []string) {
 	var err error
 	var buf []byte
-	fileName := ""
 
 	if len(args) == 0 {
-		buf, err = io.ReadAll(os.Stdin)
-		if err != nil {
-			Error("Error reading from stdin: %s", err)
+		args = []string{"-"}
+	}
+
+	for _, fileName := range args {
+		if Verbose {
+			fmt.Printf("%s:\n", fileName)
 		}
-	}
 
-	for _, fileName = range args {
-		buf, err = os.ReadFile(fileName)
-		if err != nil {
-			Error("Error reading file %q: %s", fileName, err)
+		if fileName == "" || fileName == "-" {
+			buf, err = io.ReadAll(os.Stdin)
+			if err != nil {
+				Error("Error reading from stdin: %s", err)
+			}
+		} else if strings.HasPrefix(fileName, "http") {
+			res, err := http.Get(fileName)
+			if err == nil {
+				buf, err = io.ReadAll(res.Body)
+				res.Body.Close()
+
+				if res.StatusCode/100 != 2 {
+					err = fmt.Errorf("Error getting model: %s\n%s",
+						res.Status, string(buf))
+				}
+			}
+		} else {
+			buf, err = os.ReadFile(fileName)
 		}
-	}
 
-	buf, err = registry.ProcessIncludes(fileName, buf, true)
-	if err != nil {
-		Error(err.Error())
-	}
+		if err != nil {
+			Error("Error reading %q: %s", fileName, err)
+		}
 
-	tmp := map[string]any{}
-	err = registry.Unmarshal(buf, &tmp)
-	if err != nil {
-		Error(err.Error())
+		buf, err = registry.ProcessIncludes(fileName, buf, true)
+		if err != nil {
+			Error(err.Error())
+		}
+
+		tmp := map[string]any{}
+		err = registry.Unmarshal(buf, &tmp)
+		if err != nil {
+			Error(err.Error())
+		}
+		fmt.Printf("%s\n", registry.ToJSON(tmp))
 	}
-	fmt.Printf("%s\n", registry.ToJSON(tmp))
 }
 
 func modelVerifyFunc(cmd *cobra.Command, args []string) {

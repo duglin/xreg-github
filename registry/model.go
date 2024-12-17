@@ -1759,13 +1759,16 @@ func (rm *ResourceModel) VerifyData() error {
 	for _, e := range entities {
 		if e.Type == ENTITY_GROUP {
 			group = &Group{Entity: *e, Registry: reg}
+			group.Self = group
 		} else {
 			PanicIf(group == nil, "Group can't be nil")
 			resource = &Resource{Entity: *e, Group: group}
+			resource.Self = resource
 
 			if err = resource.EnsureMaxVersions(); err != nil {
 				return err
 			}
+			resource.tx.AddResource(resource)
 		}
 	}
 

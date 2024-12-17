@@ -40,7 +40,7 @@ func xHTTP(t *testing.T, reg *registry.Registry, verb, url, reqBody string, code
 
 func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 	t.Helper()
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 
 	// t.Logf("Test: %s", test.Name)
 	// t.Logf(">> %s %s  (%s)", test.Method, test.URL, registry.GetStack()[1])
@@ -57,6 +57,11 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 	if test.ReqBody != "" {
 		body = bytes.NewReader([]byte(test.ReqBody))
 	}
+
+	if len(test.URL) > 0 {
+		test.URL = strings.TrimLeft(test.URL, "/")
+	}
+
 	req, err := http.NewRequest(test.Method,
 		"http://localhost:8181/"+test.URL, body)
 	xNoErr(t, err)
@@ -224,7 +229,6 @@ var savedREs = map[string]*regexp.Regexp{
 func TestHTTPhtml(t *testing.T) {
 	reg := NewRegistry("TestHTTPhtml")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	// Check as part of Reg request
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -252,7 +256,6 @@ func TestHTTPhtml(t *testing.T) {
 func TestHTTPModel(t *testing.T) {
 	reg := NewRegistry("TestHTTPModel")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	// Check as part of Reg request
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -1414,7 +1417,6 @@ func TestHTTPModel(t *testing.T) {
 func TestHTTPRegistry(t *testing.T) {
 	reg := NewRegistry("TestHTTPRegistry")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	_, err := reg.Model.AddAttr("myany", registry.ANY)
 	xCheckErr(t, err, "")
@@ -1980,7 +1982,6 @@ func TestHTTPRegistry(t *testing.T) {
 func TestHTTPGroups(t *testing.T) {
 	reg := NewRegistry("TestHTTPGroups")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddAttr("format", registry.STRING)
@@ -2499,7 +2500,6 @@ func TestHTTPGroups(t *testing.T) {
 func TestHTTPResourcesHeaders(t *testing.T) {
 	reg := NewRegistry("TestHTTPResourcesHeaders")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -3097,7 +3097,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 func TestHTTPCases(t *testing.T) {
 	reg := NewRegistry("TestHTTPCases")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -3295,7 +3294,6 @@ func TestHTTPCases(t *testing.T) {
 func TestHTTPResourcesContentHeaders(t *testing.T) {
 	reg := NewRegistry("TestHTTPResourcesContentHeaders")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -3486,7 +3484,6 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 func TestHTTPVersions(t *testing.T) {
 	reg := NewRegistry("TestHTTPVersions")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -4528,12 +4525,11 @@ func TestHTTPVersions(t *testing.T) {
 func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	reg := NewRegistry("TestHTTPEpochTimesAddRemove")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	reg.Refresh()
 	regEpoch := reg.GetAsInt("epoch")
 	regCreated := reg.GetAsString("createdat")
@@ -4546,7 +4542,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	xCheck(t, regCreated != "", "reg created is ''")
 
 	d1, _ := reg.AddGroup("dirs", "d1")
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	reg.Refresh()
 	d1.Refresh()
 
@@ -4566,7 +4562,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	regModified = reg.GetAsString("modifiedat")
 
 	f1, _ := d1.AddResource("files", "f1", "v1")
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	reg.Refresh()
 	d1.Refresh()
 	f1.Refresh()
@@ -4599,7 +4595,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	v1Modified := v1.GetAsString("modifiedat")
 
 	v2, _ := f1.AddVersion("v2")
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	reg.Refresh()
 	d1.Refresh()
 	f1.Refresh()
@@ -4700,7 +4696,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	// Now do DELETE up the tree
 
 	v2.DeleteSetNextVersion("")
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	reg.Refresh()
 	d1.Refresh()
 	f1.Refresh()
@@ -4726,7 +4722,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	xCheckEqual(t, "", v1.GetAsString("modifiedat"), "--"+v1Modified)
 
 	v1.DeleteSetNextVersion("")
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	reg.Refresh()
 	d1.Refresh()
 
@@ -4739,7 +4735,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	xCheckGreater(t, "", d1.GetAsString("modifiedat"), d1Modified)
 
 	d1.Delete()
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	reg.Refresh()
 
 	xCheckEqual(t, "", reg.GetAsInt("epoch"), 3)
@@ -4866,7 +4862,6 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 func TestHTTPEnum(t *testing.T) {
 	reg := NewRegistry("TestHTTPEnum")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	attr, _ := reg.Model.AddAttribute(&registry.Attribute{
 		Name:   "myint",
@@ -4974,7 +4969,6 @@ func TestHTTPEnum(t *testing.T) {
 func TestHTTPIfValue(t *testing.T) {
 	reg := NewRegistry("TestHTTPIfValues")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
 		Name: "myint",
@@ -5366,7 +5360,6 @@ func TestHTTPIfValue(t *testing.T) {
 func TestHTTPResources(t *testing.T) {
 	reg := NewRegistry("TestHTTPResources")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	xNoErr(t, err)
@@ -5630,7 +5623,6 @@ func TestHTTPResources(t *testing.T) {
 func TestHTTPNonStrings(t *testing.T) {
 	reg := NewRegistry("TestHTTPNonStrings")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	rm, _ := gm.AddResourceModel("files", "file", 0, true /* L */, true, true)
@@ -5780,7 +5772,6 @@ func TestHTTPNonStrings(t *testing.T) {
 func TestHTTPDefault(t *testing.T) {
 	reg := NewRegistry("TestHTTPDefault")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	rm, _ := gm.AddResourceModel("files", "file", 0, true /* L */, true, true)
@@ -6159,7 +6150,6 @@ func TestHTTPDefault(t *testing.T) {
 func TestHTTPDelete(t *testing.T) {
 	reg := NewRegistry("TestHTTPDelete")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -6606,7 +6596,7 @@ func TestHTTPDelete(t *testing.T) {
 	xNoErr(t, err)
 	f1.AddVersion("v2")
 	f1.AddVersion("v3")
-	f1.AddVersion("v4")
+	v4, _ := f1.AddVersion("v4")
 	v5, _ := f1.AddVersion("v5")
 	xNoErr(t, f1.SetDefault(v5))
 	f1.AddVersion("v6")
@@ -6614,6 +6604,9 @@ func TestHTTPDelete(t *testing.T) {
 	f1.AddVersion("v8")
 	f1.AddVersion("v9")
 	f1.AddVersion("v10")
+
+	t.Logf("v4.old: %s", ToJSON(v4.Object))
+	t.Logf("v4.new: %s", ToJSON(v4.NewObject))
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure", ``, 200,
 		`{
@@ -6630,7 +6623,6 @@ func TestHTTPDelete(t *testing.T) {
   "versionscount": 10
 }
 `)
-
 	// DELETE v1
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/vx", "", 404,
 		"Version \"vx\" not found\n")
@@ -7005,7 +6997,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 	// Must commit before we call Set below otherwise the transaction will
 	// be rolled back
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	// Registry itself
 	err = reg.SetSave("description", "testing")
@@ -7741,7 +7733,6 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 func TestDefaultVersionThis(t *testing.T) {
 	reg := NewRegistry("TestDefaultVersionThis")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -7921,7 +7912,6 @@ func TestDefaultVersionThis(t *testing.T) {
 func TestHTTPContent(t *testing.T) {
 	reg := NewRegistry("TestHTTPContent")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -9222,7 +9212,6 @@ func TestHTTPContent(t *testing.T) {
 func TestHTTPContent2(t *testing.T) {
 	reg := NewRegistry("TestHTTPContent")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -9488,7 +9477,6 @@ func TestHTTPContent2(t *testing.T) {
 func TestHTTPResourcesBulk(t *testing.T) {
 	reg := NewRegistry("TestHTTPResourcesBulk")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -10456,7 +10444,6 @@ func TestHTTPResourcesBulk(t *testing.T) {
 func TestHTTPRegistryPatch(t *testing.T) {
 	reg := NewRegistry("TestHTTPRegistryPatch")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	reg.Model.AddAttr("regext", registry.STRING)
 
@@ -10471,7 +10458,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 
 	xNoErr(t, err)
 
-	reg.Commit()
+	reg.SaveAllAndCommit()
 	reg.Refresh()
 	regCre := reg.GetAsString("createdat")
 	regMod := reg.GetAsString("modifiedat")
@@ -11120,7 +11107,6 @@ func TestHTTPRegistryPatch(t *testing.T) {
 func TestHTTPEpoch(t *testing.T) {
 	reg := NewRegistry("TestHTTPRegistryPatch")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -11181,7 +11167,6 @@ func TestHTTPEpoch(t *testing.T) {
 func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 	reg := NewRegistry("TestHTTPRegistryPatchNoDoc")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, false)
@@ -11262,7 +11247,6 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 func TestHTTPResourceCollections(t *testing.T) {
 	reg := NewRegistry("TestHTTPResourceCollections")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, false)
@@ -11465,7 +11449,6 @@ func TestHTTPResourceCollections(t *testing.T) {
 func TestHTTPmeta(t *testing.T) {
 	reg := NewRegistry("TestHTTPmeta")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -11513,7 +11496,6 @@ func TestHTTPmeta(t *testing.T) {
 func TestHTTPURLs(t *testing.T) {
 	reg := NewRegistry("TestHTTPURLs")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -12279,7 +12261,6 @@ func TestHTTPURLs(t *testing.T) {
 func TestHTTPNestedRegistry(t *testing.T) {
 	reg := NewRegistry("TestHTTPNestedRegistry")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -12683,7 +12664,6 @@ func TestHTTPNestedRegistry(t *testing.T) {
 func TestHTTPNestedResources(t *testing.T) {
 	reg := NewRegistry("TestHTTPNestedResources")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -13317,7 +13297,6 @@ func TestHTTPNestedResources(t *testing.T) {
 func TestHTTPExport(t *testing.T) {
 	reg := NewRegistry("TestHTTPExport")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -13429,7 +13408,6 @@ func TestHTTPExport(t *testing.T) {
 func TestHTTPVersionIDs(t *testing.T) {
 	reg := NewRegistry("TestHTTPVersionIDs")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, false)
@@ -13525,7 +13503,6 @@ func TestHTTPVersionIDs(t *testing.T) {
 func TestHTTPRecursiveData(t *testing.T) {
 	reg := NewRegistry("TestHTTPRecursiveData")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModelSimple("files", "file")
@@ -14433,7 +14410,6 @@ func TestHTTPRecursiveData(t *testing.T) {
 func TestHTTPDefVer(t *testing.T) {
 	reg := NewRegistry("TestHTTPDefVer")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModelSimple("files", "file")

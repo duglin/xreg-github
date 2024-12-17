@@ -91,7 +91,7 @@ func TestBasicTypes(t *testing.T) {
 
 	dir2, _ := reg.AddGroup("dirs", "dir2")
 
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	// /dirs/d1/f1/v1
 
@@ -369,7 +369,7 @@ func TestBasicTypes(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:04Z",
-      "modifiedat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:04Z",
       "dirbool1": true,
       "dirbool2": false,
       "dirdec1": 234.5,
@@ -391,7 +391,7 @@ func TestBasicTypes(t *testing.T) {
           "epoch": 1,
           "isdefault": true,
           "createdat": "2024-01-01T12:00:04Z",
-          "modifiedat": "2024-01-01T12:00:02Z",
+          "modifiedat": "2024-01-01T12:00:04Z",
           "filebool1": true,
           "filebool2": false,
           "filedec1": 456.5,
@@ -424,7 +424,7 @@ func TestBasicTypes(t *testing.T) {
               "epoch": 1,
               "isdefault": true,
               "createdat": "2024-01-01T12:00:04Z",
-              "modifiedat": "2024-01-01T12:00:02Z",
+              "modifiedat": "2024-01-01T12:00:04Z",
               "filebool1": true,
               "filebool2": false,
               "filedec1": 456.5,
@@ -448,7 +448,7 @@ func TestBasicTypes(t *testing.T) {
       "self": "http://localhost:8181/dirs/dir2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:04Z",
-      "modifiedat": "2024-01-01T12:00:02Z",
+      "modifiedat": "2024-01-01T12:00:04Z",
       "diranyarray": [],
       "diranymap": {},
       "diranyobj": {},

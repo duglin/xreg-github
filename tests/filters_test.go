@@ -45,7 +45,7 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
-  "createdat": "2024-12-01T12:00:00Z",
+  "createdat": "2024-12-01T12:00:01Z",
   "modifiedat": "2024-12-01T12:00:01Z",
 
   "dirsurl": "http://localhost:8181/dirs",
@@ -185,7 +185,7 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
-  "createdat": "2024-12-01T12:00:00Z",
+  "createdat": "2024-12-01T12:00:01Z",
   "modifiedat": "2024-12-01T12:00:01Z",
 
   "dirsurl": "http://localhost:8181/dirs",
@@ -204,7 +204,7 @@ func TestBasicFilters(t *testing.T) {
   "labels": {
     "reg1": "1ger"
   },
-  "createdat": "2024-12-01T12:00:00Z",
+  "createdat": "2024-12-01T12:00:01Z",
   "modifiedat": "2024-12-01T12:00:01Z",
 
   "dirsurl": "http://localhost:8181/dirs",
@@ -224,7 +224,7 @@ func TestBasicFilters(t *testing.T) {
     "reg1": "1ger"
   },
   "createdat": "2024-12-01T12:00:01Z",
-  "modifiedat": "2024-12-01T12:00:02Z",
+  "modifiedat": "2024-12-01T12:00:01Z",
 
   "dirsurl": "http://localhost:8181/dirs",
   "dirs": {
@@ -320,7 +320,7 @@ func TestBasicFilters(t *testing.T) {
     "reg1": "1ger"
   },
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
+  "modifiedat": "2024-01-01T12:00:01Z",
 
   "dirsurl": "http://localhost:8181/dirs",
   "dirs": {

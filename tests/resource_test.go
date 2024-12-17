@@ -9,7 +9,6 @@ import (
 func TestCreateResource(t *testing.T) {
 	reg := NewRegistry("TestCreateResource")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -85,7 +84,6 @@ func TestCreateResource(t *testing.T) {
 func TestResourceSet(t *testing.T) {
 	reg := NewRegistry("TestResourceSet")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -136,7 +134,7 @@ func TestResourceRequiredFields(t *testing.T) {
 
 	group, err := reg.AddGroup("dirs", "d1")
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	_, err = group.AddResource("files", "f1", "v1")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
@@ -146,7 +144,7 @@ func TestResourceRequiredFields(t *testing.T) {
 	f1, err := group.AddResourceWithObject("files", "f1", "v1",
 		registry.Object{"clireq": "test"}, false, false)
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	err = f1.SetSaveDefault("clireq", nil)
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
@@ -158,7 +156,6 @@ func TestResourceRequiredFields(t *testing.T) {
 func TestResourceMaxVersions(t *testing.T) {
 	reg := NewRegistry("TestResourceMaxVersions")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	xNoErr(t, err)

@@ -9,7 +9,6 @@ import (
 func TestCreateRegistry(t *testing.T) {
 	reg := NewRegistry("TestCreateRegistry")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	// Check basic GET first
 	xCheckGet(t, reg, "/",
@@ -61,11 +60,10 @@ func TestDeleteRegistry(t *testing.T) {
 	reg, err := registry.NewRegistry(nil, "TestDeleteRegistry")
 	defer reg.Rollback()
 	xNoErr(t, err)
-	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	err = reg.Delete()
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	reg, err = registry.FindRegistry(nil, "TestDeleteRegistry")
 	defer reg.Rollback()
@@ -93,7 +91,7 @@ func TestFindRegistry(t *testing.T) {
 		"Shouldn't have found TestFindRegistry")
 
 	reg, err = registry.NewRegistry(nil, "TestFindRegistry")
-	defer reg.Commit()
+	defer reg.SaveAllAndCommit()
 	defer reg.Delete() // PassDeleteReg(t, reg)
 	xNoErr(t, err)
 
@@ -147,7 +145,7 @@ func TestRegistryRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 
 	// Commit before we call Set below otherwise the Tx will be rolled back
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	err = reg.SetSave("description", "testing")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
@@ -250,7 +248,7 @@ func TestRegistryDefaultFields(t *testing.T) {
 	xNoErr(t, err)
 
 	// Commit before we call Set below otherwise the Tx will be rolled back
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",

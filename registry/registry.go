@@ -45,6 +45,26 @@ func (r *Registry) Rollback() error {
 	return nil
 }
 
+func (r *Registry) SaveAllAndCommit() error {
+	if r != nil {
+		return r.tx.SaveAllAndCommit()
+	}
+	return nil
+}
+
+// ONLY CALL FROM TESTS - NEVER IN PROD
+func (r *Registry) SaveCommitRefresh() error {
+	if r != nil {
+		return r.tx.SaveCommitRefresh()
+	}
+	return nil
+}
+
+// ONLY CALL FROM TESTS - NEVER IN PROD
+func (r *Registry) AddToCache(e *Entity) {
+	r.tx.AddToCache(e)
+}
+
 func (r *Registry) Commit() error {
 	if r != nil {
 		return r.tx.Commit()
@@ -110,6 +130,7 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 			Abstract: "",
 		},
 	}
+	reg.Self = reg
 	reg.Entity.Registry = reg
 	reg.Model = &Model{
 		Registry: reg,
@@ -119,6 +140,8 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 
 	tx.Registry = reg
 	reg.tx = tx
+
+	reg.tx.AddRegistry(reg)
 
 	err = reg.Model.Verify()
 	if err != nil {
@@ -221,11 +244,14 @@ func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
 	}
 
 	reg := &Registry{Entity: *ent}
+	reg.Self = reg
 	if tx.Registry == nil {
 		tx.Registry = reg
 	}
 	reg.Entity.Registry = reg
 	reg.tx = tx
+
+	reg.tx.AddRegistry(reg)
 
 	reg.LoadModel()
 	return reg, nil
@@ -296,6 +322,7 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	PanicIf(ent == nil, "No entity but we found a reg")
 
 	reg := &Registry{Entity: *ent}
+	reg.Self = reg
 
 	if tx.Registry == nil {
 		tx.Registry = reg
@@ -303,6 +330,8 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 
 	reg.Entity.Registry = reg
 	reg.tx = tx
+
+	reg.tx.AddRegistry(reg)
 
 	reg.LoadModel()
 
@@ -368,13 +397,6 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error {
 	reg.NewObject = obj
 
-	// TODO - remove this and let only happen at the end
-	// Make sure we always have an ID
-	if IsNil(reg.NewObject["registryid"]) {
-		reg.EnsureNewObject()
-		reg.NewObject["registryid"] = reg.UID
-	}
-
 	if doChildren {
 		colls := reg.GetCollections()
 		for _, coll := range colls {
@@ -437,7 +459,10 @@ func (reg *Registry) FindGroup(gType string, id string, anyCase bool) (*Group, e
 		return nil, nil
 	}
 
-	return &Group{Entity: *ent, Registry: reg}, nil
+	g := &Group{Entity: *ent, Registry: reg}
+	g.Self = g
+	g.tx.AddGroup(g)
+	return g, nil
 }
 
 func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
@@ -503,6 +528,9 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 			},
 			Registry: reg,
 		}
+		g.Self = g
+
+		g.tx.AddGroup(g)
 
 		err = DoOne(reg.tx, `
 			INSERT INTO "Groups"(SID,RegistrySID,UID,ModelSID,Path,Abstract)
@@ -524,9 +552,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 			return nil, false, err
 		}
 
-		if err = g.Registry.Touch(); err != nil {
-			return nil, false, err
-		}
+		g.Registry.Touch()
 	}
 
 	if isNew || obj != nil {

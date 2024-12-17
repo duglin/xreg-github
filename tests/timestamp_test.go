@@ -34,7 +34,6 @@ func MaskTimestamps(input string) string {
 func TestTimestampRegistry(t *testing.T) {
 	reg := NewRegistry("TestTimestampRegistry")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	// Check basic GET first
 	xCheckGet(t, reg, "/",
@@ -52,6 +51,8 @@ func TestTimestampRegistry(t *testing.T) {
 	regCreate := reg.Get("createdat")
 	regMod := reg.Get("modifiedat")
 	xCheckEqual(t, "", regCreate, regMod)
+	reg.SaveAllAndCommit()
+	reg.Refresh()
 
 	// Test to make sure modify timestamp changes, but created didn't
 	xNoErr(t, reg.SetSave("description", "my docs"))
@@ -63,14 +64,12 @@ func TestTimestampRegistry(t *testing.T) {
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
-  "epoch": 1,
+  "epoch": 2,
   "description": "my docs",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z"
 }
 `})
-
-	reg.Refresh()
 
 	xCheckEqual(t, "", reg.Get("createdat"), regCreate)
 	xCheck(t, regMod != reg.Get("modifiedat"), "should be new time")
@@ -79,6 +78,7 @@ func TestTimestampRegistry(t *testing.T) {
 	xCheck(t, ToJSON(reg.Get("modifiedat")) > ToJSON(regMod),
 		"Mod should be newer than before")
 
+	reg.Refresh()
 	regMod = reg.Get("modifiedat")
 
 	xCheck(t, ToJSON(regMod) > ToJSON(regCreate),
@@ -100,7 +100,7 @@ func TestTimestampRegistry(t *testing.T) {
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
-  "epoch": 2,
+  "epoch": 3,
   "description": "my docs",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -175,12 +175,11 @@ func TestTimestampRegistry(t *testing.T) {
 		"Should not be the same")
 
 	// Close out any lingering tx
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 
 	/*
 	   	reg = NewRegistry("TestTimestampRegistry2")
 	   	defer PassDeleteReg(t, reg)
-	   	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	   	xCheckHTTP(t, reg, &HTTPTest{
 	   		URL:    "/",
@@ -213,7 +212,7 @@ func TestTimestampRegistry(t *testing.T) {
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
-  "epoch": 3,
+  "epoch": 4,
   "createdat": "1970-01-02T03:04:05Z",
   "modifiedat": "2000-05-04T03:02:01Z",
 
@@ -241,7 +240,7 @@ func TestTimestampRegistry(t *testing.T) {
   "specversion": "` + registry.SPECVERSION + `",
   "registryid": "TestTimestampRegistry",
   "self": "http://localhost:8181/",
-  "epoch": 4,
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:00Z",
   "modifiedat": "2024-01-01T12:00:00Z",
 
@@ -318,7 +317,6 @@ func TestTimestampRegistry(t *testing.T) {
 func TestTimestampParsing(t *testing.T) {
 	reg := NewRegistry("TestTimestampParsing")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg shouldn't be nil")
 
 	// Check basic GET first
 	xCheckGet(t, reg, "/",
@@ -373,6 +371,6 @@ func TestTimestampParsing(t *testing.T) {
 
 		reg.Refresh()
 		xCheckEqual(t, "", reg.Get("modifiedat"), "--"+test.value)
-		xNoErr(t, reg.Commit())
+		xNoErr(t, reg.SaveAllAndCommit())
 	}
 }

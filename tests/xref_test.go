@@ -9,7 +9,6 @@ import (
 func TestXrefBasic(t *testing.T) {
 	reg := NewRegistry("TestXrefBasic")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -427,7 +426,7 @@ func TestXrefBasic(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
       "epoch": 2,
       "createdat": "2024-01-01T12:00:01Z",
-      "modifiedat": "2024-01-01T12:00:03Z",
+      "modifiedat": "2024-01-01T12:00:04Z",
 
       "defaultversionid": "1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure"

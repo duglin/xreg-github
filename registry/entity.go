@@ -33,6 +33,8 @@ type Entity struct {
 	Path     string // [GROUPS/gID[/RESOURCES/rID[/versions/vID]]]
 	Abstract string // [GROUPS[/RESOURCES[/versions]]]
 	EpochSet bool   `json:"-"` // Has epoch been updated this transaction?
+	ModSet   bool   `json:"-"` // Has modifiedat been updated this transaction?
+	Self     any    `json:"-"` // Pointer to typed Entity (e.g. *Resource)
 }
 
 type EntitySetter interface {
@@ -73,16 +75,9 @@ func (e *Entity) ToString() string {
 	return str
 }
 
-func (e *Entity) Touch() error {
-	/*
-		log.Printf("Touch: %s\ne.Obj: %s\nNew: %s",
-			e.UID, ToJSON(e.Object), ToJSON(e.NewObject))
-	*/
-
+func (e *Entity) Touch() {
+	log.VPrintf(3, "Touch: %s/%s", e.Singular, e.UID)
 	e.EnsureNewObject()
-	// TODO DUG - remove this and let the tx.commit do it.
-	// we may be prematurely validating/saving it
-	return e.ValidateAndSave()
 }
 
 func (e *Entity) EnsureNewObject() {
@@ -380,7 +375,14 @@ func (e *Entity) Refresh() error {
 			return err
 		}
 	}
+
+	// TODO see if we can remove this - it scares me.
+	// Added when I added Touch() - touching parent on add/remove child
 	e.EpochSet = false
+	e.ModSet = false
+
+	e.tx.AddToCache(e)
+
 	return nil
 }
 
@@ -442,6 +444,9 @@ func (e *Entity) eJustSet(pp *PropPath, val any) error {
 
 	if pp.Top() == "epoch" {
 		e.EpochSet = true
+	}
+	if pp.Top() == "modifiedat" {
+		e.ModSet = true
 	}
 
 	// Since "xref" is also a Property on the Resources table we need to
@@ -1179,6 +1184,12 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				ma := e.NewObject["modifiedat"]
+
+				// If we already set modifiedat in this Tx, just exit
+				if e.ModSet && !IsNil(ma) && ma != "" {
+					return nil
+				}
+
 				// If there's no value, or it's the same as the existing
 				// value, set to "now"
 				if IsNil(ma) || (ma == e.Object["modifiedat"]) {
@@ -1191,6 +1202,7 @@ var OrderedSpecProps = []*Attribute{
 					return err
 				}
 				e.NewObject["modifiedat"] = t
+				e.ModSet = true
 
 				return nil
 			},
@@ -1255,6 +1267,8 @@ var OrderedSpecProps = []*Attribute{
 			getFn:     nil,
 			checkFn:   nil,
 			updateFn: func(e *Entity) error {
+				// TODO really should call Resource.EnsureLatest here
+
 				// Make sure it has a value, if not copy from existing
 				xRef := e.NewObject["xref"]
 				PanicIf(xRef == "", "xref is ''")

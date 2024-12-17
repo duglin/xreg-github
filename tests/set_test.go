@@ -126,7 +126,7 @@ func TestSetDots(t *testing.T) {
 	reg := NewRegistry("TestSetDots")
 	defer PassDeleteReg(t, reg)
 
-	reg.Commit()
+	reg.SaveAllAndCommit()
 	reg.Refresh()
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
@@ -136,7 +136,7 @@ func TestSetDots(t *testing.T) {
 	dir, _ := reg.AddGroup("dirs", "d1")
 	labels := NewPP().P("labels")
 
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
 	dir.Refresh()
 
 	err := dir.SetSave(labels.UI(), "xxx")
@@ -206,7 +206,7 @@ func TestSetDots(t *testing.T) {
 func TestSetLabels(t *testing.T) {
 	reg := NewRegistry("TestSetLabels")
 	defer PassDeleteReg(t, reg)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 	reg.Refresh()
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
@@ -217,7 +217,7 @@ func TestSetLabels(t *testing.T) {
 	ver, _ := file.FindVersion("v1", false)
 	ver2, _ := file.AddVersion("v2")
 
-	reg.Commit()
+	reg.SaveAllAndCommit()
 	reg.Refresh()
 	dir.Refresh()
 	file.Refresh()

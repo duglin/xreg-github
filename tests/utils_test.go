@@ -60,7 +60,7 @@ func NewRegistry(name string, opts ...registry.RegOpt) *registry.Registry {
 	reg, _ := registry.FindRegistry(nil, name)
 	if reg != nil {
 		reg.Delete()
-		reg.Commit()
+		reg.SaveAllAndCommit()
 	}
 
 	reg, err = registry.NewRegistry(nil, name, opts...)
@@ -68,7 +68,8 @@ func NewRegistry(name string, opts ...registry.RegOpt) *registry.Registry {
 		fmt.Fprintf(os.Stderr, "Error creating registry %q: %s", name, err)
 		os.Exit(1)
 	}
-	reg.Commit()
+
+	reg.SaveAllAndCommit()
 
 	registry.DefaultRegDbSID = reg.DbSID
 
@@ -95,7 +96,7 @@ func PassDeleteReg(t *testing.T, reg *registry.Registry) {
 		}
 		registry.DefaultRegDbSID = ""
 	}
-	reg.Commit() // should this be Rollback() ?
+	reg.SaveAllAndCommit() // should this be Rollback() ?
 }
 
 func Caller() string {
@@ -165,7 +166,11 @@ func xNoErr(t *testing.T, err error) {
 
 func xCheckGet(t *testing.T, reg *registry.Registry, url string, expected string) {
 	t.Helper()
-	xNoErr(t, reg.Commit())
+	xNoErr(t, reg.SaveAllAndCommit())
+
+	if len(url) > 0 {
+		url = strings.TrimLeft(url, "/")
+	}
 
 	res, err := http.Get("http://localhost:8181/" + url)
 	xNoErr(t, err)

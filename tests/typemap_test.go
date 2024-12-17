@@ -8,7 +8,6 @@ import (
 func TestTypeMap(t *testing.T) {
 	reg := NewRegistry("TestTypeMap")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)

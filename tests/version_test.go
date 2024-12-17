@@ -10,7 +10,6 @@ import (
 func TestCreateVersion(t *testing.T) {
 	reg := NewRegistry("TestCreateVersion")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -199,7 +198,6 @@ func TestCreateVersion(t *testing.T) {
 func TestDefaultVersion(t *testing.T) {
 	reg := NewRegistry("TestDefaultVersion")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
@@ -475,7 +473,6 @@ func TestDefaultVersion(t *testing.T) {
 func TestDefaultVersionMaxVersions(t *testing.T) {
 	reg := NewRegistry("TestDefaultVersionMaxVersions")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 3, true, true, true)
@@ -624,7 +621,7 @@ func TestVersionRequiredFields(t *testing.T) {
 	f1, err := group.AddResourceWithObject("files", "f1", "v1",
 		registry.Object{"clireq": "test"}, false, false)
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	_, err = f1.AddVersion("v2")
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
@@ -633,7 +630,7 @@ func TestVersionRequiredFields(t *testing.T) {
 
 	v1, _, err := f1.UpsertVersionWithObject("v2", registry.Object{"clireq": "test"}, registry.ADD_ADD)
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	err = v1.SetSave("clireq", nil)
 	xCheckErr(t, err, "Required property \"clireq\" is missing")
@@ -647,7 +644,6 @@ func TestVersionOrdering(t *testing.T) {
 	// case insensitive "ID"s (smallest == oldest)
 	reg := NewRegistry("TestVersionOrdering")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, false)
@@ -676,11 +672,11 @@ func TestVersionOrdering(t *testing.T) {
 	  }
     }`, 200, `--{
   "fileid": "f1",
-  "versionid": "v5",
+  "versionid": "V1",
   "self": "http://localhost:8181/dirs/d1/files/f1",
   "epoch": 2,
   "isdefault": true,
-  "createdat": "`+t1+`",
+  "createdat": "`+t9+`",
   "modifiedat": "`+t2+`",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -688,7 +684,7 @@ func TestVersionOrdering(t *testing.T) {
   "versionscount": 7
 }
 `)
-	ids := []string{"v5", "V1", "z5", "Z1", "v9", "v2", "V3"}
+	ids := []string{"V1", "z5", "Z1", "v9", "v5", "v2", "V3"}
 
 	for i, id := range ids {
 		xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1/versions/"+id, ``, 204, ``)
@@ -697,9 +693,6 @@ func TestVersionOrdering(t *testing.T) {
 		}
 
 		ct := t1
-		if id == "v5" {
-			ct = t9
-		}
 		if id == "v2" {
 			ct = t0
 		}
@@ -723,4 +716,83 @@ func TestVersionOrdering(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1", ``, 404, `Not found
 `)
 
+}
+
+func TestVersionOrdering2(t *testing.T) {
+	// Make sure that "latest" is based on "createdat" first and then
+	// case insensitive "ID"s (smallest == oldest)
+	reg := NewRegistry("TestVersionOrdering2")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, false)
+
+	ts1 := "2020-01-02T12:00:00Z"
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		// URL:        "/dirs/d1/files/f1/versions?setdefaultversionid=v5",
+		URL:        "/dirs/d1/files/f1?nested",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{  "versions": {
+				    "v1": { "createdat": "` + ts1 + `"},
+				    "v2": { "createdat": "` + ts1 + `"},
+				    "v3": { "createdat": "` + ts1 + `"},
+				    "v4": { "createdat": "` + ts1 + `"},
+				    "v5": { "createdat": "` + ts1 + `"}
+		}}`,
+
+		Code: 201,
+		ResBody: `{
+  "fileid": "f1",
+  "versionid": "v5",
+  "self": "http://localhost:8181/dirs/d1/files/f1",
+  "epoch": 1,
+  "isdefault": true,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 5
+}
+`})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/dirs/d1/files/f1/meta",
+		Method: "GET",
+		Code:   200,
+		ResBody: `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "epoch": 1,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+
+  "defaultversionid": "v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5"
+}
+`})
+
+	ts2 := "2024-02-02T12:00:00Z"
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:        "/dirs/d1/files/f1/versions/v3",
+		Method:     "PATCH",
+		ReqHeaders: []string{},
+		ReqBody: `{
+		    "createdat": "` + ts2 + `"
+		}`,
+
+		Code: 200,
+		ResBody: `{
+  "fileid": "f1",
+  "versionid": "v3",
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v3",
+  "epoch": 2,
+  "isdefault": true,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z"
+}
+`})
 }

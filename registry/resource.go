@@ -218,12 +218,12 @@ func (r *Resource) SetSaveDefault(name string, val any) error {
 	return v.SetSave(name, val)
 }
 
-func (r *Resource) Touch() error {
+func (r *Resource) Touch() {
 	meta, err := r.FindMeta(false)
 	if err != nil {
-		return err
+		panic(err.Error())
 	}
-	return meta.Touch()
+	meta.Touch()
 }
 
 func (r *Resource) FindMeta(anyCase bool) (*Meta, error) {
@@ -246,6 +246,7 @@ func (r *Resource) FindMeta(anyCase bool) (*Meta, error) {
 	}
 
 	m := &Meta{Entity: *ent, Resource: r}
+	m.Self = m
 	r.tx.AddMeta(m)
 	return m, nil
 }
@@ -271,6 +272,7 @@ func (r *Resource) FindVersion(id string, anyCase bool) (*Version, error) {
 	}
 
 	v := &Version{Entity: *ent, Resource: r}
+	v.Self = v
 	v.tx.AddVersion(v)
 	return v, nil
 }
@@ -297,6 +299,30 @@ func (r *Resource) GetNewest() (*Version, error) {
 		return r.FindVersion(vIDs[len(vIDs)-1], false)
 	}
 	return nil, nil
+}
+
+func (r *Resource) EnsureLatest() error {
+	meta, err := r.FindMeta(false)
+	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
+
+	// If it's sticky, just exit. Nothing to check
+	if meta.Get("defaultversionsticky") == true {
+		return nil
+	}
+
+	vIDs, err := r.GetVersionIDs()
+	Must(err)
+	PanicIf(len(vIDs) == 0, "No versions")
+
+	newDefault := vIDs[len(vIDs)-1]
+
+	currentDefault := meta.GetAsString("defaultversionid")
+	if currentDefault == newDefault {
+		// Already set
+		return nil
+	}
+
+	return meta.SetSave("defaultversionid", newDefault)
 }
 
 // Note will set sticky if vID != ""
@@ -418,6 +444,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 			},
 			Resource: r,
 		}
+		meta.Self = meta
 
 		err = DoOne(r.tx, `
         INSERT INTO Metas(SID, RegistrySID, ResourceSID, Path, Abstract)
@@ -521,10 +548,6 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 					return nil, false, err
 				}
 			*/
-
-			if err = meta.ValidateAndSave(); err != nil {
-				return nil, false, err
-			}
 		} else {
 			// Clear all existing attributes except ID
 			meta.JustSet("#epoch", meta.Object["epoch"])
@@ -684,6 +707,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 			},
 			Resource: r,
 		}
+		v.Self = v
 
 		err = DoOne(r.tx, `
         INSERT INTO Versions(SID, UID, RegistrySID, ResourceSID, Path, Abstract)
@@ -731,12 +755,24 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		}
 	}
 
+	_, touchedTS := v.NewObject["createdat"]
+
 	// Make sure we always have an ID
 	if IsNil(v.NewObject["versionid"]) {
 		v.NewObject["versionid"] = id
 	}
 
 	if err = v.ValidateAndSave(); err != nil {
+		return nil, false, err
+	}
+
+	if touchedTS {
+		if err = r.EnsureLatest(); err != nil {
+			return nil, false, err
+		}
+	}
+
+	if err = meta.ValidateAndSave(); err != nil {
 		return nil, false, err
 	}
 
@@ -844,9 +880,7 @@ func (r *Resource) Delete() error {
 		return err
 	}
 
-	if err = r.Group.Touch(); err != nil {
-		return err
-	}
+	r.Group.Touch()
 
 	return DoOne(r.tx, `DELETE FROM Resources WHERE SID=?`, r.DbSID)
 }
@@ -871,6 +905,7 @@ func (r *Resource) GetVersions() ([]*Version, error) {
 		v := r.tx.GetVersion(r, e.UID)
 		if v == nil {
 			v = &Version{Entity: *e, Resource: r}
+			v.Self = v
 			v.tx.AddVersion(v)
 		}
 		list = append(list, v)

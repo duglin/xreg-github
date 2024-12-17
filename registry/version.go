@@ -37,9 +37,7 @@ func (v *Version) Delete() error {
 // "defaultversionid" manipulation.
 // Used when xref on the Resource is set.
 func (v *Version) JustDelete() error {
-	if err := v.Resource.Touch(); err != nil {
-		return err
-	}
+	v.Resource.Touch()
 
 	// Zero is ok if it's already been deleted
 	err := DoZeroOne(v.tx, `DELETE FROM Versions WHERE SID=?`, v.DbSID)

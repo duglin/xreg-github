@@ -9,13 +9,12 @@ import (
 func TestMultiReg(t *testing.T) {
 	reg := NewRegistry("TestMultiReg")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "can't create reg")
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	xNoErr(t, err)
 	_, err = gm.AddResourceModel("files", "file", 0, true, true, true)
 	xNoErr(t, err)
-	reg.Commit()
+	reg.SaveAllAndCommit()
 
 	reg2, err := registry.NewRegistry(nil, "reg2")
 	defer PassDeleteReg(t, reg2)
@@ -25,7 +24,7 @@ func TestMultiReg(t *testing.T) {
 	_, err = gm.AddResourceModel("reg2_files", "reg2_file", 0, true, true,
 		true)
 	xNoErr(t, err)
-	reg2.Commit()
+	reg2.SaveAllAndCommit()
 
 	// reg
 	xHTTP(t, reg, "GET", "/", "", 200, `{

@@ -1217,7 +1217,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	// a version and will return that back to the client
 
 	if len(info.Parts) == 3 {
-		// POST GROUPs/gID/RESOURCEs$structure + body:map[id]Resource
+		// POST GROUPs/gID/RESOURCEs + body:map[id]Resource
 
 		objMap, err := IncomingObj2Map(IncomingObj)
 		if err != nil {
@@ -2161,9 +2161,9 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 				return fmt.Errorf(`Epoch value for %q must be a uinteger`,
 					id)
 			}
-			if tmpInt != group.Get("epoch") {
+			if tmpInt != version.Get("epoch") {
 				return fmt.Errorf(`Epoch value for %q must be %d not %d`,
-					id, group.Get("epoch"), tmpInt)
+					id, version.Get("epoch"), tmpInt)
 			}
 		}
 
