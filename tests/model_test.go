@@ -515,10 +515,6 @@ func TestGroupModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -635,10 +631,6 @@ func TestGroupModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -754,10 +746,6 @@ func TestGroupModelCreate(t *testing.T) {
           "item": {
             "type": "string"
           }
-        },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
         },
         "createdat": {
           "name": "createdat",
@@ -933,10 +921,6 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -1003,10 +987,6 @@ func TestResourceModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -1115,10 +1095,6 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -1185,10 +1161,6 @@ func TestResourceModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -1362,10 +1334,6 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -1432,10 +1400,6 @@ func TestResourceModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -1543,10 +1507,6 @@ func TestResourceModelCreate(t *testing.T) {
           "item": {
             "type": "string"
           }
-        },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
         },
         "createdat": {
           "name": "createdat",
@@ -1664,10 +1624,6 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -1734,10 +1690,6 @@ func TestResourceModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -1845,10 +1797,6 @@ func TestResourceModelCreate(t *testing.T) {
           "item": {
             "type": "string"
           }
-        },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
         },
         "createdat": {
           "name": "createdat",
@@ -1967,10 +1915,6 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -2037,10 +1981,6 @@ func TestResourceModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -2213,10 +2153,6 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -2283,10 +2219,6 @@ func TestResourceModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -2489,10 +2421,6 @@ func TestResourceModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -2559,10 +2487,6 @@ func TestResourceModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -2767,10 +2691,6 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string"
             }
           },
-          "origin": {
-            "name": "origin",
-            "type": "uri"
-          },
           "createdat": {
             "name": "createdat",
             "type": "timestamp",
@@ -2837,10 +2757,6 @@ func TestResourceModelCreate(t *testing.T) {
                 "item": {
                   "type": "string"
                 }
-              },
-              "origin": {
-                "name": "origin",
-                "type": "uri"
               },
               "createdat": {
                 "name": "createdat",
@@ -3071,10 +2987,6 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string"
             }
           },
-          "origin": {
-            "name": "origin",
-            "type": "uri"
-          },
           "createdat": {
             "name": "createdat",
             "type": "timestamp",
@@ -3141,10 +3053,6 @@ func TestResourceModelCreate(t *testing.T) {
                 "item": {
                   "type": "string"
                 }
-              },
-              "origin": {
-                "name": "origin",
-                "type": "uri"
               },
               "createdat": {
                 "name": "createdat",
@@ -3350,10 +3258,6 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "string"
             }
           },
-          "origin": {
-            "name": "origin",
-            "type": "uri"
-          },
           "createdat": {
             "name": "createdat",
             "type": "timestamp",
@@ -3498,10 +3402,6 @@ func TestResourceModelCreate(t *testing.T) {
             "item": {
               "type": "string"
             }
-          },
-          "origin": {
-            "name": "origin",
-            "type": "uri"
           },
           "createdat": {
             "name": "createdat",
@@ -3648,10 +3548,6 @@ func TestMultModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -3718,10 +3614,6 @@ func TestMultModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -3843,10 +3735,6 @@ func TestMultModelCreate(t *testing.T) {
                 "type": "string"
               }
             },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
-            },
             "createdat": {
               "name": "createdat",
               "type": "timestamp",
@@ -3954,10 +3842,6 @@ func TestMultModelCreate(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -4024,10 +3908,6 @@ func TestMultModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -4148,10 +4028,6 @@ func TestMultModelCreate(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -4375,10 +4251,6 @@ func TestMultModel2Create(t *testing.T) {
               "type": "string"
             }
           },
-          "origin": {
-            "name": "origin",
-            "type": "uri"
-          },
           "createdat": {
             "name": "createdat",
             "type": "timestamp",
@@ -4445,10 +4317,6 @@ func TestMultModel2Create(t *testing.T) {
                 "item": {
                   "type": "string"
                 }
-              },
-              "origin": {
-                "name": "origin",
-                "type": "uri"
               },
               "createdat": {
                 "name": "createdat",
@@ -4557,10 +4425,6 @@ func TestMultModel2Create(t *testing.T) {
               "type": "string"
             }
           },
-          "origin": {
-            "name": "origin",
-            "type": "uri"
-          },
           "createdat": {
             "name": "createdat",
             "type": "timestamp",
@@ -4627,10 +4491,6 @@ func TestMultModel2Create(t *testing.T) {
                 "item": {
                   "type": "string"
                 }
-              },
-              "origin": {
-                "name": "origin",
-                "type": "uri"
               },
               "createdat": {
                 "name": "createdat",

@@ -1112,18 +1112,6 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "origin",
-		Type: URI,
-
-		internals: AttrInternals{
-			types:     StrTypes(ENTITY_GROUP, ENTITY_VERSION),
-			dontStore: false,
-			getFn:     nil,
-			checkFn:   nil,
-			updateFn:  nil,
-		},
-	},
-	{
 		Name:           "createdat",
 		Type:           TIMESTAMP,
 		ServerRequired: true,

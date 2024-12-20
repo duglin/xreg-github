@@ -419,7 +419,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 		if info.Parts[4] == "meta" {
 			if len(info.Parts) > 5 {
 				// GROUPs/gID/RESOURCEs/rID/meta/???
-				info.StatusCode = http.StatusBadRequest
+				info.StatusCode = http.StatusNotFound
 				return fmt.Errorf("URL is too long")
 			}
 
@@ -458,6 +458,6 @@ func (info *RequestInfo) ParseRequestURL() error {
 		return nil
 	}
 
-	info.StatusCode = http.StatusBadRequest
+	info.StatusCode = http.StatusNotFound
 	return fmt.Errorf("URL is too long")
 }

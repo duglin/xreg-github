@@ -84,7 +84,7 @@ func TestMetaSimple(t *testing.T) {
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/dirs/d1/files/f11/meta/xxx",
 		Method: "PUT",
-		Code:   400,
+		Code:   404,
 		ResBody: `URL is too long
 `,
 	})
@@ -93,7 +93,7 @@ func TestMetaSimple(t *testing.T) {
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/dirs/d1/files/f11/meta/xxx",
 		Method: "POST",
-		Code:   400,
+		Code:   404,
 		ResBody: `URL is too long
 `,
 	})
@@ -102,7 +102,7 @@ func TestMetaSimple(t *testing.T) {
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/dirs/d1/files/f11/meta/xxx",
 		Method: "PATCH",
-		Code:   400,
+		Code:   404,
 		ResBody: `URL is too long
 `,
 	})

@@ -679,10 +679,6 @@ func TestHTTPModel(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -749,10 +745,6 @@ func TestHTTPModel(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -956,10 +948,6 @@ func TestHTTPModel(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -1026,10 +1014,6 @@ func TestHTTPModel(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -1236,10 +1220,6 @@ func TestHTTPModel(t *testing.T) {
             "type": "string"
           }
         },
-        "origin": {
-          "name": "origin",
-          "type": "uri"
-        },
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
@@ -1306,10 +1286,6 @@ func TestHTTPModel(t *testing.T) {
               "item": {
                 "type": "string"
               }
-            },
-            "origin": {
-              "name": "origin",
-              "type": "uri"
             },
             "createdat": {
               "name": "createdat",
@@ -2650,7 +2626,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
 			"xRegistry-labels-l3: null",
-			"xRegistry-origin: foo.com",
 		},
 		ReqBody:     "My cool doc",
 		Code:        201,
@@ -2667,7 +2642,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -2700,7 +2674,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -2763,7 +2736,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-fileurl: http://example.com",
@@ -2811,7 +2783,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -2841,7 +2812,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -2872,7 +2842,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: v1",
 			"xRegistry-labels-l2: 5",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -2904,7 +2873,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l1: l1l1",
 			"xRegistry-labels-l4: 4444",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -2934,7 +2902,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-isdefault: true",
 			"xRegistry-documentation: my doc url",
 			"xRegistry-labels-l3: 3333",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -2963,7 +2930,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-name: my doc",
 			"xRegistry-isdefault: true",
 			"xRegistry-documentation: my doc url",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -3000,7 +2966,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-labels-foo-bar: l-foo-bar",
 			"xRegistry-labels-foo_bar: l-foo_bar",
 			"xRegistry-labels-foo.bar: l-foo.bar",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -3039,7 +3004,6 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-labels-foo-bar: l-foo-bar",
 			"xRegistry-labels-foo_bar: l-foo_bar",
 			"xRegistry-labels-foo.bar: l-foo.bar",
-			"xRegistry-origin: foo.com",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:02Z",
 			"xRegistry-metaurl: http://localhost:8181/dirs/dir1/files/f3/meta",
@@ -11488,7 +11452,7 @@ func TestHTTPmeta(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/$structure", `{}`, 400,
 		`Version id in URL can't be blank
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1/$structure", `{}`, 400,
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1/$structure", `{}`, 404,
 		`URL is too long
 `)
 }
