@@ -150,6 +150,10 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 
 	buf.WriteString("{")
 	for _, specProp := range OrderedSpecProps {
+		if specProp.Name[0] == '$' {
+			continue
+		}
+
 		if eType >= 0 && !specProp.InType(eType) {
 			// log.Printf("Skipping: %s  L: %d", specProp.Name, eType)
 			// continue
@@ -170,7 +174,7 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 
 			// We need to exclude "model" because we don't want to show the
 			// end user "model" as a valid attribute in the model.
-			if name == "model" {
+			if name == "model" || name == "capabilities" {
 				continue
 			}
 
@@ -1473,6 +1477,10 @@ func (m *Model) Verify() error {
 			continue
 		}
 
+		if specProp.Name[0] == '$' {
+			continue
+		}
+
 		if specProp.Name == "id" {
 			specProp = specProp.Clone("registryid")
 		} else {
@@ -1519,13 +1527,16 @@ func (m *Model) GetBaseAttributes() Attributes {
 
 	// Add xReg defined attributes
 	// TODO Check for conflicts
-	/*
-	   for _, specProp := range OrderedSpecProps {
-	       if specProp.InType(eType) {
-	           attrs[specProp.Name] = specProp
-	       }
-	   }
-	*/
+	for _, specProp := range OrderedSpecProps {
+		if specProp.Name == "id" {
+			// Skip "id"
+			continue
+		}
+
+		if specProp.InType(ENTITY_REGISTRY) && IsNil(attrs[specProp.Name]) {
+			attrs[specProp.Name] = specProp
+		}
+	}
 
 	return attrs
 }
@@ -1555,6 +1566,10 @@ func (gm *GroupModel) Verify(gmName string) error {
 	}
 
 	for _, specProp := range OrderedSpecProps {
+		if specProp.Name[0] == '$' {
+			continue
+		}
+
 		// If it's not a Group level attribute, then skip it
 		if !specProp.InType(ENTITY_GROUP) {
 			continue
@@ -1623,13 +1638,17 @@ func (gm *GroupModel) GetBaseAttributes() Attributes {
 
 	// Add xReg defined attributes
 	// TODO Check for conflicts
-	/*
-	   for _, specProp := range OrderedSpecProps {
-	       if specProp.InType(eType) {
-	           attrs[specProp.Name] = specProp
-	       }
-	   }
-	*/
+	for _, specProp := range OrderedSpecProps {
+		if specProp.Name == "id" {
+			// Skip "id"
+			continue
+		}
+
+		if specProp.InType(ENTITY_GROUP) && IsNil(attrs[specProp.Name]) {
+			attrs[specProp.Name] = specProp
+		}
+	}
+
 	return attrs
 }
 
@@ -1664,6 +1683,10 @@ func (rm *ResourceModel) Verify(rmName string) error {
 	}
 
 	for _, specProp := range OrderedSpecProps {
+		if specProp.Name[0] == '$' {
+			continue
+		}
+
 		if specProp.Name == "id" {
 			specProp = specProp.Clone(rm.Singular + "id")
 		}
@@ -1810,13 +1833,16 @@ func (rm *ResourceModel) GetBaseMetaAttributes() Attributes {
 
 	// Add xReg defined attributes
 	// TODO Check for conflicts
-	/*
-	   for _, specProp := range OrderedSpecProps {
-	       if specProp.InType(eType) {
-	           attrs[specProp.Name] = specProp
-	       }
-	   }
-	*/
+	for _, specProp := range OrderedSpecProps {
+		if specProp.Name == "id" {
+			// Skip "id"
+			continue
+		}
+
+		if specProp.InType(ENTITY_META) && IsNil(attrs[specProp.Name]) {
+			attrs[specProp.Name] = specProp
+		}
+	}
 
 	return attrs
 }

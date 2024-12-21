@@ -1224,6 +1224,24 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
+		Name: "$extensions",
+		internals: AttrInternals{
+			types: "",
+		},
+	},
+	{
+		Name: "$space",
+		internals: AttrInternals{
+			types: "",
+		},
+	},
+	{
+		Name: "$resource",
+		internals: AttrInternals{
+			types: StrTypes(ENTITY_RESOURCE),
+		},
+	},
+	{
 		Name:           "metaurl",
 		Type:           URL,
 		ReadOnly:       true,
@@ -1241,6 +1259,12 @@ var OrderedSpecProps = []*Attribute{
 			},
 			checkFn:  nil,
 			updateFn: nil,
+		},
+	},
+	{
+		Name: "$space",
+		internals: AttrInternals{
+			types: "",
 		},
 	},
 	{
@@ -1329,6 +1353,38 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
+		Name: "$space",
+		internals: AttrInternals{
+			types: "",
+		},
+	},
+	{
+		Name:     "capabilities",
+		Type:     OBJECT,
+		ReadOnly: true,
+		Attributes: Attributes{
+			"*": &Attribute{
+				Name: "*",
+				Type: ANY,
+			},
+		},
+
+		internals: AttrInternals{
+			types:     StrTypes(ENTITY_REGISTRY),
+			dontStore: false,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				// Need to explicitly ask for "capabilities", ?inline=* won't
+				// do it
+				if info != nil && info.ShouldInline(NewPPP("capabilities").DB()) {
+					return e.Registry.Capabilities
+				}
+				return nil
+			},
+			checkFn:  nil,
+			updateFn: nil,
+		},
+	},
+	{
 		Name:     "model",
 		Type:     OBJECT,
 		ReadOnly: true,
@@ -1343,7 +1399,7 @@ var OrderedSpecProps = []*Attribute{
 			types:     StrTypes(ENTITY_REGISTRY),
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
-				// They need to explicitly ask for "model", ?inline=* won't
+				// Need to explicitly ask for "model", ?inline=* won't
 				// do it
 				if info != nil && info.ShouldInline(NewPPP("model").DB()) {
 					model := info.Registry.Model
@@ -1410,10 +1466,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 			continue // not allowed at this eType so skip it
 		}
 
-		// Before metaurl/defaultversionid attrs, add extensions & RESOURCE*
-		if (e.Type == ENTITY_RESOURCE && prop.Name == "metaurl") ||
-			(e.Type == ENTITY_META && prop.Name == "defaultversionid") {
-
+		if prop.Name == "$extensions" {
 			for _, objKey := range SortedKeys(daObj) {
 				attrKey := objKey
 				if attrKey == e.Singular+"id" {
@@ -1438,6 +1491,14 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 					return err
 				}
 			}
+			continue
+		}
+
+		if name[0] == '$' {
+			if err := fn(e, info, name, nil, attr); err != nil {
+				return err
+			}
+			continue
 		}
 
 		// Should be a no-op for Resources.

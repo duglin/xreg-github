@@ -38,12 +38,15 @@ type RequestInfo struct {
 	extras map[string]any
 }
 
+var explicitInlines = []string{"capabilities", "model"}
+var nonModelInlines = append([]string{"*"}, explicitInlines...)
+
 func (info *RequestInfo) AddInline(path string) error {
 	// use "*" to inline all
 	// path = strings.TrimLeft(path, "/.") // To be nice
 
-	if path == "*" {
-		info.Inlines = append(info.Inlines, "*")
+	if ArrayContains(nonModelInlines, path) {
+		info.Inlines = append(info.Inlines, path)
 		return nil
 	}
 
@@ -53,12 +56,6 @@ func (info *RequestInfo) AddInline(path string) error {
 	}
 
 	// Check to make sure the requested inline attribute exists, else error
-
-	// Allow .model
-	if pp.Equals(NewPPP("model")) {
-		info.Inlines = append(info.Inlines, NewPPP("model").DB())
-		return nil
-	}
 
 	for _, group := range info.Registry.Model.Groups {
 		if pp.Equals(NewPPP(group.Plural)) {
@@ -107,7 +104,7 @@ func (info *RequestInfo) ShouldInline(entityPath string) bool {
 		iPP, _ := PropPathFromDB(path) // Inline-PP
 		// * doesn't include "model" because it's special, they need to
 		// be explicit if they want to include it
-		if (iPP.Top() == "*" && ePP.Top() != "model") || ePP.Equals(iPP) || iPP.HasPrefix(ePP) {
+		if (iPP.Top() == "*" && !ArrayContains(explicitInlines, ePP.UI())) || ePP.Equals(iPP) || iPP.HasPrefix(ePP) {
 			log.VPrintf(4, "Inline match: %q in %q", entityPath, path)
 			return true
 		}
@@ -308,7 +305,7 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /???
-	if len(info.Parts) > 0 && info.Parts[0] == "model" {
+	if len(info.Parts) > 0 && info.Parts[0] == "model" || info.Parts[0] == "capabilities" {
 		return nil
 	}
 

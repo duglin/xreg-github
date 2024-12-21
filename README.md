@@ -113,7 +113,7 @@ TODOs:
   - make sure we support them as http headers too
 - support createdat and modifiedat as http headers
 - make sure we don't let go http add "content-type" header for docs w/o a value
-- add support for PUT / to update the model
+- add support for PUT / to update the model and capabilities
 - add model tests for typemap - just that we can set via full model updates
 - support the DB vanishing for a while
 - create an UpdateDefaultVersion func in resource.go to move it from http logic

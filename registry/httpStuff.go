@@ -340,7 +340,7 @@ func (pw *PageWriter) Done() {
 
 	inlineOptions := []string{}
 	if len(pw.Info.Parts) == 0 {
-		inlineOptions = GetModelInlines(pw.Info.Registry.Model)
+		inlineOptions = GetRegistryModelInlines(pw.Info.Registry.Model)
 	} else if len(pw.Info.Parts) <= 2 {
 		inlineOptions = GetGroupModelInlines(pw.Info.GroupModel)
 	} else if len(pw.Info.Parts) <= 4 {
@@ -594,7 +594,7 @@ function apply() {
 	pw.OldWriter.Done()
 }
 
-func GetModelInlines(m *Model) []string {
+func GetRegistryModelInlines(m *Model) []string {
 	res := []string{}
 
 	for _, gm := range m.Groups {
@@ -640,6 +640,23 @@ func GetResourceModelInlines(rm *ResourceModel) []string {
 
 func GetVersionModelInlines(rm *ResourceModel) []string {
 	return []string{rm.Singular}
+}
+
+func HTTPGETCapabilities(info *RequestInfo) error {
+	if len(info.Parts) > 1 {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Not found")
+	}
+
+	buf, err := json.MarshalIndent(info.Registry.Capabilities, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	info.AddHeader("Content-Type", "application/json")
+	info.Write(buf)
+	info.Write([]byte("\n"))
+	return nil
 }
 
 func HTTPGETModel(info *RequestInfo) error {
@@ -891,6 +908,10 @@ func HTTPGet(info *RequestInfo) error {
 		return HTTPGETModel(info)
 	}
 
+	if len(info.Parts) > 0 && info.Parts[0] == "capabilities" {
+		return HTTPGETCapabilities(info)
+	}
+
 	// 'metaInBody' tells us whether xReg metadata should be in the http
 	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
@@ -1005,6 +1026,11 @@ func HTTPPutPost(info *RequestInfo) error {
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
 
 	info.Root = strings.Trim(info.Root, "/")
+
+	// Capabilities has its own special func
+	if len(info.Parts) > 0 && info.Parts[0] == "capabilities" {
+		return HTTPPUTCapabilities(info)
+	}
 
 	// The model has its own special func
 	if len(info.Parts) > 0 && info.Parts[0] == "model" {
@@ -1632,6 +1658,35 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	return SerializeQuery(info, paths, what, nil)
+}
+
+func HTTPPUTCapabilities(info *RequestInfo) error {
+	if len(info.Parts) > 1 {
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Not found")
+	}
+
+	reqBody, err := io.ReadAll(info.OriginalRequest.Body)
+	if err != nil {
+		info.StatusCode = http.StatusInternalServerError
+		return err
+	}
+
+	cap, err := ParseCapabilitiesJSON(reqBody)
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return err
+	}
+
+	err = cap.Validate()
+	if err != nil {
+		info.StatusCode = http.StatusBadRequest
+		return err
+	}
+
+	// TODO: SAVE IT
+
+	return HTTPGETCapabilities(info)
 }
 
 func HTTPPUTModel(info *RequestInfo) error {

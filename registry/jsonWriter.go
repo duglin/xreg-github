@@ -166,6 +166,7 @@ func (jw *JsonWriter) WriteEntity() error {
 	extra := "" // stuff to go at end of line during next print - eg: ,
 	myType := jw.Entity.Type
 	myAbstract := jw.Entity.Abstract
+	addSpace := false // Add space before next attribute?
 
 	if log.GetVerbose() > 3 {
 		log.VPrintf(0, "eType: %d", myType)
@@ -178,27 +179,24 @@ func (jw *JsonWriter) WriteEntity() error {
 	jw.Indent()
 
 	jsonIt := func(e *Entity, info *RequestInfo, key string, val any, attr *Attribute) error {
+		if key == "$space" {
+			addSpace = true
+			return nil
+		}
+
 		if key[0] == '#' {
 			// Skip all other internal attributes
 			return nil
 		}
 
-		// Hate it but do it anyway
-		if e.Type == ENTITY_RESOURCE && key == "metaurl" {
-			err := SerializeResourceContents(jw, e, info, &extra)
-			if err != nil {
-				return err
-			}
-
-			// Add space before "metaurl"
-			jw.Printf("%s\n", extra)
-			extra = ""
+		if key == "$resource" {
+			return SerializeResourceContents(jw, jw.Entity, jw.info, &extra)
 		}
 
-		if e.Type == ENTITY_META && key == "defaultversionid" {
-			// Add space before "defaultversionid"
+		if addSpace {
 			jw.Printf("%s\n", extra)
 			extra = ""
+			addSpace = false
 		}
 
 		buf, _ := json.MarshalIndent(val, jw.indent, "  ")
@@ -210,15 +208,6 @@ func (jw *JsonWriter) WriteEntity() error {
 	err := jw.Entity.SerializeProps(jw.info, jsonIt)
 	if err != nil {
 		panic(err)
-	}
-
-	// Add resource content properties
-	// if myType == ENTITY_RESOURCE ||  // we do resources in "hate it" section
-	if myType == ENTITY_VERSION {
-		err = SerializeResourceContents(jw, jw.Entity, jw.info, &extra)
-		if err != nil {
-			return err
-		}
 	}
 
 	// Now show all of the nested collections

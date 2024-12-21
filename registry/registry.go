@@ -12,7 +12,8 @@ import (
 
 type Registry struct {
 	Entity
-	Model *Model
+	Capabilities *Capabilities
+	Model        *Model
 }
 
 var DefaultRegDbSID string
@@ -132,6 +133,7 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 	}
 	reg.Self = reg
 	reg.Entity.Registry = reg
+	reg.Capabilities = DefaultCapabilities
 	reg.Model = &Model{
 		Registry: reg,
 		Schemas:  []string{XREGSCHEMA + "/" + SPECVERSION},
@@ -249,6 +251,7 @@ func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
 		tx.Registry = reg
 	}
 	reg.Entity.Registry = reg
+	reg.Capabilities = DefaultCapabilities
 	reg.tx = tx
 
 	reg.tx.AddRegistry(reg)
@@ -329,6 +332,7 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	}
 
 	reg.Entity.Registry = reg
+	reg.Capabilities = DefaultCapabilities
 	reg.tx = tx
 
 	reg.tx.AddRegistry(reg)

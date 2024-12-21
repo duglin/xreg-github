@@ -782,3 +782,12 @@ func NormalizeStrTime(str string) (string, error) {
 	str = t.Format(time.RFC3339Nano)
 	return str, nil
 }
+
+func ArrayContains(strs []string, needle string) bool {
+	for _, s := range strs {
+		if needle == s {
+			return true
+		}
+	}
+	return false
+}

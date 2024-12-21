@@ -274,6 +274,7 @@ func TestHTTPModel(t *testing.T) {
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
   "model": {
     "schemas": [
       "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"

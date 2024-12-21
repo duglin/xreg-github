@@ -79,6 +79,7 @@ func TestNoModel(t *testing.T) {
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -2587,6 +2588,7 @@ func TestResourceModelCreate(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -2887,6 +2889,7 @@ func TestResourceModelCreate(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -3158,6 +3161,7 @@ func TestResourceModelCreate(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -3303,6 +3307,7 @@ func TestResourceModelCreate(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
@@ -4151,6 +4156,7 @@ func TestMultModel2Create(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+
   "model": {
     "schemas": [
       "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
