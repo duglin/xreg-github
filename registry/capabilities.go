@@ -2,11 +2,11 @@ package registry
 
 import (
 	"fmt"
-	log "github.com/duglin/dlog"
-	// "reflect"
 	"slices"
 	"sort"
 	"strings"
+
+	log "github.com/duglin/dlog"
 )
 
 type Capabilities struct {
@@ -144,50 +144,12 @@ func ParseCapabilitiesJSON(buf []byte) (*Capabilities, error) {
 	err := Unmarshal(buf, &cap)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "unknown field ") {
-			return nil, fmt.Errorf("Unknown capability: %s",
-				err.Error()[14:])
+			err = fmt.Errorf("Unknown capability: %s", err.Error()[14:])
 		}
 		return nil, err
 	}
 	return &cap, nil
-
-	/*
-	   tmpmap := map[string]any{}
-
-	   // check generial json syntax first
-
-	   	if err := Unmarshal(buf, &tmpmap); err != nil {
-	   		return nil, err
-	   	}
-
-	   // Look for unknown keys
-	   capValue := reflect.ValueOf(cap)
-
-	   	for key, _ := range tmpmap {
-	   		fieldVal := capValue.FieldByNameFunc(func(name string) bool {
-	   			return strings.ToLower(name) == key
-	   		})
-	   		if !fieldVal.IsValid() {
-	   			return nil, fmt.Errorf("Unknown capability: %s", key)
-	   		}
-	   	}
-
-	   // Now parse into 'cap'
-
-	   	if err := Unmarshal(buf, &cap); err != nil {
-	   		return nil, err
-	   	}
-
-	   return &cap, nil
-	*/
 }
-
-// Mutable         []string `json:"mutable,omitempty"`
-// Pagination      *bool    `json:"pagination,omitempty"`
-// QueryParameters []string `json:"queryparameters,omitempty"`
-// Schemas         []string `json:"schemas,omitempty"`
-// ShortSelf       *bool    `json:"shortself,omitempty"`
-// SpecVersions    []string `json:"specversions,omitempty"`
 
 func (c *Capabilities) MutableEnabled(str string) bool {
 	return ArrayContains(c.Mutable, strings.ToLower(str))

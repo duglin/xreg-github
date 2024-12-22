@@ -1140,7 +1140,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Return HTTP GET of Registry root
-		return SerializeQuery(info, []string{""}, "Registry", nil)
+		return SerializeQuery(info, []string{""}, "Registry", info.Filters)
 	}
 
 	// URL: /GROUPs[/gID]...
@@ -1183,7 +1183,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Return HTTP GET of Groups created or updated
-		return SerializeQuery(info, paths, "Coll", nil)
+		return SerializeQuery(info, paths, "Coll", info.Filters)
 	}
 
 	if len(info.Parts) == 2 {
@@ -1212,7 +1212,8 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Return HTTP GET of Group
-		return SerializeQuery(info, []string{group.Path}, "Entity", nil)
+		return SerializeQuery(info, []string{group.Path}, "Entity",
+			info.Filters)
 	}
 
 	// Must be PUT/POST /GROUPs/gID/...
@@ -1278,7 +1279,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Return HTTP GET of Resources created or modified
-		return SerializeQuery(info, paths, "Coll", nil)
+		return SerializeQuery(info, paths, "Coll", info.Filters)
 	}
 
 	if len(info.Parts) > 3 {
@@ -1441,7 +1442,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			info.StatusCode = http.StatusCreated
 		}
 
-		return SerializeQuery(info, []string{meta.Path}, "Entity", nil)
+		return SerializeQuery(info, []string{meta.Path}, "Entity", info.Filters)
 	}
 
 	// Just double-check
@@ -1552,7 +1553,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if len(paths) == 0 {
 			paths = []string{"!"} // Force an empty collection to be returned
 		}
-		return SerializeQuery(info, paths, "Coll", nil)
+		return SerializeQuery(info, paths, "Coll", info.Filters)
 	}
 
 	if len(info.Parts) == 6 {
@@ -1657,7 +1658,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		paths = []string{strings.Join(info.Parts, "/")}
 	}
 
-	return SerializeQuery(info, paths, what, nil)
+	return SerializeQuery(info, paths, what, info.Filters)
 }
 
 func HTTPPUTCapabilities(info *RequestInfo) error {
@@ -1806,7 +1807,7 @@ func HTTPSetDefaultVersionID(info *RequestInfo) error {
 		return err
 	}
 
-	return SerializeQuery(info, []string{resource.Path}, "Entity", nil)
+	return SerializeQuery(info, []string{resource.Path}, "Entity", info.Filters)
 }
 
 func HTTPDelete(info *RequestInfo) error {
@@ -2293,7 +2294,6 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 			body = []byte("{}") // Be forgiving
 		}
 
-		// err = json.Unmarshal(body, &IncomingObj)
 		err := Unmarshal(body, &IncomingObj)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest

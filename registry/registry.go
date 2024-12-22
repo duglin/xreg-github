@@ -251,12 +251,13 @@ func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
 		tx.Registry = reg
 	}
 	reg.Entity.Registry = reg
-	reg.Capabilities = DefaultCapabilities
 	reg.tx = tx
 
 	reg.tx.AddRegistry(reg)
 
+	reg.LoadCapabilities()
 	reg.LoadModel()
+
 	return reg, nil
 }
 
@@ -332,14 +333,30 @@ func FindRegistry(tx *Tx, id string) (*Registry, error) {
 	}
 
 	reg.Entity.Registry = reg
-	reg.Capabilities = DefaultCapabilities
 	reg.tx = tx
 
 	reg.tx.AddRegistry(reg)
 
+	reg.LoadCapabilities()
 	reg.LoadModel()
 
 	return reg, nil
+}
+
+func (reg *Registry) LoadCapabilities() *Capabilities {
+	capVal, ok := reg.Object["#capabilities"]
+	if !ok {
+		// No custom capabilities, use the default one
+		reg.Capabilities = DefaultCapabilities
+	} else {
+		// Custom capabilities
+		capStr, ok := capVal.(string)
+		PanicIf(!ok, "not a byte array: %T", capVal)
+		cap, err := ParseCapabilitiesJSON([]byte(capStr))
+		Must(err)
+		reg.Capabilities = cap
+	}
+	return reg.Capabilities
 }
 
 func (reg *Registry) LoadModel() *Model {

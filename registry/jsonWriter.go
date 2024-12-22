@@ -179,6 +179,7 @@ func (jw *JsonWriter) WriteEntity() error {
 	jw.Indent()
 
 	jsonIt := func(e *Entity, info *RequestInfo, key string, val any, attr *Attribute) error {
+		log.VPrintf(4, "jsonIt: %q", key)
 		if key == "$space" {
 			addSpace = true
 			return nil

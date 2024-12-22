@@ -1360,12 +1360,18 @@ var OrderedSpecProps = []*Attribute{
 	},
 	{
 		Name:     "capabilities",
-		Type:     STRING,
+		Type:     OBJECT, // This ensures the client sent a map
 		ReadOnly: false,
+		Attributes: Attributes{
+			"*": &Attribute{
+				Name: "*",
+				Type: ANY,
+			},
+		},
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_REGISTRY),
-			dontStore: false,
+			dontStore: true,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				// Need to explicitly ask for "capabilities", ?inline=* won't
 				// do it
@@ -1374,8 +1380,31 @@ var OrderedSpecProps = []*Attribute{
 				}
 				return nil
 			},
-			checkFn:  nil,
-			updateFn: nil,
+			checkFn: func(e *Entity) error {
+				// Yes it's weird to store it in #capabilities but
+				// it's actually easier to do it this way. Trying to covert
+				// map[string]any <-> Capabilities  is really annoying
+				val := e.NewObject["capabilities"]
+				if !IsNil(val) {
+					// Is speed is ever a concern here, just save the raw
+					// json from the input stream instead from http processing
+					valStr := ToJSON(val)
+					cap, err := ParseCapabilitiesJSON([]byte(valStr))
+					if err != nil {
+						return err
+					}
+					if err = cap.Validate(); err != nil {
+						return err
+					}
+					e.NewObject["#capabilities"] = valStr
+					delete(e.NewObject, "capabilities")
+					e.Registry.Capabilities = cap
+				}
+				return nil
+			},
+			updateFn: func(e *Entity) error {
+				return nil
+			},
 		},
 	},
 	{

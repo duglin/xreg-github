@@ -169,39 +169,39 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 	info.HasNested = r.URL.Query().Has("nested")
 
 	if r.URL.Query().Has("inline") {
-		// Only pick up inlining values if we're doing a GET, not write ops
-		if strings.EqualFold(r.Method, "GET") {
-			for _, value := range r.URL.Query()["inline"] {
-				for _, p := range strings.Split(value, ",") {
-					if p == "" || p == "*" {
-						p = "*"
-					} else {
-						// if we're not at the root then we need to twiddle
-						// the inline path to add the HTTP Path as a prefix
-						if info.Abstract != "" {
-							// want: p = info.Abstract + "." + p  in UI format
-							absPP, err := PropPathFromPath(info.Abstract)
-							if err != nil {
-								info.StatusCode = http.StatusBadRequest
-								return info, err
-							}
-							pPP, err := PropPathFromUI(p)
-							if err != nil {
-								info.StatusCode = http.StatusBadRequest
-								return info, err
-							}
-							p = absPP.Append(pPP).UI()
+		// OLD: Only pick up inlining values if we're doing a GET, not write ops
+		// if  strings.EqualFold(r.Method, "GET")
+		for _, value := range r.URL.Query()["inline"] {
+			for _, p := range strings.Split(value, ",") {
+				if p == "" || p == "*" {
+					p = "*"
+				} else {
+					// if we're not at the root then we need to twiddle
+					// the inline path to add the HTTP Path as a prefix
+					if info.Abstract != "" {
+						// want: p = info.Abstract + "." + p  in UI format
+						absPP, err := PropPathFromPath(info.Abstract)
+						if err != nil {
+							info.StatusCode = http.StatusBadRequest
+							return info, err
 						}
+						pPP, err := PropPathFromUI(p)
+						if err != nil {
+							info.StatusCode = http.StatusBadRequest
+							return info, err
+						}
+						p = absPP.Append(pPP).UI()
 					}
-					if err := info.AddInline(p); err != nil {
-						info.StatusCode = http.StatusBadRequest
-						return info, err
-					}
+				}
+				if err := info.AddInline(p); err != nil {
+					info.StatusCode = http.StatusBadRequest
+					return info, err
 				}
 			}
 		}
 	}
 
+	// if  strings.EqualFold(r.Method, "GET")
 	err = info.ParseFilters()
 	if err != nil {
 		info.StatusCode = http.StatusBadRequest
