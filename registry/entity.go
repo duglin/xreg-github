@@ -1360,14 +1360,8 @@ var OrderedSpecProps = []*Attribute{
 	},
 	{
 		Name:     "capabilities",
-		Type:     OBJECT,
-		ReadOnly: true,
-		Attributes: Attributes{
-			"*": &Attribute{
-				Name: "*",
-				Type: ANY,
-			},
-		},
+		Type:     STRING,
+		ReadOnly: false,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_REGISTRY),

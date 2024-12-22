@@ -258,12 +258,12 @@ SELECT
     sR.SID AS SourceSID,
     sR.Path AS SourcePath,
     sR.Abstract AS SourceAbstract,
-    sRM.Singular AS Singular,
+    mE.Singular AS Singular,
     tR.SID as TargetSID,
     tR.Path as TargetPath
 FROM Resources AS sR
 JOIN Metas AS sM ON (sM.ResourceSID=sR.SID)
-JOIN ModelEntities AS sRM ON (sRM.SID=sR.ModelSID)
+JOIN ModelEntities AS mE ON (mE.SID=sR.ModelSID)
 JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND
     tR.Path=(SELECT PropValue FROM Props WHERE
              EntitySID=sM.SID AND PropName='xref$DB_IN'));
@@ -312,28 +312,28 @@ FROM Registries AS r
 UNION SELECT                            # Gather Groups
     g.RegistrySID AS RegSID,
     $ENTITY_GROUP AS Type,
-    m.Plural AS Plural,
-    m.Singular AS Singular,
+    mE.Plural AS Plural,
+    mE.Singular AS Singular,
     g.RegistrySID AS ParentSID,
     g.SID AS eSID,
     g.UID AS UID,
     g.Abstract,
     g.Path
 FROM "Groups" AS g
-JOIN ModelEntities AS m ON (m.SID=g.ModelSID)
+JOIN ModelEntities AS mE ON (mE.SID=g.ModelSID)
 
 UNION SELECT                    # Add Resources
-    m.RegistrySID AS RegSID,
+    mE.RegistrySID AS RegSID,
     $ENTITY_RESOURCE AS Type,
-    m.Plural AS Plural,
-    m.Singular AS Singular,
+    mE.Plural AS Plural,
+    mE.Singular AS Singular,
     r.GroupSID AS ParentSID,
     r.SID AS eSID,
     r.UID AS UID,
     r.Abstract,
     r.Path
 FROM Resources AS r
-JOIN ModelEntities AS m ON (m.SID=r.ModelSID)
+JOIN ModelEntities AS mE ON (mE.SID=r.ModelSID)
 
 UNION SELECT                    # Add Metas
     metas.RegistrySID AS RegSID,
@@ -363,42 +363,42 @@ FROM EffectiveVersions AS v ;
 # This assumes other calculated props (like isDefault) will be done later
 CREATE VIEW xRefProps AS
 SELECT
-    R.RegistrySID,
+    xR.RegistrySID,
 	Ms.SID AS EntitySID,
 	P.PropName,
 	P.PropValue,
 	P.PropType
-FROM xRefSrc2TgtResources AS R
-JOIN Metas AS Ms ON (Ms.ResourceSID=R.SourceSID)
-JOIN Metas AS Mt ON (Mt.ResourceSID=R.TargetSID)
+FROM xRefSrc2TgtResources AS xR
+JOIN Metas AS Ms ON (Ms.ResourceSID=xR.SourceSID)
+JOIN Metas AS Mt ON (Mt.ResourceSID=xR.TargetSID)
 JOIN Props AS P ON (P.EntitySID=Mt.SID AND
-       P.PropName NOT IN ('xref$DB_IN',CONCAT(R.Singular,'id$DB_IN')))
+       P.PropName NOT IN ('xref$DB_IN',CONCAT(xR.Singular,'id$DB_IN')))
 
 /*
 SELECT                            # Iterate over the xRef Resources
-    R.RegistrySID,
-    R.SourceSID AS EntitySID,
+    xR.RegistrySID,
+    xR.SourceSID AS EntitySID,
     P.PropName,
     P.PropValue,
     P.PropType
-FROM xRefSrc2TgtResources AS R
+FROM xRefSrc2TgtResources AS xR
 JOIN Props AS P ON (              # Grab the Target Resource's attributes
-    P.EntitySID=R.TargetSID AND
-    P.PropName<>CONCAT(R.Singular,'id$DB_IN') AND
+    P.EntitySID=xR.TargetSID AND
+    P.PropName<>CONCAT(xR.Singular,'id$DB_IN') AND
     P.PropName<>'xref$DB_IN'
 )
 */
 
 UNION SELECT                      # Find all Version attributes (not meta)
-    R.RegistrySID,
-    CONCAT(R.SourceSID, '-', P.EntitySID),
+    xR.RegistrySID,
+    CONCAT(xR.SourceSID, '-', P.EntitySID),
     P.PropName,
     P.PropValue,
     P.PropType
-FROM xRefSrc2TgtResources AS R
+FROM xRefSrc2TgtResources AS xR
 JOIN Props AS P ON (
     P.EntitySID IN (
-        SELECT eSID FROM Entities WHERE ParentSID=R.TargetSID AND
+        SELECT eSID FROM Entities WHERE ParentSID=xR.TargetSID AND
                                         Type=$ENTITY_VERSION
     ) AND
     P.PropName<>'xref$DB_IN'
@@ -474,12 +474,12 @@ JOIN EffectiveProps AS p ON (
 UNION SELECT                   # Add in "RESOURCEid", which is calculated
   v.RegSID,
   v.eSID,
-  CONCAT(rm.Singular, 'id$DB_IN'),
+  CONCAT(mE.Singular, 'id$DB_IN'),
   r.UID,
   'string'
 FROM Entities AS v
 JOIN Resources AS r ON (r.SID=v.ParentSID)
-JOIN ModelEntities AS rm ON (rm.SID=r.ModelSID)
+JOIN ModelEntities AS mE ON (mE.SID=r.ModelSID)
 WHERE v.Type=$ENTITY_VERSION;
 
 CREATE VIEW xRefResources AS
