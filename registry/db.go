@@ -802,6 +802,7 @@ func ReplaceVariables(str string) string {
 		{"$ENTITY_META", StrTypes(ENTITY_META)},
 		{"$ENTITY_VERSION", StrTypes(ENTITY_VERSION)},
 		{"$DB_IN", string(DB_IN)},
+		{"$MAX_VARCHAR", fmt.Sprintf("%d", MAX_VARCHAR)},
 	}
 
 	for _, vs := range vars {

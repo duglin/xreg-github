@@ -610,6 +610,11 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 		}
 
 		switch reflect.ValueOf(val).Kind() {
+		case reflect.String:
+			if reflect.ValueOf(val).Len() > MAX_VARCHAR {
+				return fmt.Errorf("Value must be less that %d chars",
+					MAX_VARCHAR+1)
+			}
 		case reflect.Slice:
 			if reflect.ValueOf(val).Len() > 0 {
 				return fmt.Errorf("Can't set non-empty arrays")
@@ -1376,7 +1381,10 @@ var OrderedSpecProps = []*Attribute{
 				// Need to explicitly ask for "capabilities", ?inline=* won't
 				// do it
 				if info != nil && info.ShouldInline(NewPPP("capabilities").DB()) {
-					return e.Registry.Capabilities
+					capStr := e.GetAsString("#capabilities")
+					cap, err := ParseCapabilitiesJSON([]byte(capStr))
+					Must(err)
+					return cap
 				}
 				return nil
 			},
@@ -1386,16 +1394,21 @@ var OrderedSpecProps = []*Attribute{
 				// map[string]any <-> Capabilities  is really annoying
 				val := e.NewObject["capabilities"]
 				if !IsNil(val) {
-					// Is speed is ever a concern here, just save the raw
+					// If speed is ever a concern here, just save the raw
 					// json from the input stream instead from http processing
 					valStr := ToJSON(val)
+
 					cap, err := ParseCapabilitiesJSON([]byte(valStr))
 					if err != nil {
 						return err
 					}
+
 					if err = cap.Validate(); err != nil {
 						return err
 					}
+
+					valStr = ToJSON(cap)
+
 					e.NewObject["#capabilities"] = valStr
 					delete(e.NewObject, "capabilities")
 					e.Registry.Capabilities = cap

@@ -140,9 +140,9 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		extras: map[string]any{},
 	}
 
-	tx.IgnoreEpoch = r.URL.Query().Has("noepoch")
-	tx.IgnoreDefaultVersionSticky = r.URL.Query().Has("nodefaultversionsticky")
-	tx.IgnoreDefaultVersionID = r.URL.Query().Has("nodefaultversionid")
+	tx.IgnoreEpoch = info.HasFlag("noepoch")
+	tx.IgnoreDefaultVersionSticky = info.HasFlag("nodefaultversionsticky")
+	tx.IgnoreDefaultVersionID = info.HasFlag("nodefaultversionid")
 
 	if info.Registry != nil && tx.Registry == nil {
 		tx.Registry = info.Registry
@@ -166,12 +166,12 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		return info, err
 	}
 
-	info.HasNested = r.URL.Query().Has("nested")
+	info.HasNested = info.HasFlag("nested")
 
-	if r.URL.Query().Has("inline") {
+	if info.HasFlag("inline") {
 		// OLD: Only pick up inlining values if we're doing a GET, not write ops
 		// if  strings.EqualFold(r.Method, "GET")
-		for _, value := range r.URL.Query()["inline"] {
+		for _, value := range info.GetFlagValues("inline") {
 			for _, p := range strings.Split(value, ",") {
 				if p == "" || p == "*" {
 					p = "*"
@@ -211,7 +211,7 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 }
 
 func (info *RequestInfo) ParseFilters() error {
-	for _, filterQ := range info.OriginalRequest.URL.Query()["filter"] {
+	for _, filterQ := range info.GetFlagValues("filter") {
 		// ?filter=path.to.attribute[=value],* & filter=...
 
 		filterQ = strings.TrimSpace(filterQ)
@@ -457,4 +457,26 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	info.StatusCode = http.StatusNotFound
 	return fmt.Errorf("URL is too long")
+}
+
+// Get query parameter value
+func (info *RequestInfo) GetFlag(name string) string {
+	if !info.Registry.Capabilities.FlagEnabled(name) {
+		return ""
+	}
+	return info.OriginalRequest.URL.Query().Get(name)
+}
+
+func (info *RequestInfo) GetFlagValues(name string) []string {
+	if !info.Registry.Capabilities.FlagEnabled(name) {
+		return nil
+	}
+	return info.OriginalRequest.URL.Query()[name]
+}
+
+func (info *RequestInfo) HasFlag(name string) bool {
+	if !info.Registry.Capabilities.FlagEnabled(name) {
+		return false
+	}
+	return info.OriginalRequest.URL.Query().Has(name)
 }

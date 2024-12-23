@@ -10,38 +10,38 @@ import (
 )
 
 type Capabilities struct {
-	Mutable         []string `json:"mutable"`
-	Pagination      bool     `json:"pagination"`
-	QueryParameters []string `json:"queryparameters"`
-	Schemas         []string `json:"schemas"`
-	ShortSelf       bool     `json:"shortself"`
-	SpecVersions    []string `json:"specversions"`
+	Flags        []string `json:"flags"`
+	Mutable      []string `json:"mutable"`
+	Pagination   bool     `json:"pagination"`
+	Schemas      []string `json:"schemas"`
+	ShortSelf    bool     `json:"shortself"`
+	SpecVersions []string `json:"specversions"`
 }
+
+var AllowableFlags = ArrayToLower([]string{
+	"epoch", "export", "filter", "inline",
+	"nested", "nodefaultversionid", "nodefaultversionsticky",
+	"noepoch", "noreadonly", "schema", "setdefaultversionid"})
 
 var AllowableMutable = ArrayToLower([]string{
 	"capabilities", "entities", "model"})
-
-var AllowableQueryParameters = ArrayToLower([]string{
-	"epoch", "export", "filter", "inline",
-	"nested", "nodefaultversionid", "nodefaultversionsticky",
-	"noepoch", "noreadonly", "setdefaultversionid"})
 
 var AllowableSchemas = ArrayToLower([]string{"xRegistry-json"})
 
 var AllowableSpecVersions = ArrayToLower([]string{"0.5"})
 
 var DefaultCapabilities = &Capabilities{
-	Mutable:         []string{"entities", "model"},
-	Pagination:      false,
-	QueryParameters: AllowableQueryParameters,
-	Schemas:         AllowableSchemas,
-	ShortSelf:       false,
-	SpecVersions:    AllowableSpecVersions,
+	Flags:        AllowableFlags,
+	Mutable:      AllowableMutable,
+	Pagination:   false,
+	Schemas:      AllowableSchemas,
+	ShortSelf:    false,
+	SpecVersions: AllowableSpecVersions,
 }
 
 func init() {
+	sort.Strings(AllowableFlags)
 	sort.Strings(AllowableMutable)
-	sort.Strings(AllowableQueryParameters)
 	sort.Strings(AllowableSchemas)
 	sort.Strings(AllowableSpecVersions)
 
@@ -105,13 +105,12 @@ func (c *Capabilities) Validate() error {
 		c.SpecVersions = []string{SPECVERSION}
 	}
 
-	c.Mutable, err = CleanArray(c.Mutable, AllowableMutable, "mutable")
+	c.Flags, err = CleanArray(c.Flags, AllowableFlags, "flags")
 	if err != nil {
 		return err
 	}
 
-	c.QueryParameters, err = CleanArray(c.QueryParameters,
-		AllowableQueryParameters, "queryparameter")
+	c.Mutable, err = CleanArray(c.Mutable, AllowableMutable, "mutable")
 	if err != nil {
 		return err
 	}
@@ -151,16 +150,16 @@ func ParseCapabilitiesJSON(buf []byte) (*Capabilities, error) {
 	return &cap, nil
 }
 
+func (c *Capabilities) FlagEnabled(str string) bool {
+	return ArrayContains(c.Flags, strings.ToLower(str))
+}
+
 func (c *Capabilities) MutableEnabled(str string) bool {
 	return ArrayContains(c.Mutable, strings.ToLower(str))
 }
 
 func (c *Capabilities) PaginationEnabled() bool {
 	return c.Pagination
-}
-
-func (c *Capabilities) QueryParameterEnabled(str string) bool {
-	return ArrayContains(c.QueryParameters, strings.ToLower(str))
 }
 
 func (c *Capabilities) SchemaEnabled(str string) bool {

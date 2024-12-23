@@ -648,7 +648,15 @@ func HTTPGETCapabilities(info *RequestInfo) error {
 		return fmt.Errorf("Not found")
 	}
 
-	buf, err := json.MarshalIndent(info.Registry.Capabilities, "", "  ")
+	cap := info.Registry.Capabilities
+	capStr := info.Registry.GetAsString("#capabilities")
+	if capStr != "" {
+		var err error
+		cap, err = ParseCapabilitiesJSON([]byte(capStr))
+		Must(err)
+	}
+
+	buf, err := json.MarshalIndent(cap, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -665,7 +673,7 @@ func HTTPGETModel(info *RequestInfo) error {
 		return fmt.Errorf("Not found")
 	}
 
-	format := info.OriginalRequest.URL.Query().Get("schema")
+	format := info.GetFlag("schema")
 	if format == "" {
 		format = "xRegistry-json"
 	}
@@ -1051,8 +1059,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	// POST /groups/gID/resources/rID?setdefaultversiond is special in that
 	// it only moves the "default" pointer, nothing else is meant to be done
 	if metaInBody && len(info.Parts) == 4 && method == "POST" && body == nil {
-		_, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]
-		if ok {
+		if info.HasFlag("setdefaultversionid") {
 			return HTTPSetDefaultVersionID(info)
 		}
 	}
@@ -1486,7 +1493,7 @@ func HTTPPutPost(info *RequestInfo) error {
 				return fmt.Errorf("Set of Versions to add can't be empty")
 			}
 
-			vID := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
+			vID := info.GetFlag("setdefaultversionid")
 			if vID == "" || vID == "request" {
 				if len(objMap) > 1 {
 					info.StatusCode = http.StatusBadRequest
@@ -1685,7 +1692,7 @@ func HTTPPUTCapabilities(info *RequestInfo) error {
 		return err
 	}
 
-	// TODO: SAVE IT
+	info.Registry.SetSave("#capabilities", ToJSON(cap))
 
 	return HTTPGETCapabilities(info)
 }
@@ -1728,8 +1735,8 @@ func HTTPPUTModel(info *RequestInfo) error {
 // "resource" is the resource we're processing
 // "version" is the version that was processed
 func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, version *Version) error {
-	vIDs, ok := info.OriginalRequest.URL.Query()["setdefaultversionid"]
-	if !ok {
+	vIDs := info.GetFlagValues("setdefaultversionid")
+	if len(vIDs) == 0 {
 		return nil
 	}
 
@@ -1819,7 +1826,7 @@ func HTTPDelete(info *RequestInfo) error {
 	}
 
 	var err error
-	epochStr := info.OriginalRequest.URL.Query().Get("epoch")
+	epochStr := info.GetFlag("epoch")
 	epochInt := -1
 	if epochStr != "" {
 		epochInt, err = strconv.Atoi(epochStr)
@@ -1949,7 +1956,7 @@ func HTTPDelete(info *RequestInfo) error {
 					info.VersionUID, e, epochInt)
 			}
 		}
-		nextDefault := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
+		nextDefault := info.GetFlag("setdefaultversionid")
 		err = version.DeleteSetNextVersion(nextDefault)
 
 		if err != nil {
@@ -2158,7 +2165,7 @@ func HTTPDeleteResources(info *RequestInfo) error {
 }
 
 func HTTPDeleteVersions(info *RequestInfo) error {
-	nextDefault := info.OriginalRequest.URL.Query().Get("setdefaultversionid")
+	nextDefault := info.GetFlag("setdefaultversionid")
 
 	list, err := LoadEpochMap(info)
 	if err != nil {

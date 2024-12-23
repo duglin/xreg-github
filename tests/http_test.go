@@ -195,30 +195,33 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 		t.FailNow()
 	}
 
-	testBody := test.ResBody
+	// Only check body if not "*"
+	if test.ResBody != "*" {
+		testBody := test.ResBody
 
-	for _, mask := range test.BodyMasks {
-		var re *regexp.Regexp
-		search, replace, found := strings.Cut(mask, "||")
-		if !found {
-			// Must be just a property name
-			search = fmt.Sprintf(`("%s": ")(.*)(")`, search)
-			replace = `${1}xxx${3}`
+		for _, mask := range test.BodyMasks {
+			var re *regexp.Regexp
+			search, replace, found := strings.Cut(mask, "||")
+			if !found {
+				// Must be just a property name
+				search = fmt.Sprintf(`("%s": ")(.*)(")`, search)
+				replace = `${1}xxx${3}`
+			}
+
+			if re = savedREs[search]; re == nil {
+				re = regexp.MustCompile(search)
+				savedREs[search] = re
+			}
+
+			resBody = re.ReplaceAll(resBody, []byte(replace))
+			testBody = re.ReplaceAllString(testBody, replace)
 		}
 
-		if re = savedREs[search]; re == nil {
-			re = regexp.MustCompile(search)
-			savedREs[search] = re
+		xCheckEqual(t, "Test: "+test.Name+"\nBody:\n",
+			string(resBody), testBody)
+		if t.Failed() {
+			t.FailNow()
 		}
-
-		resBody = re.ReplaceAll(resBody, []byte(replace))
-		testBody = re.ReplaceAllString(testBody, replace)
-	}
-
-	xCheckEqual(t, "Test: "+test.Name+"\nBody:\n",
-		string(resBody), testBody)
-	if t.Failed() {
-		t.FailNow()
 	}
 }
 

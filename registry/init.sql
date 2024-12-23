@@ -244,7 +244,7 @@ CREATE TABLE Props (
     RegistrySID VARCHAR(64) NOT NULL,
     EntitySID   VARCHAR(64) NOT NULL,       # Reg,Group,Res,Ver System ID
     PropName    VARCHAR(64) NOT NULL,
-    PropValue   VARCHAR(255),
+    PropValue   VARCHAR($MAX_VARCHAR),
     PropType    CHAR(64) NOT NULL,          # string, boolean, int, ...
 
     PRIMARY KEY (EntitySID, PropName),
