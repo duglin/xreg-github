@@ -445,8 +445,7 @@ JOIN EffectiveVersions AS v ON (m.ResourceSID=v.ResourceSID
 JOIN EffectiveProps AS p ON (p.EntitySID=v.SID)
 */
 
-
-UNION SELECT
+UNION SELECT                    # Add Resource.isdefault, always 'true'
     m.RegistrySID,
     m.ResourceSID,
     'isdefault$DB_IN',
@@ -458,7 +457,7 @@ CREATE VIEW AllProps AS
 SELECT * FROM EffectiveProps
 UNION SELECT * FROM DefaultProps
 
-UNION SELECT                    # Add in "isdefault", which is calculated
+UNION SELECT                    # Add Version.isdefault, which is calculated
   v.RegSID,
   v.eSID,
   'isdefault$DB_IN',
@@ -471,7 +470,7 @@ JOIN EffectiveProps AS p ON (
   p.PropName='defaultversionid$DB_IN'
   AND p.PropValue=v.UID )
 
-UNION SELECT                   # Add in "RESOURCEid", which is calculated
+UNION SELECT                   # Add in Version.RESOURCEid, which is calculated
   v.RegSID,
   v.eSID,
   CONCAT(mE.Singular, 'id$DB_IN'),
