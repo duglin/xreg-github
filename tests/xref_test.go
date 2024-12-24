@@ -22,15 +22,23 @@ func TestXrefBasic(t *testing.T) {
 
 	_, err = d.AddResourceWithObject("files", "fx", "", registry.Object{
 		"meta": map[string]any{
-			"xref": "/" + f1.Path, // make it bad
+			"xref": f1.Path, // missing leading /
 		},
 	}, false, false)
-	xCheckErr(t, err, `'xref' (/`+f1.Path+`) must be of the form: `+
-		`GROUPs/gID/RESOURCEs/rID`)
+	xCheckErr(t, err, `'xref' (`+f1.Path+`) must be of the form: `+
+		`/GROUPS/gID/RESOURCES/rID`)
+
+	_, err = d.AddResourceWithObject("files", "fx", "", registry.Object{
+		"meta": map[string]any{
+			"xref": "foo/" + f1.Path, // make it bad
+		},
+	}, false, false)
+	xCheckErr(t, err, `'xref' (foo/`+f1.Path+`) must be of the form: `+
+		`/GROUPS/gID/RESOURCES/rID`)
 
 	fx, err := d.AddResourceWithObject("files", "fx", "", registry.Object{
 		"meta": map[string]any{
-			"xref": "dirs/d1/files/f1",
+			"xref": "/dirs/d1/files/f1",
 		},
 	}, false, false)
 	xNoErr(t, err)
@@ -51,6 +59,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "f1",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "xid": "/dirs/d1/files/f1",
     "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
@@ -64,6 +73,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "fx",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "xid": "/dirs/d1/files/fx",
     "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:01Z",
@@ -88,6 +98,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "f1",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
     "isdefault": true,
@@ -99,6 +110,7 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+      "xid": "/dirs/d1/files/f1/meta",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
@@ -112,6 +124,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "f1",
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
         "isdefault": true,
@@ -126,6 +139,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "fx",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "xid": "/dirs/d1/files/fx",
     "epoch": 2,
     "name": "v1 name",
     "isdefault": true,
@@ -137,7 +151,8 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
-      "xref": "dirs/d1/files/f1",
+      "xid": "/dirs/d1/files/fx/meta",
+      "xref": "/dirs/d1/files/f1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
@@ -151,6 +166,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "fx",
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure",
+        "xid": "/dirs/d1/files/fx/versions/v1",
         "epoch": 2,
         "name": "v1 name",
         "isdefault": true,
@@ -191,6 +207,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "f1",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
     "isdefault": true,
@@ -202,6 +219,7 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+      "xid": "/dirs/d1/files/f1/meta",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
@@ -215,6 +233,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "f1",
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
         "isdefault": true,
@@ -229,6 +248,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "fx",
     "versionid": "1",
     "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "xid": "/dirs/d1/files/fx",
     "epoch": 1,
     "isdefault": true,
     "createdat": "2024-01-01T12:00:03Z",
@@ -238,6 +258,7 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+      "xid": "/dirs/d1/files/fx/meta",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:03Z",
@@ -251,6 +272,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "fx",
         "versionid": "1",
         "self": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure",
+        "xid": "/dirs/d1/files/fx/versions/1",
         "epoch": 1,
         "isdefault": true,
         "createdat": "2024-01-01T12:00:03Z",
@@ -266,7 +288,7 @@ func TestXrefBasic(t *testing.T) {
 	fx, isNew, err = d.UpsertResourceWithObject("files", "fx", "",
 		registry.Object{
 			"meta": map[string]any{
-				"xref": f1.Path,
+				"xref": "/" + f1.Path,
 			},
 		}, registry.ADD_UPDATE, false, false)
 	xNoErr(t, err)
@@ -282,6 +304,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "f1",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
     "isdefault": true,
@@ -293,6 +316,7 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+      "xid": "/dirs/d1/files/f1/meta",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
@@ -306,6 +330,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "f1",
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
         "isdefault": true,
@@ -320,6 +345,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "fx",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "xid": "/dirs/d1/files/fx",
     "epoch": 2,
     "name": "v1 name",
     "isdefault": true,
@@ -331,7 +357,8 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
-      "xref": "dirs/d1/files/f1",
+      "xid": "/dirs/d1/files/fx/meta",
+      "xref": "/dirs/d1/files/f1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
@@ -345,6 +372,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "fx",
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure",
+        "xid": "/dirs/d1/files/fx/versions/v1",
         "epoch": 2,
         "name": "v1 name",
         "isdefault": true,
@@ -375,6 +403,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "f1",
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
     "isdefault": true,
@@ -386,6 +415,7 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "f1",
       "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+      "xid": "/dirs/d1/files/f1/meta",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
@@ -399,6 +429,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "f1",
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
         "isdefault": true,
@@ -413,6 +444,7 @@ func TestXrefBasic(t *testing.T) {
     "fileid": "fx",
     "versionid": "1",
     "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "xid": "/dirs/d1/files/fx",
     "epoch": 1,
     "name": "fx name",
     "isdefault": true,
@@ -424,6 +456,7 @@ func TestXrefBasic(t *testing.T) {
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+      "xid": "/dirs/d1/files/fx/meta",
       "epoch": 2,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:04Z",
@@ -437,6 +470,7 @@ func TestXrefBasic(t *testing.T) {
         "fileid": "fx",
         "versionid": "1",
         "self": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure",
+        "xid": "/dirs/d1/files/fx/versions/1",
         "epoch": 1,
         "name": "fx name",
         "isdefault": true,

@@ -107,20 +107,26 @@ func (r *Resource) GetXref() (string, *Resource, error) {
 	if xref == "" {
 		return "", nil, nil
 	}
-	parts := strings.Split(xref, "/")
-	if len(parts) != 4 {
-		return "", nil, fmt.Errorf("'xref' (%s) must be of the form: "+
-			"GROUPs/gID/RESOURCEs/rID", tmp.(string))
+
+	if xref[0] != '/' {
+		return "", nil, fmt.Errorf("'xref' (%s) must start with '/'",
+			tmp.(string))
 	}
 
-	group, err := r.Registry.FindGroup(parts[0], parts[1], false)
+	parts := strings.Split(xref, "/")
+	if len(parts) != 5 || len(parts[0]) != 0 {
+		return "", nil, fmt.Errorf("'xref' (%s) must be of the form: "+
+			"/GROUPS/gID/RESOURCES/rID", tmp.(string))
+	}
+
+	group, err := r.Registry.FindGroup(parts[1], parts[2], false)
 	if err != nil || IsNil(group) {
 		return "", nil, err
 	}
 	if IsNil(group) {
 		return "", nil, nil
 	}
-	res, err := group.FindResource(parts[2], parts[3], false)
+	res, err := group.FindResource(parts[3], parts[4], false)
 	if err != nil || IsNil(res) {
 		return "", nil, err
 	}
@@ -404,9 +410,9 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 				xref, _ = xrefAny.(string)
 				xref = strings.TrimSpace(xref)
 				parts := strings.Split(xref, "/")
-				if len(parts) != 4 {
+				if len(parts) != 5 || len(parts[0]) != 0 {
 					return nil, false, fmt.Errorf("'xref' (%s) must be of the "+
-						"form: GROUPs/gID/RESOURCEs/rID", xref)
+						"form: /GROUPS/gID/RESOURCES/rID", xref)
 				}
 
 				// Erase all attributes except id and xref

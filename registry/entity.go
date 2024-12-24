@@ -946,7 +946,7 @@ var OrderedSpecProps = []*Attribute{
 		internals: AttrInternals{
 			types: "", // Yes even ENTITY_RESOURCE
 			// types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
-			dontStore: false,
+			dontStore: true,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
 				if info != nil {
@@ -966,6 +966,22 @@ var OrderedSpecProps = []*Attribute{
 					}
 				}
 				return base + "/" + e.Path
+			},
+			checkFn:  nil,
+			updateFn: nil,
+		},
+	},
+	{
+		Name:           "xid",
+		Type:           URL,
+		ReadOnly:       true,
+		ServerRequired: true,
+
+		internals: AttrInternals{
+			types:     "",
+			dontStore: true,
+			getFn: func(e *Entity, info *RequestInfo) any {
+				return "/" + e.Path
 			},
 			checkFn:  nil,
 			updateFn: nil,
@@ -1382,6 +1398,10 @@ var OrderedSpecProps = []*Attribute{
 				// do it
 				if info != nil && info.ShouldInline(NewPPP("capabilities").DB()) {
 					capStr := e.GetAsString("#capabilities")
+					if capStr == "" {
+						return e.Registry.Capabilities
+					}
+
 					cap, err := ParseCapabilitiesJSON([]byte(capStr))
 					Must(err)
 					return cap
@@ -1606,9 +1626,6 @@ func (e *Entity) Save() error {
 
 	// make a dup so we can delete some attributes
 	newObj := maps.Clone(e.NewObject)
-
-	// TODO calculate which to delete based on attr properties
-	delete(newObj, "self")
 
 	e.RemoveCollections(newObj)
 

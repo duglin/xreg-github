@@ -353,12 +353,43 @@ func (pw *PageWriter) Done() {
 	inlines := ""
 	inlineCount := 0
 
-	if pw.Info.IsInlineSet("*") {
+	// ----
+
+	if len(pw.Info.Parts) == 0 {
+		if pw.Info.IsInlineSet(NewPPP("capabilities").DB()) {
+			checked = " checked"
+		}
+		inlines += fmt.Sprintf(`
+    <div class=inlines>
+      <input id=inline%d type='checkbox' value='capabilities'`+
+			checked+`/>capabilities
+    </div>`, inlineCount)
+		inlineCount++
+		checked = ""
+	}
+
+	// ----
+
+	if len(pw.Info.Parts) == 0 {
+		if pw.Info.IsInlineSet(NewPPP("model").DB()) {
+			checked = " checked"
+		}
+		inlines += fmt.Sprintf(`
+    <div class=inlines>
+      <input id=inline%d type='checkbox' value='model'`+checked+`/>model
+    </div>`, inlineCount)
+		inlineCount++
+		checked = ""
+	}
+
+	// ----
+
+	if pw.Info.IsInlineSet(NewPPP("*").DB()) {
 		checked = " checked"
 	}
 	except := ""
 	if len(pw.Info.Parts) == 0 {
-		except = " except: model"
+		except = " but model,capabilities"
 	}
 	inlines += fmt.Sprintf(`
     <div class=inlines>
@@ -367,17 +398,7 @@ func (pw *PageWriter) Done() {
 	inlineCount++
 	checked = ""
 
-	if pw.Info.IsInlineSet(NewPPP("model").DB()) {
-		checked = " checked"
-	}
-	if len(pw.Info.Parts) == 0 {
-		inlines += fmt.Sprintf(`
-    <div class=inlines>
-      <input id=inline%d type='checkbox' value='model'`+checked+`/>model
-    </div>`, inlineCount)
-		inlineCount++
-	}
-	checked = ""
+	// ----
 
 	pp, _ := PropPathFromPath(pw.Info.Abstract)
 	for _, inline := range inlineOptions {

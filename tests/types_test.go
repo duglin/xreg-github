@@ -299,6 +299,7 @@ func TestBasicTypes(t *testing.T) {
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestBasicTypes",
   "self": "http://localhost:8181/",
+  "xid": "/",
   "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
@@ -367,6 +368,7 @@ func TestBasicTypes(t *testing.T) {
     "d1": {
       "dirid": "d1",
       "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:04Z",
       "modifiedat": "2024-01-01T12:00:04Z",
@@ -388,6 +390,7 @@ func TestBasicTypes(t *testing.T) {
           "fileid": "f1",
           "versionid": "v1",
           "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
           "createdat": "2024-01-01T12:00:04Z",
@@ -408,6 +411,7 @@ func TestBasicTypes(t *testing.T) {
           "meta": {
             "fileid": "f1",
             "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "xid": "/dirs/d1/files/f1/meta",
             "epoch": 1,
             "createdat": "2024-01-01T12:00:04Z",
             "modifiedat": "2024-01-01T12:00:04Z",
@@ -421,6 +425,7 @@ func TestBasicTypes(t *testing.T) {
               "fileid": "f1",
               "versionid": "v1",
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "isdefault": true,
               "createdat": "2024-01-01T12:00:04Z",
@@ -446,6 +451,7 @@ func TestBasicTypes(t *testing.T) {
     "dir2": {
       "dirid": "dir2",
       "self": "http://localhost:8181/dirs/dir2",
+      "xid": "/dirs/dir2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:04Z",
       "modifiedat": "2024-01-01T12:00:04Z",

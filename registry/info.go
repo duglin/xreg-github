@@ -46,7 +46,7 @@ func (info *RequestInfo) AddInline(path string) error {
 	// path = strings.TrimLeft(path, "/.") // To be nice
 
 	if ArrayContains(nonModelInlines, path) {
-		info.Inlines = append(info.Inlines, path)
+		info.Inlines = append(info.Inlines, NewPPP(path).DB())
 		return nil
 	}
 

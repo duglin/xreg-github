@@ -265,7 +265,7 @@ FROM Resources AS sR
 JOIN Metas AS sM ON (sM.ResourceSID=sR.SID)
 JOIN ModelEntities AS mE ON (mE.SID=sR.ModelSID)
 JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND
-    tR.Path=(SELECT PropValue FROM Props WHERE
+    tR.Path=(SELECT SUBSTRING(PropValue,2) FROM Props WHERE # remove leading /
              EntitySID=sM.SID AND PropName='xref$DB_IN'));
 # JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND tR.Path=sR.xRef);
 

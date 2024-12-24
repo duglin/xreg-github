@@ -43,6 +43,7 @@ func TestCreateGroup(t *testing.T) {
 		`{
   "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
+  "xid": "/dirs/d1",
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",

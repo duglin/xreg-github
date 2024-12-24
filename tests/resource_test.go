@@ -45,6 +45,7 @@ func TestCreateResource(t *testing.T) {
   "fileid": "f1",
   "versionid": "v2",
   "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
