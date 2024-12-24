@@ -308,11 +308,20 @@ func (pw *PageWriter) Done() {
 	buf := pw.Buffer.Bytes()
 
 	list := ""
-	list += fmt.Sprintf("<li><a href='/?ui'>Default</a></li>\n")
-	for _, name := range GetRegistryNames() {
-		list += fmt.Sprintf("  <li><a href='/reg-%s?ui'>%s</a></li>\n",
-			name, name)
+	regs := GetRegistryNames()
+	sort.Strings(regs)
+	regs = append([]string{"Default"}, regs...)
+
+	for _, name := range regs {
+		checked := ""
+		if name == "Default" && !strings.Contains(pw.Info.BaseURL, "/reg-") {
+			checked = " selected"
+		} else if strings.Contains(pw.Info.BaseURL, "/reg-"+name) {
+			checked = " selected"
+		}
+		list += fmt.Sprintf("\n    <option%s>%s</option>", checked, name)
 	}
+	list += "\n"
 
 	filters := ""
 	prefix := MustPropPathFromPath(pw.Info.Abstract).UI()
@@ -518,6 +527,9 @@ func (pw *PageWriter) Done() {
     font-family: courier ;
     width: 100%%
   }
+  select {
+    font-weight: bold ;
+  }
   .inlines {
     font-size: 13px ;
     font-family: courier ;
@@ -551,17 +563,17 @@ func (pw *PageWriter) Done() {
   }
 </style>
 <div id=left>
-  <b>Registries:</b>
+  <b>Registry:</b>
+  <select onchange="changeRegistry(value)">`+list+`  </select>
   <br>
-  `+list+`
-  <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
+  <br>
   <div id=buttonList>
     <b>Filters:</b>
     <textarea id=filters>`+filters+`</textarea>
     <b>Inlines:</b>`+inlines+`
     <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
     <div style="display:ruby">
-      <button onclick="apply()">Apply</button>`+
+      <button onclick="apply()" style="font-weight:bold">Apply</button>`+
 		structureButton+`
     </div>
   </div>
@@ -575,6 +587,15 @@ func (pw *PageWriter) Done() {
 <script>
 
 var structureswitch = `+structureswitch+`;
+
+function changeRegistry(name) {
+	var loc = ""
+
+	if (name == "Default") loc = "/?ui"
+	else loc = "/reg-" + name + "?ui"
+
+	window.location = loc
+}
 
 function apply() {
   var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`"
@@ -618,6 +639,7 @@ function apply() {
   </div>
   <!-- <div id=buttonBar>%s</div> -->
 </div>
+</html>
 `, RegHTMLify(pw.Info.OriginalRequest, buf))))
 
 	pw.OldWriter.Done()
