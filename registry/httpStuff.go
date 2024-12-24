@@ -366,11 +366,9 @@ func (pw *PageWriter) Done() {
     </div>`, inlineCount)
 		inlineCount++
 		checked = ""
-	}
 
-	// ----
+		// ----
 
-	if len(pw.Info.Parts) == 0 {
 		if pw.Info.IsInlineSet(NewPPP("model").DB()) {
 			checked = " checked"
 		}
@@ -380,6 +378,9 @@ func (pw *PageWriter) Done() {
     </div>`, inlineCount)
 		inlineCount++
 		checked = ""
+
+		inlines += `
+    <div class=line></div>`
 	}
 
 	// ----
@@ -388,9 +389,9 @@ func (pw *PageWriter) Done() {
 		checked = " checked"
 	}
 	except := ""
-	if len(pw.Info.Parts) == 0 {
-		except = " but model,capabilities"
-	}
+	// if len(pw.Info.Parts) == 0 {
+	// except = " but model,capabilities"
+	// }
 	inlines += fmt.Sprintf(`
     <div class=inlines>
       <input id=inline%d type='checkbox' value='*'`+checked+`/>* (all%s)
@@ -499,11 +500,12 @@ func (pw *PageWriter) Done() {
     margin-bottom: 10px ;
   }
   #commit {
+	background-color: lightsteelblue ;
     font-size: 12px ;
     font-family: courier ;
     position: fixed ;
     bottom: 0 ;
-	z-index: 0 ;
+    z-index: 0 ;
   }
   textarea {
     margin-bottom: 10px ;
@@ -519,6 +521,11 @@ func (pw *PageWriter) Done() {
   .inlines {
     font-size: 13px ;
     font-family: courier ;
+  }
+  .line {
+    width: 90%% ;
+    border-bottom: 1px solid black ;
+    margin: 3 0 3 20 ;
   }
   #urlPath {
     background-color: lightgray ;
@@ -561,7 +568,8 @@ func (pw *PageWriter) Done() {
   <div style="height:12px"></div> <!-- buffer for "Commmit:" line -->
   <div id=commit><a target=_blank
         href="http://github.com/duglin/xreg-github/tree/`+
-		GitCommit+`">Commit: `+fmt.Sprintf("%.12s", GitCommit)+`</a></div>
+		GitCommit+`">Commit: `+fmt.Sprintf("%.12s", GitCommit)+
+		`&nbsp;&nbsp;</a></div>
 </div>
 
 <script>
