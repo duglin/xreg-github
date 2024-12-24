@@ -59,16 +59,7 @@ CREATE TRIGGER ModelsTrigger BEFORE DELETE ON Models
 FOR EACH ROW
 BEGIN
     DELETE FROM ModelEntities WHERE RegistrySID=OLD.RegistrySID @
-    DELETE FROM "Schemas"     WHERE RegistrySID=OLD.RegistrySID @
 END ;
-
-CREATE TABLE "Schemas" (
-    RegistrySID  VARCHAR(64) NOT NULL,
-    "Schema"     VARCHAR(255) NOT NULL,
-
-    PRIMARY KEY(RegistrySID, "Schema"),
-    INDEX (RegistrySID)
-);
 
 CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     SID               VARCHAR(64),        # my System ID

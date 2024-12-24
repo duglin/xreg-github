@@ -281,9 +281,6 @@ func TestHTTPModel(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:01Z",
 
   "model": {
-    "schemas": [
-      "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
-    ],
     "attributes": {
       "specversion": {
         "name": "specversion",
@@ -361,9 +358,6 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "schemas": [
-    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -440,88 +434,6 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "schemas": [
-    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
-  ],
-  "attributes": {
-    "specversion": {
-      "name": "specversion",
-      "type": "string",
-      "readonly": true,
-      "immutable": true,
-      "serverrequired": true
-    },
-    "registryid": {
-      "name": "registryid",
-      "type": "string",
-      "immutable": true,
-      "serverrequired": true
-    },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "xid": {
-      "name": "xid",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "epoch": {
-      "name": "epoch",
-      "type": "uinteger",
-      "serverrequired": true
-    },
-    "name": {
-      "name": "name",
-      "type": "string"
-    },
-    "description": {
-      "name": "description",
-      "type": "string"
-    },
-    "documentation": {
-      "name": "documentation",
-      "type": "url"
-    },
-    "labels": {
-      "name": "labels",
-      "type": "map",
-      "item": {
-        "type": "string"
-      }
-    },
-    "createdat": {
-      "name": "createdat",
-      "type": "timestamp",
-      "serverrequired": true
-    },
-    "modifiedat": {
-      "name": "modifiedat",
-      "type": "timestamp",
-      "serverrequired": true
-    }
-  }
-}
-`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "Create model - just schema",
-		URL:        "/model",
-		Method:     "PUT",
-		ReqHeaders: []string{},
-		ReqBody:    `{"schemas":["schema1"]}`,
-
-		Code:       200,
-		ResHeaders: []string{"Content-Type:application/json"},
-		ResBody: `{
-  "schemas": [
-    "schema1",
-    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -610,9 +522,6 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "schemas": [
-    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -878,9 +787,6 @@ func TestHTTPModel(t *testing.T) {
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
-  "schemas": [
-    "schema1"
-  ],
   "groups": {
     "dirs": {
       "plural": "dirs",
@@ -902,10 +808,6 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "schemas": [
-    "schema1",
-    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -1195,9 +1097,6 @@ func TestHTTPModel(t *testing.T) {
 		Code:       200,
 		ResHeaders: []string{"Content-Type:application/json"},
 		ResBody: `{
-  "schemas": [
-    "` + registry.XREGSCHEMA + "/" + registry.SPECVERSION + `"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -7729,78 +7628,7 @@ func TestHTTPModelSchema(t *testing.T) {
 	reg := NewRegistry("TestHTTPModelSchema")
 	defer PassDeleteReg(t, reg)
 
-	xHTTP(t, reg, "GET", "/model", "", 200, `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
-  "attributes": {
-    "specversion": {
-      "name": "specversion",
-      "type": "string",
-      "readonly": true,
-      "immutable": true,
-      "serverrequired": true
-    },
-    "registryid": {
-      "name": "registryid",
-      "type": "string",
-      "immutable": true,
-      "serverrequired": true
-    },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "xid": {
-      "name": "xid",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "epoch": {
-      "name": "epoch",
-      "type": "uinteger",
-      "serverrequired": true
-    },
-    "name": {
-      "name": "name",
-      "type": "string"
-    },
-    "description": {
-      "name": "description",
-      "type": "string"
-    },
-    "documentation": {
-      "name": "documentation",
-      "type": "url"
-    },
-    "labels": {
-      "name": "labels",
-      "type": "map",
-      "item": {
-        "type": "string"
-      }
-    },
-    "createdat": {
-      "name": "createdat",
-      "type": "timestamp",
-      "serverrequired": true
-    },
-    "modifiedat": {
-      "name": "modifiedat",
-      "type": "timestamp",
-      "serverrequired": true
-    }
-  }
-}
-`)
-
 	xHTTP(t, reg, "GET", "/model?schema="+registry.XREGSCHEMA, "", 200, `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -7866,9 +7694,6 @@ func TestHTTPModelSchema(t *testing.T) {
 `)
 
 	xHTTP(t, reg, "GET", "/model?schema="+registry.XREGSCHEMA+"/"+registry.SPECVERSION, "", 200, `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",

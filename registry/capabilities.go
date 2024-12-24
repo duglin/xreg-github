@@ -26,7 +26,7 @@ var AllowableFlags = ArrayToLower([]string{
 var AllowableMutable = ArrayToLower([]string{
 	"capabilities", "entities", "model"})
 
-var AllowableSchemas = ArrayToLower([]string{"xRegistry-json"})
+var AllowableSchemas = ArrayToLower([]string{XREGSCHEMA + "/" + SPECVERSION})
 
 var AllowableSpecVersions = ArrayToLower([]string{"0.5"})
 
@@ -62,6 +62,14 @@ func CleanArray(arr []string, full []string, text string) ([]string, error) {
 	// Lowercase evrything and look for "*"
 	for i, s := range arr {
 		s = strings.ToLower(s)
+
+		// Special case these
+		if text == "schemas" && s == strings.ToLower(XREGSCHEMA) {
+			// Allow just "xregistry-json", we'll add the spec version #
+			s = s + "/" + SPECVERSION
+		}
+		// End-of-special
+
 		arr[i] = s
 		if s == "*" {
 			if len(arr) != 1 {
@@ -70,6 +78,7 @@ func CleanArray(arr []string, full []string, text string) ([]string, error) {
 			}
 			return full, nil
 		}
+
 	}
 
 	sort.Strings(arr)         // sort 'em
@@ -99,7 +108,7 @@ func (c *Capabilities) Validate() error {
 	var err error
 
 	if c.Schemas == nil {
-		c.Schemas = []string{XREGSCHEMA}
+		c.Schemas = []string{XREGSCHEMA + "/" + SPECVERSION}
 	}
 	if c.SpecVersions == nil {
 		c.SpecVersions = []string{SPECVERSION}
@@ -126,8 +135,8 @@ func (c *Capabilities) Validate() error {
 		return err
 	}
 
-	if !ArrayContains(c.Schemas, strings.ToLower(XREGSCHEMA)) {
-		return fmt.Errorf(`"schemas" must contain %q`, XREGSCHEMA)
+	if !ArrayContains(c.Schemas, strings.ToLower(XREGSCHEMA+"/"+SPECVERSION)) {
+		return fmt.Errorf(`"schemas" must contain %q`, XREGSCHEMA+"/"+SPECVERSION)
 	}
 	if !ArrayContains(c.SpecVersions, strings.ToLower(SPECVERSION)) {
 		return fmt.Errorf(`"specversions" must contain %q`, SPECVERSION)

@@ -12,9 +12,6 @@ func TestNoModel(t *testing.T) {
 	xCheck(t, reg != nil, "reg create didn't work")
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -78,6 +75,7 @@ func TestNoModel(t *testing.T) {
   }
 }
 `)
+
 	xCheckGet(t, reg, "?inline=model", `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestNoModel",
@@ -88,9 +86,6 @@ func TestNoModel(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:01Z",
 
   "model": {
-    "schemas": [
-      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-    ],
     "attributes": {
       "specversion": {
         "name": "specversion",
@@ -156,293 +151,7 @@ func TestNoModel(t *testing.T) {
 }
 `)
 
-	xCheckGet(t, reg, "/model/foo", "Not found\n")
-}
-
-func TestRegSchema(t *testing.T) {
-	reg := NewRegistry("TestRegSchema")
-	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
-
-	reg.Model.AddSchema("schema1")
-	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "schema1",
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
-  "attributes": {
-    "specversion": {
-      "name": "specversion",
-      "type": "string",
-      "readonly": true,
-      "immutable": true,
-      "serverrequired": true
-    },
-    "registryid": {
-      "name": "registryid",
-      "type": "string",
-      "immutable": true,
-      "serverrequired": true
-    },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "xid": {
-      "name": "xid",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "epoch": {
-      "name": "epoch",
-      "type": "uinteger",
-      "serverrequired": true
-    },
-    "name": {
-      "name": "name",
-      "type": "string"
-    },
-    "description": {
-      "name": "description",
-      "type": "string"
-    },
-    "documentation": {
-      "name": "documentation",
-      "type": "url"
-    },
-    "labels": {
-      "name": "labels",
-      "type": "map",
-      "item": {
-        "type": "string"
-      }
-    },
-    "createdat": {
-      "name": "createdat",
-      "type": "timestamp",
-      "serverrequired": true
-    },
-    "modifiedat": {
-      "name": "modifiedat",
-      "type": "timestamp",
-      "serverrequired": true
-    }
-  }
-}
-`)
-
-	reg.Model.AddSchema("schema2")
-	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "schema1",
-    "schema2",
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
-  "attributes": {
-    "specversion": {
-      "name": "specversion",
-      "type": "string",
-      "readonly": true,
-      "immutable": true,
-      "serverrequired": true
-    },
-    "registryid": {
-      "name": "registryid",
-      "type": "string",
-      "immutable": true,
-      "serverrequired": true
-    },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "xid": {
-      "name": "xid",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "epoch": {
-      "name": "epoch",
-      "type": "uinteger",
-      "serverrequired": true
-    },
-    "name": {
-      "name": "name",
-      "type": "string"
-    },
-    "description": {
-      "name": "description",
-      "type": "string"
-    },
-    "documentation": {
-      "name": "documentation",
-      "type": "url"
-    },
-    "labels": {
-      "name": "labels",
-      "type": "map",
-      "item": {
-        "type": "string"
-      }
-    },
-    "createdat": {
-      "name": "createdat",
-      "type": "timestamp",
-      "serverrequired": true
-    },
-    "modifiedat": {
-      "name": "modifiedat",
-      "type": "timestamp",
-      "serverrequired": true
-    }
-  }
-}
-`)
-
-	reg.Model.DelSchema("schema1")
-	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "schema2",
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
-  "attributes": {
-    "specversion": {
-      "name": "specversion",
-      "type": "string",
-      "readonly": true,
-      "immutable": true,
-      "serverrequired": true
-    },
-    "registryid": {
-      "name": "registryid",
-      "type": "string",
-      "immutable": true,
-      "serverrequired": true
-    },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "xid": {
-      "name": "xid",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "epoch": {
-      "name": "epoch",
-      "type": "uinteger",
-      "serverrequired": true
-    },
-    "name": {
-      "name": "name",
-      "type": "string"
-    },
-    "description": {
-      "name": "description",
-      "type": "string"
-    },
-    "documentation": {
-      "name": "documentation",
-      "type": "url"
-    },
-    "labels": {
-      "name": "labels",
-      "type": "map",
-      "item": {
-        "type": "string"
-      }
-    },
-    "createdat": {
-      "name": "createdat",
-      "type": "timestamp",
-      "serverrequired": true
-    },
-    "modifiedat": {
-      "name": "modifiedat",
-      "type": "timestamp",
-      "serverrequired": true
-    }
-  }
-}
-`)
-
-	reg.Model.DelSchema("schema2")
-	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
-  "attributes": {
-    "specversion": {
-      "name": "specversion",
-      "type": "string",
-      "readonly": true,
-      "immutable": true,
-      "serverrequired": true
-    },
-    "registryid": {
-      "name": "registryid",
-      "type": "string",
-      "immutable": true,
-      "serverrequired": true
-    },
-    "self": {
-      "name": "self",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "xid": {
-      "name": "xid",
-      "type": "url",
-      "readonly": true,
-      "serverrequired": true
-    },
-    "epoch": {
-      "name": "epoch",
-      "type": "uinteger",
-      "serverrequired": true
-    },
-    "name": {
-      "name": "name",
-      "type": "string"
-    },
-    "description": {
-      "name": "description",
-      "type": "string"
-    },
-    "documentation": {
-      "name": "documentation",
-      "type": "url"
-    },
-    "labels": {
-      "name": "labels",
-      "type": "map",
-      "item": {
-        "type": "string"
-      }
-    },
-    "createdat": {
-      "name": "createdat",
-      "type": "timestamp",
-      "serverrequired": true
-    },
-    "modifiedat": {
-      "name": "modifiedat",
-      "type": "timestamp",
-      "serverrequired": true
-    }
-  }
-}
-`)
+	xHTTP(t, reg, "GET", "/model/foo", "", 404, "Not found\n")
 }
 
 func TestGroupModelCreate(t *testing.T) {
@@ -454,9 +163,6 @@ func TestGroupModelCreate(t *testing.T) {
 	xNoErr(t, err)
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -582,9 +288,6 @@ func TestGroupModelCreate(t *testing.T) {
 `)
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -710,9 +413,6 @@ func TestGroupModelCreate(t *testing.T) {
 `)
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -896,9 +596,6 @@ func TestResourceModelCreate(t *testing.T) {
 	xCheck(t, rm != nil && err == nil, "gm2/rm2 should have worked")
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -1351,9 +1048,6 @@ func TestResourceModelCreate(t *testing.T) {
 
 	rm2.Delete()
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -1671,9 +1365,6 @@ func TestResourceModelCreate(t *testing.T) {
 `)
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -1992,9 +1683,6 @@ func TestResourceModelCreate(t *testing.T) {
 
 	gm2.Delete()
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -2254,9 +1942,6 @@ func TestResourceModelCreate(t *testing.T) {
 `)
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -2542,9 +2227,6 @@ func TestResourceModelCreate(t *testing.T) {
 
 	xNoErr(t, reg.Model.ApplyNewModel(newModel))
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -2838,9 +2520,6 @@ func TestResourceModelCreate(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "model": {
-    "schemas": [
-      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-    ],
     "attributes": {
       "specversion": {
         "name": "specversion",
@@ -3166,9 +2845,6 @@ func TestResourceModelCreate(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "model": {
-    "schemas": [
-      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-    ],
     "attributes": {
       "specversion": {
         "name": "specversion",
@@ -3464,9 +3140,6 @@ func TestResourceModelCreate(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "model": {
-    "schemas": [
-      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-    ],
     "attributes": {
       "specversion": {
         "name": "specversion",
@@ -3624,9 +3297,6 @@ func TestResourceModelCreate(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "model": {
-    "schemas": [
-      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-    ],
     "attributes": {
       "specversion": {
         "name": "specversion",
@@ -3781,9 +3451,6 @@ func TestMultModelCreate(t *testing.T) {
 	xCheck(t, rm22 != nil && err == nil, "rm12 should have worked: %s", err)
 
 	xCheckGet(t, reg, "/model", `{
-  "schemas": [
-    "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-  ],
   "attributes": {
     "specversion": {
       "name": "specversion",
@@ -4552,9 +4219,6 @@ func TestMultModel2Create(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "model": {
-    "schemas": [
-      "`+registry.XREGSCHEMA+"/"+registry.SPECVERSION+`"
-    ],
     "attributes": {
       "specversion": {
         "name": "specversion",

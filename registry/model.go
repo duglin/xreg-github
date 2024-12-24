@@ -8,7 +8,6 @@ import (
 	"maps"
 	"reflect"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +32,6 @@ func IsValidMapKey(key string) bool {
 
 type Model struct {
 	Registry   *Registry              `json:"-"`
-	Schemas    []string               `json:"schemas,omitempty"`
 	Attributes Attributes             `json:"attributes,omitempty"`
 	Groups     map[string]*GroupModel `json:"groups,omitempty"` // Plural
 }
@@ -228,47 +226,6 @@ func (r *ResourceModel) UnmarshalJSON(data []byte) error {
 	return Unmarshal(data, (*tmpResourceModel)(r))
 }
 
-func (m *Model) AddSchema(schema string) error {
-	err := Do(m.Registry.tx,
-		`INSERT INTO "Schemas" (RegistrySID, "Schema") VALUES(?,?)`,
-		m.Registry.DbSID, schema)
-	if err != nil {
-		err = fmt.Errorf("Error inserting schema(%s): %s", schema, err)
-		log.Print(err)
-		return err
-	}
-
-	for _, s := range m.Schemas {
-		if s == schema {
-			// already there
-			return nil
-		}
-	}
-
-	m.Schemas = append(m.Schemas, schema)
-	sort.Strings(m.Schemas)
-	return nil
-}
-
-func (m *Model) DelSchema(schema string) error {
-	err := Do(m.Registry.tx,
-		`DELETE FROM "Schemas" WHERE RegistrySID=? AND "Schema"=?`,
-		m.Registry.DbSID, schema)
-	if err != nil {
-		err = fmt.Errorf("Error deleting schema(%s): %s", schema, err)
-		log.Print(err)
-		return err
-	}
-
-	for i, s := range m.Schemas {
-		if s == schema {
-			m.Schemas = append(m.Schemas[:i], m.Schemas[i+1:]...)
-			return nil
-		}
-	}
-	return nil
-}
-
 func (m *Model) SetPointers() {
 	PanicIf(m.Registry == nil, "Model.Registry can't be nil")
 
@@ -358,11 +315,6 @@ func (m *Model) VerifyAndSave() error {
 }
 
 func (m *Model) Save() error {
-	err := m.SetSchemas(m.Schemas)
-	if err != nil {
-		return err
-	}
-
 	// Create a temporary type so that we don't use the MarshalJSON func
 	// in model.go. That one will exclude "model" from the serialization and
 	// we don't want to do that when we're saving it in the DB. We only want
@@ -371,7 +323,7 @@ func (m *Model) Save() error {
 	buf, _ := json.Marshal((tmpAttributes)(m.Attributes))
 	attrs := string(buf)
 
-	err = DoZeroOne(m.Registry.tx,
+	err := DoZeroOne(m.Registry.tx,
 		`UPDATE Registries SET Attributes=? WHERE SID=?`,
 		attrs, m.Registry.DbSID)
 	if err != nil {
@@ -385,25 +337,6 @@ func (m *Model) Save() error {
 		}
 	}
 
-	return nil
-}
-
-func (m *Model) SetSchemas(schemas []string) error {
-	err := Do(m.Registry.tx,
-		`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
-	if err != nil {
-		err = fmt.Errorf("Error deleting schemas: %s", err)
-		log.Print(err)
-		return err
-	}
-	m.Schemas = nil
-
-	for _, s := range schemas {
-		err = m.AddSchema(s)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -685,23 +618,6 @@ func LoadModel(reg *Registry) *Model {
 	model.Attributes.SetRegistry(reg)
 	model.Attributes.SetSpecPropsFields("registry")
 
-	// Load Schemas
-	results, err = Query(reg.tx, `
-        SELECT RegistrySID, "Schema" FROM "Schemas"
-        WHERE RegistrySID=?
-        ORDER BY "Schema" ASC`, reg.DbSID)
-	defer results.Close()
-
-	if err != nil {
-		log.Printf("Error loading schemas(%s): %s", reg.UID, err)
-		return nil
-	}
-
-	for row := results.NextRow(); row != nil; row = results.NextRow() {
-		model.Schemas = append(model.Schemas, NotNilString(row[1]))
-	}
-	results.Close()
-
 	// Load Groups & Resources
 	results, err = Query(reg.tx, `
         SELECT
@@ -795,20 +711,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 		return err
 	}
 
-	// Delete old Schemas, then add new ones
-	m.Schemas = []string{XREGSCHEMA + "/" + SPECVERSION}
-	err := Do(m.Registry.tx,
-		`DELETE FROM "Schemas" WHERE RegistrySID=?`, m.Registry.DbSID)
-	if err != nil {
-		return err
-	}
-
-	for _, schema := range newM.Schemas {
-		if err = m.AddSchema(schema); err != nil {
-			return err
-		}
-	}
-
+	var err error
 	m.Attributes = newM.Attributes
 
 	// Find all old groups that need to be deleted
@@ -1448,19 +1351,6 @@ func EnsureAttrOK(userAttr *Attribute, specAttr *Attribute) error {
 }
 
 func (m *Model) Verify() error {
-	found := false
-	for _, s := range m.Schemas {
-		if strings.EqualFold(s, XREGSCHEMA+"/"+SPECVERSION) {
-			found = true
-			break
-		}
-	}
-	if !found {
-		m.Schemas = append([]string{XREGSCHEMA + "/" + SPECVERSION},
-			m.Schemas...)
-	}
-	sort.Strings(m.Schemas)
-
 	// First, make sure we have the xRegistry core/spec defined attributes
 	// in the list and they're not changed in an inappropriate way.
 	// This just checks the Registry.Attributes. Groups and Resources will

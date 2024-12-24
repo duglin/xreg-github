@@ -15,23 +15,8 @@ func TestModelVerifySimple(t *testing.T) {
 	tests := []Test{
 		{"empty model", Model{}, ""},
 		{"empty model - 2", Model{
-			Schemas:    []string{},
 			Attributes: map[string]*Attribute{},
 			Groups:     map[string]*GroupModel{},
-		}, ""},
-
-		{"empty schemas", Model{
-			Schemas: []string{},
-		}, ""},
-		{"json schema", Model{
-			Schemas: []string{"jsonSchema"},
-		}, ""},
-		{"mulitple schemas", Model{
-			Schemas: []string{"jsonSchema", "jsonSchema/v1"},
-		}, ""},
-		{"schema + empty reg attrs", Model{
-			Schemas:    []string{"xxx"},
-			Attributes: Attributes{},
 		}, ""},
 
 		{"reg 1 attr - full", Model{

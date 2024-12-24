@@ -136,7 +136,6 @@ func NewRegistry(tx *Tx, id string, regOpts ...RegOpt) (*Registry, error) {
 	reg.Capabilities = DefaultCapabilities
 	reg.Model = &Model{
 		Registry: reg,
-		Schemas:  []string{XREGSCHEMA + "/" + SPECVERSION},
 		Groups:   map[string]*GroupModel{},
 	}
 
