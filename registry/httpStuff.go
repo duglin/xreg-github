@@ -509,7 +509,7 @@ func (pw *PageWriter) Done() {
     margin-bottom: 10px ;
   }
   #commit {
-	background-color: lightsteelblue ;
+    background-color: lightsteelblue ;
     font-size: 12px ;
     font-family: courier ;
     position: fixed ;
@@ -552,7 +552,40 @@ func (pw *PageWriter) Done() {
     padding: 5px ;
     flex: 1 ;
     overflow: auto ;
+    font-family: courier ;
+    font-size: 14px ;
+    white-space: pre ;
   }
+
+  .spc {
+    cursor: default ;
+    width: 14px ;
+    display: inline ;
+    user-select: none ;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    text-align: center ;
+  }
+
+  .exp {
+    cursor: default ;
+    width: 1ch ;
+    display: inline-block ;
+    user-select: none ;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    text-align: center ;
+
+    // background-color: lightsteelblue ; // #e7eff7 ;
+    // color: black ;
+    font-weight: bold ;
+  }
+
+  .hide {
+    width:0px ;
+    display:inline-block ;
+  }
+
   pre {
     margin: 0px ;
   }
@@ -589,12 +622,12 @@ func (pw *PageWriter) Done() {
 var structureswitch = `+structureswitch+`;
 
 function changeRegistry(name) {
-	var loc = ""
+  var loc = ""
 
-	if (name == "Default") loc = "/?ui"
-	else loc = "/reg-" + name + "?ui"
+  if (name == "Default") loc = "/?ui"
+  else loc = "/reg-" + name + "?ui"
 
-	window.location = loc
+  window.location = loc
 }
 
 function apply() {
@@ -621,6 +654,18 @@ function apply() {
 
   window.location = loc
 }
+
+function toggleExp(elem) {
+  var id = elem.id
+  var block = document.getElementById(id+'block')
+  var exp = (block.style.display == "none")
+
+  elem.innerHTML = (exp ? "`+HTML_EXP+`" : "`+HTML_MIN+`")
+
+  block.style.display = (exp?"inline":"none")
+  document.getElementById(id+'dots').style.display = (exp?"none":"inline")
+}
+
 </script>
 
 <div id=right>
@@ -634,11 +679,8 @@ function apply() {
   <div id=urlPath>
   <b>Path:</b> `+urlPath+`
   </div>
-  <div id=myOutput>
-    <pre>%s</pre>
-  </div>
-  <!-- <div id=buttonBar>%s</div> -->
-</div>
+  <div id=myOutput>%s</div> <!--myOutput-->
+</div> <!--right-->
 </html>
 `, RegHTMLify(pw.Info.OriginalRequest, buf))))
 
