@@ -557,6 +557,23 @@ func (pw *PageWriter) Done() {
     white-space: pre ;
   }
 
+  .expandAll {
+    display: inline-flex ;
+	position: fixed ;
+	top: 30 ;
+	right: 16 ;
+  }
+
+  .expandBtn {
+    display: inline-block ;
+	width: 2ch ;
+	text-align: center ;
+	border: 1px solid darkgrey ;
+	border-radius: 5px ;
+	background-color: lightgrey ;
+	margin-right: 2px ;
+  }
+
   .spc {
     cursor: default ;
     width: 14px ;
@@ -577,8 +594,9 @@ func (pw *PageWriter) Done() {
     text-align: center ;
 
     // background-color: lightsteelblue ; // #e7eff7 ;
-    // color: black ;
+    color: black ;
     font-weight: bold ;
+	font-size: smaller ;
   }
 
   .hide {
@@ -655,10 +673,18 @@ function apply() {
   window.location = loc
 }
 
-function toggleExp(elem) {
+function toggleExp(elem, exp) {
+  if ( !elem ) {
+    for ( var i = 1 ;; i++ ) {
+      elem = document.getElementById("s"+i)
+      if ( !elem ) return false
+      toggleExp(elem, exp)
+    }
+  }
+
   var id = elem.id
   var block = document.getElementById(id+'block')
-  var exp = (block.style.display == "none")
+  if ( exp === undefined ) exp = (block.style.display == "none")
 
   elem.innerHTML = (exp ? "`+HTML_EXP+`" : "`+HTML_MIN+`")
 
@@ -679,7 +705,10 @@ function toggleExp(elem) {
   <div id=urlPath>
   <b>Path:</b> `+urlPath+`
   </div>
-  <div id=myOutput>%s</div> <!--myOutput-->
+  <div id=myOutput><div class=expandAll>
+    <span class=expandBtn title="Collapse all" onclick=toggleExp(null,false)>`+HTML_MIN+`</span>
+    <span class=expandBtn title="Expand all" onclick=toggleExp(null,true)>`+HTML_EXP+`</span>
+  </div><div id='text'>%s</div></div> <!--myOutput-->
 </div> <!--right-->
 </html>
 `, RegHTMLify(pw.Info.OriginalRequest, buf))))
