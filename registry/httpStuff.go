@@ -613,7 +613,6 @@ func (pw *PageWriter) Done() {
     list-style-type: circle ;
   }
 </style>
-<body xxonkeydown=dokeydown(event)>
 <div id=left>
   <b>Registry:</b>
   <select onchange="changeRegistry(value)">`+list+`  </select>
@@ -695,11 +694,12 @@ function toggleExp(elem, exp) {
 
 function dokeydown(event) {
   if (event.key == "a" && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault(); // don't bubble event
+
     // make ctl-a only select the output, not the entire page
-    event.preventDefault();
     var range = document.createRange()
     range.selectNodeContents(document.getElementById("text"))
-    window.getSelection().removeAllRanges()
+    window.getSelection().empty()
     window.getSelection().addRange(range)
   }
 }

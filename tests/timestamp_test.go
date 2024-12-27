@@ -10,27 +10,6 @@ import (
 	"github.com/duglin/xreg-github/registry"
 )
 
-var TSREGEXP = `\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[-+]\d{2}:\d{2})`
-var TSMASK = TSREGEXP + `||YYYY-MM-DDTHH:MM:SSZ`
-
-// Mask timestamps, but if (for the same input) the same TS is used, make sure
-// the mask result is the same for just those two
-func MaskTimestamps(input string) string {
-	seenTS := map[string]string{}
-
-	replaceFunc := func(input string) string {
-		if val, ok := seenTS[input]; ok {
-			return val
-		}
-		val := fmt.Sprintf("YYYY-MM-DDTHH:MM:%02dZ", len(seenTS)+1)
-		seenTS[input] = val
-		return val
-	}
-
-	re := savedREs[TSREGEXP]
-	return re.ReplaceAllStringFunc(input, replaceFunc)
-}
-
 func TestTimestampRegistry(t *testing.T) {
 	reg := NewRegistry("TestTimestampRegistry")
 	defer PassDeleteReg(t, reg)
