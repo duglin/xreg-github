@@ -613,7 +613,7 @@ func (pw *PageWriter) Done() {
     list-style-type: circle ;
   }
 </style>
-<body onkeydown=dokeydown(event)>
+<body xxonkeydown=dokeydown(event)>
 <div id=left>
   <b>Registry:</b>
   <select onchange="changeRegistry(value)">`+list+`  </select>
@@ -717,13 +717,12 @@ function dokeydown(event) {
   <div id=urlPath>
   <b>Path:</b> `+urlPath+`
   </div>
-  <div id=myOutput><div class=expandAll>
+  <div id=myOutput tabindex=0 onkeydown=dokeydown(event)><div class=expandAll>
     <span class=expandBtn title="Collapse all" onclick=toggleExp(null,false)>`+HTML_MIN+`</span>
     <span class=expandBtn title="Expand all" onclick=toggleExp(null,true)>`+HTML_EXP+`</span>
   </div><div id='text'>%s</div></div> <!--myOutput-->
 </div> <!--right-->
 
-</body>
 </html>
 `, RegHTMLify(pw.Info.OriginalRequest, buf))))
 
