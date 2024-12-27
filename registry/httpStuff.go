@@ -613,6 +613,7 @@ func (pw *PageWriter) Done() {
     list-style-type: circle ;
   }
 </style>
+<body onkeydown=dokeydown(event)>
 <div id=left>
   <b>Registry:</b>
   <select onchange="changeRegistry(value)">`+list+`  </select>
@@ -692,6 +693,17 @@ function toggleExp(elem, exp) {
   document.getElementById(id+'dots').style.display = (exp?"none":"inline")
 }
 
+function dokeydown(event) {
+  if (event.key == "a" && (event.ctrlKey || event.metaKey)) {
+    // make ctl-a only select the output, not the entire page
+    event.preventDefault();
+    var range = document.createRange()
+    range.selectNodeContents(document.getElementById("text"))
+    window.getSelection().removeAllRanges()
+    window.getSelection().addRange(range)
+  }
+}
+
 </script>
 
 <div id=right>
@@ -710,6 +722,8 @@ function toggleExp(elem, exp) {
     <span class=expandBtn title="Expand all" onclick=toggleExp(null,true)>`+HTML_EXP+`</span>
   </div><div id='text'>%s</div></div> <!--myOutput-->
 </div> <!--right-->
+
+</body>
 </html>
 `, RegHTMLify(pw.Info.OriginalRequest, buf))))
 
