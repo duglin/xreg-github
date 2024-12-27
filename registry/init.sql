@@ -35,7 +35,6 @@ SET sql_mode = 'ANSI_QUOTES' ;
 CREATE TABLE Registries (
     SID     VARCHAR(255) NOT NULL,  # System ID
     UID     VARCHAR(255) NOT NULL,  # User defined
-    Attributes  JSON,               # Until we use the Attributes table
 
     PRIMARY KEY (SID),
     UNIQUE INDEX (UID)
@@ -51,6 +50,9 @@ END ;
 
 CREATE TABLE Models (
     RegistrySID VARCHAR(64) NOT NULL,
+
+    Labels      JSON,
+    Attributes  JSON,               # Until we use the Attributes table
 
     PRIMARY KEY (RegistrySID)
 );
@@ -77,6 +79,7 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     HasDocument       BOOL,
     ReadOnly          BOOL,
     TypeMap           JSON,
+    Labels            JSON,
     MetaAttributes    JSON,
 
     PRIMARY KEY(SID),
@@ -355,10 +358,10 @@ FROM EffectiveVersions AS v ;
 CREATE VIEW xRefProps AS
 SELECT
     xR.RegistrySID,
-	Ms.SID AS EntitySID,
-	P.PropName,
-	P.PropValue,
-	P.PropType
+    Ms.SID AS EntitySID,
+    P.PropName,
+    P.PropValue,
+    P.PropType
 FROM xRefSrc2TgtResources AS xR
 JOIN Metas AS Ms ON (Ms.ResourceSID=xR.SourceSID)
 JOIN Metas AS Mt ON (Mt.ResourceSID=xR.TargetSID)
@@ -424,10 +427,10 @@ WHERE p1.PropName='defaultVersionId$DB_IN' AND v.UID=p1.PropValue
 /*
 SELECT
     m.RegistrySID,
-	m.ResourceSID AS EntitySID,
-	p.PropName,
-	p.PropValue,
-	p.PropType
+    m.ResourceSID AS EntitySID,
+    p.PropName,
+    p.PropValue,
+    p.PropType
 FROM Metas m
 JOIN EffectiveProps AS dvp ON (dvp.EntitySID=m.SID AND
      dvp.PropName='defaultVersionId,')

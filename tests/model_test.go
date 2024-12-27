@@ -4871,3 +4871,850 @@ func TestMultModel2Create(t *testing.T) {
 	xCheckGet(t, reg, "?inline&oneline",
 		`{"dirs0":{},"dirs01":{},"dirs02":{},"dirs1":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}},"dirs14":{},"dirs15":{},"dirs16":{},"dirs2":{"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{}}}}}},"dirs3":{},"dirs4":{},"dirs5":{}}`)
 }
+
+func TestModelLabels(t *testing.T) {
+	reg := NewRegistry("TestModelLabels")
+	defer PassDeleteReg(t, reg)
+	xCheck(t, reg != nil, "reg create didn't work")
+
+	xNoErr(t, reg.Model.AddLabel("reg-label", "reg-value"))
+
+	gm, err := reg.Model.AddGroupModel("gms1", "gm1")
+	xCheck(t, gm != nil && err == nil, "gm should have worked")
+	xNoErr(t, gm.AddLabel("g-label", "g-value"))
+
+	rm, err := gm.AddResourceModel("rms", "rm", 0, true, true, true)
+	xCheck(t, rm != nil && err == nil, "rm should have worked: %s", err)
+	xNoErr(t, rm.AddLabel("r-label", "r-value"))
+
+	reg.SaveAllAndCommit()
+	reg.Refresh()
+
+	xCheckGet(t, reg, "/model", `{
+  "labels": {
+    "reg-label": "reg-value"
+  },
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "immutable": true,
+      "serverrequired": true
+    },
+    "registryid": {
+      "name": "registryid",
+      "type": "string",
+      "immutable": true,
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "xid": {
+      "name": "xid",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdat": {
+      "name": "createdat",
+      "type": "timestamp",
+      "serverrequired": true
+    },
+    "modifiedat": {
+      "name": "modifiedat",
+      "type": "timestamp",
+      "serverrequired": true
+    }
+  },
+  "groups": {
+    "gms1": {
+      "plural": "gms1",
+      "singular": "gm1",
+      "labels": {
+        "g-label": "g-value"
+      },
+      "attributes": {
+        "gm1id": {
+          "name": "gm1id",
+          "type": "string",
+          "immutable": true,
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "xid": {
+          "name": "xid",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "serverrequired": true
+        },
+        "modifiedat": {
+          "name": "modifiedat",
+          "type": "timestamp",
+          "serverrequired": true
+        }
+      },
+      "resources": {
+        "rms": {
+          "plural": "rms",
+          "singular": "rm",
+          "maxversions": 0,
+          "setversionid": true,
+          "setdefaultversionsticky": true,
+          "hasdocument": true,
+          "labels": {
+            "r-label": "r-value"
+          },
+          "attributes": {
+            "rmid": {
+              "name": "rmid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xid": {
+              "name": "xid",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "isdefault": {
+              "name": "isdefault",
+              "type": "boolean",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "createdat": {
+              "name": "createdat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "modifiedat": {
+              "name": "modifiedat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          },
+          "metaattributes": {
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xid": {
+              "name": "xid",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "createdat": {
+              "name": "createdat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "modifiedat": {
+              "name": "modifiedat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "defaultversionid": {
+              "name": "defaultversionid",
+              "type": "string",
+              "serverrequired": true
+            },
+            "defaultversionurl": {
+              "name": "defaultversionurl",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "defaultversionsticky": {
+              "name": "defaultversionsticky",
+              "type": "boolean",
+              "readonly": true
+            },
+            "rmid": {
+              "name": "rmid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`)
+
+	xNoErr(t, reg.Refresh())
+	reg.LoadModel()
+
+	gm = reg.Model.FindGroupModel(gm.Plural)
+	rm = gm.Resources[rm.Plural]
+
+	xNoErr(t, reg.Model.RemoveLabel("reg-label"))
+	xNoErr(t, gm.RemoveLabel("g-label"))
+	xNoErr(t, rm.RemoveLabel("r-label"))
+
+	xCheckGet(t, reg, "/model", `{
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "immutable": true,
+      "serverrequired": true
+    },
+    "registryid": {
+      "name": "registryid",
+      "type": "string",
+      "immutable": true,
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "xid": {
+      "name": "xid",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdat": {
+      "name": "createdat",
+      "type": "timestamp",
+      "serverrequired": true
+    },
+    "modifiedat": {
+      "name": "modifiedat",
+      "type": "timestamp",
+      "serverrequired": true
+    }
+  },
+  "groups": {
+    "gms1": {
+      "plural": "gms1",
+      "singular": "gm1",
+      "attributes": {
+        "gm1id": {
+          "name": "gm1id",
+          "type": "string",
+          "immutable": true,
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "xid": {
+          "name": "xid",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "serverrequired": true
+        },
+        "modifiedat": {
+          "name": "modifiedat",
+          "type": "timestamp",
+          "serverrequired": true
+        }
+      },
+      "resources": {
+        "rms": {
+          "plural": "rms",
+          "singular": "rm",
+          "maxversions": 0,
+          "setversionid": true,
+          "setdefaultversionsticky": true,
+          "hasdocument": true,
+          "attributes": {
+            "rmid": {
+              "name": "rmid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xid": {
+              "name": "xid",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "isdefault": {
+              "name": "isdefault",
+              "type": "boolean",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "createdat": {
+              "name": "createdat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "modifiedat": {
+              "name": "modifiedat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          },
+          "metaattributes": {
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xid": {
+              "name": "xid",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "createdat": {
+              "name": "createdat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "modifiedat": {
+              "name": "modifiedat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "defaultversionid": {
+              "name": "defaultversionid",
+              "type": "string",
+              "serverrequired": true
+            },
+            "defaultversionurl": {
+              "name": "defaultversionurl",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "defaultversionsticky": {
+              "name": "defaultversionsticky",
+              "type": "boolean",
+              "readonly": true
+            },
+            "rmid": {
+              "name": "rmid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/model", `{
+  "labels": {
+    "reg-label": "reg-value"
+  },
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "labels": {
+        "g-label": "g-value"
+      },
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "labels": {
+            "r-label": "r-value"
+          }
+        }
+      }
+    }
+  }
+}`, 200, `{
+  "labels": {
+    "reg-label": "reg-value"
+  },
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "immutable": true,
+      "serverrequired": true
+    },
+    "registryid": {
+      "name": "registryid",
+      "type": "string",
+      "immutable": true,
+      "serverrequired": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "xid": {
+      "name": "xid",
+      "type": "url",
+      "readonly": true,
+      "serverrequired": true
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "serverrequired": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdat": {
+      "name": "createdat",
+      "type": "timestamp",
+      "serverrequired": true
+    },
+    "modifiedat": {
+      "name": "modifiedat",
+      "type": "timestamp",
+      "serverrequired": true
+    }
+  },
+  "groups": {
+    "dirs": {
+      "plural": "dirs",
+      "singular": "dir",
+      "labels": {
+        "g-label": "g-value"
+      },
+      "attributes": {
+        "dirid": {
+          "name": "dirid",
+          "type": "string",
+          "immutable": true,
+          "serverrequired": true
+        },
+        "self": {
+          "name": "self",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "xid": {
+          "name": "xid",
+          "type": "url",
+          "readonly": true,
+          "serverrequired": true
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uinteger",
+          "serverrequired": true
+        },
+        "name": {
+          "name": "name",
+          "type": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "string"
+        },
+        "documentation": {
+          "name": "documentation",
+          "type": "url"
+        },
+        "labels": {
+          "name": "labels",
+          "type": "map",
+          "item": {
+            "type": "string"
+          }
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "serverrequired": true
+        },
+        "modifiedat": {
+          "name": "modifiedat",
+          "type": "timestamp",
+          "serverrequired": true
+        }
+      },
+      "resources": {
+        "files": {
+          "plural": "files",
+          "singular": "file",
+          "maxversions": 0,
+          "setversionid": true,
+          "setdefaultversionsticky": true,
+          "hasdocument": true,
+          "labels": {
+            "r-label": "r-value"
+          },
+          "attributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
+            "versionid": {
+              "name": "versionid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xid": {
+              "name": "xid",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "name": {
+              "name": "name",
+              "type": "string"
+            },
+            "isdefault": {
+              "name": "isdefault",
+              "type": "boolean",
+              "readonly": true
+            },
+            "description": {
+              "name": "description",
+              "type": "string"
+            },
+            "documentation": {
+              "name": "documentation",
+              "type": "url"
+            },
+            "labels": {
+              "name": "labels",
+              "type": "map",
+              "item": {
+                "type": "string"
+              }
+            },
+            "createdat": {
+              "name": "createdat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "modifiedat": {
+              "name": "modifiedat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "contenttype": {
+              "name": "contenttype",
+              "type": "string"
+            }
+          },
+          "metaattributes": {
+            "self": {
+              "name": "self",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xid": {
+              "name": "xid",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "xref": {
+              "name": "xref",
+              "type": "url"
+            },
+            "epoch": {
+              "name": "epoch",
+              "type": "uinteger",
+              "serverrequired": true
+            },
+            "createdat": {
+              "name": "createdat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "modifiedat": {
+              "name": "modifiedat",
+              "type": "timestamp",
+              "serverrequired": true
+            },
+            "defaultversionid": {
+              "name": "defaultversionid",
+              "type": "string",
+              "serverrequired": true
+            },
+            "defaultversionurl": {
+              "name": "defaultversionurl",
+              "type": "url",
+              "readonly": true,
+              "serverrequired": true
+            },
+            "defaultversionsticky": {
+              "name": "defaultversionsticky",
+              "type": "boolean",
+              "readonly": true
+            },
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`)
+
+}

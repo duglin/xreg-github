@@ -32,6 +32,7 @@ func IsValidMapKey(key string) bool {
 
 type Model struct {
 	Registry   *Registry              `json:"-"`
+	Labels     map[string]string      `json:"labels,omitempty"`
 	Attributes Attributes             `json:"attributes,omitempty"`
 	Groups     map[string]*GroupModel `json:"groups,omitempty"` // Plural
 }
@@ -96,9 +97,10 @@ type GroupModel struct {
 	SID      string    `json:"-"`
 	Registry *Registry `json:"-"`
 
-	Plural     string     `json:"plural"`
-	Singular   string     `json:"singular"`
-	Attributes Attributes `json:"attributes,omitempty"`
+	Plural     string            `json:"plural"`
+	Singular   string            `json:"singular"`
+	Labels     map[string]string `json:"labels,omitempty"`
+	Attributes Attributes        `json:"attributes,omitempty"`
 
 	Resources map[string]*ResourceModel `json:"resources,omitempty"` // Plural
 }
@@ -115,6 +117,7 @@ type ResourceModel struct {
 	HasDocument      *bool             `json:"hasdocument"`             // do not include omitempty
 	ReadOnly         bool              `json:"readonly,omitempty"`
 	TypeMap          map[string]string `json:"typemap,omitempty"`
+	Labels           map[string]string `json:"labels,omitempty"`
 	Attributes       Attributes        `json:"attributes,omitempty"`
 	MetaAttributes   Attributes        `json:"metaattributes,omitempty"`
 }
@@ -323,9 +326,16 @@ func (m *Model) Save() error {
 	buf, _ := json.Marshal((tmpAttributes)(m.Attributes))
 	attrs := string(buf)
 
-	err := DoZeroOne(m.Registry.tx,
-		`UPDATE Registries SET Attributes=? WHERE SID=?`,
-		attrs, m.Registry.DbSID)
+	buf, _ = json.Marshal(m.Labels)
+	labels := string(buf)
+
+	err := DoZeroTwo(m.Registry.tx, `
+        INSERT INTO Models(RegistrySID, Labels, Attributes)
+        VALUES(?,?,?)
+        ON DUPLICATE KEY UPDATE Labels=?,Attributes=? `,
+
+		m.Registry.DbSID, labels, attrs,
+		labels, attrs)
 	if err != nil {
 		log.Printf("Error updating model: %s", err)
 		return err
@@ -464,6 +474,42 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 	return gm, nil
 }
 
+func (m *Model) AddLabel(name string, value string) error {
+	oldLabels := maps.Clone(m.Labels)
+
+	if m.Labels == nil {
+		m.Labels = map[string]string{}
+	}
+	m.Labels[name] = value
+
+	if err := m.VerifyAndSave(); err != nil {
+		// Undo
+		m.Labels = oldLabels
+		return err
+	}
+	return nil
+}
+
+func (m *Model) RemoveLabel(name string) error {
+	if m.Labels == nil {
+		return nil
+	}
+
+	oldLabels := maps.Clone(m.Labels)
+
+	delete(m.Labels, name)
+	if len(m.Labels) == 0 {
+		m.Labels = nil
+	}
+
+	if err := m.VerifyAndSave(); err != nil {
+		// Undo
+		m.Labels = oldLabels
+		return err
+	}
+	return nil
+}
+
 func NewItem() *Item {
 	return &Item{}
 }
@@ -595,9 +641,9 @@ func LoadModel(reg *Registry) *Model {
 		Groups:   map[string]*GroupModel{},
 	}
 
-	// Load Registry Attributes
+	// Load Registry Labels, Attributes
 	results, err := Query(reg.tx,
-		`SELECT Attributes FROM Registries WHERE SID=?`,
+		`SELECT Labels, Attributes FROM Models WHERE RegistrySID=?`,
 		reg.DbSID)
 	defer results.Close()
 	if err != nil {
@@ -611,7 +657,10 @@ func LoadModel(reg *Registry) *Model {
 	}
 
 	if row[0] != nil {
-		Unmarshal([]byte(NotNilString(row[0])), &model.Attributes)
+		Unmarshal([]byte(NotNilString(row[0])), &model.Labels)
+	}
+	if row[1] != nil {
+		Unmarshal([]byte(NotNilString(row[1])), &model.Attributes)
 	}
 	results.Close()
 
@@ -623,7 +672,7 @@ func LoadModel(reg *Registry) *Model {
         SELECT
             SID, RegistrySID, ParentSID, Plural, Singular, Attributes,
 			MaxVersions, SetVersionId, SetDefaultSticky, HasDocument, ReadOnly,
-			TypeMap, MetaAttributes
+			TypeMap, Labels, MetaAttributes
         FROM ModelEntities
         WHERE RegistrySID=?
         ORDER BY ParentSID ASC`, reg.DbSID)
@@ -644,8 +693,12 @@ func LoadModel(reg *Registry) *Model {
 		if row[11] != nil {
 			Unmarshal([]byte(NotNilString(row[11])), &typemap)
 		}
+		labels := map[string]string(nil)
 		if row[12] != nil {
-			Unmarshal([]byte(NotNilString(row[12])), &metaAttrs)
+			Unmarshal([]byte(NotNilString(row[12])), &labels)
+		}
+		if row[13] != nil {
+			Unmarshal([]byte(NotNilString(row[13])), &metaAttrs)
 		}
 
 		if *row[2] == nil { // ParentSID nil -> new Group
@@ -655,6 +708,7 @@ func LoadModel(reg *Registry) *Model {
 				Plural:     NotNilString(row[3]), // Plural
 				Singular:   NotNilString(row[4]), // Singular
 				Attributes: attrs,
+				Labels:     labels,
 
 				Resources: map[string]*ResourceModel{},
 			}
@@ -669,17 +723,19 @@ func LoadModel(reg *Registry) *Model {
 
 			if g != nil { // should always be true, but...
 				r := &ResourceModel{
-					SID:              NotNilString(row[0]),
-					GroupModel:       g,
-					Plural:           NotNilString(row[3]),
-					Singular:         NotNilString(row[4]),
-					Attributes:       attrs,
+					SID:        NotNilString(row[0]),
+					GroupModel: g,
+					Plural:     NotNilString(row[3]),
+					Singular:   NotNilString(row[4]),
+					Attributes: attrs,
+
 					MaxVersions:      NotNilIntDef(row[6], MAXVERSIONS),
 					SetVersionId:     PtrBool(NotNilBoolDef(row[7], SETVERSIONID)),
 					SetDefaultSticky: PtrBool(NotNilBoolDef(row[8], SETDEFAULTSTICKY)),
 					HasDocument:      PtrBool(NotNilBoolDef(row[9], HASDOCUMENT)),
 					ReadOnly:         NotNilBoolDef(row[10], READONLY),
 					TypeMap:          typemap,
+					Labels:           labels,
 					MetaAttributes:   metaAttrs,
 				}
 
@@ -712,6 +768,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 	}
 
 	var err error
+	m.Labels = newM.Labels
 	m.Attributes = newM.Attributes
 
 	// Find all old groups that need to be deleted
@@ -745,6 +802,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 		} else {
 			oldGM.Singular = newGM.Singular
 		}
+		oldGM.Labels = newGM.Labels
 		oldGM.Attributes = newGM.Attributes
 
 		for _, newRM := range newGM.Resources {
@@ -775,6 +833,8 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 			}
 			oldRM.Attributes = newRM.Attributes
 			oldRM.TypeMap = newRM.TypeMap
+			oldRM.Labels = newRM.Labels
+			oldRM.MetaAttributes = newRM.MetaAttributes
 		}
 	}
 
@@ -808,20 +868,23 @@ func (gm *GroupModel) Save() error {
 	// Just updates this GroupModel, not any Resources
 	// DO NOT use this to insert a new one
 
-	buf, _ := json.Marshal(gm.Attributes)
+	buf, _ := json.Marshal(gm.Labels)
+	labels := string(buf)
+
+	buf, _ = json.Marshal(gm.Attributes)
 	attrs := string(buf)
 
 	err := DoZeroTwo(gm.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID,
-			ParentSID, Plural, Singular, Attributes)
-        VALUES(?,?,?,?,?,?)
+			ParentSID, Plural, Singular, Labels, Attributes)
+        VALUES(?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
-		    ParentSID=?,Plural=?,Singular=?,Attributes=?
+		    ParentSID=?,Plural=?,Singular=?,Labels=?,Attributes=?
 		`,
 		gm.SID, gm.Registry.DbSID,
-		nil, gm.Plural, gm.Singular, attrs,
-		nil, gm.Plural, gm.Singular, attrs)
+		nil, gm.Plural, gm.Singular, labels, attrs,
+		nil, gm.Plural, gm.Singular, labels, attrs)
 	if err != nil {
 		log.Printf("Error updating groupModel(%s): %s", gm.Plural, err)
 	}
@@ -959,13 +1022,17 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	buf, _ := json.Marshal(rm.TypeMap)
 	typemap := string(buf)
 
+	buf, _ = json.Marshal(rm.Labels)
+	labels := string(buf)
+
 	err := DoOne(gm.Registry.tx, `
 		INSERT INTO ModelEntities(
 			SID, RegistrySID, ParentSID, Plural, Singular, MaxVersions,
-			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap)
-		VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
+			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap,
+			Labels)
+		VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
 		rm.SID, gm.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.MaxVersions,
-		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap)
+		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap, labels)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", rm.Plural, err)
 		return nil, err
@@ -981,6 +1048,42 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	}
 
 	return rm, nil
+}
+
+func (gm *GroupModel) AddLabel(name string, value string) error {
+	oldLabels := maps.Clone(gm.Labels)
+
+	if gm.Labels == nil {
+		gm.Labels = map[string]string{}
+	}
+	gm.Labels[name] = value
+
+	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		gm.Labels = oldLabels
+		return err
+	}
+	return nil
+}
+
+func (gm *GroupModel) RemoveLabel(name string) error {
+	if gm.Labels == nil {
+		return nil
+	}
+
+	oldLabels := maps.Clone(gm.Labels)
+
+	delete(gm.Labels, name)
+	if len(gm.Labels) == 0 {
+		gm.Labels = nil
+	}
+
+	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		gm.Labels = oldLabels
+		return err
+	}
+	return nil
 }
 
 func (rm *ResourceModel) GetSetVersionId() bool {
@@ -1016,10 +1119,12 @@ func (rm *ResourceModel) Save() error {
 	// Just updates this GroupModel, not any Resources
 	// DO NOT use this to insert a new one
 
-	buf, _ := json.Marshal(rm.Attributes)
-	attrs := string(buf)
-	buf, _ = json.Marshal(rm.TypeMap)
+	buf, _ := json.Marshal(rm.TypeMap)
 	typemap := string(buf)
+	buf, _ = json.Marshal(rm.Labels)
+	labels := string(buf)
+	buf, _ = json.Marshal(rm.Attributes)
+	attrs := string(buf)
 	buf, _ = json.Marshal(rm.MetaAttributes)
 	metaAttrs := string(buf)
 
@@ -1029,22 +1134,22 @@ func (rm *ResourceModel) Save() error {
 			ParentSID, Plural, Singular, MaxVersions,
 			Attributes,
 			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap,
-			MetaAttributes)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+			Labels, MetaAttributes)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON DUPLICATE KEY UPDATE
             ParentSID=?, Plural=?, Singular=?,
 			Attributes=?,
-            MaxVersions=?, SetVersionId=?, SetDefaultSticky=?, HasDocument=?, ReadOnly=?, TypeMap=?,
+            MaxVersions=?, SetVersionId=?, SetDefaultSticky=?, HasDocument=?, ReadOnly=?, TypeMap=?, Labels=?,
 			MetaAttributes=?`,
 		rm.SID, rm.GroupModel.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.MaxVersions,
 		attrs,
-		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap,
+		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap, labels,
 		metaAttrs,
 
 		rm.GroupModel.SID, rm.Plural, rm.Singular,
 		attrs,
-		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap,
+		rm.MaxVersions, rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap, labels,
 		metaAttrs)
 	if err != nil {
 		log.Printf("Error updating resourceModel(%s): %s", rm.Plural, err)
@@ -1909,6 +2014,42 @@ func (rm *ResourceModel) RemoveTypeMap(ct string) error {
 	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
 		// Undo
 		rm.TypeMap = oldMap
+		return err
+	}
+	return nil
+}
+
+func (rm *ResourceModel) AddLabel(name string, value string) error {
+	oldLabels := maps.Clone(rm.Labels)
+
+	if rm.Labels == nil {
+		rm.Labels = map[string]string{}
+	}
+	rm.Labels[name] = value
+
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		rm.Labels = oldLabels
+		return err
+	}
+	return nil
+}
+
+func (rm *ResourceModel) RemoveLabel(name string) error {
+	if rm.Labels == nil {
+		return nil
+	}
+
+	oldLabels := maps.Clone(rm.Labels)
+
+	delete(rm.Labels, name)
+	if len(rm.Labels) == 0 {
+		rm.Labels = nil
+	}
+
+	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+		// Undo
+		rm.Labels = oldLabels
 		return err
 	}
 	return nil

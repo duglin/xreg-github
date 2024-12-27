@@ -43,6 +43,7 @@ test: .test .testimage
 	@make mysql waitformysql
 	@echo
 	@echo "# Testing"
+	@! grep -P '\t' registry/init.sql || (echo "Remove tabs in init.db";exit 1)
 	@go clean -testcache
 	@echo "go test -failfast $(TESTDIRS)"
 	@for s in $(TESTDIRS); do if ! go test -failfast $$s; then exit 1; fi; done
