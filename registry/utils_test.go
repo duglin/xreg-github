@@ -400,3 +400,38 @@ func TestMatch(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeShort(t *testing.T) {
+	tests := []struct {
+		in  []byte
+		exp string
+	}{
+		{in: []byte{}, exp: ""},
+
+		{in: []byte{0}, exp: "aa"},
+		{in: []byte{0, 0}, exp: "aaa"},
+		{in: []byte{0, 0, 0}, exp: "aaaa"},
+
+		{in: []byte{0x0F}, exp: "dW"},        // 000011 11.... -> 3, 32+16(48)
+		{in: []byte{0x0F, 0xFF}, exp: "d@8"}, // 000011,111111,111100->3,63,60
+		{in: []byte{0xF0}, exp: "8a"},        // 111100,00000 -> 60,0
+		{in: []byte{0xF0, 0xFF}, exp: "8p8"}, // 111100,001111,1111..:60,15,60
+
+		{in: []byte{0xFF}, exp: "@W"},        // 111111,11.... : 63,48
+		{in: []byte{0xFF, 0xFF}, exp: "@@8"}, // 111111 111111 1111..:63,63,60
+		{in: []byte{0xFF, 0xFF, 0xFF}, exp: "@@@@"},
+		{in: []byte{0xFF, 0xFF, 0xFF, 0xFF}, exp: "@@@@@W"},
+
+		{in: []byte{0xAA, 0xAA, 0xAA, 0xAA}, exp: "QQQQQG"},
+		{in: []byte{0x55, 0x55, 0x55, 0x55}, exp: "vvvvvq"},
+		{in: []byte{0xA5, 0xA5, 0xA5, 0xA5}, exp: "PAwLPq"},
+	}
+
+	for _, test := range tests {
+		res := MakeShort(test.in)
+		if res != test.exp {
+			t.Errorf("%x should map to %q, got %q", test.in, test.exp, res)
+			t.FailNow()
+		}
+	}
+}

@@ -949,9 +949,12 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: true,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
+				path := e.Path
+
 				if info != nil {
 					base = info.BaseURL
 				}
+
 				if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 					meta := info != nil && (info.ShowStructure || info.ResourceUID == "" || len(info.Parts) == 5)
 					_, rm := e.GetModels()
@@ -960,17 +963,51 @@ var OrderedSpecProps = []*Attribute{
 					}
 
 					if meta {
-						return base + "/" + e.Path + "$structure"
-					} else {
-						return base + "/" + e.Path
+						path += "$structure"
 					}
 				}
-				return base + "/" + e.Path
+				return base + "/" + path
 			},
 			checkFn:  nil,
 			updateFn: nil,
 		},
 	},
+	/*
+		{
+			Name:           "shortself",
+			Type:           URL,
+			ReadOnly:       true,
+			ServerRequired: true,
+
+			internals: AttrInternals{
+				types:     "",
+				dontStore: true,
+				getFn: func(e *Entity, info *RequestInfo) any {
+					path := e.Path
+					base := ""
+					if info != nil {
+						base = info.BaseURL
+					}
+					if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
+						meta := info != nil && (info.ShowStructure || info.ResourceUID == "" || len(info.Parts) == 5)
+						_, rm := e.GetModels()
+						if rm.GetHasDocument() == false {
+							meta = false
+						}
+
+						if meta {
+							path += "$structure"
+						}
+					}
+
+					shortself := MD5(path)
+					return base + "/r?u=" + shortself
+				},
+				checkFn:  nil,
+				updateFn: nil,
+			},
+		},
+	*/
 	{
 		Name:           "xid",
 		Type:           URL,

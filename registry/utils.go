@@ -2,13 +2,12 @@ package registry
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
-	// "net/url"
 	"io"
-	// "maps"
+	"math"
 	"net/http"
 	"os"
 	"path"
@@ -18,12 +17,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/duglin/dlog"
 	"github.com/google/uuid"
 )
 
-var count = 0
+var count = 0 // UUID counter
 
 func NewUUID() string {
 	count++ // Help keep it unique w/o using the entire UUID string
@@ -867,4 +867,69 @@ func ArrayContains(strs []string, needle string) bool {
 		}
 	}
 	return false
+}
+
+// Convert a string into a unique MD5 string - basically just for cases
+// where we want to create a tiny URL
+func MD5(str string) string {
+	sum := md5.Sum([]byte(str)) // 16 bytes, 128 bits
+	return MakeShort(sum[:])
+}
+
+// Valid tiny URL chars.
+// Number of them needs to be a multiple of 2
+var ShortChars = "" +
+	"abcdefghijklmnopqrstuvwxyz" + // 0->25
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" + // 26->51
+	"0123456789" + // 52->61
+	"-@" // 62-63
+
+// Convert a []byte into a string that uses ShortChars as its encoding.
+// Similar to base64 but with a larger char set.
+func MakeShort(buf []byte) string {
+	// Each output char will take 6 bits, which means 64 possible chars.
+	// Which is the size of ShortChars.
+	// If we tried 7 bits, then we'd need 128 chars, which we don't have.
+
+	num := int(math.Ceil((float64(len(buf)) * 8) / 6)) // # of bytes in result
+	buf = append(buf, []byte{0}...)                    // add 0 if need padding
+
+	str := ""      // result string
+	size := 0      // size of str
+	startByte := 0 // current byte pos in buf
+	startBit := 0  // next bit in current byte to grab
+	ch := byte(0)  // index into ShortChars array
+	left := 6      // bits remaining for current ch (init to "all")
+
+	for size < num {
+		grab := 8 - startBit // try to grab the rest of current byte
+		if left < grab {
+			grab = left // only need 'grab' # of bites
+		}
+
+		ch = ch << grab // shift existing bits in ch to make sure for new bits
+
+		// Move bits we want all the way to the right
+		bufCH := buf[startByte] >> (8 - grab - startBit)
+		mask := byte(0xFF) >> (8 - grab) // grab/mask just bits of interest
+		ch |= (bufCH & mask)             // add buf's bits to ch
+
+		// Move to next bit, and next byte if needed
+		startBit += grab
+		if startBit >= 8 {
+			startByte++
+			startBit = 0 // 8 - startBit
+		}
+
+		// Are we done with current ch? If so, get ShortChar and reset
+		left = left - grab
+		if left == 0 {
+			str += string(ShortChars[ch])
+			size++
+			left = 6
+			ch = 0
+		}
+	}
+
+	return str
 }
