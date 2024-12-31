@@ -14687,3 +14687,43 @@ func TestHTTPDefVer(t *testing.T) {
 	})
 
 }
+
+func TestHTTPInvalidID(t *testing.T) {
+	reg := NewRegistry("TestHTTPInvalidID")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModelSimple("files", "file")
+
+	xHTTP(t, reg, "PUT", "/", `{"registryid": "*" }`, 400,
+		"\"*\" isn't a valid ID\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1*", `{}`, 400,
+		"\"d1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{"dirid": "d1*" }`, 400,
+		"\"d1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "POST", "/dirs/", `{"d1*":{}}`, 400,
+		"\"d1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "POST", "/dirs/", `{"d1*":{"dirid": "d1*" }}`, 400,
+		"\"d1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "POST", "/dirs/", `{"d1":{"dirid": "d2*" }}`, 400,
+		"\"d2*\" isn't a valid ID\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1*$structure", `{}`, 400,
+		"\"f1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{"fileid":"f1*"}`, 400,
+		"The \"fileid\" attribute must be set to \"f1\", not \"f1*\"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{"versionid":"v1*"}`,
+		400, "\"v1*\" isn't a valid ID\n")
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"v1*":{}}`, 400,
+		"\"v1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1*", `{}`, 400,
+		"\"v1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
+		`{"versionid": "v1*"}`, 400,
+		"\"v1*\" isn't a valid ID\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
+		`{"fileid": "f1*"}`, 400,
+		"\"f1*\" isn't a valid ID\n")
+}

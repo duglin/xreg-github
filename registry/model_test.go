@@ -61,6 +61,19 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		err   string
 	}
 
+	groups := map[string]*GroupModel{
+		"dirs": &GroupModel{
+			Plural:   "dirs",
+			Singular: "dir",
+			Resources: map[string]*ResourceModel{
+				"files": &ResourceModel{
+					Plural:   "files",
+					Singular: "file",
+				},
+			},
+		},
+	}
+
 	tests := []Test{
 		{"empty attrs", Model{Attributes: Attributes{}}, ""},
 		{"err - missing name", Model{
@@ -80,6 +93,68 @@ func TestModelVerifyRegAttr(t *testing.T) {
 			Attributes: Attributes{"x": {Name: "x", Type: DECIMAL}}}, ``},
 		{"type - integer", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: INTEGER}}}, ``},
+
+		{"err - type - relation - missing target", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION}}},
+			`"model.x" must have a "target" value since "type" is "relation"`},
+
+		{"err - type - relation - extra target", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: STRING, Target: "/"}}},
+			`"model.x" must not have a "target" value since "type" is not "relation"`},
+		{"err - type - relation - leading chars", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "xx/"}}},
+			`"model.x" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`},
+		{"err - type - relation - extra / at end", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/xx/"}}},
+			`"model.x" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`},
+		{"err - type - relation - spaces", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/  xx"}}},
+			`"model.x" has an unknown Group type: "  xx"`},
+		{"err - type - relation - bad group", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/badg"}},
+			Groups: groups},
+			`"model.x" has an unknown Group type: "badg"`,
+		},
+		{"err - type - relation - bad resource", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/dirs/badr"}},
+			Groups: groups},
+			`"model.x" has an unknown Resource type: "badr"`,
+		},
+		{"type - relation - reg", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/"}}, Groups: groups}, ``,
+		},
+		{"type - relation - group", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/dirs"}}, Groups: groups}, ``,
+		},
+		{"type - relation - res", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/dirs/files"}}, Groups: groups}, ``,
+		},
+		{"type - relation - versions", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/dirs/files/versions"}}, Groups: groups}, ``,
+		},
+		{"type - relation - both", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/dirs/files/versions?"}}, Groups: groups}, ``,
+		},
+
+		{"type - relation - reg", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: ""}}},
+			`"model.x" must have a "target" value since "type" is "relation"`},
+		{"type - relation - reg", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+				Target: "/"}}},
+			``},
+
 		{"type - string", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: STRING}}}, ``},
 		{"type - timestamp", Model{

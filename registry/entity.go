@@ -856,6 +856,10 @@ var OrderedSpecProps = []*Attribute{
 						singular)
 				}
 
+				if !IsValidID(newID.(string)) {
+					return fmt.Errorf(`%q isn't a valid ID`, newID)
+				}
+
 				if oldID != "" && !IsNil(oldID) && newID != oldID {
 					return fmt.Errorf(`The %q attribute must be set to `+
 						`%q, not %q`, singular, oldID, newID)
@@ -919,6 +923,10 @@ var OrderedSpecProps = []*Attribute{
 
 				if newID == "" {
 					return fmt.Errorf(`"versionid" can't be an empty string`)
+				}
+
+				if !IsValidID(newID.(string)) {
+					return fmt.Errorf(`%q isn't a valid ID`, newID)
 				}
 
 				if oldID != "" && !IsNil(oldID) && newID != oldID {
@@ -2338,6 +2346,16 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 		if i < 0 {
 			return fmt.Errorf("Attribute %q must be a uinteger", path.UI())
 		}
+	case RELATION:
+		if valKind != reflect.String {
+			return fmt.Errorf("Attribute %q must be a relation", path.UI())
+		}
+		str := val.(string)
+
+		err := e.MatchRelation(str, attr.Target)
+		if err != nil {
+			return fmt.Errorf("Attribute %q %s", path.UI(), err.Error())
+		}
 	case STRING:
 		if valKind != reflect.String {
 			return fmt.Errorf("Attribute %q must be a string", path.UI())
@@ -2369,6 +2387,8 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 			return fmt.Errorf("Attribute %q is a malformed timestamp",
 				path.UI())
 		}
+	default:
+		panic(fmt.Sprintf("Unknown type: %v", attr.Type))
 	}
 
 	// don't "return nil" above, we may need to check enum values
@@ -2426,6 +2446,114 @@ func PrepUpdateEntity(e *Entity) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+// If no match then return an error saying why
+func (e *Entity) MatchRelation(str string, relation string) error {
+	targetParts := strings.Split(relation, "/")
+	if len(str) == 0 {
+		return fmt.Errorf("must be an xid, not empty")
+	}
+	if str[0] != '/' {
+		return fmt.Errorf("must be an xid, and start with /")
+	}
+	strParts := strings.Split(str, "/")
+	if len(strParts) < 2 {
+		return fmt.Errorf("must be a valid xid")
+	}
+	if len(strParts[0]) > 0 {
+		return fmt.Errorf("must be an xid, and start with /")
+	}
+	if relation == "/" {
+		if str != "/" {
+			return fmt.Errorf("must match %q target", relation)
+		}
+		return nil
+	}
+	if targetParts[1] != strParts[1] { // works for "" too
+		return fmt.Errorf("must match %q target", relation)
+	}
+
+	gm := e.Registry.Model.Groups[targetParts[1]]
+	if gm == nil {
+		return fmt.Errorf("uses an unknown group %q", targetParts[1])
+	}
+	if len(strParts) < 3 || len(strParts[2]) == 0 {
+		return fmt.Errorf("must match %q target, missing \"%sid\"",
+			relation, gm.Singular)
+	}
+	if !IsValidID(strParts[2]) {
+		return fmt.Errorf("must match %q target, %q isn't a valid ID",
+			relation, strParts[2])
+	}
+
+	if len(targetParts) == 2 { //   ""/GROUPS
+		if len(strParts) == 3 {
+			return nil
+		}
+		return fmt.Errorf("must match %q target, extra stuff after %q",
+			relation, strParts[2])
+	}
+
+	// len targetParts >= 3
+	if len(strParts) < 4 { //    /GROUPS/gID/RESOURCES
+		return fmt.Errorf("must match %q target, missing %q",
+			relation, targetParts[2])
+	}
+
+	if targetParts[2] != strParts[3] {
+		return fmt.Errorf("must match %q target, missing %q",
+			relation, targetParts[2])
+	}
+
+	rm := gm.Resources[targetParts[2]]
+	if rm == nil {
+		return fmt.Errorf("uses an unknown resource %q", targetParts[2])
+	}
+
+	if len(strParts) < 5 || len(strParts[4]) == 0 {
+		return fmt.Errorf("must match %q target, missing \"%sid\"",
+			relation, rm.Singular)
+	}
+	if !IsValidID(strParts[4]) {
+		return fmt.Errorf("must match %q target, %q isn't a valid ID",
+			relation, strParts[4])
+	}
+	if len(targetParts) == 3 {
+		if len(strParts) == 5 {
+			return nil
+		}
+		return fmt.Errorf("must match %q target, extra stuff after %q",
+			relation, strParts[4])
+
+	}
+
+	if targetParts[3] == "versions?" {
+		if len(strParts) == 5 {
+			//   /GROUPS/RESOURCES/version?  vs /GROUPS/gID/RESOURCES/rID
+			return nil
+		}
+	}
+
+	if len(strParts) < 6 || strParts[5] != "versions" {
+		return fmt.Errorf("must match %q target, missing \"versions\"",
+			relation)
+	}
+
+	if len(strParts) < 7 || len(strParts[6]) == 0 {
+		return fmt.Errorf("must match %q target, missing a \"versionid\"",
+			relation)
+	}
+	if !IsValidID(strParts[6]) {
+		return fmt.Errorf("must match %q target, %q isn't a valid ID",
+			relation, strParts[6])
+	}
+
+	if len(strParts) > 7 {
+		return fmt.Errorf("must match %q target, too long", relation)
 	}
 
 	return nil

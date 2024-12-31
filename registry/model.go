@@ -17,6 +17,7 @@ import (
 
 var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]{0,62}$")
 var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]{0,62}$")
+var RegexpID = regexp.MustCompile("^[a-zA-Z0-9_.\\-~]{1,62}$")
 
 type ModelSerializer func(*Model, string) ([]byte, error)
 
@@ -28,6 +29,10 @@ func IsValidAttributeName(name string) bool {
 
 func IsValidMapKey(key string) bool {
 	return RegexpMapKey.MatchString(key)
+}
+
+func IsValidID(id string) bool {
+	return RegexpID.MatchString(id)
 }
 
 type Model struct {
@@ -57,17 +62,18 @@ type AttrInternals struct {
 // 'false', but Strict needs to default to 'true'. See the custome Unmarshal
 // funcs in model.go for how we set those
 type Attribute struct {
-	Registry       *Registry `json:"-"`
-	Name           string    `json:"name,omitempty"`
-	Type           string    `json:"type,omitempty"`
-	Description    string    `json:"description,omitempty"`
-	Enum           []any     `json:"enum,omitempty"` // just scalars though
-	Strict         *bool     `json:"strict,omitempty"`
-	ReadOnly       bool      `json:"readonly,omitempty"`
-	Immutable      bool      `json:"immutable,omitempty"`
-	ClientRequired bool      `json:"clientrequired,omitempty"`
-	ServerRequired bool      `json:"serverrequired,omitempty"`
-	Default        any       `json:"default,omitempty"`
+	Model          *Model `json:"-"`
+	Name           string `json:"name,omitempty"`
+	Type           string `json:"type,omitempty"`
+	Target         string `json:"target,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Enum           []any  `json:"enum,omitempty"` // just scalars though
+	Strict         *bool  `json:"strict,omitempty"`
+	ReadOnly       bool   `json:"readonly,omitempty"`
+	Immutable      bool   `json:"immutable,omitempty"`
+	ClientRequired bool   `json:"clientrequired,omitempty"`
+	ServerRequired bool   `json:"serverrequired,omitempty"`
+	Default        any    `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
 	Item       *Item      `json:"item,omitempty"`       // for maps & arrays
@@ -81,7 +87,7 @@ type Attribute struct {
 }
 
 type Item struct { // for maps and arrays
-	Registry   *Registry  `json:"-"`
+	Model      *Model     `json:"-"`
 	Type       string     `json:"type,omitempty"`
 	Attributes Attributes `json:"attributes,omitempty"` // when 'type'=obj
 	Item       *Item      `json:"item,omitempty"`       // when 'type'=map,array
@@ -94,8 +100,8 @@ type IfValue struct {
 }
 
 type GroupModel struct {
-	SID      string    `json:"-"`
-	Registry *Registry `json:"-"`
+	SID   string `json:"-"`
+	Model *Model `json:"-"`
 
 	Plural     string            `json:"plural"`
 	Singular   string            `json:"singular"`
@@ -230,18 +236,12 @@ func (r *ResourceModel) UnmarshalJSON(data []byte) error {
 }
 
 func (m *Model) SetPointers() {
-	PanicIf(m.Registry == nil, "Model.Registry can't be nil")
-
-	if m.Attributes == nil {
-		m.Attributes = map[string]*Attribute{}
-	}
-
 	for _, attr := range m.Attributes {
-		attr.SetRegistry(m.Registry)
+		attr.SetModel(m)
 	}
 
 	for _, gm := range m.Groups {
-		gm.SetRegistry(m.Registry)
+		gm.SetModel(m)
 	}
 }
 
@@ -366,6 +366,10 @@ func (m *Model) AddAttrArray(name string, item *Item) (*Attribute, error) {
 	return m.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
 }
 
+func (m *Model) AddAttrRelation(name string, tgt string) (*Attribute, error) {
+	return m.AddAttribute(&Attribute{Name: name, Type: RELATION, Target: tgt})
+}
+
 func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr == nil {
 		return nil, nil
@@ -379,14 +383,12 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 		m.Attributes = Attributes{}
 	}
 
-	if attr.Registry == nil {
-		attr.Registry = m.Registry
-	}
+	attr.Model = m
 
 	oldVal := m.Attributes[attr.Name]
 	m.Attributes[attr.Name] = attr
 
-	attr.Item.SetRegistry(m.Registry)
+	attr.Item.SetModel(m)
 
 	if err := m.VerifyAndSave(); err != nil {
 		// Undo
@@ -452,7 +454,7 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 	}
 	gm := &GroupModel{
 		SID:      mSID,
-		Registry: m.Registry,
+		Model:    m,
 		Singular: singular,
 		Plural:   plural,
 
@@ -511,50 +513,56 @@ func (m *Model) RemoveLabel(name string) error {
 }
 
 func NewItem() *Item {
-	return &Item{}
+	return &Item{
+		// Model: m, // will be set when Item is added to attribute
+	}
 }
 func NewItemType(daType string) *Item {
 	return &Item{
+		// Model: m, // will be set when Item is added to attribute
 		Type: daType,
 	}
 }
 
 func NewItemObject() *Item {
 	return &Item{
+		// Model: m,  // will be set when Item is added to attribute
 		Type: OBJECT,
 	}
 }
 
 func NewItemMap(item *Item) *Item {
 	return &Item{
-		Type: MAP,
-		Item: item,
+		Model: item.Model,
+		Type:  MAP,
+		Item:  item,
 	}
 }
 
 func NewItemArray(item *Item) *Item {
 	return &Item{
-		Type: ARRAY,
-		Item: item,
+		Model: item.Model,
+		Type:  ARRAY,
+		Item:  item,
 	}
 }
 
-func (i *Item) SetRegistry(reg *Registry) {
+func (i *Item) SetModel(m *Model) {
 	if i == nil {
 		return
 	}
 
-	i.Registry = reg
-	i.Attributes.SetRegistry(reg)
+	i.Model = m
+	i.Attributes.SetModel(m)
 }
 
 func (i *Item) SetItem(item *Item) error {
 	oldVal := i.Item
 	i.Item = item
-	item.SetRegistry(i.Registry)
+	item.SetModel(i.Model)
 
-	if i.Registry != nil {
-		if err := i.Registry.Model.VerifyAndSave(); err != nil {
+	if i.Model != nil {
+		if err := i.Model.VerifyAndSave(); err != nil {
 			// Undo
 			i.Item = oldVal
 			return err
@@ -595,13 +603,11 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 	oldVal := i.Attributes[attr.Name]
 	i.Attributes[attr.Name] = attr
 
-	if attr.Registry == nil {
-		attr.Registry = i.Registry
-	}
-	attr.Item.SetRegistry(i.Registry)
+	attr.Model = i.Model
+	attr.Item.SetModel(i.Model)
 
-	if i.Registry != nil {
-		if err := i.Registry.Model.VerifyAndSave(); err != nil {
+	if i.Model != nil {
+		if err := i.Model.VerifyAndSave(); err != nil {
 			// Undo
 			ResetMap(i.Attributes, attr.Name, oldVal)
 			return nil, err
@@ -619,8 +625,8 @@ func (i *Item) DelAttribute(name string) error {
 	oldVal := i.Attributes[name]
 	delete(i.Attributes, name)
 
-	if i.Registry != nil {
-		if err := i.Registry.Model.VerifyAndSave(); err != nil {
+	if i.Model != nil {
+		if err := i.Model.VerifyAndSave(); err != nil {
 			// Undo
 			ResetMap(i.Attributes, name, oldVal)
 			return err
@@ -664,7 +670,7 @@ func LoadModel(reg *Registry) *Model {
 	}
 	results.Close()
 
-	model.Attributes.SetRegistry(reg)
+	model.Attributes.SetModel(model)
 	model.Attributes.SetSpecPropsFields("registry")
 
 	// Load Groups & Resources
@@ -704,7 +710,7 @@ func LoadModel(reg *Registry) *Model {
 		if *row[2] == nil { // ParentSID nil -> new Group
 			g := &GroupModel{ // Plural
 				SID:        NotNilString(row[0]), // SID
-				Registry:   reg,
+				Model:      model,
 				Plural:     NotNilString(row[3]), // Plural
 				Singular:   NotNilString(row[4]), // Singular
 				Attributes: attrs,
@@ -753,16 +759,31 @@ func LoadModel(reg *Registry) *Model {
 }
 
 func (m *Model) FindGroupModel(gTypePlural string) *GroupModel {
+	return m.Groups[gTypePlural]
+	/*
+		for _, gModel := range m.Groups {
+			if strings.EqualFold(gModel.Plural, gTypePlural) {
+				return gModel
+			}
+		}
+		return nil
+	*/
+}
+
+/*
+func (m *Model) FindGroupModelBySingular(gTypeSingular string) *GroupModel {
 	for _, gModel := range m.Groups {
-		if strings.EqualFold(gModel.Plural, gTypePlural) {
+		if gModel.Singular == gTypeSingular {
 			return gModel
 		}
 	}
 	return nil
 }
+*/
 
 func (m *Model) ApplyNewModel(newM *Model) error {
 	newM.Registry = m.Registry
+
 	if err := newM.Verify(); err != nil {
 		return err
 	}
@@ -792,7 +813,7 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 	newM.Registry = m.Registry
 	for _, newGM := range newM.Groups {
 		log.VPrintf(4, "Applying Group: %s", newGM.Plural)
-		newGM.Registry = m.Registry
+		newGM.Model = m
 		oldGM := m.Groups[newGM.Plural]
 		if oldGM == nil {
 			oldGM, err = m.AddGroupModel(newGM.Plural, newGM.Singular)
@@ -850,16 +871,16 @@ func (m *Model) ApplyNewModel(newM *Model) error {
 func (gm *GroupModel) Delete() error {
 	log.VPrintf(3, ">Enter: Delete.GroupModel: %s", gm.Plural)
 	defer log.VPrintf(3, "<Exit: Delete.GroupModel")
-	err := DoOne(gm.Registry.tx, `
+	err := DoOne(gm.Model.Registry.tx, `
         DELETE FROM ModelEntities
 		WHERE RegistrySID=? AND SID=?`, // SID should be enough, but ok
-		gm.Registry.DbSID, gm.SID)
+		gm.Model.Registry.DbSID, gm.SID)
 	if err != nil {
 		log.Printf("Error deleting groupModel(%s): %s", gm.Plural, err)
 		return err
 	}
 
-	delete(gm.Registry.Model.Groups, gm.Plural)
+	delete(gm.Model.Groups, gm.Plural)
 
 	return nil
 }
@@ -874,7 +895,7 @@ func (gm *GroupModel) Save() error {
 	buf, _ = json.Marshal(gm.Attributes)
 	attrs := string(buf)
 
-	err := DoZeroTwo(gm.Registry.tx, `
+	err := DoZeroTwo(gm.Model.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, Labels, Attributes)
@@ -882,7 +903,7 @@ func (gm *GroupModel) Save() error {
         ON DUPLICATE KEY UPDATE
 		    ParentSID=?,Plural=?,Singular=?,Labels=?,Attributes=?
 		`,
-		gm.SID, gm.Registry.DbSID,
+		gm.SID, gm.Model.Registry.DbSID,
 		nil, gm.Plural, gm.Singular, labels, attrs,
 		nil, gm.Plural, gm.Singular, labels, attrs)
 	if err != nil {
@@ -897,6 +918,17 @@ func (gm *GroupModel) Save() error {
 
 	return err
 }
+
+/*
+func (gm *GroupModel) FindResourceModelBySingular(rTypeSingular string) *ResourceModel {
+	for _, rModel := range gm.Resources {
+		if rModel.Singular == rTypeSingular {
+			return rModel
+		}
+	}
+	return nil
+}
+*/
 
 func (gm *GroupModel) AddAttr(name, daType string) (*Attribute, error) {
 	return gm.AddAttribute(&Attribute{Name: name, Type: daType})
@@ -930,12 +962,10 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	oldVal := gm.Attributes[attr.Name]
 	gm.Attributes[attr.Name] = attr
 
-	if attr.Registry == nil {
-		attr.Registry = gm.Registry
-	}
-	attr.Item.SetRegistry(gm.Registry)
+	attr.Model = gm.Model
+	attr.Item.SetModel(gm.Model)
 
-	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+	if err := gm.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(gm.Attributes, attr.Name, oldVal)
 		return nil, err
@@ -952,7 +982,7 @@ func (gm *GroupModel) DelAttribute(name string) error {
 	oldVal := gm.Attributes[name]
 	delete(gm.Attributes, name)
 
-	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+	if err := gm.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(gm.Attributes, name, oldVal)
 	}
@@ -1025,13 +1055,13 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	buf, _ = json.Marshal(rm.Labels)
 	labels := string(buf)
 
-	err := DoOne(gm.Registry.tx, `
+	err := DoOne(gm.Model.Registry.tx, `
 		INSERT INTO ModelEntities(
 			SID, RegistrySID, ParentSID, Plural, Singular, MaxVersions,
 			SetVersionId, SetDefaultSticky, HasDocument, ReadOnly, TypeMap,
 			Labels)
 		VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
-		rm.SID, gm.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.MaxVersions,
+		rm.SID, gm.Model.Registry.DbSID, gm.SID, rm.Plural, rm.Singular, rm.MaxVersions,
 		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap, labels)
 	if err != nil {
 		log.Printf("Error inserting resourceModel(%s): %s", rm.Plural, err)
@@ -1041,7 +1071,7 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	oldVal := gm.Resources[rm.Plural]
 	gm.Resources[rm.Plural] = rm
 
-	if err = gm.Registry.Model.VerifyAndSave(); err != nil {
+	if err = gm.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(gm.Resources, rm.Plural, oldVal)
 		return nil, err
@@ -1058,7 +1088,7 @@ func (gm *GroupModel) AddLabel(name string, value string) error {
 	}
 	gm.Labels[name] = value
 
-	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+	if err := gm.Model.VerifyAndSave(); err != nil {
 		// Undo
 		gm.Labels = oldLabels
 		return err
@@ -1078,7 +1108,7 @@ func (gm *GroupModel) RemoveLabel(name string) error {
 		gm.Labels = nil
 	}
 
-	if err := gm.Registry.Model.VerifyAndSave(); err != nil {
+	if err := gm.Model.VerifyAndSave(); err != nil {
 		// Undo
 		gm.Labels = oldLabels
 		return err
@@ -1101,10 +1131,10 @@ func (rm *ResourceModel) GetHasDocument() bool {
 func (rm *ResourceModel) Delete() error {
 	log.VPrintf(3, ">Enter: Delete.ResourceModel: %s", rm.Plural)
 	defer log.VPrintf(3, "<Exit: Delete.ResourceModel")
-	err := DoOne(rm.GroupModel.Registry.tx, `
+	err := DoOne(rm.GroupModel.Model.Registry.tx, `
         DELETE FROM ModelEntities
 		WHERE RegistrySID=? AND SID=?`, // SID should be enough, but ok
-		rm.GroupModel.Registry.DbSID, rm.SID)
+		rm.GroupModel.Model.Registry.DbSID, rm.SID)
 	if err != nil {
 		log.Printf("Error deleting resourceModel(%s): %s", rm.Plural, err)
 		return err
@@ -1128,7 +1158,7 @@ func (rm *ResourceModel) Save() error {
 	buf, _ = json.Marshal(rm.MetaAttributes)
 	metaAttrs := string(buf)
 
-	err := DoZeroTwo(rm.GroupModel.Registry.tx, `
+	err := DoZeroTwo(rm.GroupModel.Model.Registry.tx, `
         INSERT INTO ModelEntities(
             SID, RegistrySID,
 			ParentSID, Plural, Singular, MaxVersions,
@@ -1141,7 +1171,7 @@ func (rm *ResourceModel) Save() error {
 			Attributes=?,
             MaxVersions=?, SetVersionId=?, SetDefaultSticky=?, HasDocument=?, ReadOnly=?, TypeMap=?, Labels=?,
 			MetaAttributes=?`,
-		rm.SID, rm.GroupModel.Registry.DbSID,
+		rm.SID, rm.GroupModel.Model.Registry.DbSID,
 		rm.GroupModel.SID, rm.Plural, rm.Singular, rm.MaxVersions,
 		attrs,
 		rm.GetSetVersionId(), rm.GetSetDefaultSticky(), rm.GetHasDocument(), rm.ReadOnly, typemap, labels,
@@ -1190,12 +1220,10 @@ func (rm *ResourceModel) AddMetaAttribute(attr *Attribute) (*Attribute, error) {
 	oldVal := rm.MetaAttributes[attr.Name]
 	rm.MetaAttributes[attr.Name] = attr
 
-	if attr.Registry == nil {
-		attr.Registry = rm.GroupModel.Registry
-	}
-	attr.Item.SetRegistry(rm.GroupModel.Registry)
+	attr.Model = rm.GroupModel.Model
+	attr.Item.SetModel(rm.GroupModel.Model)
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(rm.MetaAttributes, attr.Name, oldVal)
 		return nil, err
@@ -1251,12 +1279,10 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 	oldVal := rm.Attributes[attr.Name]
 	rm.Attributes[attr.Name] = attr
 
-	if attr.Registry == nil {
-		attr.Registry = rm.GroupModel.Registry
-	}
-	attr.Item.SetRegistry(rm.GroupModel.Registry)
+	attr.Model = rm.GroupModel.Model
+	attr.Item.SetModel(rm.GroupModel.Model)
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(rm.Attributes, attr.Name, oldVal)
 		return nil, err
@@ -1273,7 +1299,7 @@ func (rm *ResourceModel) DelMetaAttribute(name string) error {
 	oldVal := rm.MetaAttributes[name]
 	delete(rm.MetaAttributes, name)
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(rm.MetaAttributes, name, oldVal)
 		return err
@@ -1289,7 +1315,7 @@ func (rm *ResourceModel) DelAttribute(name string) error {
 	oldVal := rm.Attributes[name]
 	delete(rm.Attributes, name)
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(rm.Attributes, name, oldVal)
 		return err
@@ -1297,15 +1323,15 @@ func (rm *ResourceModel) DelAttribute(name string) error {
 	return nil
 }
 
-func (attrs Attributes) SetRegistry(reg *Registry) {
+func (attrs Attributes) SetModel(m *Model) {
 	if attrs == nil {
 		return
 	}
 
 	for _, attr := range attrs {
-		attr.Registry = reg
-		attr.Item.SetRegistry(reg)
-		attr.IfValues.SetRegistry(reg)
+		attr.Model = m
+		attr.Item.SetModel(m)
+		attr.IfValues.SetModel(m)
 	}
 }
 
@@ -1351,6 +1377,7 @@ func KindIsScalar(k reflect.Kind) bool {
 
 func IsScalar(daType string) bool {
 	return daType == BOOLEAN || daType == DECIMAL || daType == INTEGER ||
+		daType == RELATION ||
 		daType == STRING || daType == TIMESTAMP || daType == UINTEGER ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
 		daType == URL
@@ -1358,7 +1385,7 @@ func IsScalar(daType string) bool {
 
 // Is some string variant
 func IsString(daType string) bool {
-	return daType == STRING || daType == TIMESTAMP ||
+	return daType == STRING || daType == TIMESTAMP || daType == RELATION ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
 		daType == URL
 }
@@ -1376,21 +1403,21 @@ func (a *Attribute) IsScalar() bool {
 	return IsScalar(a.Type)
 }
 
-func (a *Attribute) SetRegistry(reg *Registry) {
+func (a *Attribute) SetModel(m *Model) {
 	if a == nil {
 		return
 	}
 
-	a.Registry = reg
-	a.Item.SetRegistry(reg)
-	a.IfValues.SetRegistry(reg)
+	a.Model = m
+	a.Item.SetModel(m)
+	a.IfValues.SetModel(m)
 }
 
 func (a *Attribute) AddAttr(name, daType string) (*Attribute, error) {
 	return a.AddAttribute(&Attribute{
-		Registry: a.Registry,
-		Name:     name,
-		Type:     daType,
+		Model: a.Model,
+		Name:  name,
+		Type:  daType,
 	})
 }
 
@@ -1416,9 +1443,9 @@ func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 
 	oldVal := a.Attributes[attr.Name]
 	a.Attributes[attr.Name] = attr
-	attr.SetRegistry(a.Registry)
+	attr.SetModel(a.Model)
 
-	if err := a.Registry.Model.VerifyAndSave(); err != nil {
+	if err := a.Model.VerifyAndSave(); err != nil {
 		// Undo
 		ResetMap(a.Attributes, attr.Name, oldVal)
 		return nil, err
@@ -1497,6 +1524,7 @@ func (m *Model) Verify() error {
 
 	// Now check Registry attributes for correctness
 	ld := &LevelData{
+		Model:     m,
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("model"),
 	}
@@ -1507,7 +1535,8 @@ func (m *Model) Verify() error {
 	// TODO: Verify that the Registry data is model compliant
 
 	for gmName, gm := range m.Groups {
-		gm.Registry = m.Registry
+		gm.Model = m
+		// PanicIf(m.Registry.Model == nil, "nil")
 		if err := gm.Verify(gmName); err != nil {
 			return err
 		}
@@ -1590,6 +1619,7 @@ func (gm *GroupModel) Verify(gmName string) error {
 	}
 
 	ld := &LevelData{
+		Model:     gm.Model,
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("groups").P(gm.Plural),
 	}
@@ -1609,21 +1639,21 @@ func (gm *GroupModel) Verify(gmName string) error {
 	return nil
 }
 
-func (gm *GroupModel) SetRegistry(reg *Registry) {
+func (gm *GroupModel) SetModel(m *Model) {
 	if gm == nil {
 		return
 	}
 
-	gm.Registry = reg
+	gm.Model = m
 	if gm.Attributes == nil {
 		gm.Attributes = map[string]*Attribute{}
 	}
 
-	gm.Attributes.SetRegistry(reg)
+	gm.Attributes.SetModel(m)
 
 	for _, rm := range gm.Resources {
 		// rm.GroupModel = gm
-		rm.SetRegistry(reg)
+		rm.SetModel(m)
 	}
 }
 
@@ -1718,6 +1748,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 	}
 
 	ld := &LevelData{
+		Model:     rm.GroupModel.Model,
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("resources").P(rm.Plural),
 	}
@@ -1737,10 +1768,10 @@ func (rm *ResourceModel) Verify(rmName string) error {
 	}
 
 	// TODO: verify the Resources data are model compliant
-	// Only do this if we have a Registry. It assumes that if we have
+	// Only do this if we have a Regsitry. It assumes that if we have
 	// no Registry then we're not connected to a backend and there's no data
 	// to verify
-	if rm.GroupModel.Registry != nil {
+	if rm.GroupModel.Model.Registry != nil {
 		if err := rm.VerifyData(); err != nil {
 			return err
 		}
@@ -1758,7 +1789,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 }
 
 func (rm *ResourceModel) VerifyData() error {
-	reg := rm.GroupModel.Registry
+	reg := rm.GroupModel.Model.Registry
 
 	// Query to find all Groups/Resources of the proper type.
 	// The resulting list MUST be Group followed by it's Resources, repeat...
@@ -1793,7 +1824,7 @@ func (rm *ResourceModel) VerifyData() error {
 	return nil
 }
 
-func (rm *ResourceModel) SetRegistry(reg *Registry) {
+func (rm *ResourceModel) SetModel(m *Model) {
 	if rm == nil {
 		return
 	}
@@ -1802,7 +1833,7 @@ func (rm *ResourceModel) SetRegistry(reg *Registry) {
 		rm.Attributes = map[string]*Attribute{}
 	}
 
-	rm.Attributes.SetRegistry(reg)
+	rm.Attributes.SetModel(m)
 }
 
 func (rm *ResourceModel) SetMaxVersions(maxV int) error {
@@ -1992,7 +2023,7 @@ func (rm *ResourceModel) AddTypeMap(ct string, format string) error {
 	}
 	rm.TypeMap[ct] = format
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		rm.TypeMap = oldMap
 		return err
@@ -2011,7 +2042,7 @@ func (rm *ResourceModel) RemoveTypeMap(ct string) error {
 		rm.TypeMap = nil
 	}
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		rm.TypeMap = oldMap
 		return err
@@ -2027,7 +2058,7 @@ func (rm *ResourceModel) AddLabel(name string, value string) error {
 	}
 	rm.Labels[name] = value
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		rm.Labels = oldLabels
 		return err
@@ -2047,7 +2078,7 @@ func (rm *ResourceModel) RemoveLabel(name string) error {
 		rm.Labels = nil
 	}
 
-	if err := rm.GroupModel.Registry.Model.VerifyAndSave(); err != nil {
+	if err := rm.GroupModel.Model.VerifyAndSave(); err != nil {
 		// Undo
 		rm.Labels = oldLabels
 		return err
@@ -2096,6 +2127,7 @@ func (rm *ResourceModel) MapContentType(ct string) string {
 }
 
 type LevelData struct {
+	Model *Model
 	// AttrNames is the list of known attribute names for a certain eType
 	// an entity (basically the Attributes list + ifValues). We use this to know
 	// if an IfValue SiblingAttribute would conflict if another attribute's name
@@ -2168,6 +2200,7 @@ func ConvertString(val string, toType string) (any, bool) {
 
 func (attrs Attributes) Verify(ld *LevelData) error {
 	ld = &LevelData{
+		Model:     ld.Model,
 		AttrNames: maps.Clone(ld.AttrNames),
 		Path:      ld.Path.Clone(),
 	}
@@ -2205,6 +2238,53 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 		if DefinedTypes[attr.Type] != true { // valie Type: field?
 			return fmt.Errorf("%q has an invalid type: %s", path.UI(),
 				attr.Type)
+		}
+
+		if attr.Type == RELATION {
+			if attr.Target == "" {
+				return fmt.Errorf("%q must have a \"target\" value "+
+					"since \"type\" is \"relation\"", path.UI())
+			}
+			target := strings.TrimSpace(attr.Target)
+			if len(target) == 0 || target[0] != '/' {
+				return fmt.Errorf("%q \"target\" must be of the form: "+
+					"/[GROUPS[/RESOURCES[/versions[?]]]]", path.UI())
+			}
+			target = target[1:]
+			if len(target) > 0 {
+				parts := strings.Split(target, "/")
+				if len(parts) > 3 || // too many /'s
+					len(parts[len(parts)-1]) == 0 { // ends with /
+					return fmt.Errorf("%q \"target\" must be of the form: "+
+						"/[GROUPS[/RESOURCES[/versions[?]]]]", path.UI())
+				}
+
+				gm := ld.Model.FindGroupModel(parts[0])
+				if gm == nil {
+					return fmt.Errorf("%q has an unknown Group type: %q",
+						path.UI(), parts[0])
+				}
+				if len(parts) > 1 {
+					rm := gm.Resources[parts[1]]
+					if rm == nil {
+						return fmt.Errorf("%q has an unknown Resource type: %q",
+							path.UI(), parts[1])
+					}
+
+					if len(parts) > 2 {
+						if parts[2] != "versions" && parts[2] != "versions?" {
+							return fmt.Errorf("%q \"target\" must be of "+
+								"the form: "+
+								"/[GROUPS[/RESOURCES[/versions[?]]]]", path.UI())
+						}
+					}
+				}
+			}
+		}
+
+		if attr.Target != "" && attr.Type != RELATION {
+			return fmt.Errorf("%q must not have a \"target\" value "+
+				"since \"type\" is not \"relation\"", path.UI())
 		}
 
 		// Is it ok for strict=true and enum=[] ? Require no value???
@@ -2266,7 +2346,7 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			if attr.Item != nil {
 				return fmt.Errorf("%q must not have an \"item\" section", path.UI())
 			}
-			if err := attr.Attributes.Verify(&LevelData{nil, path}); err != nil {
+			if err := attr.Attributes.Verify(&LevelData{ld.Model, nil, path}); err != nil {
 				return err
 			}
 		}
@@ -2289,7 +2369,9 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 				return fmt.Errorf("%q has an empty ifvalues key", ld.Path.UI())
 			}
 
-			nextLD := &LevelData{ld.AttrNames,
+			nextLD := &LevelData{
+				ld.Model,
+				ld.AttrNames,
 				ld.Path.P(attr.Name).P("ifvalues").P(valStr)}
 
 			// Recursive
@@ -2316,13 +2398,13 @@ func (attrs Attributes) SetSpecPropsFields(singular string) {
 	}
 }
 
-func (ifvalues IfValues) SetRegistry(reg *Registry) {
+func (ifvalues IfValues) SetModel(m *Model) {
 	if ifvalues == nil {
 		return
 	}
 
 	for _, ifvalue := range ifvalues {
-		ifvalue.SiblingAttributes.SetRegistry(reg)
+		ifvalue.SiblingAttributes.SetModel(m)
 	}
 }
 
@@ -2349,7 +2431,7 @@ func (item *Item) Verify(path *PropPath) error {
 	}
 
 	if item.Attributes != nil {
-		if err := item.Attributes.Verify(&LevelData{nil, p}); err != nil {
+		if err := item.Attributes.Verify(&LevelData{item.Model, nil, p}); err != nil {
 			return err
 		}
 	}
@@ -2367,6 +2449,7 @@ var DefinedTypes = map[string]bool{
 	ARRAY:     true,
 	MAP:       true,
 	OBJECT:    true,
+	RELATION:  true,
 	STRING:    true,
 	TIMESTAMP: true,
 	URI:       true, URI_REFERENCE: true, URI_TEMPLATE: true, URL: true}

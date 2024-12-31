@@ -246,8 +246,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(err)
 
 		_, err = reg.Model.AddAttrArray("arrmap",
-			registry.NewItemMap(
-				registry.NewItemType(registry.STRING)))
+			registry.NewItemMap(registry.NewItemType(registry.STRING)))
 		ErrFatalf(err)
 
 		ErrFatalf(reg.SetSave("bool1", true))
@@ -281,6 +280,9 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	_, err = rm.AddAttr("*", registry.STRING)
 	ErrFatalf(err)
 
+	_, err = reg.Model.AddAttrRelation("resptr", "/dirs/files/versions?")
+	ErrFatalf(err)
+
 	ErrFatalf(reg.Model.Verify())
 
 	g, err := reg.AddGroup("dirs", "dir1")
@@ -295,6 +297,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(r.SetSaveMeta("labels.none", ""))
 	ErrFatalf(r.SetSaveMeta("rext", "a string"))
 	ErrFatalf(r.SetSaveDefault("vext", "a ver string"))
+	ErrFatalf(reg.SetSave("resptr", "/dirs/dir1/files/f1/versions/v1"))
 
 	_, err = g.AddResource("datas", "d1", "v1")
 
@@ -327,60 +330,6 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(err)
 	err = reg.LoadModelFromFile(fn)
 	ErrFatalf(err)
-
-	/*
-		ep, err := reg.Model.AddGroupModel("endpoints", "endpoint")
-		ErrFatalf(err)
-		attr, err := ep.AddAttr("usage", registry.STRING)
-		ErrFatalf(err)
-		// TODO make these required
-		// attr.ClientRequired = true
-		// attr.ServerRequired = true
-		_, err = ep.AddAttr("origin", registry.URI)
-		ErrFatalf(err)
-		_, err = ep.AddAttr("channel", registry.STRING)
-		ErrFatalf(err)
-		attr, err = ep.AddAttrObj("deprecated")
-		ErrFatalf(err)
-		_, err = attr.AddAttr("effective", registry.TIMESTAMP)
-		ErrFatalf(err)
-		_, err = attr.AddAttr("removal", registry.TIMESTAMP)
-		ErrFatalf(err)
-		_, err = attr.AddAttr("alternative", registry.URL)
-		ErrFatalf(err)
-		_, err = attr.AddAttr("docs", registry.URL)
-		ErrFatalf(err)
-
-		config, err := attr.AddAttrObj("config")
-		ErrFatalf(err)
-		_, err = config.AddAttr("protocol", registry.STRING)
-		ErrFatalf(err)
-		obj, err := config.AddAttrMap("endpoints", registry.NewItemObject())
-		ErrFatalf(err)
-		obj.Item.SetItem(registry.NewItem())
-		_, err = obj.Item.Item.AddAttr("*", registry.ANY)
-		ErrFatalf(err)
-
-		auth, err := config.AddAttrObj("authorization")
-		ErrFatalf(err)
-		attr, err = auth.AddAttr("type", registry.STRING)
-		ErrFatalf(err)
-		attr, err = auth.AddAttr("resourceurl", registry.STRING)
-		ErrFatalf(err)
-		attr, err = auth.AddAttr("authorityurl", registry.STRING)
-		ErrFatalf(err)
-		attr, err = auth.AddAttrArray("grant_types", registry.NewItemType(registry.STRING))
-		ErrFatalf(err)
-
-		_, err = config.AddAttr("strict", registry.BOOLEAN)
-		ErrFatalf(err)
-
-		_, err = config.AddAttrMap("options", registry.NewItemType(registry.ANY))
-		ErrFatalf(err)
-
-		_, err = ep.AddResourceModel("definitions", "definition", 2, true, true, true)
-		ErrFatalf(err)
-	*/
 
 	// End of model
 
@@ -451,41 +400,7 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 	err = reg.LoadModelFromFile(fn)
 	ErrFatalf(err)
 
-	/*
-		msgs, _ := reg.Model.AddGroupModel("messagegroups", "messagegroup")
-		msgs.AddAttr("binding", registry.STRING)
-
-		msg, _ := msgs.AddResourceModel("messages", "message", 1, true, true, false)
-
-		// Modify core attribute
-		attr, _ := msg.AddAttr("format", registry.STRING)
-		attr.ClientRequired = true
-		attr.ServerRequired = true
-
-		msg.AddAttr("basedefinitionurl", registry.URL)
-
-		meta, _ := msg.AddAttrObj("metadata")
-		meta.AddAttr("required", registry.BOOLEAN)
-		meta.AddAttr("description", registry.STRING)
-		meta.AddAttr("value", registry.ANY)
-		meta.AddAttr("type", registry.STRING)
-		meta.AddAttr("specurl", registry.URL)
-
-		obj := registry.NewItemObject()
-		meta.AddAttrMap("attributes", obj)
-		obj.AddAttr("type", registry.STRING)
-		obj.AddAttr("value", registry.ANY)
-		obj.AddAttr("required", registry.BOOLEAN)
-
-		meta.AddAttr("binding", registry.STRING)
-		meta.AddAttrMap("message", registry.NewItemType(registry.ANY))
-
-		meta.AddAttr("schemaformat", registry.STRING)
-		meta.AddAttr("schema", registry.ANY)
-		meta.AddAttr("schemaurl", registry.URL)
-
-		// End of model
-	*/
+	// End of model
 
 	ErrFatalf(reg.Model.Verify())
 	reg.Commit()

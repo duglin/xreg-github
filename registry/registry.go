@@ -391,15 +391,13 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 		return fmt.Errorf("Processing %q: %s", file, err)
 	}
 
-	model := &Model{
-		Registry: reg,
-	}
+	model := &Model{}
 
 	if err := Unmarshal(buf, model); err != nil {
 		return fmt.Errorf("Processing %q: %s", file, err)
 	}
 
-	model.SetPointers()
+	// TODO: Do we need to call model.SetPointers?
 
 	if err := model.Verify(); err != nil {
 		return fmt.Errorf("Processing %q: %s", file, err)
