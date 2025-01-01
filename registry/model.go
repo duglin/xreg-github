@@ -139,20 +139,12 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 
 	// Hack!
 	// attribute "$singular" holds the singular name of the entity.
-	// attribute "$type" hold the xReg Type of the entity.
 	// Couldn't find a better way to pass this info all the way down.
 	singular := ""
 	eType := -1
 	if attr, ok := attrsCopy["$singular"]; ok {
 		singular = attr.Description
 		delete(attrsCopy, "$singular")
-	}
-	if attr, ok := attrsCopy["$type"]; ok {
-		typeStr := attr.Description
-		delete(attrsCopy, "$type")
-		if typeStr != "" {
-			eType = int(typeStr[0] - '0')
-		}
 	}
 	// end of hack
 
@@ -259,22 +251,12 @@ func (m *Model) SetSingular() {
 		Type:        STRING,
 		Description: "registry",
 	}
-	m.Attributes["$type"] = &Attribute{
-		Name:        "$type",
-		Type:        STRING,
-		Description: string([]rune{'0' + ENTITY_REGISTRY}),
-	}
 
 	for _, gm := range m.Groups {
 		gm.Attributes["$singular"] = &Attribute{
 			Name:        "$singular",
 			Type:        STRING,
 			Description: gm.Singular,
-		}
-		gm.Attributes["$type"] = &Attribute{
-			Name:        "$type",
-			Type:        STRING,
-			Description: string([]rune{'0' + ENTITY_GROUP}),
 		}
 
 		for _, rm := range gm.Resources {
@@ -283,21 +265,11 @@ func (m *Model) SetSingular() {
 				Type:        STRING,
 				Description: rm.Singular,
 			}
-			rm.Attributes["$type"] = &Attribute{
-				Name:        "$type",
-				Type:        STRING,
-				Description: string([]rune{'0' + ENTITY_RESOURCE}),
-			}
 
 			rm.MetaAttributes["$singular"] = &Attribute{
 				Name:        "$singular",
 				Type:        STRING,
 				Description: rm.Singular,
-			}
-			rm.MetaAttributes["$type"] = &Attribute{
-				Name:        "$type",
-				Type:        STRING,
-				Description: string([]rune{'0' + ENTITY_META}),
 			}
 		}
 	}
