@@ -500,6 +500,12 @@ func TestHTTPModel(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -546,12 +552,6 @@ func TestHTTPModel(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -786,6 +786,12 @@ func TestHTTPModel(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -832,12 +838,6 @@ func TestHTTPModel(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -1079,6 +1079,12 @@ func TestHTTPModel(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -1125,12 +1131,6 @@ func TestHTTPModel(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }

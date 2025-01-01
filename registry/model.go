@@ -256,7 +256,7 @@ func (m *Model) SetSingular() {
 	m.Attributes["$type"] = &Attribute{
 		Name:        "$type",
 		Type:        STRING,
-		Description: "0",
+		Description: string([]rune{'0' + ENTITY_REGISTRY}),
 	}
 
 	for _, gm := range m.Groups {
@@ -268,7 +268,7 @@ func (m *Model) SetSingular() {
 		gm.Attributes["$type"] = &Attribute{
 			Name:        "$type",
 			Type:        STRING,
-			Description: "1",
+			Description: string([]rune{'0' + ENTITY_GROUP}),
 		}
 
 		for _, rm := range gm.Resources {
@@ -280,7 +280,18 @@ func (m *Model) SetSingular() {
 			rm.Attributes["$type"] = &Attribute{
 				Name:        "$type",
 				Type:        STRING,
-				Description: "2",
+				Description: string([]rune{'0' + ENTITY_RESOURCE}),
+			}
+
+			rm.MetaAttributes["$singular"] = &Attribute{
+				Name:        "$singular",
+				Type:        STRING,
+				Description: rm.Singular,
+			}
+			rm.MetaAttributes["$type"] = &Attribute{
+				Name:        "$type",
+				Type:        STRING,
+				Description: string([]rune{'0' + ENTITY_META}),
 			}
 		}
 	}

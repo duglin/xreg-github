@@ -793,6 +793,12 @@ func TestResourceModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -839,12 +845,6 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -985,6 +985,12 @@ func TestResourceModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -1031,12 +1037,6 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -1245,6 +1245,12 @@ func TestResourceModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -1291,12 +1297,6 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -1562,6 +1562,12 @@ func TestResourceModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -1608,12 +1614,6 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -1880,6 +1880,12 @@ func TestResourceModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -1926,12 +1932,6 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -2139,6 +2139,12 @@ func TestResourceModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -2185,12 +2191,6 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -2428,6 +2428,12 @@ func TestResourceModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -2474,12 +2480,6 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -2721,6 +2721,12 @@ func TestResourceModelCreate(t *testing.T) {
               }
             },
             "metaattributes": {
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
               "self": {
                 "name": "self",
                 "type": "url",
@@ -2767,12 +2773,6 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "defaultversionsticky",
                 "type": "boolean",
                 "readonly": true
-              },
-              "fileid": {
-                "name": "fileid",
-                "type": "string",
-                "immutable": true,
-                "serverrequired": true
               }
             }
           }
@@ -3042,6 +3042,12 @@ func TestResourceModelCreate(t *testing.T) {
               }
             },
             "metaattributes": {
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
               "self": {
                 "name": "self",
                 "type": "url",
@@ -3088,12 +3094,6 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "defaultversionsticky",
                 "type": "boolean",
                 "readonly": true
-              },
-              "fileid": {
-                "name": "fileid",
-                "type": "string",
-                "immutable": true,
-                "serverrequired": true
               }
             }
           }
@@ -3648,6 +3648,12 @@ func TestMultModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "rm1id": {
+              "name": "rm1id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -3694,12 +3700,6 @@ func TestMultModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "rm1id": {
-              "name": "rm1id",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         },
@@ -3780,6 +3780,12 @@ func TestMultModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "rm2id": {
+              "name": "rm2id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -3826,12 +3832,6 @@ func TestMultModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "rm2id": {
-              "name": "rm2id",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -3972,6 +3972,12 @@ func TestMultModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "rm1id": {
+              "name": "rm1id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -4018,12 +4024,6 @@ func TestMultModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "rm1id": {
-              "name": "rm1id",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         },
@@ -4104,6 +4104,12 @@ func TestMultModelCreate(t *testing.T) {
             }
           },
           "metaattributes": {
+            "rm2id": {
+              "name": "rm2id",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -4150,12 +4156,6 @@ func TestMultModelCreate(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "rm2id": {
-              "name": "rm2id",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -4416,6 +4416,12 @@ func TestMultModel2Create(t *testing.T) {
               }
             },
             "metaattributes": {
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
               "self": {
                 "name": "self",
                 "type": "url",
@@ -4462,12 +4468,6 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "defaultversionsticky",
                 "type": "boolean",
                 "readonly": true
-              },
-              "fileid": {
-                "name": "fileid",
-                "type": "string",
-                "immutable": true,
-                "serverrequired": true
               }
             }
           }
@@ -4608,6 +4608,12 @@ func TestMultModel2Create(t *testing.T) {
               }
             },
             "metaattributes": {
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
               "self": {
                 "name": "self",
                 "type": "url",
@@ -4654,12 +4660,6 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "defaultversionsticky",
                 "type": "boolean",
                 "readonly": true
-              },
-              "fileid": {
-                "name": "fileid",
-                "type": "string",
-                "immutable": true,
-                "serverrequired": true
               }
             }
           }
@@ -5097,6 +5097,12 @@ func TestModelLabels(t *testing.T) {
             }
           },
           "metaattributes": {
+            "rmid": {
+              "name": "rmid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -5143,12 +5149,6 @@ func TestModelLabels(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "rmid": {
-              "name": "rmid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -5366,6 +5366,12 @@ func TestModelLabels(t *testing.T) {
             }
           },
           "metaattributes": {
+            "rmid": {
+              "name": "rmid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -5412,12 +5418,6 @@ func TestModelLabels(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "rmid": {
-              "name": "rmid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
@@ -5656,6 +5656,12 @@ func TestModelLabels(t *testing.T) {
             }
           },
           "metaattributes": {
+            "fileid": {
+              "name": "fileid",
+              "type": "string",
+              "immutable": true,
+              "serverrequired": true
+            },
             "self": {
               "name": "self",
               "type": "url",
@@ -5702,12 +5708,6 @@ func TestModelLabels(t *testing.T) {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true
-            },
-            "fileid": {
-              "name": "fileid",
-              "type": "string",
-              "immutable": true,
-              "serverrequired": true
             }
           }
         }
