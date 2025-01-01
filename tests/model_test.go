@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/duglin/xreg-github/registry"
@@ -9,7 +10,6 @@ import (
 func TestNoModel(t *testing.T) {
 	reg := NewRegistry("TestNoModel")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
 
 	xCheckGet(t, reg, "/model", `{
   "attributes": {
@@ -157,7 +157,6 @@ func TestNoModel(t *testing.T) {
 func TestGroupModelCreate(t *testing.T) {
 	reg := NewRegistry("TestGroupModelCreate")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	xNoErr(t, err)
@@ -563,7 +562,6 @@ func TestGroupModelCreate(t *testing.T) {
 func TestResourceModelCreate(t *testing.T) {
 	reg := NewRegistry("TestResourceModels")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
 	xNoErr(t, err)
@@ -3430,7 +3428,6 @@ func TestResourceModelCreate(t *testing.T) {
 func TestMultModelCreate(t *testing.T) {
 	reg := NewRegistry("TestMultModelCreate")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
 
 	gm1, err := reg.Model.AddGroupModel("gms1", "gm1")
 	xCheck(t, gm1 != nil && err == nil, "gm1 should have worked")
@@ -4169,7 +4166,6 @@ func TestMultModelCreate(t *testing.T) {
 func TestModelAPI(t *testing.T) {
 	reg := NewRegistry("TestModelAPI")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
 
 	gm, _ := reg.Model.AddGroupModel("dirs1", "dir1")
 	gm.AddResourceModel("files", "file", 2, true, false, true)
@@ -4184,7 +4180,7 @@ func TestModelAPI(t *testing.T) {
 func TestMultModel2Create(t *testing.T) {
 	reg := NewRegistry("TestMultModel2Create")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
+
 	reg.SaveAllAndCommit()
 	reg.Refresh()
 
@@ -4875,7 +4871,6 @@ func TestMultModel2Create(t *testing.T) {
 func TestModelLabels(t *testing.T) {
 	reg := NewRegistry("TestModelLabels")
 	defer PassDeleteReg(t, reg)
-	xCheck(t, reg != nil, "reg create didn't work")
 
 	xNoErr(t, reg.Model.AddLabel("reg-label", "reg-value"))
 
@@ -5717,4 +5712,1035 @@ func TestModelLabels(t *testing.T) {
 }
 `)
 
+}
+
+// Make sure that we can use spec defined attribute names in a nested
+// Object w/o the code mucking if it. There are some spots in the code
+// where we'll do thinkg like skip certain attributes but we should only
+// do that at the top level of the entire, not within a nested object.
+func TestUseSpecAttrs(t *testing.T) {
+	reg := NewRegistry("TestUseSpecAttrs")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, false)
+
+	// Registry level
+	obj, err := reg.Model.AddAttrObj("obj")
+	xNoErr(t, err)
+	vals := map[string]any{}
+
+	for i, prop := range registry.OrderedSpecProps {
+		if prop.Name[0] == '$' {
+			continue
+		}
+
+		v := any(i)
+		typ := registry.INTEGER
+		if prop.Type == registry.INTEGER || prop.Type == registry.UINTEGER {
+			typ = registry.STRING
+			v = fmt.Sprintf("%d-%s", i, prop.Name)
+		}
+		_, err := obj.AddAttr(prop.Name, typ)
+		xNoErr(t, err)
+		vals["obj."+prop.Name] = v
+
+		if prop.Name == "id" {
+			_, err := obj.AddAttr("registryid", typ)
+			xNoErr(t, err)
+			vals["obj.registryid"] = v
+		}
+	}
+
+	for k, v := range vals {
+		xNoErr(t, reg.SetSave(k, v))
+	}
+
+	// Group level
+	obj, err = gm.AddAttrObj("obj")
+	xNoErr(t, err)
+	vals = map[string]any{}
+
+	for i, prop := range registry.OrderedSpecProps {
+		if prop.Name[0] == '$' {
+			continue
+		}
+
+		v := any(i)
+		typ := registry.INTEGER
+		if prop.Type == registry.INTEGER || prop.Type == registry.UINTEGER {
+			typ = registry.STRING
+			v = fmt.Sprintf("%d-%s", i, prop.Name)
+		}
+		_, err := obj.AddAttr(prop.Name, typ)
+		xNoErr(t, err)
+		vals["obj."+prop.Name] = v
+
+		if prop.Name == "id" {
+			_, err = obj.AddAttr("registryid", typ)
+			_, err = obj.AddAttr("dirid", typ)
+			_, err = obj.AddAttr("fileid", typ)
+			xNoErr(t, err)
+			vals["obj.registryid"] = v
+			vals["obj.dirid"] = v
+			vals["obj.fileid"] = v
+		}
+	}
+
+	d1, err := reg.AddGroup("dirs", "d1")
+	xNoErr(t, err)
+	for k, v := range vals {
+		xNoErr(t, d1.SetSave(k, v))
+	}
+
+	// Resource level
+	obj, err = rm.AddAttrObj("obj")
+	xNoErr(t, err)
+
+	objMeta, err := rm.AddMetaAttrObj("obj")
+	xNoErr(t, err)
+
+	vals = map[string]any{}
+
+	for i, prop := range registry.OrderedSpecProps {
+		if prop.Name[0] == '$' {
+			continue
+		}
+
+		v := any(i)
+		typ := registry.INTEGER
+		if prop.Type == registry.INTEGER || prop.Type == registry.UINTEGER {
+			typ = registry.STRING
+			v = fmt.Sprintf("%d-%s", i, prop.Name)
+		}
+		_, err := obj.AddAttr(prop.Name, typ)
+		xNoErr(t, err)
+
+		_, err = objMeta.AddAttr(prop.Name, typ)
+		xNoErr(t, err)
+
+		vals["obj."+prop.Name] = v
+
+		if prop.Name == "id" {
+			_, err = obj.AddAttr("registryid", typ)
+			_, err = obj.AddAttr("dirid", typ)
+			_, err = obj.AddAttr("fileid", typ)
+			_, err = obj.AddAttr("file", typ)
+			_, err = obj.AddAttr("filebase64", typ)
+			_, err = obj.AddAttr("fileurl", typ)
+			xNoErr(t, err)
+			_, err = objMeta.AddAttr("registryid", typ)
+			_, err = objMeta.AddAttr("dirid", typ)
+			_, err = objMeta.AddAttr("fileid", typ)
+			_, err = objMeta.AddAttr("file", typ)
+			_, err = objMeta.AddAttr("filebase64", typ)
+			_, err = objMeta.AddAttr("fileurl", typ)
+			xNoErr(t, err)
+			vals["obj.registryid"] = v
+			vals["obj.dirid"] = v
+			vals["obj.fileid"] = v
+			vals["obj.file"] = v
+			vals["obj.filebase64"] = v
+			vals["obj.fileurl"] = v
+		}
+	}
+
+	r1, err := d1.AddResource("files", "f1", "v1")
+	xNoErr(t, err)
+
+	v1, err := r1.FindVersion("v1", false)
+	xNoErr(t, err)
+
+	meta, err := r1.FindMeta(false)
+	xNoErr(t, err)
+
+	for k, v := range vals {
+		xNoErr(t, v1.SetSave(k, v))
+		xNoErr(t, meta.SetSave(k, v))
+	}
+
+	xHTTP(t, reg, "GET", "?inline=*,model", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestUseSpecAttrs",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "obj": {
+    "capabilities": 24,
+    "contenttype": 14,
+    "createdat": 12,
+    "defaultversionid": 20,
+    "defaultversionsticky": 22,
+    "defaultversionurl": 21,
+    "description": 9,
+    "documentation": 10,
+    "epoch": "6-epoch",
+    "id": 1,
+    "isdefault": 8,
+    "labels": 11,
+    "metaurl": 18,
+    "model": 25,
+    "modifiedat": 13,
+    "name": 7,
+    "registryid": 1,
+    "self": 3,
+    "specversion": 0,
+    "versionid": 2,
+    "xid": 4,
+    "xref": 5
+  },
+
+  "model": {
+    "attributes": {
+      "specversion": {
+        "name": "specversion",
+        "type": "string",
+        "readonly": true,
+        "immutable": true,
+        "serverrequired": true
+      },
+      "registryid": {
+        "name": "registryid",
+        "type": "string",
+        "immutable": true,
+        "serverrequired": true
+      },
+      "self": {
+        "name": "self",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "xid": {
+        "name": "xid",
+        "type": "url",
+        "readonly": true,
+        "serverrequired": true
+      },
+      "epoch": {
+        "name": "epoch",
+        "type": "uinteger",
+        "serverrequired": true
+      },
+      "name": {
+        "name": "name",
+        "type": "string"
+      },
+      "description": {
+        "name": "description",
+        "type": "string"
+      },
+      "documentation": {
+        "name": "documentation",
+        "type": "url"
+      },
+      "labels": {
+        "name": "labels",
+        "type": "map",
+        "item": {
+          "type": "string"
+        }
+      },
+      "createdat": {
+        "name": "createdat",
+        "type": "timestamp",
+        "serverrequired": true
+      },
+      "modifiedat": {
+        "name": "modifiedat",
+        "type": "timestamp",
+        "serverrequired": true
+      },
+      "obj": {
+        "name": "obj",
+        "type": "object",
+        "attributes": {
+          "capabilities": {
+            "name": "capabilities",
+            "type": "integer"
+          },
+          "contenttype": {
+            "name": "contenttype",
+            "type": "integer"
+          },
+          "createdat": {
+            "name": "createdat",
+            "type": "integer"
+          },
+          "defaultversionid": {
+            "name": "defaultversionid",
+            "type": "integer"
+          },
+          "defaultversionsticky": {
+            "name": "defaultversionsticky",
+            "type": "integer"
+          },
+          "defaultversionurl": {
+            "name": "defaultversionurl",
+            "type": "integer"
+          },
+          "description": {
+            "name": "description",
+            "type": "integer"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "integer"
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "string"
+          },
+          "id": {
+            "name": "id",
+            "type": "integer"
+          },
+          "isdefault": {
+            "name": "isdefault",
+            "type": "integer"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "integer"
+          },
+          "metaurl": {
+            "name": "metaurl",
+            "type": "integer"
+          },
+          "model": {
+            "name": "model",
+            "type": "integer"
+          },
+          "modifiedat": {
+            "name": "modifiedat",
+            "type": "integer"
+          },
+          "name": {
+            "name": "name",
+            "type": "integer"
+          },
+          "registryid": {
+            "name": "registryid",
+            "type": "integer"
+          },
+          "self": {
+            "name": "self",
+            "type": "integer"
+          },
+          "specversion": {
+            "name": "specversion",
+            "type": "integer"
+          },
+          "versionid": {
+            "name": "versionid",
+            "type": "integer"
+          },
+          "xid": {
+            "name": "xid",
+            "type": "integer"
+          },
+          "xref": {
+            "name": "xref",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "groups": {
+      "dirs": {
+        "plural": "dirs",
+        "singular": "dir",
+        "attributes": {
+          "dirid": {
+            "name": "dirid",
+            "type": "string",
+            "immutable": true,
+            "serverrequired": true
+          },
+          "self": {
+            "name": "self",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "xid": {
+            "name": "xid",
+            "type": "url",
+            "readonly": true,
+            "serverrequired": true
+          },
+          "epoch": {
+            "name": "epoch",
+            "type": "uinteger",
+            "serverrequired": true
+          },
+          "name": {
+            "name": "name",
+            "type": "string"
+          },
+          "description": {
+            "name": "description",
+            "type": "string"
+          },
+          "documentation": {
+            "name": "documentation",
+            "type": "url"
+          },
+          "labels": {
+            "name": "labels",
+            "type": "map",
+            "item": {
+              "type": "string"
+            }
+          },
+          "createdat": {
+            "name": "createdat",
+            "type": "timestamp",
+            "serverrequired": true
+          },
+          "modifiedat": {
+            "name": "modifiedat",
+            "type": "timestamp",
+            "serverrequired": true
+          },
+          "obj": {
+            "name": "obj",
+            "type": "object",
+            "attributes": {
+              "capabilities": {
+                "name": "capabilities",
+                "type": "integer"
+              },
+              "contenttype": {
+                "name": "contenttype",
+                "type": "integer"
+              },
+              "createdat": {
+                "name": "createdat",
+                "type": "integer"
+              },
+              "defaultversionid": {
+                "name": "defaultversionid",
+                "type": "integer"
+              },
+              "defaultversionsticky": {
+                "name": "defaultversionsticky",
+                "type": "integer"
+              },
+              "defaultversionurl": {
+                "name": "defaultversionurl",
+                "type": "integer"
+              },
+              "description": {
+                "name": "description",
+                "type": "integer"
+              },
+              "dirid": {
+                "name": "dirid",
+                "type": "integer"
+              },
+              "documentation": {
+                "name": "documentation",
+                "type": "integer"
+              },
+              "epoch": {
+                "name": "epoch",
+                "type": "string"
+              },
+              "fileid": {
+                "name": "fileid",
+                "type": "integer"
+              },
+              "id": {
+                "name": "id",
+                "type": "integer"
+              },
+              "isdefault": {
+                "name": "isdefault",
+                "type": "integer"
+              },
+              "labels": {
+                "name": "labels",
+                "type": "integer"
+              },
+              "metaurl": {
+                "name": "metaurl",
+                "type": "integer"
+              },
+              "model": {
+                "name": "model",
+                "type": "integer"
+              },
+              "modifiedat": {
+                "name": "modifiedat",
+                "type": "integer"
+              },
+              "name": {
+                "name": "name",
+                "type": "integer"
+              },
+              "registryid": {
+                "name": "registryid",
+                "type": "integer"
+              },
+              "self": {
+                "name": "self",
+                "type": "integer"
+              },
+              "specversion": {
+                "name": "specversion",
+                "type": "integer"
+              },
+              "versionid": {
+                "name": "versionid",
+                "type": "integer"
+              },
+              "xid": {
+                "name": "xid",
+                "type": "integer"
+              },
+              "xref": {
+                "name": "xref",
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "resources": {
+          "files": {
+            "plural": "files",
+            "singular": "file",
+            "maxversions": 0,
+            "setversionid": true,
+            "setdefaultversionsticky": true,
+            "hasdocument": false,
+            "attributes": {
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
+              "versionid": {
+                "name": "versionid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
+              "self": {
+                "name": "self",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "xid": {
+                "name": "xid",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "epoch": {
+                "name": "epoch",
+                "type": "uinteger",
+                "serverrequired": true
+              },
+              "name": {
+                "name": "name",
+                "type": "string"
+              },
+              "isdefault": {
+                "name": "isdefault",
+                "type": "boolean",
+                "readonly": true
+              },
+              "description": {
+                "name": "description",
+                "type": "string"
+              },
+              "documentation": {
+                "name": "documentation",
+                "type": "url"
+              },
+              "labels": {
+                "name": "labels",
+                "type": "map",
+                "item": {
+                  "type": "string"
+                }
+              },
+              "createdat": {
+                "name": "createdat",
+                "type": "timestamp",
+                "serverrequired": true
+              },
+              "modifiedat": {
+                "name": "modifiedat",
+                "type": "timestamp",
+                "serverrequired": true
+              },
+              "contenttype": {
+                "name": "contenttype",
+                "type": "string"
+              },
+              "obj": {
+                "name": "obj",
+                "type": "object",
+                "attributes": {
+                  "capabilities": {
+                    "name": "capabilities",
+                    "type": "integer"
+                  },
+                  "contenttype": {
+                    "name": "contenttype",
+                    "type": "integer"
+                  },
+                  "createdat": {
+                    "name": "createdat",
+                    "type": "integer"
+                  },
+                  "defaultversionid": {
+                    "name": "defaultversionid",
+                    "type": "integer"
+                  },
+                  "defaultversionsticky": {
+                    "name": "defaultversionsticky",
+                    "type": "integer"
+                  },
+                  "defaultversionurl": {
+                    "name": "defaultversionurl",
+                    "type": "integer"
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "integer"
+                  },
+                  "dirid": {
+                    "name": "dirid",
+                    "type": "integer"
+                  },
+                  "documentation": {
+                    "name": "documentation",
+                    "type": "integer"
+                  },
+                  "epoch": {
+                    "name": "epoch",
+                    "type": "string"
+                  },
+                  "file": {
+                    "name": "file",
+                    "type": "integer"
+                  },
+                  "filebase64": {
+                    "name": "filebase64",
+                    "type": "integer"
+                  },
+                  "fileid": {
+                    "name": "fileid",
+                    "type": "integer"
+                  },
+                  "fileurl": {
+                    "name": "fileurl",
+                    "type": "integer"
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "integer"
+                  },
+                  "isdefault": {
+                    "name": "isdefault",
+                    "type": "integer"
+                  },
+                  "labels": {
+                    "name": "labels",
+                    "type": "integer"
+                  },
+                  "metaurl": {
+                    "name": "metaurl",
+                    "type": "integer"
+                  },
+                  "model": {
+                    "name": "model",
+                    "type": "integer"
+                  },
+                  "modifiedat": {
+                    "name": "modifiedat",
+                    "type": "integer"
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "integer"
+                  },
+                  "registryid": {
+                    "name": "registryid",
+                    "type": "integer"
+                  },
+                  "self": {
+                    "name": "self",
+                    "type": "integer"
+                  },
+                  "specversion": {
+                    "name": "specversion",
+                    "type": "integer"
+                  },
+                  "versionid": {
+                    "name": "versionid",
+                    "type": "integer"
+                  },
+                  "xid": {
+                    "name": "xid",
+                    "type": "integer"
+                  },
+                  "xref": {
+                    "name": "xref",
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "metaattributes": {
+              "fileid": {
+                "name": "fileid",
+                "type": "string",
+                "immutable": true,
+                "serverrequired": true
+              },
+              "self": {
+                "name": "self",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "xid": {
+                "name": "xid",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "xref": {
+                "name": "xref",
+                "type": "url"
+              },
+              "epoch": {
+                "name": "epoch",
+                "type": "uinteger",
+                "serverrequired": true
+              },
+              "createdat": {
+                "name": "createdat",
+                "type": "timestamp",
+                "serverrequired": true
+              },
+              "modifiedat": {
+                "name": "modifiedat",
+                "type": "timestamp",
+                "serverrequired": true
+              },
+              "defaultversionid": {
+                "name": "defaultversionid",
+                "type": "string",
+                "serverrequired": true
+              },
+              "defaultversionurl": {
+                "name": "defaultversionurl",
+                "type": "url",
+                "readonly": true,
+                "serverrequired": true
+              },
+              "defaultversionsticky": {
+                "name": "defaultversionsticky",
+                "type": "boolean",
+                "readonly": true
+              },
+              "obj": {
+                "name": "obj",
+                "type": "object",
+                "attributes": {
+                  "capabilities": {
+                    "name": "capabilities",
+                    "type": "integer"
+                  },
+                  "contenttype": {
+                    "name": "contenttype",
+                    "type": "integer"
+                  },
+                  "createdat": {
+                    "name": "createdat",
+                    "type": "integer"
+                  },
+                  "defaultversionid": {
+                    "name": "defaultversionid",
+                    "type": "integer"
+                  },
+                  "defaultversionsticky": {
+                    "name": "defaultversionsticky",
+                    "type": "integer"
+                  },
+                  "defaultversionurl": {
+                    "name": "defaultversionurl",
+                    "type": "integer"
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "integer"
+                  },
+                  "dirid": {
+                    "name": "dirid",
+                    "type": "integer"
+                  },
+                  "documentation": {
+                    "name": "documentation",
+                    "type": "integer"
+                  },
+                  "epoch": {
+                    "name": "epoch",
+                    "type": "string"
+                  },
+                  "file": {
+                    "name": "file",
+                    "type": "integer"
+                  },
+                  "filebase64": {
+                    "name": "filebase64",
+                    "type": "integer"
+                  },
+                  "fileid": {
+                    "name": "fileid",
+                    "type": "integer"
+                  },
+                  "fileurl": {
+                    "name": "fileurl",
+                    "type": "integer"
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "integer"
+                  },
+                  "isdefault": {
+                    "name": "isdefault",
+                    "type": "integer"
+                  },
+                  "labels": {
+                    "name": "labels",
+                    "type": "integer"
+                  },
+                  "metaurl": {
+                    "name": "metaurl",
+                    "type": "integer"
+                  },
+                  "model": {
+                    "name": "model",
+                    "type": "integer"
+                  },
+                  "modifiedat": {
+                    "name": "modifiedat",
+                    "type": "integer"
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "integer"
+                  },
+                  "registryid": {
+                    "name": "registryid",
+                    "type": "integer"
+                  },
+                  "self": {
+                    "name": "self",
+                    "type": "integer"
+                  },
+                  "specversion": {
+                    "name": "specversion",
+                    "type": "integer"
+                  },
+                  "versionid": {
+                    "name": "versionid",
+                    "type": "integer"
+                  },
+                  "xid": {
+                    "name": "xid",
+                    "type": "integer"
+                  },
+                  "xref": {
+                    "name": "xref",
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:02Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+      "obj": {
+        "capabilities": 24,
+        "contenttype": 14,
+        "createdat": 12,
+        "defaultversionid": 20,
+        "defaultversionsticky": 22,
+        "defaultversionurl": 21,
+        "description": 9,
+        "dirid": 1,
+        "documentation": 10,
+        "epoch": "6-epoch",
+        "fileid": 1,
+        "id": 1,
+        "isdefault": 8,
+        "labels": 11,
+        "metaurl": 18,
+        "model": 25,
+        "modifiedat": 13,
+        "name": 7,
+        "registryid": 1,
+        "self": 3,
+        "specversion": 0,
+        "versionid": 2,
+        "xid": 4,
+        "xref": 5
+      },
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1",
+          "xid": "/dirs/d1/files/f1",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "YYYY-MM-DDTHH:MM:02Z",
+          "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+          "obj": {
+            "capabilities": 24,
+            "contenttype": 14,
+            "createdat": 12,
+            "defaultversionid": 20,
+            "defaultversionsticky": 22,
+            "defaultversionurl": 21,
+            "description": 9,
+            "dirid": 1,
+            "documentation": 10,
+            "epoch": "6-epoch",
+            "file": 1,
+            "filebase64": 1,
+            "fileid": 1,
+            "fileurl": 1,
+            "id": 1,
+            "isdefault": 8,
+            "labels": 11,
+            "metaurl": 18,
+            "model": 25,
+            "modifiedat": 13,
+            "name": 7,
+            "registryid": 1,
+            "self": 3,
+            "specversion": 0,
+            "versionid": 2,
+            "xid": 4,
+            "xref": 5
+          },
+
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "meta": {
+            "fileid": "f1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "xid": "/dirs/d1/files/f1/meta",
+            "epoch": 1,
+            "createdat": "YYYY-MM-DDTHH:MM:02Z",
+            "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+            "obj": {
+              "capabilities": 24,
+              "contenttype": 14,
+              "createdat": 12,
+              "defaultversionid": 20,
+              "defaultversionsticky": 22,
+              "defaultversionurl": 21,
+              "description": 9,
+              "dirid": 1,
+              "documentation": 10,
+              "epoch": "6-epoch",
+              "file": 1,
+              "filebase64": 1,
+              "fileid": 1,
+              "fileurl": 1,
+              "id": 1,
+              "isdefault": 8,
+              "labels": 11,
+              "metaurl": 18,
+              "model": 25,
+              "modifiedat": 13,
+              "name": 7,
+              "registryid": 1,
+              "self": 3,
+              "specversion": 0,
+              "versionid": 2,
+              "xid": 4,
+              "xref": 5
+            },
+
+            "defaultversionid": "v1",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+              "xid": "/dirs/d1/files/f1/versions/v1",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "YYYY-MM-DDTHH:MM:02Z",
+              "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+              "obj": {
+                "capabilities": 24,
+                "contenttype": 14,
+                "createdat": 12,
+                "defaultversionid": 20,
+                "defaultversionsticky": 22,
+                "defaultversionurl": 21,
+                "description": 9,
+                "dirid": 1,
+                "documentation": 10,
+                "epoch": "6-epoch",
+                "file": 1,
+                "filebase64": 1,
+                "fileid": 1,
+                "fileurl": 1,
+                "id": 1,
+                "isdefault": 8,
+                "labels": 11,
+                "metaurl": 18,
+                "model": 25,
+                "modifiedat": 13,
+                "name": 7,
+                "registryid": 1,
+                "self": 3,
+                "specversion": 0,
+                "versionid": 2,
+                "xid": 4,
+                "xref": 5
+              }
+            }
+          },
+          "versionscount": 1
+        }
+      },
+      "filescount": 1
+    }
+  },
+  "dirscount": 1
+}
+`)
 }

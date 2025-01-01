@@ -129,7 +129,8 @@ type ResourceModel struct {
 }
 
 // To be picky, let's Marshal the list of attributes with Spec defined ones
-// first, and then the extensions in alphabetical order
+// first, and then the extensions in alphabetical order.
+// This is used when serializing the model for end user consumption
 
 func (attrs Attributes) MarshalJSON() ([]byte, error) {
 	buf := bytes.Buffer{}
@@ -156,45 +157,50 @@ func (attrs Attributes) MarshalJSON() ([]byte, error) {
 	// end of hack
 
 	buf.WriteString("{")
-	for _, specProp := range OrderedSpecProps {
-		if specProp.Name[0] == '$' {
-			continue
-		}
 
-		if eType >= 0 && !specProp.InType(eType) {
-			// log.Printf("Skipping: %s  L: %d", specProp.Name, eType)
-			// continue
-		}
-
-		name := specProp.Name
-		if name == "id" {
-			if singular != "" {
-				name = singular + name
-			}
-		}
-
-		if attr, ok := attrsCopy[name]; ok {
-			delete(attrsCopy, name)
-
-			tmpAttr := *attr
-			attr = &tmpAttr
-
-			// We need to exclude "model" because we don't want to show the
-			// end user "model" as a valid attribute in the model.
-			if name == "model" || name == "capabilities" {
+	// Only order (or tweak things) if we're at the top level, which
+	// we know because $singular was set - not within an extension (sub-object)
+	if singular != "" {
+		for _, specProp := range OrderedSpecProps {
+			if specProp.Name[0] == '$' {
 				continue
 			}
 
-			if count > 0 {
-				buf.WriteRune(',')
+			if eType >= 0 && !specProp.InType(eType) {
+				// log.Printf("Skipping: %s  L: %d", specProp.Name, eType)
+				// continue
 			}
-			buf.WriteString(`"` + name + `": `)
-			tmpBuf, err := json.Marshal(attr)
-			if err != nil {
-				return nil, err
+
+			name := specProp.Name
+			if name == "id" {
+				if singular != "" {
+					name = singular + name
+				}
 			}
-			buf.Write(tmpBuf)
-			count++
+
+			if attr, ok := attrsCopy[name]; ok {
+				delete(attrsCopy, name)
+
+				tmpAttr := *attr
+				attr = &tmpAttr
+
+				// We need to exclude "model" because we don't want to show the
+				// end user "model" as a valid attribute in the model.
+				if name == "model" || name == "capabilities" {
+					continue
+				}
+
+				if count > 0 {
+					buf.WriteRune(',')
+				}
+				buf.WriteString(`"` + name + `": `)
+				tmpBuf, err := json.Marshal(attr)
+				if err != nil {
+					return nil, err
+				}
+				buf.Write(tmpBuf)
+				count++
+			}
 		}
 	}
 
