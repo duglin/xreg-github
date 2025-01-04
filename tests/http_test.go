@@ -10087,25 +10087,42 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f10/versions - new res,version-2v",
-		URL:        "/dirs/dir1/files/f10/versions",
+		Name:       "POST resources/f99/versions - new res,version-2v,newest=alphabetical",
+		URL:        "/dirs/dir1/files/f99/versions",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
-          "v1": {},
+          "v10": {},
           "v2": {}
         }`,
-		Code: 400,
-		ResHeaders: []string{
-			"Content-Type:text/plain; charset=utf-8",
-		},
-		ResBody: `?setdefaultversionid is required
+		Code: 200,
+		ResBody: `{
+  "v10": {
+    "fileid": "f99",
+    "versionid": "v10",
+    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v10$structure",
+    "xid": "/dirs/dir1/files/f99/versions/v10",
+    "epoch": 1,
+    "createdat": "2025-01-04T13:31:22.013338763Z",
+    "modifiedat": "2025-01-04T13:31:22.013338763Z"
+  },
+  "v2": {
+    "fileid": "f99",
+    "versionid": "v2",
+    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v2$structure",
+    "xid": "/dirs/dir1/files/f99/versions/v2",
+    "epoch": 1,
+    "isdefault": true,
+    "createdat": "2025-01-04T13:31:22.013338763Z",
+    "modifiedat": "2025-01-04T13:31:22.013338763Z"
+  }
+}
 `,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "POST resources/f10/versions - new res,version-1v",
-		URL:        "/dirs/dir1/files/f10/versions?setdefaultversionid=v2",
+		URL:        "/dirs/dir1/files/f10/versions?setdefaultversionid=v3",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -10115,7 +10132,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResHeaders: []string{
 			"Content-Type:text/plain; charset=utf-8",
 		},
-		ResBody: `Version "v2" not found
+		ResBody: `Version "v3" not found
 `,
 	})
 

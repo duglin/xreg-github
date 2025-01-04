@@ -1640,11 +1640,8 @@ func HTTPPutPost(info *RequestInfo) error {
 
 			vID := info.GetFlag("setdefaultversionid")
 			if vID == "" || vID == "request" {
-				if len(objMap) > 1 {
+				if vID == "request" && len(objMap) > 1 {
 					info.StatusCode = http.StatusBadRequest
-					if vID == "" {
-						return fmt.Errorf("?setdefaultversionid is required")
-					}
 					return fmt.Errorf("?setdefaultversionid can not be " +
 						"'request'")
 				}
@@ -1907,7 +1904,8 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 	if vID == "request" {
 		if version == nil {
 			info.StatusCode = http.StatusBadRequest
-			return fmt.Errorf("Can't use 'request' if a version wasn't processed")
+			return fmt.Errorf("Can't use 'request' if a version wasn't " +
+				"processed")
 		}
 		// stick default version to current one we just processed
 		return resource.SetDefault(version)
