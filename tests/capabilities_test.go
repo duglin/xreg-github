@@ -25,7 +25,8 @@ func TestCapabilitySimple(t *testing.T) {
     "noepoch",
     "noreadonly",
     "schema",
-    "setdefaultversionid"
+    "setdefaultversionid",
+    "specversion"
   ],
   "mutable": [
     "capabilities",
@@ -64,7 +65,8 @@ func TestCapabilitySimple(t *testing.T) {
       "noepoch",
       "noreadonly",
       "schema",
-      "setdefaultversionid"
+      "setdefaultversionid",
+      "specversion"
     ],
     "mutable": [
       "capabilities",
@@ -256,7 +258,8 @@ func TestCapabilityPath(t *testing.T) {
     "noepoch",
     "noreadonly",
     "schema",
-    "setdefaultversionid"
+    "setdefaultversionid",
+    "specversion"
   ],
   "mutable": [
     "capabilities",
@@ -370,7 +373,7 @@ func TestCapabilityPath(t *testing.T) {
   "flags": [
     "epoch", "export", "filter", "inline", "nested", "nodefaultversionid",
     "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
-	"setdefaultversionid"
+	"setdefaultversionid", "specversion"
   ],
   "mutable": [ "capabilities", "entities", "model" ],
   "pagination": false,
@@ -390,7 +393,8 @@ func TestCapabilityPath(t *testing.T) {
     "noepoch",
     "noreadonly",
     "schema",
-    "setdefaultversionid"
+    "setdefaultversionid",
+    "specversion"
   ],
   "mutable": [
     "capabilities",
@@ -420,7 +424,8 @@ func TestCapabilityPath(t *testing.T) {
     "noepoch",
     "noreadonly",
     "schema",
-    "setdefaultversionid"
+    "setdefaultversionid",
+    "specversion"
   ],
   "mutable": [
     "capabilities",
@@ -617,7 +622,7 @@ func TestCapabilityAttr(t *testing.T) {
   "flags": [
     "epoch", "export", "filter", "inline", "nested", "nodefaultversionid",
     "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
-	"setdefaultversionid"
+	"setdefaultversionid", "specversion"
   ],
   "mutable": [ "capabilities", "entities", "model" ],
   "pagination": false,
@@ -648,7 +653,8 @@ func TestCapabilityAttr(t *testing.T) {
     "noepoch",
     "noreadonly",
     "schema",
-    "setdefaultversionid"
+    "setdefaultversionid",
+    "specversion"
   ],
   "mutable": [
     "capabilities",
@@ -735,9 +741,9 @@ func TestCapabilityAttr(t *testing.T) {
 
 // "epoch", "export", "filter", "inline",
 // "nested", "nodefaultversionid", "nodefaultversionsticky",
-// "noepoch", "noreadonly", "schema", "setdefaultversionid"})
+// "noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
 
-func TestCapabilityFlags(t *testing.T) {
+func TestCapabilityFlagsOff(t *testing.T) {
 	reg := NewRegistry("TestCapabilityFlags")
 	defer PassDeleteReg(t, reg)
 
@@ -824,6 +830,9 @@ func TestCapabilityFlags(t *testing.T) {
 
 	// Test ?schema
 	xHTTP(t, reg, "GET", "/model?schema=foo", ``, 200, `*`)
+
+	// Test ?specversion
+	xHTTP(t, reg, "GET", "/model?specversion=foo", ``, 200, `*`)
 
 	// TODO nodefaultversionid, nodefaultversionsticky, noepoch, noreadonly
 }

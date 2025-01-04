@@ -21,7 +21,7 @@ type Capabilities struct {
 var AllowableFlags = ArrayToLower([]string{
 	"epoch", "export", "filter", "inline",
 	"nested", "nodefaultversionid", "nodefaultversionsticky",
-	"noepoch", "noreadonly", "schema", "setdefaultversionid"})
+	"noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
 
 var AllowableMutable = ArrayToLower([]string{
 	"capabilities", "entities", "model"})
@@ -135,10 +135,10 @@ func (c *Capabilities) Validate() error {
 		return err
 	}
 
-	if !ArrayContains(c.Schemas, strings.ToLower(XREGSCHEMA+"/"+SPECVERSION)) {
+	if !ArrayContainsAnyCase(c.Schemas, XREGSCHEMA+"/"+SPECVERSION) {
 		return fmt.Errorf(`"schemas" must contain %q`, XREGSCHEMA+"/"+SPECVERSION)
 	}
-	if !ArrayContains(c.SpecVersions, strings.ToLower(SPECVERSION)) {
+	if !ArrayContainsAnyCase(c.SpecVersions, SPECVERSION) {
 		return fmt.Errorf(`"specversions" must contain %q`, SPECVERSION)
 	}
 
@@ -160,11 +160,11 @@ func ParseCapabilitiesJSON(buf []byte) (*Capabilities, error) {
 }
 
 func (c *Capabilities) FlagEnabled(str string) bool {
-	return ArrayContains(c.Flags, strings.ToLower(str))
+	return ArrayContainsAnyCase(c.Flags, str)
 }
 
 func (c *Capabilities) MutableEnabled(str string) bool {
-	return ArrayContains(c.Mutable, strings.ToLower(str))
+	return ArrayContainsAnyCase(c.Mutable, str)
 }
 
 func (c *Capabilities) PaginationEnabled() bool {
@@ -172,7 +172,7 @@ func (c *Capabilities) PaginationEnabled() bool {
 }
 
 func (c *Capabilities) SchemaEnabled(str string) bool {
-	return ArrayContains(c.Schemas, strings.ToLower(str))
+	return ArrayContainsAnyCase(c.Schemas, str)
 }
 
 func (c *Capabilities) ShortSelfEnabled(str string) bool {
@@ -180,5 +180,5 @@ func (c *Capabilities) ShortSelfEnabled(str string) bool {
 }
 
 func (c *Capabilities) SpecVersionEnabled(str string) bool {
-	return ArrayContains(c.SpecVersions, strings.ToLower(str))
+	return ArrayContainsAnyCase(c.SpecVersions, str)
 }

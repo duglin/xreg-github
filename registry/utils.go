@@ -869,6 +869,16 @@ func ArrayContains(strs []string, needle string) bool {
 	return false
 }
 
+func ArrayContainsAnyCase(strs []string, needle string) bool {
+	needle = strings.ToLower(needle)
+	for _, s := range strs {
+		if needle == strings.ToLower(s) {
+			return true
+		}
+	}
+	return false
+}
+
 // Convert a string into a unique MD5 string - basically just for cases
 // where we want to create a tiny URL
 func MD5(str string) string {

@@ -137,6 +137,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == nil {
+		if sv := info.GetFlag("specversion"); sv != "" {
+			if !info.Registry.Capabilities.SpecVersionEnabled(sv) {
+				err = fmt.Errorf("Unsupported xRegistry spec version: %s",
+					sv)
+			}
+		}
+	}
+
+	if err == nil {
 		// These should only return an error if they didn't already
 		// send a response back to the client.
 		switch strings.ToUpper(r.Method) {
@@ -565,6 +574,7 @@ func (pw *PageWriter) Done() {
   }
 
   .expandBtn {
+    cursor: default ;
     display: inline-block ;
 	width: 2ch ;
 	text-align: center ;

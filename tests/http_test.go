@@ -14727,3 +14727,12 @@ func TestHTTPInvalidID(t *testing.T) {
 		`{"fileid": "f1*"}`, 400,
 		"\"f1*\" isn't a valid ID\n")
 }
+
+func TestHTTPSpecVersion(t *testing.T) {
+	reg := NewRegistry("TestHTTPSpecVersion")
+	defer PassDeleteReg(t, reg)
+
+	xHTTP(t, reg, "GET", "?specversion=0.5", "", 200, "*")
+	xHTTP(t, reg, "GET", "?specversion=0.x", "", 400,
+		"Unsupported xRegistry spec version: 0.x\n")
+}
