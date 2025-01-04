@@ -568,20 +568,20 @@ func (pw *PageWriter) Done() {
 
   .expandAll {
     display: inline-flex ;
-	position: fixed ;
-	top: 30 ;
-	right: 16 ;
+    position: fixed ;
+    top: 30 ;
+    right: 16 ;
   }
 
   .expandBtn {
     cursor: default ;
     display: inline-block ;
-	width: 2ch ;
-	text-align: center ;
-	border: 1px solid darkgrey ;
-	border-radius: 5px ;
-	background-color: lightgrey ;
-	margin-right: 2px ;
+    width: 2ch ;
+    text-align: center ;
+    border: 1px solid darkgrey ;
+    border-radius: 5px ;
+    background-color: lightgrey ;
+    margin-right: 2px ;
   }
 
   .spc {
@@ -605,8 +605,11 @@ func (pw *PageWriter) Done() {
 
     // background-color: lightsteelblue ; // #e7eff7 ;
     color: black ;
-    font-weight: bold ;
-	font-size: smaller ;
+    // font-weight: bold ;
+    font-size: medium ;
+    overflow: hidden ;
+    line-height: 10px ;
+    max-width: 8px ;
   }
 
   .hide {
