@@ -151,3 +151,5 @@ TODOs:
 - test creating a resource + lots of versions w/o ?defaultversionid-should fail
   - PUT ../f1   POST .../f1/versions   POT .../versions
 - Split the model.verify stuff so it doesn't verify the data unless asked to
+- make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
+  support it. Like pagination or enforcecompatibility

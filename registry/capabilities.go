@@ -10,12 +10,13 @@ import (
 )
 
 type Capabilities struct {
-	Flags        []string `json:"flags"`
-	Mutable      []string `json:"mutable"`
-	Pagination   bool     `json:"pagination"`
-	Schemas      []string `json:"schemas"`
-	ShortSelf    bool     `json:"shortself"`
-	SpecVersions []string `json:"specversions"`
+	EnforceCompatibility bool     `json:"enforcecompatibility"`
+	Flags                []string `json:"flags"`
+	Mutable              []string `json:"mutable"`
+	Pagination           bool     `json:"pagination"`
+	Schemas              []string `json:"schemas"`
+	ShortSelf            bool     `json:"shortself"`
+	SpecVersions         []string `json:"specversions"`
 }
 
 var AllowableFlags = ArrayToLower([]string{
@@ -31,12 +32,13 @@ var AllowableSchemas = ArrayToLower([]string{XREGSCHEMA + "/" + SPECVERSION})
 var AllowableSpecVersions = ArrayToLower([]string{"0.5"})
 
 var DefaultCapabilities = &Capabilities{
-	Flags:        AllowableFlags,
-	Mutable:      AllowableMutable,
-	Pagination:   false,
-	Schemas:      AllowableSchemas,
-	ShortSelf:    false,
-	SpecVersions: AllowableSpecVersions,
+	EnforceCompatibility: false,
+	Flags:                AllowableFlags,
+	Mutable:              AllowableMutable,
+	Pagination:           false,
+	Schemas:              AllowableSchemas,
+	ShortSelf:            false,
+	SpecVersions:         AllowableSpecVersions,
 }
 
 func init() {
@@ -157,6 +159,10 @@ func ParseCapabilitiesJSON(buf []byte) (*Capabilities, error) {
 		return nil, err
 	}
 	return &cap, nil
+}
+
+func (c *Capabilities) EnforceCompatibilityEnabled() bool {
+	return c.EnforceCompatibility
 }
 
 func (c *Capabilities) FlagEnabled(str string) bool {
