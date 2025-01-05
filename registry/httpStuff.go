@@ -582,6 +582,7 @@ func (pw *PageWriter) Done() {
     border-radius: 5px ;
     background-color: lightgrey ;
     margin-right: 2px ;
+	font-family: menlo ;
   }
 
   .spc {
@@ -606,6 +607,7 @@ func (pw *PageWriter) Done() {
     // background-color: lightsteelblue ; // #e7eff7 ;
     color: black ;
     // font-weight: bold ;
+	font-family: menlo ;
     font-size: medium ;
     overflow: hidden ;
     line-height: 10px ;
