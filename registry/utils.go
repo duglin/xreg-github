@@ -372,6 +372,7 @@ func Unmarshal(buf []byte, v any) error {
 		// Try to grab the json around the error
 		offset := int(dec.InputOffset())
 		nearStart := offset - 200
+		// lineNum := LineNum(buf, int(offset))
 		if nearStart < 0 {
 			nearStart = 0
 		}
@@ -379,12 +380,14 @@ func Unmarshal(buf []byte, v any) error {
 		if nearEnd >= len(buf) {
 			nearEnd = len(buf)
 		}
-		near := ""
+		near := "" // fmt.Sprintf(" near: ") //  line #%d\n", lineNum)
+		// log.Printf("offset: %d  len(buf): %d, nearStart: %d", offset, len(buf), nearStart)
+		// log.Printf("**  %s", buf[offset:])
 		if nearStart != offset {
 			if nearStart != 0 {
-				near = "..."
+				near += "..."
 			}
-			near = string(buf[nearStart:nearEnd])
+			near += string(buf[nearStart:nearEnd])
 		}
 		if offset > 0 && nearEnd != offset {
 			near += "..."
@@ -450,6 +453,7 @@ func ProcessIncludes(file string, buf []byte, localFiles bool) ([]byte, error) {
 	}
 
 	// Convert back to byte
+	// buf, err := json.MarshalIndent(data, "", "  ")
 	buf, err := json.Marshal(data)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating JSON: %s", err)
