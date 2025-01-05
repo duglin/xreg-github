@@ -369,6 +369,27 @@ func Unmarshal(buf []byte, v any) error {
 	dec := json.NewDecoder(bytes.NewReader(buf))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
+		// Try to grab the json around the error
+		offset := int(dec.InputOffset())
+		nearStart := offset - 200
+		if nearStart < 0 {
+			nearStart = 0
+		}
+		nearEnd := offset + 200
+		if nearEnd >= len(buf) {
+			nearEnd = len(buf)
+		}
+		near := ""
+		if nearStart != offset {
+			if nearStart != 0 {
+				near = "..."
+			}
+			near = string(buf[nearStart:nearEnd])
+		}
+		if offset > 0 && nearEnd != offset {
+			near += "..."
+		}
+
 		msg := err.Error()
 
 		if jerr, ok := err.(*json.UnmarshalTypeError); ok {
@@ -384,6 +405,10 @@ func Unmarshal(buf []byte, v any) error {
 			}
 		}
 		msg, _ = strings.CutPrefix(msg, "json: ")
+		if near != "" {
+			msg += " near: " + near
+		}
+
 		return errors.New(msg)
 	}
 	return nil

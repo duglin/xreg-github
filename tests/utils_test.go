@@ -261,13 +261,13 @@ func xCheckEqual(t *testing.T, extra string, gotAny any, expAny any) {
 	}
 
 	if pos == len(got) {
-		t.Fatalf("%s"+
+		t.Fatalf("%s\n"+
 			"Expected:\n%s\nGot:\n%s\nGot ended early at(%d)[%02X]:\n%q",
 			extra, exp, got, pos, exp[pos], got[pos:])
 	}
 
 	if pos == len(exp) {
-		t.Fatalf("%s"+
+		t.Fatalf("%s\n"+
 			"Expected:\n%s\nGot:\n%s\nExp ended early at(%d)[%02X]:\n%q",
 			extra, exp, got, pos, got[pos], got[pos:])
 	}
