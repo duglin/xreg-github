@@ -1650,7 +1650,8 @@ func HTTPPutPost(info *RequestInfo) error {
 					return fmt.Errorf("?setdefaultversionid can not be " +
 						"'request'")
 				}
-				// Only one Version so use its ID as the default version
+				// Just randomly grab one Verison and make it the default
+				// one for now
 				for k, _ := range objMap {
 					vID = k
 					break
@@ -1686,20 +1687,27 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Process the remaining versions
+		addType := ADD_UPSERT
+		if method == "PATCH" {
+			addType = ADD_PATCH
+		}
 		for id, obj := range objMap {
-			addType := ADD_UPSERT
-			if method == "PATCH" {
-				addType = ADD_PATCH
-			}
 			v, _, err := resource.UpsertVersionWithObject(id, obj, addType)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
 			}
+
 			paths = append(paths, v.Path)
 		}
 
 		err = ProcessSetDefaultVersionIDFlag(info, resource, thisVersion)
+		if err != nil {
+			return err
+		}
+
+		// Make sure the latest version is chosen appropriately
+		err = resource.EnsureLatest()
 		if err != nil {
 			return err
 		}

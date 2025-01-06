@@ -2980,16 +2980,17 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
-          "v10": {},
+          "v1": {},
+          "v9": {},
           "v2": {}
         }`,
 		Code: 200,
 		ResBody: `{
-  "v10": {
+  "v1": {
     "fileid": "f99",
-    "versionid": "v10",
-    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v10$structure",
-    "xid": "/dirs/dir1/files/f99/versions/v10",
+    "versionid": "v1",
+    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v1$structure",
+    "xid": "/dirs/dir1/files/f99/versions/v1",
     "epoch": 1,
     "createdat": "2025-01-04T13:31:22.013338763Z",
     "modifiedat": "2025-01-04T13:31:22.013338763Z"
@@ -2999,6 +3000,15 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "versionid": "v2",
     "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v2$structure",
     "xid": "/dirs/dir1/files/f99/versions/v2",
+    "epoch": 1,
+    "createdat": "2025-01-04T13:31:22.013338763Z",
+    "modifiedat": "2025-01-04T13:31:22.013338763Z"
+  },
+  "v9": {
+    "fileid": "f99",
+    "versionid": "v9",
+    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v9$structure",
+    "xid": "/dirs/dir1/files/f99/versions/v9",
     "epoch": 1,
     "isdefault": true,
     "createdat": "2025-01-04T13:31:22.013338763Z",
