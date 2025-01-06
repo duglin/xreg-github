@@ -314,7 +314,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
 	if !IsNil(meta.Get("xref")) {
-		// All versions should have been deleted alread so just return
+		// All versions should have been deleted already so just return
 		return r, isNew, nil
 	}
 
