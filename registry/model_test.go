@@ -36,6 +36,32 @@ func TestModelVerifySimple(t *testing.T) {
 				},
 			},
 		}, ""},
+		{"reg 1 group -1 ", Model{
+			Groups: map[string]*GroupModel{
+				"gs1": &GroupModel{
+					Plural:   "gs1",
+					Singular: "g1",
+				},
+			},
+		}, ""},
+		{"reg 1 group -2 ", Model{
+			Groups: map[string]*GroupModel{"Gs1": nil},
+		}, `GroupModel "Gs1" can't be empty`},
+		{"reg 1 group -3 ", Model{
+			Groups: map[string]*GroupModel{"Gs1": {}},
+		}, `Invalid model type name "Gs1", must match: ^[a-z_][a-z_0-9]{0,57}$`},
+		{"reg 1 group -4 ", Model{
+			Groups: map[string]*GroupModel{"@": {}},
+		}, `Invalid model type name "@", must match: ^[a-z_][a-z_0-9]{0,57}$`},
+		{"reg 1 group -5 ", Model{
+			Groups: map[string]*GroupModel{"_a": {Plural: "_a", Singular: "a"}},
+		}, ``},
+		{"reg 1 group -6 ", Model{
+			Groups: map[string]*GroupModel{"a234567890123456789012345678901234567890123456789012345678": {Plural: "a234567890123456789012345678901234567890123456789012345678", Singular: "a"}},
+		}, ``},
+		{"reg 1 group -7 ", Model{
+			Groups: map[string]*GroupModel{"a2345678901234567890123456789012345678901234567890123456789": {}},
+		}, `Invalid model type name "a2345678901234567890123456789012345678901234567890123456789", must match: ^[a-z_][a-z_0-9]{0,57}$`},
 	}
 
 	for _, test := range tests {
@@ -49,7 +75,7 @@ func TestModelVerifySimple(t *testing.T) {
 				test.name, test.err)
 		}
 		if err != nil && test.err != err.Error() {
-			t.Fatalf("ModifyVerify: %s - expected %q got %q", test.name,
+			t.Fatalf("ModifyVerify: %s\nexp: %s\ngot: %s", test.name,
 				test.err, err.Error())
 		}
 	}
@@ -184,9 +210,31 @@ func TestModelVerifyRegAttr(t *testing.T) {
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
 				Attributes: Attributes{}}}}, ``},
 
-		{"type - any", Model{
+		{"type - attr - err1", Model{
 			Attributes: Attributes{".foo": {Name: ".foo", Type: ANY}}},
-			`"model" has an invalid attribute key ".foo" - must match "^[a-z_][a-z0-9_./]{0,62}$"`},
+			`Error processing "model": Invalid attribute name ".foo", must match: ^[a-z_][a-z_0-9]{0,62}$`},
+		{"type - attr - err2", Model{
+			Attributes: Attributes{"foo.bar": {}}},
+			`Error processing "model": Invalid attribute name "foo.bar", must match: ^[a-z_][a-z_0-9]{0,62}$`},
+		{"type - attr - err3", Model{
+			Attributes: Attributes{"foo": nil}},
+			`Error processing "model": attribute "foo" can't be empty`},
+		{"type - attr - err4", Model{
+			Attributes: Attributes{"FOO": {}}},
+			`Error processing "model": Invalid attribute name "FOO", must match: ^[a-z_][a-z_0-9]{0,62}$`},
+		{"type - attr - err5", Model{
+			Attributes: Attributes{"9foo": {}}},
+			`Error processing "model": Invalid attribute name "9foo", must match: ^[a-z_][a-z_0-9]{0,62}$`},
+		{"type - attr - err6", Model{
+			Attributes: Attributes{"": {}}},
+			`Error processing "model": it has an empty attribute key`},
+		{"type - attr - ok1", Model{
+			Attributes: Attributes{"a23456789012345678901234567890123456789012345678901234567890123": {Name: "a23456789012345678901234567890123456789012345678901234567890123", Type: STRING}}},
+			``},
+		{"type - attr - err7", Model{
+			Attributes: Attributes{"a234567890123456789012345678901234567890123456789012345678901234": {Name: "a234567890123456789012345678901234567890123456789012345678901234", Type: STRING}}},
+			`Error processing "model": Invalid attribute name "a234567890123456789012345678901234567890123456789012345678901234", must match: ^[a-z_][a-z_0-9]{0,62}$`},
+
 		{"type - array - missing item", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: ARRAY}}},
 			`"model.x" must have an "item" section`},
@@ -540,6 +588,182 @@ func TestTargetRegExp(t *testing.T) {
 
 		if len(tmpParts) != len(test.result) || exp != got {
 			t.Fatalf("\nIn: %s\nExp: %s\nGot: %s", test.input, exp, got)
+		}
+	}
+}
+
+func TestValidChars(t *testing.T) {
+	a10 := "a234567890"
+	a50 := a10 + a10 + a10 + a10 + a10
+	a58 := a50 + "12345678"
+	a59 := a50 + "123456789"
+	a60 := a50 + a10
+	a63 := a60 + "123"
+	a64 := a63 + "4"
+	a128 := a64 + a64
+	a129 := a128 + "9"
+
+	// Test Group and Resource model type names
+	match := RegexpModelName.String()
+	for _, test := range []struct {
+		input  string
+		result string
+	}{
+		{"", `Invalid model type name "", must match: ` + match},
+		{"A", `Invalid model type name "A", must match: ` + match},
+		{"*", `Invalid model type name "*", must match: ` + match},
+		{"@", `Invalid model type name "@", must match: ` + match},
+		{"0", `Invalid model type name "0", must match: ` + match},
+		{"0a", `Invalid model type name "0a", must match: ` + match},
+		{"aZ", `Invalid model type name "aZ", must match: ` + match},
+		{a59, `Invalid model type name "` + a59 + `", must match: ` + match},
+		{"a", ``},
+		{"_", ``},
+		{"_a", ``},
+		{"_8", ``},
+		{"a_", ``},
+		{"a_8", ``},
+		{"aa", ``},
+		{"a9", ``},
+		{a58, ``},
+	} {
+		err := IsValidModelName(test.input)
+		got := ""
+		if err != nil {
+			got = err.Error()
+		}
+		if got != test.result {
+			t.Fatalf("Test: %s\nExp: %s\nGot: %s", test.input, test.result, got)
+		}
+	}
+
+	// Test attribute names
+	match = RegexpPropName.String()
+	for _, test := range []struct {
+		input  string
+		result string
+	}{
+		{"", `Invalid attribute name "", must match: ` + match},
+		{"A", `Invalid attribute name "A", must match: ` + match},
+		{"*", `Invalid attribute name "*", must match: ` + match},
+		{"@", `Invalid attribute name "@", must match: ` + match},
+		{"0", `Invalid attribute name "0", must match: ` + match},
+		{"0a", `Invalid attribute name "0a", must match: ` + match},
+		{"aZ", `Invalid attribute name "aZ", must match: ` + match},
+		{a64, `Invalid attribute name "` + a64 + `", must match: ` + match},
+		{"a", ``},
+		{"_", ``},
+		{"_a", ``},
+		{"_8", ``},
+		{"a_", ``},
+		{"a_8", ``},
+		{"aa", ``},
+		{"a9", ``},
+		{a63, ``},
+	} {
+		err := IsValidAttributeName(test.input)
+		got := ""
+		if err != nil {
+			got = err.Error()
+		}
+		if got != test.result {
+			t.Fatalf("Test: %s\nExp: %s\nGot: %s", test.input, test.result, got)
+		}
+	}
+
+	// Test IDs
+	match = RegexpID.String()
+	for _, test := range []struct {
+		input  string
+		result string
+	}{
+		{"", `Invalid ID "", must match: ` + match},
+		{"*", `Invalid ID "*", must match: ` + match},
+		{"!", `Invalid ID "!", must match: ` + match},
+		{"+", `Invalid ID "+", must match: ` + match},
+		{"A*", `Invalid ID "A*", must match: ` + match},
+		{"*a", `Invalid ID "*a", must match: ` + match},
+		{a129, `Invalid ID "` + a129 + `", must match: ` + match},
+		{"a", ``},
+		{"A", ``},
+		{"_", ``},
+		{".", ``},
+		{"-", ``},
+		{"~", ``},
+		{"@", ``},
+		{"0", ``},
+		{"9", ``},
+		{"aa", ``},
+		{"aA", ``},
+		{"a_", ``},
+		{"a.", ``},
+		{"a-", ``},
+		{"a~", ``},
+		{"a@", ``},
+		{"9a", ``},
+		{"9A", ``},
+		{"9_", ``},
+		{"9.", ``},
+		{"9-", ``},
+		{"9~", ``},
+		{"9@", ``},
+		{"90", ``},
+		{".-~_0Nb", ``},
+		{a128, ``},
+	} {
+		err := IsValidID(test.input)
+		got := ""
+		if err != nil {
+			got = err.Error()
+		}
+		if got != test.result {
+			t.Fatalf("Test: %s\nExp: %s\nGot: %s", test.input, test.result, got)
+		}
+	}
+
+	// Test map keys
+	match = RegexpMapKey.String()
+	for _, test := range []struct {
+		input  string
+		result string
+	}{
+		{"", `Invalid map key name "", must match: ` + match},
+		{"_", `Invalid map key name "_", must match: ` + match},
+		{".", `Invalid map key name ".", must match: ` + match},
+		{"-", `Invalid map key name "-", must match: ` + match},
+		{"*", `Invalid map key name "*", must match: ` + match},
+		{"!", `Invalid map key name "!", must match: ` + match},
+		{"~", `Invalid map key name "~", must match: ` + match},
+		{"A", `Invalid map key name "A", must match: ` + match},
+		{"aA", `Invalid map key name "aA", must match: ` + match},
+		{"Aa", `Invalid map key name "Aa", must match: ` + match},
+		{"_a", `Invalid map key name "_a", must match: ` + match},
+		{"9A", `Invalid map key name "9A", must match: ` + match},
+		{"a*", `Invalid map key name "a*", must match: ` + match},
+		{"a!", `Invalid map key name "a!", must match: ` + match},
+		{"a~", `Invalid map key name "a~", must match: ` + match},
+		{a64, `Invalid map key name "` + a64 + `", must match: ` + match},
+
+		{"a", ``},
+		{"0", ``},
+		{"a0", ``},
+		{"0a", ``},
+		{"zb", ``},
+		{"m_.-", ``},
+		{"m-", ``},
+		{"m_", ``},
+		{"m-z", ``},
+		{"m.9", ``},
+		{"m_9", ``},
+		{a63, ``},
+	} {
+		err := IsValidMapKey(test.input)
+		got := ""
+		if err != nil {
+			got = err.Error()
+		}
+		if got != test.result {
+			t.Fatalf("Test: %s\nExp: %s\nGot: %s", test.input, test.result, got)
 		}
 	}
 }

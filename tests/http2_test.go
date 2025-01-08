@@ -7611,36 +7611,37 @@ func TestHTTPInvalidID(t *testing.T) {
 	gm.AddResourceModelSimple("files", "file")
 
 	xHTTP(t, reg, "PUT", "/", `{"registryid": "*" }`, 400,
-		"\"*\" isn't a valid ID\n")
+		`Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1*", `{}`, 400,
-		"\"d1*\" isn't a valid ID\n")
+		`Invalid ID "d1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1", `{"dirid": "d1*" }`, 400,
-		"\"d1*\" isn't a valid ID\n")
+		`Invalid ID "d1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/", `{"d1*":{}}`, 400,
-		"\"d1*\" isn't a valid ID\n")
+		`Invalid ID "d1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/", `{"d1*":{"dirid": "d1*" }}`, 400,
-		"\"d1*\" isn't a valid ID\n")
+		`Invalid ID "d1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/", `{"d1":{"dirid": "d2*" }}`, 400,
-		"\"d2*\" isn't a valid ID\n")
+		`Invalid ID "d2*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1*$structure", `{}`, 400,
-		"\"f1*\" isn't a valid ID\n")
+		`Invalid ID "f1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{"fileid":"f1*"}`, 400,
 		"The \"fileid\" attribute must be set to \"f1\", not \"f1*\"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{"versionid":"v1*"}`,
-		400, "\"v1*\" isn't a valid ID\n")
+		400,
+		`Invalid ID "v1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{"v1*":{}}`, 400,
-		"\"v1*\" isn't a valid ID\n")
+		`Invalid ID "v1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1*", `{}`, 400,
-		"\"v1*\" isn't a valid ID\n")
+		`Invalid ID "v1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
 		`{"versionid": "v1*"}`, 400,
-		"\"v1*\" isn't a valid ID\n")
+		`Invalid ID "v1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
 		`{"fileid": "f1*"}`, 400,
-		"\"f1*\" isn't a valid ID\n")
+		`Invalid ID "f1*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`+"\n")
 }
 
 func TestHTTPSpecVersion(t *testing.T) {

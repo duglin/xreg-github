@@ -28,12 +28,13 @@ func TestSetAttributeNames(t *testing.T) {
 		{"_123_", ""},
 		{"_", ""},
 		{"__", ""},
-		{sixty + "1234", "Invalid attribute name: "},
-		{"1234", "Invalid attribute name: "},
-		{"A", "Invalid attribute name: "},
-		{"aA", "Invalid attribute name: "},
-		{"_A", "Invalid attribute name: "},
-		{"_ _", "Invalid attribute name: "},
+		{"", "Invalid attribute name "},
+		{sixty + "1234", "Invalid attribute name "},
+		{"1234", "Invalid attribute name "},
+		{"A", "Invalid attribute name "},
+		{"aA", "Invalid attribute name "},
+		{"_A", "Invalid attribute name "},
+		{"_ _", "Invalid attribute name "},
 	}
 
 	for _, test := range tests {
@@ -42,7 +43,7 @@ func TestSetAttributeNames(t *testing.T) {
 			t.Errorf("Name: %q failed: %s", test.name, err)
 		}
 		if test.msg != "" && (err == nil || !strings.HasPrefix(err.Error(), test.msg)) {
-			t.Errorf("Name: %q should have failed", test.name)
+			t.Errorf("Name: %q should have failed: %s", test.name, err)
 		}
 	}
 }

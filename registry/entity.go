@@ -856,8 +856,8 @@ var OrderedSpecProps = []*Attribute{
 						singular)
 				}
 
-				if !IsValidID(newID.(string)) {
-					return fmt.Errorf(`%q isn't a valid ID`, newID)
+				if err := IsValidID(newID.(string)); err != nil {
+					return err
 				}
 
 				if oldID != "" && !IsNil(oldID) && newID != oldID {
@@ -925,8 +925,8 @@ var OrderedSpecProps = []*Attribute{
 					return fmt.Errorf(`"versionid" can't be an empty string`)
 				}
 
-				if !IsValidID(newID.(string)) {
-					return fmt.Errorf(`%q isn't a valid ID`, newID)
+				if err := IsValidID(newID.(string)); err != nil {
+					return err
 				}
 
 				if oldID != "" && !IsNil(oldID) && newID != oldID {
@@ -2500,9 +2500,8 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 		return fmt.Errorf("must match %q target, missing \"%sid\"",
 			relation, gm.Singular)
 	}
-	if !IsValidID(strParts[2]) {
-		return fmt.Errorf("must match %q target, %q isn't a valid ID",
-			relation, strParts[2])
+	if err := IsValidID(strParts[2]); err != nil {
+		return fmt.Errorf("must match %q target: %s", relation, err)
 	}
 
 	if targetParts[2] == "" { // /GROUPS
@@ -2533,9 +2532,8 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 		return fmt.Errorf("must match %q target, missing \"%sid\"",
 			relation, rm.Singular)
 	}
-	if !IsValidID(strParts[4]) {
-		return fmt.Errorf("must match %q target, %q isn't a valid ID",
-			relation, strParts[4])
+	if err := IsValidID(strParts[4]); err != nil {
+		return fmt.Errorf("must match %q target: %s", relation, err)
 	}
 
 	if targetParts[3] == "" && targetParts[4] == "" {
@@ -2563,9 +2561,8 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 		return fmt.Errorf("must match %q target, missing a \"versionid\"",
 			relation)
 	}
-	if !IsValidID(strParts[6]) {
-		return fmt.Errorf("must match %q target, %q isn't a valid ID",
-			relation, strParts[6])
+	if err := IsValidID(strParts[6]); err != nil {
+		return fmt.Errorf("must match %q target: %s", relation, err)
 	}
 
 	if len(strParts) > 7 {

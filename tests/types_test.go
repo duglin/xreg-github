@@ -153,7 +153,7 @@ func TestBasicTypes(t *testing.T) {
 	tests := []Test{
 		Test{reg, []Prop{
 			{"registryid", 66, nil, `Attribute "registryid" must be a string`},
-			{"registryid", "*", nil, `"*" isn't a valid ID`},
+			{"registryid", "*", nil, `Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 
 			{"regarrayarrayint[1][1]", 66, nil, "Attribute \"regarrayarrayint[1][0]\" must be an integer"},
 			{"regarrayint[0]", 1, nil, ""},
@@ -250,7 +250,7 @@ func TestBasicTypes(t *testing.T) {
 			{"regptr_group", "/dirs", nil, `Attribute "regptr_group" must match "/dirs" target, missing "dirid"`},
 			{"regptr_group", "/dirs2", nil, `Attribute "regptr_group" must match "/dirs" target`},
 			{"regptr_group", "/dirs", nil, `Attribute "regptr_group" must match "/dirs" target, missing "dirid"`},
-			{"regptr_group", "/dirs/*", nil, `Attribute "regptr_group" must match "/dirs" target, "*" isn't a valid ID`},
+			{"regptr_group", "/dirs/*", nil, `Attribute "regptr_group" must match "/dirs" target: Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 			{"regptr_group", "/dirs/id/", nil, `Attribute "regptr_group" must match "/dirs" target, extra stuff after "id"`},
 			{"regptr_group", "/dirs/id/extra", nil, `Attribute "regptr_group" must match "/dirs" target, extra stuff after "id"`},
 			{"regptr_group", "/dirs/id/extra/", nil, `Attribute "regptr_group" must match "/dirs" target, extra stuff after "id"`},
@@ -261,10 +261,10 @@ func TestBasicTypes(t *testing.T) {
 			{"regptr_res", "/dirs/d1/fff", nil, `Attribute "regptr_res" must match "/dirs/files" target, missing "files"`},
 			{"regptr_res", "/dirs/d1/fff/", nil, `Attribute "regptr_res" must match "/dirs/files" target, missing "files"`},
 			{"regptr_res", "/dirs/d1/fff/f2", nil, `Attribute "regptr_res" must match "/dirs/files" target, missing "files"`},
-			{"regptr_res", "/dirs/*/files/f2", nil, `Attribute "regptr_res" must match "/dirs/files" target, "*" isn't a valid ID`},
+			{"regptr_res", "/dirs/*/files/f2", nil, `Attribute "regptr_res" must match "/dirs/files" target: Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 			{"regptr_res", "/dirs/d1/files", nil, `Attribute "regptr_res" must match "/dirs/files" target, missing "fileid"`},
 			{"regptr_res", "/dirs/d1/files/", nil, `Attribute "regptr_res" must match "/dirs/files" target, missing "fileid"`},
-			{"regptr_res", "/dirs/d1/files/*", nil, `Attribute "regptr_res" must match "/dirs/files" target, "*" isn't a valid ID`},
+			{"regptr_res", "/dirs/d1/files/*", nil, `Attribute "regptr_res" must match "/dirs/files" target: Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 			{"regptr_res", "/dirs/d1/files/f2/versions", nil, `Attribute "regptr_res" must match "/dirs/files" target, extra stuff after "f2"`},
 			{"regptr_res", "/dirs/d1/files/f2/versions/v1", nil, `Attribute "regptr_res" must match "/dirs/files" target, extra stuff after "f2"`},
 			{"regptr_res", "/dirs/d1/files/f2", nil, ``},
@@ -276,7 +276,7 @@ func TestBasicTypes(t *testing.T) {
 			{"regptr_ver", "/dirs/d1/files/f2/versions/", nil, `Attribute "regptr_ver" must match "/dirs/files/versions" target, missing a "versionid"`},
 			{"regptr_ver", "/dirs/d1/files/f2/versions/v2/", nil, `Attribute "regptr_ver" must match "/dirs/files/versions" target, too long`},
 			{"regptr_ver", "/dirs/d1/files/f2/versions/v2/xx", nil, `Attribute "regptr_ver" must match "/dirs/files/versions" target, too long`},
-			{"regptr_ver", "/dirs/d1/files/f2/versions/v2?", nil, `Attribute "regptr_ver" must match "/dirs/files/versions" target, "v2?" isn't a valid ID`},
+			{"regptr_ver", "/dirs/d1/files/f2/versions/v2?", nil, `Attribute "regptr_ver" must match "/dirs/files/versions" target: Invalid ID "v2?", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 			{"regptr_ver", "/dirs/d1/files/f2/versions/v2", nil, ``},
 
 			{"regptr_res_ver", "/dirs/d1/files/", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "fileid"`},
@@ -284,19 +284,19 @@ func TestBasicTypes(t *testing.T) {
 			{"regptr_res_ver", "/dirs/d1/files/f2/", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "versions"`},
 			{"regptr_res_ver", "/dirs/d1/files/f2/vers", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "versions"`},
 			{"regptr_res_ver", "/dirs/d1/files/f2/vers/v1", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "versions"`},
-			{"regptr_res_ver", "/dirs/d1/files/f*/vers/v1", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, "f*" isn't a valid ID`},
+			{"regptr_res_ver", "/dirs/d1/files/f*/vers/v1", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target: Invalid ID "f*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 			{"regptr_res_ver", "/dirs/d1/files/f2", nil, ``},
 
 			{"regptr_res_ver2", "/dirs/d1/files/f2/versions", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, missing a "versionid"`},
 			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, missing a "versionid"`},
 			{"regptr_res_ver2", "/dirs/d1/files/f2/versions//v2", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, missing a "versionid"`},
 			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v2/", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, too long`},
-			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v*", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, "v*" isn't a valid ID`},
+			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v*", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target: Invalid ID "v*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v2", nil, ``},
 		}},
 		Test{dir, []Prop{
 			{"dirid", 66, nil, `Attribute "dirid" must be a string`},
-			{"dirid", "*", nil, `"*" isn't a valid ID`},
+			{"dirid", "*", nil, `Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 
 			{"dirstring1", "str2", nil, ""},
 			{"dirstring2", "", nil, ""},
@@ -320,9 +320,9 @@ func TestBasicTypes(t *testing.T) {
 		}},
 		Test{file, []Prop{
 			{"fileid", 66, nil, `Attribute "fileid" must be a string`},
-			{"fileid", "*", nil, `"*" isn't a valid ID`},
+			{"fileid", "*", nil, `Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 			{"versionid", 66, nil, `Attribute "versionid" must be a string`},
-			{"versionid", "*", nil, `"*" isn't a valid ID`},
+			{"versionid", "*", nil, `Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 
 			{"filestring1", "str3", nil, ""},
 			{"filestring2", "", nil, ""},
@@ -338,7 +338,7 @@ func TestBasicTypes(t *testing.T) {
 		}},
 		Test{ver, []Prop{
 			{"versionid", 66, nil, `Attribute "versionid" must be a string`},
-			{"versionid", "*", nil, `"*" isn't a valid ID`},
+			{"versionid", "*", nil, `Invalid ID "*", must match: ^[a-zA-Z0-9_.\-~@]{1,128}$`},
 
 			{"filestring1", "str4", nil, ""},
 			{"filestring2", "", nil, ""},

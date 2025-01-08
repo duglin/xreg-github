@@ -15,29 +15,45 @@ import (
 	log "github.com/duglin/dlog"
 )
 
-var RegexpModelName = regexp.MustCompile("^[a-z_][a-z0-9_]{0,57}$")
-var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]{0,62}$")
+var RegexpModelName = regexp.MustCompile("^[a-z_][a-z_0-9]{0,57}$")
+var RegexpPropName = regexp.MustCompile("^[a-z_][a-z_0-9]{0,62}$")
 var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]{0,62}$")
-var RegexpID = regexp.MustCompile("^[a-zA-Z0-9_.\\-~]{1,62}$")
+var RegexpID = regexp.MustCompile("^[a-zA-Z0-9_.\\-~@]{1,128}$")
 
 type ModelSerializer func(*Model, string) ([]byte, error)
 
 var ModelSerializers = map[string]ModelSerializer{}
 
-func IsValidModelName(name string) bool {
-	return RegexpModelName.MatchString(name)
+func IsValidModelName(name string) error {
+	if RegexpModelName.MatchString(name) {
+		return nil
+	}
+	return fmt.Errorf("Invalid model type name %q, must match: %s",
+		name, RegexpModelName.String())
 }
 
-func IsValidAttributeName(name string) bool {
-	return RegexpPropName.MatchString(name)
+func IsValidAttributeName(name string) error {
+	if RegexpPropName.MatchString(name) {
+		return nil
+	}
+	return fmt.Errorf("Invalid attribute name %q, must match: %s",
+		name, RegexpPropName.String())
 }
 
-func IsValidMapKey(key string) bool {
-	return RegexpMapKey.MatchString(key)
+func IsValidMapKey(key string) error {
+	if RegexpMapKey.MatchString(key) {
+		return nil
+	}
+	return fmt.Errorf("Invalid map key name %q, must match: %s",
+		key, RegexpMapKey.String())
 }
 
-func IsValidID(id string) bool {
-	return RegexpID.MatchString(id)
+func IsValidID(id string) error {
+	if RegexpID.MatchString(id) {
+		return nil
+	}
+	return fmt.Errorf("Invalid ID %q, must match: %s",
+		id, RegexpID.String())
 }
 
 type Model struct {
@@ -369,8 +385,10 @@ func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
-		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	if attr.Name != "*" {
+		if err := IsValidAttributeName(attr.Name); err != nil {
+			return nil, err
+		}
 	}
 
 	if m.Attributes == nil {
@@ -417,12 +435,12 @@ func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, erro
 		return nil, fmt.Errorf("Can't add a GroupModel with an empty sigular name")
 	}
 
-	if !IsValidAttributeName(plural) {
-		return nil, fmt.Errorf("GroupModel plural name is not valid")
+	if err := IsValidModelName(plural); err != nil {
+		return nil, err
 	}
 
-	if !IsValidAttributeName(singular) {
-		return nil, fmt.Errorf("GroupModel singular name is not valid")
+	if err := IsValidModelName(singular); err != nil {
+		return nil, err
 	}
 
 	for _, gm := range m.Groups {
@@ -586,8 +604,10 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
-		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	if attr.Name != "*" {
+		if err := IsValidAttributeName(attr.Name); err != nil {
+			return nil, err
+		}
 	}
 
 	if i.Attributes == nil {
@@ -945,8 +965,10 @@ func (gm *GroupModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
-		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	if attr.Name != "*" {
+		if err := IsValidAttributeName(attr.Name); err != nil {
+			return nil, err
+		}
 	}
 
 	if gm.Attributes == nil {
@@ -1021,11 +1043,11 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 		return nil, fmt.Errorf("'setdefaultversionsticky' must be 'false' since " +
 			"'maxversions' is '1'")
 	}
-	if !IsValidAttributeName(rm.Plural) {
-		return nil, fmt.Errorf("ResourceModel plural name is not valid")
+	if err := IsValidModelName(rm.Plural); err != nil {
+		return nil, err
 	}
-	if !IsValidAttributeName(rm.Singular) {
-		return nil, fmt.Errorf("ResourceModel singular name is not valid")
+	if err := IsValidModelName(rm.Singular); err != nil {
+		return nil, err
 	}
 
 	for _, r := range gm.Resources {
@@ -1203,8 +1225,10 @@ func (rm *ResourceModel) AddMetaAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
-		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	if attr.Name != "*" {
+		if err := IsValidAttributeName(attr.Name); err != nil {
+			return nil, err
+		}
 	}
 
 	if rm.MetaAttributes == nil {
@@ -1247,8 +1271,10 @@ func (rm *ResourceModel) AddAttribute(attr *Attribute) (*Attribute, error) {
 		return nil, nil
 	}
 
-	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
-		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	if attr.Name != "*" {
+		if err := IsValidAttributeName(attr.Name); err != nil {
+			return nil, err
+		}
 	}
 
 	if rm.GetHasDocument() == true {
@@ -1427,8 +1453,10 @@ func (a *Attribute) AddAttrArray(name string, item *Item) (*Attribute, error) {
 	return a.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
 }
 func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
-	if attr.Name != "*" && !IsValidAttributeName(attr.Name) {
-		return nil, fmt.Errorf("Invalid attribute name: %s", attr.Name)
+	if attr.Name != "*" {
+		if err := IsValidAttributeName(attr.Name); err != nil {
+			return nil, err
+		}
 	}
 
 	if a.Attributes == nil {
@@ -1529,6 +1557,9 @@ func (m *Model) Verify() error {
 	// TODO: Verify that the Registry data is model compliant
 
 	for gmName, gm := range m.Groups {
+		if gm == nil {
+			return fmt.Errorf("GroupModel %q can't be empty", gmName)
+		}
 		gm.Model = m
 		// PanicIf(m.Registry.Model == nil, "nil")
 		if err := gm.Verify(gmName); err != nil {
@@ -1560,9 +1591,8 @@ func (m *Model) GetBaseAttributes() Attributes {
 }
 
 func (gm *GroupModel) Verify(gmName string) error {
-	if !IsValidAttributeName(gmName) {
-		return fmt.Errorf("Invalid Group name/key %q - must match %q",
-			gmName, RegexpPropName.String())
+	if err := IsValidModelName(gmName); err != nil {
+		return err
 	}
 
 	if gm.Plural != gmName {
@@ -1570,9 +1600,8 @@ func (gm *GroupModel) Verify(gmName string) error {
 			gmName, gmName, gm.Plural)
 	}
 
-	if !IsValidAttributeName(gm.Singular) {
-		return fmt.Errorf("Invalid Group 'singular' value %q - must match %q",
-			gm.Singular, RegexpPropName.String())
+	if err := IsValidModelName(gm.Singular); err != nil {
+		return err
 	}
 
 	// Make sure we have the xRegistry core/spec defined attributes
@@ -1624,6 +1653,9 @@ func (gm *GroupModel) Verify(gmName string) error {
 	// TODO: verify the Groups data are model compliant
 
 	for rmName, rm := range gm.Resources {
+		if rm == nil {
+			return fmt.Errorf("Resource %q can't be empty", rmName)
+		}
 		rm.GroupModel = gm
 		if err := rm.Verify(rmName); err != nil {
 			return err
@@ -1672,9 +1704,8 @@ func (gm *GroupModel) GetBaseAttributes() Attributes {
 }
 
 func (rm *ResourceModel) Verify(rmName string) error {
-	if !IsValidAttributeName(rmName) {
-		return fmt.Errorf("Invalid Resource name/key %q - must match %q",
-			rmName, RegexpPropName.String())
+	if err := IsValidModelName(rmName); err != nil {
+		return err
 	}
 
 	if rm.Plural == "" {
@@ -2209,8 +2240,14 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 
 	// First add the new attribute names, while checking the attr
 	for name, attr := range attrs {
+		if attr == nil {
+			return fmt.Errorf("Error processing %q: "+
+				"attribute %q can't be empty", ld.Path.UI(), name)
+		}
+
 		if name == "" { // attribute key empty?
-			return fmt.Errorf("%q has an empty attribute key", ld.Path.UI())
+			return fmt.Errorf("Error processing %q: "+
+				"it has an empty attribute key", ld.Path.UI())
 		}
 		if ld.AttrNames[name] == true { // Dup attr name?
 			return fmt.Errorf("Duplicate attribute name (%s) at: %s", name,
@@ -2221,10 +2258,10 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 		// we wanted to let those pass.
 		// Technicall we should convert the XXXid into id but any XXXid needs
 		// to be a valid name/string so we should be ok
-		if name != "*" && SpecProps[name] == nil &&
-			!IsValidAttributeName(name) { // valid chars?
-			return fmt.Errorf("%q has an invalid attribute key %q - must "+
-				"match %q", ld.Path.UI(), name, RegexpPropName.String())
+		if name != "*" && SpecProps[name] == nil {
+			if err := IsValidAttributeName(name); err != nil { // valid chars?
+				return fmt.Errorf("Error processing %q: %s", ld.Path.UI(), err)
+			}
 		}
 		path := ld.Path.P(name)
 		if name != attr.Name { // missing Name: field?
