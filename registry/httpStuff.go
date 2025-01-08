@@ -332,106 +332,119 @@ func (pw *PageWriter) Done() {
 	}
 	list += "\n"
 
+	// Only do "inline" and "filter" stuff if we're not showing a special root
+	// object, like 'capabilities' or 'model'
+	specialObj := (pw.Info.GroupType == "" && len(pw.Info.Parts) > 0)
+
 	filters := ""
-	prefix := MustPropPathFromPath(pw.Info.Abstract).UI()
-	if prefix != "" {
-		prefix += string(UX_IN)
-	}
-	for _, arrayF := range pw.Info.Filters {
-		if filters != "" {
-			filters += "\n"
+	if !specialObj {
+		prefix := MustPropPathFromPath(pw.Info.Abstract).UI()
+		if prefix != "" {
+			prefix += string(UX_IN)
 		}
-		subF := ""
-		for _, FE := range arrayF {
-			if subF != "" {
-				subF += ","
+		for _, arrayF := range pw.Info.Filters {
+			if filters != "" {
+				filters += "\n"
 			}
-			next := MustPropPathFromDB(FE.Path).UI()
-			next, _ = strings.CutPrefix(next, prefix)
-			subF += next
-			if FE.HasEqual {
-				subF += "=" + FE.Value
+			subF := ""
+			for _, FE := range arrayF {
+				if subF != "" {
+					subF += ","
+				}
+				next := MustPropPathFromDB(FE.Path).UI()
+				next, _ = strings.CutPrefix(next, prefix)
+				subF += next
+				if FE.HasEqual {
+					subF += "=" + FE.Value
+				}
 			}
+			filters += subF
 		}
-		filters += subF
+		filters = `<b>Filters:</b>
+    <textarea id=filters>` + filters + `</textarea>`
 	}
 
-	inlineOptions := []string{}
-	if len(pw.Info.Parts) == 0 {
-		inlineOptions = GetRegistryModelInlines(pw.Info.Registry.Model)
-	} else if len(pw.Info.Parts) <= 2 {
-		inlineOptions = GetGroupModelInlines(pw.Info.GroupModel)
-	} else if len(pw.Info.Parts) <= 4 {
-		inlineOptions = GetResourceModelInlines(pw.Info.ResourceModel)
-	} else {
-		inlineOptions = GetVersionModelInlines(pw.Info.ResourceModel)
-	}
-
-	checked := ""
 	inlines := ""
-	inlineCount := 0
+	if !specialObj {
+		inlines = "<b>Inlines:</b>"
+		inlineCount := 0
+		checked := ""
 
-	// ----
-
-	if len(pw.Info.Parts) == 0 {
-		if pw.Info.IsInlineSet(NewPPP("capabilities").DB()) {
-			checked = " checked"
+		inlineOptions := []string{}
+		if !specialObj {
+			if len(pw.Info.Parts) == 0 {
+				inlineOptions = GetRegistryModelInlines(pw.Info.Registry.Model)
+			} else if len(pw.Info.Parts) <= 2 {
+				inlineOptions = GetGroupModelInlines(pw.Info.GroupModel)
+			} else if len(pw.Info.Parts) <= 4 {
+				inlineOptions = GetResourceModelInlines(pw.Info.ResourceModel)
+			} else {
+				inlineOptions = GetVersionModelInlines(pw.Info.ResourceModel)
+			}
 		}
-		inlines += fmt.Sprintf(`
+
+		// ----
+
+		if len(pw.Info.Parts) == 0 {
+			if pw.Info.IsInlineSet(NewPPP("capabilities").DB()) {
+				checked = " checked"
+			}
+			inlines += fmt.Sprintf(`
     <div class=inlines>
       <input id=inline%d type='checkbox' value='capabilities'`+
-			checked+`/>capabilities
+				checked+`/>capabilities
     </div>`, inlineCount)
+			inlineCount++
+			checked = ""
+
+			// ----
+
+			if pw.Info.IsInlineSet(NewPPP("model").DB()) {
+				checked = " checked"
+			}
+			inlines += fmt.Sprintf(`
+    <div class=inlines>
+      <input id=inline%d type='checkbox' value='model'`+checked+`/>model
+    </div>`, inlineCount)
+			inlineCount++
+			checked = ""
+
+			inlines += `
+    <div class=line></div>`
+		}
+
+		// ----
+
+		if pw.Info.IsInlineSet(NewPPP("*").DB()) {
+			checked = " checked"
+		}
+		except := ""
+		// if len(pw.Info.Parts) == 0 {
+		// except = " but model,capabilities"
+		// }
+		inlines += fmt.Sprintf(`
+    <div class=inlines>
+      <input id=inline%d type='checkbox' value='*'`+checked+`/>* (all%s)
+    </div>`, inlineCount, except)
 		inlineCount++
 		checked = ""
 
 		// ----
 
-		if pw.Info.IsInlineSet(NewPPP("model").DB()) {
-			checked = " checked"
-		}
-		inlines += fmt.Sprintf(`
-    <div class=inlines>
-      <input id=inline%d type='checkbox' value='model'`+checked+`/>model
-    </div>`, inlineCount)
-		inlineCount++
-		checked = ""
-
-		inlines += `
-    <div class=line></div>`
-	}
-
-	// ----
-
-	if pw.Info.IsInlineSet(NewPPP("*").DB()) {
-		checked = " checked"
-	}
-	except := ""
-	// if len(pw.Info.Parts) == 0 {
-	// except = " but model,capabilities"
-	// }
-	inlines += fmt.Sprintf(`
-    <div class=inlines>
-      <input id=inline%d type='checkbox' value='*'`+checked+`/>* (all%s)
-    </div>`, inlineCount, except)
-	inlineCount++
-	checked = ""
-
-	// ----
-
-	pp, _ := PropPathFromPath(pw.Info.Abstract)
-	for _, inline := range inlineOptions {
-		checked = ""
-		pInline := MustPropPathFromUI(inline)
-		fullInline := pp.Append(pInline).DB()
-		if pw.Info.IsInlineSet(fullInline) {
-			checked = " checked"
-		}
-		inlines += fmt.Sprintf(`
+		pp, _ := PropPathFromPath(pw.Info.Abstract)
+		for _, inline := range inlineOptions {
+			checked = ""
+			pInline := MustPropPathFromUI(inline)
+			fullInline := pp.Append(pInline).DB()
+			if pw.Info.IsInlineSet(fullInline) {
+				checked = " checked"
+			}
+			inlines += fmt.Sprintf(`
     <div class=inlines>
       <input id=inline%d type='checkbox' value='%s'%s/>%s
     </div>`, inlineCount, inline, checked, inline)
-		inlineCount++
+			inlineCount++
+		}
 	}
 
 	tmp := pw.Info.BaseURL
@@ -441,21 +454,31 @@ func (pw *PageWriter) Done() {
 		urlPath += fmt.Sprintf(`/<a href="%s?ui">%s</a>`, tmp, p)
 	}
 
-	structureswitch := ""
-	structuretext := ""
-	structureButton := ""
-	if pw.Info.ShowStructure {
-		structureswitch = "true"
-		structuretext = "Show document"
-		urlPath += fmt.Sprintf(`$<a href="%s$structure?ui">structure</a>`, tmp)
-	} else {
-		structureswitch = "false"
-		structuretext = "Show structure"
-	}
-	if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
-		structureButton = fmt.Sprintf(`
-    <div><button id=structure onclick='structureswitch=!structureswitch ; apply()'>%s</button></div>
+	apply := ""
+	structureswitch := "false"
+	if !specialObj {
+		structuretext := ""
+		structureButton := ""
+		if pw.Info.ShowStructure {
+			structureswitch = "true"
+			structuretext = "Show document"
+			urlPath += fmt.Sprintf(`$<a href="%s$structure?ui">structure</a>`, tmp)
+		} else {
+			structureswitch = "false"
+			structuretext = "Show structure"
+		}
+		if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
+			structureButton = fmt.Sprintf(`
+    <div><button id=structure onclick='structureswitch=!structureswitch ; apply()' style="font-weight:bold">%s</button></div>
 `, structuretext)
+		}
+
+		apply = `
+    <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
+    <div style="display:ruby">
+      <button onclick="apply()" style="font-weight:bold">Apply</button>` +
+			structureButton + `
+    </div>`
 	}
 
 	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
@@ -502,6 +525,7 @@ func (pw *PageWriter) Done() {
     // margin-left: 5px ;
   }
   #buttonList {
+    margin-top: 10px ;
     display: flex ;
     flex-direction: column ;
     align-items: start ;
@@ -625,23 +649,21 @@ func (pw *PageWriter) Done() {
   li {
     white-space: nowrap ;
     cursor: pointer ;
-    list-style-type: circle ;
+    list-style-type: disc ;
   }
 </style>
 <div id=left>
   <b>Registry:</b>
   <select onchange="changeRegistry(value)">`+list+`  </select>
   <br>
-  <br>
+  <hr>
+    <li><a href="`+pw.Info.BaseURL+`?ui">Registry Root</a>
+    <li><a href="`+pw.Info.BaseURL+`/capabilities?ui">Capabilities</a>
+    <li><a href="`+pw.Info.BaseURL+`/model?ui">Model</a>
   <div id=buttonList>
-    <b>Filters:</b>
-    <textarea id=filters>`+filters+`</textarea>
-    <b>Inlines:</b>`+inlines+`
-    <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
-    <div style="display:ruby">
-      <button onclick="apply()" style="font-weight:bold">Apply</button>`+
-		structureButton+`
-    </div>
+    `+filters+`
+    `+inlines+`
+	`+apply+`
   </div>
   <div style="height:12px"></div> <!-- buffer for "Commmit:" line -->
   <div id=commit><a target=_blank
