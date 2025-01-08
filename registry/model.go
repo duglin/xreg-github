@@ -15,6 +15,7 @@ import (
 	log "github.com/duglin/dlog"
 )
 
+var RegexpModelName = regexp.MustCompile("^[a-z_][a-z0-9_]{0,57}$")
 var RegexpPropName = regexp.MustCompile("^[a-z_][a-z0-9_./]{0,62}$")
 var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.\\-]{0,62}$")
 var RegexpID = regexp.MustCompile("^[a-zA-Z0-9_.\\-~]{1,62}$")
@@ -22,6 +23,10 @@ var RegexpID = regexp.MustCompile("^[a-zA-Z0-9_.\\-~]{1,62}$")
 type ModelSerializer func(*Model, string) ([]byte, error)
 
 var ModelSerializers = map[string]ModelSerializer{}
+
+func IsValidModelName(name string) bool {
+	return RegexpModelName.MatchString(name)
+}
 
 func IsValidAttributeName(name string) bool {
 	return RegexpPropName.MatchString(name)
@@ -2187,6 +2192,11 @@ func ConvertString(val string, toType string) (any, bool) {
 	return nil, false
 }
 
+// 0=complete 1=GROUPS 2=RESOURCES|"" 3=versions|""  4=[/versions]|""
+// nil, or [0]="" means error
+var targetREstr = `^(?:/([^/]+)(?:/([^[/]+)(?:(?:/(versions)|(\[(?:/versions)]))?))?)?$`
+var targetRE = regexp.MustCompile(targetREstr)
+
 func (attrs Attributes) Verify(ld *LevelData) error {
 	ld = &LevelData{
 		Model:     ld.Model,
@@ -2235,38 +2245,23 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 					"since \"type\" is \"relation\"", path.UI())
 			}
 			target := strings.TrimSpace(attr.Target)
-			if len(target) == 0 || target[0] != '/' {
+			parts := targetRE.FindStringSubmatch(target)
+			// 0=all  1=GROUPS  2=RESOURCES  3=versions|""  4=[/versions]|""
+			if len(parts) == 0 || parts[0] == "" {
 				return fmt.Errorf("%q \"target\" must be of the form: "+
-					"/[GROUPS[/RESOURCES[/versions[?]]]]", path.UI())
+					"/GROUPS[/RESOURCES[/versions | \\[/versions\\] ]]",
+					path.UI())
 			}
-			target = target[1:]
-			if len(target) > 0 {
-				parts := strings.Split(target, "/")
-				if len(parts) > 3 || // too many /'s
-					len(parts[len(parts)-1]) == 0 { // ends with /
-					return fmt.Errorf("%q \"target\" must be of the form: "+
-						"/[GROUPS[/RESOURCES[/versions[?]]]]", path.UI())
-				}
 
-				gm := ld.Model.FindGroupModel(parts[0])
-				if gm == nil {
-					return fmt.Errorf("%q has an unknown Group type: %q",
-						path.UI(), parts[0])
-				}
-				if len(parts) > 1 {
-					rm := gm.Resources[parts[1]]
-					if rm == nil {
-						return fmt.Errorf("%q has an unknown Resource type: %q",
-							path.UI(), parts[1])
-					}
-
-					if len(parts) > 2 {
-						if parts[2] != "versions" && parts[2] != "versions?" {
-							return fmt.Errorf("%q \"target\" must be of "+
-								"the form: "+
-								"/[GROUPS[/RESOURCES[/versions[?]]]]", path.UI())
-						}
-					}
+			gm := ld.Model.FindGroupModel(parts[1])
+			if gm == nil {
+				return fmt.Errorf("%q has an unknown Group type: %q",
+					path.UI(), parts[1])
+			}
+			if parts[2] != "" {
+				if rm := gm.Resources[parts[2]]; rm == nil {
+					return fmt.Errorf("%q has an unknown Resource type: %q",
+						path.UI(), parts[2])
 				}
 			}
 		}

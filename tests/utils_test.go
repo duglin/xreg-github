@@ -276,12 +276,14 @@ func xCheckEqual(t *testing.T, extra string, gotAny any, expAny any) {
 	if expMax > len(exp) {
 		expMax = len(exp)
 	}
-	t.Fatalf( /* Caller()+"\n*/ "%s"+
-		"\nExpected:\n%s\nGot:\n%s\n"+
-		"Diff at(%d)[%x/%x]:\n"+
-		"Exp subset:\n%s\nGot:\n%s",
-		extra, exp, got, pos, exp[pos], got[pos],
-		exp[pos:expMax], got[pos:])
+
+	t.Fatalf(extra+
+		"\nExpected:\n"+exp+
+		"\nGot:\n"+got+
+		"\nDiff at(%d)[x%0x/x%0x]:"+
+		"\nExp subset:\n"+exp[pos:expMax]+
+		"\nGot:\n"+got[pos:],
+		pos, exp[pos], got[pos])
 }
 
 type HTTPTest struct {

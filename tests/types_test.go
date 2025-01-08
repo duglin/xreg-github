@@ -85,19 +85,18 @@ func TestBasicTypes(t *testing.T) {
 	_, err = reg.Model.AddAttrRelation("regptr_group", "")
 	xCheckErr(t, err, `"model.regptr_group" must have a "target" value since "type" is "relation"`)
 	_, err = reg.Model.AddAttrRelation("regptr_group", "qwe")
-	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
+	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 	_, err = reg.Model.AddAttrRelation("regptr_group", "qwe/")
-	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
-	_, err = reg.Model.AddAttrRelation("regptr_group", " /") // ok?
-	xCheckErr(t, err, ``)
-	_, err = reg.Model.AddAttrRelation("regptr_group", " / ") // ok?
-	xCheckErr(t, err, ``)
-	reg.Model.AddAttrRelation("regptr_reg", "/")
+	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
+	_, err = reg.Model.AddAttrRelation("regptr_group", " /")
+	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
+	_, err = reg.Model.AddAttrRelation("regptr_reg", "/")
+	xCheckErr(t, err, `"model.regptr_reg" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 
 	_, err = reg.Model.AddAttrRelation("regptr_group", "/xxxs")
 	xCheckErr(t, err, `"model.regptr_group" has an unknown Group type: "xxxs"`)
 	_, err = reg.Model.AddAttrRelation("regptr_group", "/xxxs/")
-	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
+	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 	_, err = reg.Model.AddAttrRelation("regptr_group", "/dirs")
 	xCheckErr(t, err, ``)
 
@@ -109,21 +108,21 @@ func TestBasicTypes(t *testing.T) {
 	xCheckErr(t, err, ``)
 
 	_, err = reg.Model.AddAttrRelation("regptr_ver", "/dirs/files/")
-	xCheckErr(t, err, `"model.regptr_ver" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
+	xCheckErr(t, err, `"model.regptr_ver" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 	_, err = reg.Model.AddAttrRelation("regptr_ver", "/dirs/files/asd")
-	xCheckErr(t, err, `"model.regptr_ver" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
+	xCheckErr(t, err, `"model.regptr_ver" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 	_, err = reg.Model.AddAttrRelation("regptr_ver", "/dirs/files/asd?")
-	xCheckErr(t, err, `"model.regptr_ver" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
+	xCheckErr(t, err, `"model.regptr_ver" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 	_, err = reg.Model.AddAttrRelation("regptr_ver", "/dirs/files/versions")
 	xCheckErr(t, err, ``)
 
 	_, err = reg.Model.AddAttrRelation("regptr_res_ver", "/dirs/files/versions?asd")
-	xCheckErr(t, err, `"model.regptr_res_ver" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
+	xCheckErr(t, err, `"model.regptr_res_ver" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 	_, err = reg.Model.AddAttrRelation("regptr_res_ver", "/dirs/files/versions?/")
-	xCheckErr(t, err, `"model.regptr_res_ver" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`)
-	_, err = reg.Model.AddAttrRelation("regptr_res_ver", "/dirs/files/versions?")
+	xCheckErr(t, err, `"model.regptr_res_ver" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
+	_, err = reg.Model.AddAttrRelation("regptr_res_ver", "/dirs/files[/versions]")
 	xCheckErr(t, err, ``)
-	_, err = reg.Model.AddAttrRelation("regptr_res_ver2", "/dirs/files/versions?")
+	_, err = reg.Model.AddAttrRelation("regptr_res_ver2", "/dirs/files[/versions]")
 	xCheckErr(t, err, ``)
 
 	// Model is fully defined, so save it
@@ -245,23 +244,10 @@ func TestBasicTypes(t *testing.T) {
 			{"unknown_str", "error", nil,
 				`Invalid extension(s): unknown_str`}, // unknown attr
 
-			// regprt_reg  _group _res _ver _res_ver
-			{"regptr_reg", 123, nil,
-				`Attribute "regptr_reg" must be a relation`},
-			{"regptr_reg", "", nil,
-				`Attribute "regptr_reg" must be an xid, not empty`},
-			{"regptr_reg", "asd", nil,
-				`Attribute "regptr_reg" must be an xid, and start with /`},
-			{"regptr_reg", "asd/", nil,
-				`Attribute "regptr_reg" must be an xid, and start with /`},
-			{"regptr_reg", "asd/dirs", nil,
-				`Attribute "regptr_reg" must be an xid, and start with /`},
-			{"regptr_reg", "/dirs", nil,
-				`Attribute "regptr_reg" must match "/" target`},
-			{"regptr_reg", "/", nil, ``},
-
 			{"regptr_group", "", nil, `Attribute "regptr_group" must be an xid, not empty`},
 			{"regptr_group", "/", nil, `Attribute "regptr_group" must match "/dirs" target`},
+			{"regptr_group", "/xxx", nil, `Attribute "regptr_group" must match "/dirs" target`},
+			{"regptr_group", "/dirs", nil, `Attribute "regptr_group" must match "/dirs" target, missing "dirid"`},
 			{"regptr_group", "/dirs2", nil, `Attribute "regptr_group" must match "/dirs" target`},
 			{"regptr_group", "/dirs", nil, `Attribute "regptr_group" must match "/dirs" target, missing "dirid"`},
 			{"regptr_group", "/dirs/*", nil, `Attribute "regptr_group" must match "/dirs" target, "*" isn't a valid ID`},
@@ -293,19 +279,19 @@ func TestBasicTypes(t *testing.T) {
 			{"regptr_ver", "/dirs/d1/files/f2/versions/v2?", nil, `Attribute "regptr_ver" must match "/dirs/files/versions" target, "v2?" isn't a valid ID`},
 			{"regptr_ver", "/dirs/d1/files/f2/versions/v2", nil, ``},
 
-			{"regptr_res_ver", "/dirs/d1/files/", nil, `Attribute "regptr_res_ver" must match "/dirs/files/versions?" target, missing "fileid"`},
-			{"regptr_res_ver", "/dirs/d1/files//", nil, `Attribute "regptr_res_ver" must match "/dirs/files/versions?" target, missing "fileid"`},
-			{"regptr_res_ver", "/dirs/d1/files/f2/", nil, `Attribute "regptr_res_ver" must match "/dirs/files/versions?" target, missing "versions"`},
-			{"regptr_res_ver", "/dirs/d1/files/f2/vers", nil, `Attribute "regptr_res_ver" must match "/dirs/files/versions?" target, missing "versions"`},
-			{"regptr_res_ver", "/dirs/d1/files/f2/vers/v1", nil, `Attribute "regptr_res_ver" must match "/dirs/files/versions?" target, missing "versions"`},
-			{"regptr_res_ver", "/dirs/d1/files/f*/vers/v1", nil, `Attribute "regptr_res_ver" must match "/dirs/files/versions?" target, "f*" isn't a valid ID`},
+			{"regptr_res_ver", "/dirs/d1/files/", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "fileid"`},
+			{"regptr_res_ver", "/dirs/d1/files//", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "fileid"`},
+			{"regptr_res_ver", "/dirs/d1/files/f2/", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "versions"`},
+			{"regptr_res_ver", "/dirs/d1/files/f2/vers", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "versions"`},
+			{"regptr_res_ver", "/dirs/d1/files/f2/vers/v1", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, missing "versions"`},
+			{"regptr_res_ver", "/dirs/d1/files/f*/vers/v1", nil, `Attribute "regptr_res_ver" must match "/dirs/files[/versions]" target, "f*" isn't a valid ID`},
 			{"regptr_res_ver", "/dirs/d1/files/f2", nil, ``},
 
-			{"regptr_res_ver2", "/dirs/d1/files/f2/versions", nil, `Attribute "regptr_res_ver2" must match "/dirs/files/versions?" target, missing a "versionid"`},
-			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/", nil, `Attribute "regptr_res_ver2" must match "/dirs/files/versions?" target, missing a "versionid"`},
-			{"regptr_res_ver2", "/dirs/d1/files/f2/versions//v2", nil, `Attribute "regptr_res_ver2" must match "/dirs/files/versions?" target, missing a "versionid"`},
-			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v2/", nil, `Attribute "regptr_res_ver2" must match "/dirs/files/versions?" target, too long`},
-			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v*", nil, `Attribute "regptr_res_ver2" must match "/dirs/files/versions?" target, "v*" isn't a valid ID`},
+			{"regptr_res_ver2", "/dirs/d1/files/f2/versions", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, missing a "versionid"`},
+			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, missing a "versionid"`},
+			{"regptr_res_ver2", "/dirs/d1/files/f2/versions//v2", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, missing a "versionid"`},
+			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v2/", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, too long`},
+			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v*", nil, `Attribute "regptr_res_ver2" must match "/dirs/files[/versions]" target, "v*" isn't a valid ID`},
 			{"regptr_res_ver2", "/dirs/d1/files/f2/versions/v2", nil, ``},
 		}},
 		Test{dir, []Prop{
@@ -387,7 +373,7 @@ func TestBasicTypes(t *testing.T) {
 				return // stop fast
 			}
 			if err == nil && prop.ErrMsg != "" {
-				t.Errorf("Setting (%q=%v) was supposed to fail:\nGot: %s",
+				t.Errorf("Setting (%q=%v) was supposed to fail:\nExp: %s",
 					prop.Name, prop.Value, prop.ErrMsg)
 				return // stop fast
 			}
@@ -421,7 +407,7 @@ func TestBasicTypes(t *testing.T) {
   "registryid": "TestBasicTypes",
   "self": "http://localhost:8181/",
   "xid": "/",
-  "epoch": 9,
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "reganyarrayint": [
@@ -479,7 +465,6 @@ func TestBasicTypes(t *testing.T) {
     "objstr": "in1"
   },
   "regptr_group": "/dirs/d1",
-  "regptr_reg": "/",
   "regptr_res": "/dirs/d1/files/f2",
   "regptr_res_ver": "/dirs/d1/files/f2",
   "regptr_res_ver2": "/dirs/d1/files/f2/versions/v2",

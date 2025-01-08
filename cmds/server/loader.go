@@ -286,7 +286,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	_, err = rm.AddAttr("*", registry.STRING)
 	ErrFatalf(err)
 
-	_, err = reg.Model.AddAttrRelation("resptr", "/dirs/files/versions?")
+	_, err = reg.Model.AddAttrRelation("resptr", "/dirs/files[/versions]")
 	ErrFatalf(err)
 
 	ErrFatalf(reg.Model.Verify())

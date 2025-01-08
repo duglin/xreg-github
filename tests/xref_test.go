@@ -485,3 +485,59 @@ func TestXrefBasic(t *testing.T) {
 `)
 
 }
+
+func TestXrefErrors(t *testing.T) {
+	reg := NewRegistry("TestXrefErrors")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, false)
+	d, _ := reg.AddGroup("dirs", "d1")
+	_, err := d.AddResource("files", "f1", "v1")
+	xNoErr(t, err)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/meta",
+		`{"xref": "/dirs/d1/files/fx","fileid":"f2"}`, 400,
+		"meta.fileid must be \"f1\", not \"f2\"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/meta",
+		`{"xref": "/dirs/d1/files/fx","epoch":5}`, 400,
+		"Attribute \"epoch\"(5) doesn't match existing value (1)\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/meta",
+		`{"xref": "/dirs/d1/files/fx", "modifiedat":"2025-01-01T12:00:00"}`,
+		400,
+		"Extra attributes (modifiedat) in \"meta\" not allowed when \"xref\" is set\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/meta",
+		`{"foo":"foo","xref": "/dirs/d1/files/fx"}`, 400,
+		"Extra attributes (foo) in \"meta\" not allowed when \"xref\" is set\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1",
+		`{"meta": {"fileid":"f1", "xref":"/dirs/d1/files/f1"},"epoch":5, "description": "x"}`,
+		400,
+		"Extra attributes (description,epoch) not allowed when \"xref\" is set\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1",
+		`{"meta": {"fileid":"f1", "xref":"/dirs/d1/files/f1"},"epoch":5, "description": "x"}`,
+		400,
+		"Extra attributes (description,epoch) not allowed when \"xref\" is set\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1",
+		`{"fileid": "f2", "meta": {"xref":"/dirs/d1/files/f1"}}`, 400,
+		"The \"fileid\" attribute must be set to \"f1\", not \"f2\"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1",
+		`{"meta": {"xref":"/dirs/d1/files/f1","epoch":6}}`, 400,
+		"Attribute \"epoch\"(6) doesn't match existing value (1)\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1",
+		`{"fileid": "f1", "meta": {"xref":"/dirs/d1/files/f1","modifiedat":"2025-01-01-T:12:00:00"}}`, 400,
+		"Extra attributes (modifiedat) in \"meta\" not allowed when \"xref\" is set\n")
+
+	// Works!
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/meta",
+		`{"xref": "/dirs/d1/files/fx", "epoch":1}`,
+		200,
+		`{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "xref": "/dirs/d1/files/fx"
+}
+`)
+}

@@ -153,3 +153,4 @@ TODOs:
 - Split the model.verify stuff so it doesn't verify the data unless asked to
 - make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
   support it. Like pagination or enforcecompatibility
+- support/test ?inline, ?filter and ?export on write operations

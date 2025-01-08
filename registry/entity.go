@@ -1085,6 +1085,10 @@ var OrderedSpecProps = []*Attribute{
 				return nil
 			},
 			updateFn: func(e *Entity) error {
+				// Very special, if we're in meta and xref set then
+				// erase 'epoch'. We can't do it earlier because we need
+				// the checkFn to be run to make sure any incoming value
+				// was valid
 				if e.Type == ENTITY_META && e.GetAsString("xref") != "" {
 					e.NewObject["epoch"] = nil
 					return nil
@@ -1092,6 +1096,15 @@ var OrderedSpecProps = []*Attribute{
 
 				// If we already set Epoch in this Tx, just exit
 				if e.EpochSet {
+					// If we already set epoch this tx but there's no value
+					// then grab it from Object, otherwise we'll be missing a
+					// value during Save(). This can happen when we Save()
+					// more than once on this Entity during the same Tx and
+					// the 2nd Save() didn't have epoch as part of the incoming
+					// Object
+					if IsNil(e.NewObject["epoch"]) {
+						e.NewObject["epoch"] = e.Object["epoch"]
+					}
 					return nil
 				}
 
@@ -2453,7 +2466,9 @@ func PrepUpdateEntity(e *Entity) error {
 
 // If no match then return an error saying why
 func (e *Entity) MatchRelation(str string, relation string) error {
-	targetParts := strings.Split(relation, "/")
+	// 0=all  1=GROUPS  2=RESOURCES  3=versions|""  4=[/versions]|""
+	targetParts := targetRE.FindStringSubmatch(relation)
+
 	if len(str) == 0 {
 		return fmt.Errorf("must be an xid, not empty")
 	}
@@ -2490,7 +2505,7 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 			relation, strParts[2])
 	}
 
-	if len(targetParts) == 2 { //   ""/GROUPS
+	if targetParts[2] == "" { // /GROUPS
 		if len(strParts) == 3 {
 			return nil
 		}
@@ -2498,7 +2513,7 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 			relation, strParts[2])
 	}
 
-	// len targetParts >= 3
+	// targetParts has RESOURCES
 	if len(strParts) < 4 { //    /GROUPS/gID/RESOURCES
 		return fmt.Errorf("must match %q target, missing %q",
 			relation, targetParts[2])
@@ -2522,7 +2537,8 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 		return fmt.Errorf("must match %q target, %q isn't a valid ID",
 			relation, strParts[4])
 	}
-	if len(targetParts) == 3 {
+
+	if targetParts[3] == "" && targetParts[4] == "" {
 		if len(strParts) == 5 {
 			return nil
 		}
@@ -2531,9 +2547,9 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 
 	}
 
-	if targetParts[3] == "versions?" {
+	if targetParts[4] != "" { // has [/versions]
 		if len(strParts) == 5 {
-			//   /GROUPS/RESOURCES/version?  vs /GROUPS/gID/RESOURCES/rID
+			//   /GROUPS/RESOURCES[/version]  vs /GROUPS/gID/RESOURCES/rID
 			return nil
 		}
 	}

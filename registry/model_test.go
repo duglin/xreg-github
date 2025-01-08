@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -104,11 +105,11 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"err - type - relation - leading chars", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
 				Target: "xx/"}}},
-			`"model.x" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`},
+			`"model.x" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`},
 		{"err - type - relation - extra / at end", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
 				Target: "/xx/"}}},
-			`"model.x" "target" must be of the form: /[GROUPS[/RESOURCES[/versions[?]]]]`},
+			`"model.x" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`},
 		{"err - type - relation - spaces", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
 				Target: "/  xx"}}},
@@ -125,10 +126,6 @@ func TestModelVerifyRegAttr(t *testing.T) {
 			Groups: groups},
 			`"model.x" has an unknown Resource type: "badr"`,
 		},
-		{"type - relation - reg", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
-				Target: "/"}}, Groups: groups}, ``,
-		},
 		{"type - relation - group", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
 				Target: "/dirs"}}, Groups: groups}, ``,
@@ -143,17 +140,18 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		},
 		{"type - relation - both", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
-				Target: "/dirs/files/versions?"}}, Groups: groups}, ``,
+				Target: "/dirs/files[/versions]"}}, Groups: groups}, ``,
 		},
 
-		{"type - relation - reg", Model{
+		{"type - relation - reg - ''", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
-				Target: ""}}},
+				Target: ""}}, Groups: groups},
 			`"model.x" must have a "target" value since "type" is "relation"`},
-		{"type - relation - reg", Model{
+		{"type - relation - reg - /", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
-				Target: "/"}}},
-			``},
+				Target: "/"}}, Groups: groups},
+			`"model.x" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`,
+		},
 
 		{"type - string", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: STRING}}}, ``},
@@ -496,6 +494,52 @@ func TestGetModelSerializer(t *testing.T) {
 				t.Fatalf("Fn should have been nil for match: %q, Test:\n%s",
 					m.format, ToJSON(test.formats))
 			}
+		}
+	}
+}
+
+func TestTargetRegExp(t *testing.T) {
+	// targetRE
+	for _, test := range []struct {
+		input  string
+		result []string
+	}{
+		{"", nil},
+		{"/", nil},
+		{"//versions", nil},
+		{"///versions", nil},
+		{"/g", []string{"g", "", "", ""}},
+		{"/g/", nil},
+		{"/g//versions", nil},
+		{"/g/[/versions]", nil},
+		{"/g/r", []string{"g", "r", "", ""}},
+		{"/g/r/", nil},
+		{"/g/r//", nil},
+		{"/g/r//versions", nil},
+		{"/g/r/[/versions]", nil},
+		{"/g/r/versions", []string{"g", "r", "versions", ""}},
+		{"/g/r//versions/", nil},
+		{"/g/r//versions[/versions]", nil},
+		{"/g/r[/versions]", []string{"g", "r", "", "[/versions]"}},
+		{"/g/r/[/versions]", nil},
+		{"/g/r[/versions]/", nil},
+		{"/g/r[/versions]/versions", nil},
+	} {
+		parts := targetRE.FindStringSubmatch(test.input)
+		tmpParts := []string{}
+		if len(parts) > 1 {
+			tmpParts = parts[1:]
+		}
+
+		exp := fmt.Sprintf("%#v", test.result)
+		got := fmt.Sprintf("%#v", tmpParts)
+
+		if (len(parts) == 0 || parts[0] == "") && test.result == nil {
+			continue
+		}
+
+		if len(tmpParts) != len(test.result) || exp != got {
+			t.Fatalf("\nIn: %s\nExp: %s\nGot: %s", test.input, exp, got)
 		}
 	}
 }

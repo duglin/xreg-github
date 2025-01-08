@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -401,8 +402,56 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 	hasXref := false
 	xref := ""
 
+	attrsToKeep := []string{
+		r.Singular + "id",
+		"#nextversionid",
+		"#epoch", // Last used epoch so we can restore it when xref is cleared
+		// "epoch",
+		"#createdat",
+		"#modifiedat"}
+	//, "defaultversionid"
+
+	if r.tx.IgnoreDefaultVersionID && !IsNil(obj) {
+		delete(obj, "defaultversionid")
+	}
+	if r.tx.IgnoreDefaultVersionSticky && !IsNil(obj) {
+		delete(obj, "defaultversionsticky")
+	}
+
+	// Apply properties
+	existingNewObj := meta.NewObject // Should be nil when using http
+	meta.NewObject = obj
+	meta.Entity.EnsureNewObject()
+
+	if meta.NewObject != nil && addType == ADD_PATCH {
+		// Patching, so copy missing existing attributes
+		for k, val := range meta.Object {
+			if _, ok := meta.NewObject[k]; !ok {
+				meta.NewObject[k] = val
+			}
+		}
+	}
+
+	// Mure sure these attributes are present in NewObject, and if not
+	// grab them from the previous version of NewObject or Object
+	// TODO: change to just blindly copy all "#..." attributes
+	for _, key := range attrsToKeep {
+		if tmp, ok := meta.NewObject[key]; !ok {
+			if tmp, ok = existingNewObj[key]; ok {
+				meta.NewObject[key] = tmp
+			} else if tmp, ok = meta.Object[key]; ok {
+				meta.NewObject[key] = tmp
+			}
+		}
+	}
+
+	// Make sure we always have an ID
+	if IsNil(meta.NewObject[r.Singular+"id"]) {
+		meta.JustSet(r.Singular+"id", r.UID)
+	}
+
 	if obj != nil {
-		xrefAny, hasXref = obj["xref"]
+		xrefAny, hasXref = meta.NewObject["xref"]
 		if hasXref {
 			if IsNil(xrefAny) {
 				// Do nothing - leave it there so we can null it out later
@@ -414,21 +463,8 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 					return nil, false, fmt.Errorf("'xref' (%s) must be of the "+
 						"form: /GROUPS/gID/RESOURCES/rID", xref)
 				}
-
-				// Erase all attributes except id and xref
-				obj = map[string]any{
-					r.Singular + "id": r.UID,
-					"xref":            xref,
-				}
 			}
 		}
-	}
-
-	if r.tx.IgnoreDefaultVersionID && !IsNil(obj) {
-		delete(obj, "defaultversionid")
-	}
-	if r.tx.IgnoreDefaultVersionSticky && !IsNil(obj) {
-		delete(obj, "defaultversionsticky")
 	}
 
 	// If Meta doesn't exist, create it
@@ -472,51 +508,10 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		}
 	}
 
-	attrsToKeep := []string{
-		r.Singular + "id",
-		"#nextversionid",
-		"#epoch", // Last used epoch so we can restore it when xref is cleared
-		"epoch",
-		"#createdat",
-		"#modifiedat"}
-	//, "defaultversionid"
-
-	// Apply properties
-	if obj != nil {
-		existingNewObj := meta.NewObject
-		meta.NewObject = obj
-
-		if addType == ADD_PATCH {
-			// Copy existing props over if the incoming obj doesn't set them
-			for k, val := range meta.Object {
-				if _, ok := meta.NewObject[k]; !ok {
-					meta.NewObject[k] = val
-				}
-			}
-		}
-
-		// Mure sure these attributes are present in NewObject, and if not
-		// grab them from the previous version of NewObject or Object
-		for _, key := range attrsToKeep {
-			if tmp, ok := meta.NewObject[key]; !ok {
-				if tmp, ok = existingNewObj[key]; ok {
-					meta.NewObject[key] = tmp
-				} else if tmp, ok = meta.Object[key]; ok {
-					meta.NewObject[key] = tmp
-				}
-			}
-		}
-	}
-
-	// Make sure we always have an ID
-	if IsNil(meta.NewObject[r.Singular+"id"]) {
-		meta.JustSet(r.Singular+"id", r.UID)
-	}
-
 	// Process any xref
 	if hasXref {
 		if IsNil(xrefAny) || xref == "" {
-			delete(obj, "xref")
+			delete(meta.NewObject, "xref")
 			if err = meta.JustSet("xref", nil); err != nil {
 				return nil, false, err
 			}
@@ -557,15 +552,15 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		} else {
 			// Clear all existing attributes except ID
 			meta.JustSet("#epoch", meta.Object["epoch"])
-			meta.JustSet("epoch", nil)
 			meta.JustSet("#createdat", meta.Object["createdat"])
-			meta.JustSet("createdat", nil)
+			// meta.JustSet("createdat", nil)
 			meta.JustSet("#modifiedat", meta.Object["modifiedat"])
-			meta.JustSet("modifiedat", nil)
+			// meta.JustSet("modifiedat", nil)
 
+			extraAttrs := []string{}
 			for k, _ := range meta.NewObject {
 				delIt := true
-				if k[0] == '#' {
+				if k[0] == '#' || k == "xref" {
 					continue
 				}
 				for _, tmp := range attrsToKeep {
@@ -574,9 +569,18 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 						break
 					}
 				}
-				if delIt {
-					meta.JustSet(k, nil)
+
+				// Leave "epoch" in NewObject, the updateFn will delete it.
+				// So don't add it to "extraAttrs"
+				if delIt && k != "epoch" {
+					extraAttrs = append(extraAttrs, k)
 				}
+			}
+			if len(extraAttrs) > 0 {
+				sort.Strings(extraAttrs)
+				return nil, false, fmt.Errorf("Extra attributes (%s) in "+
+					"\"meta\" not allowed when \"xref\" is set",
+					strings.Join(extraAttrs, ","))
 			}
 
 			if err = meta.SetSave("xref", xref); err != nil {

@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/duglin/dlog"
 )
@@ -314,6 +315,14 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
 	if !IsNil(meta.Get("xref")) {
+		delete(obj, "meta")
+		delete(obj, r.Singular+"id")
+		if len(obj) > 0 {
+			return nil, false,
+				fmt.Errorf("Extra attributes (%s) not allowed when "+
+					"\"xref\" is set", strings.Join(SortedKeys(obj), ","))
+		}
+
 		// All versions should have been deleted already so just return
 		return r, isNew, nil
 	}
