@@ -92,6 +92,7 @@ func (r *Resource) Get(name string) any {
 		panic(err)
 	}
 	PanicIf(v == nil, "No default version for %q", r.UID)
+
 	return v.Entity.Get(name)
 }
 
@@ -398,6 +399,14 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		}
 	}
 
+	// Just in case we need it, save the Resource's epoch value. If this
+	// is an xref'd Resource then it'll actually be the target's epoch
+	targetEpoch := 0
+	if meta.Object["xref"] != nil {
+		targetEpochAny := r.Get("epoch")
+		targetEpoch = NotNilInt(&targetEpochAny)
+	}
+
 	var xrefAny any
 	hasXref := false
 	xref := ""
@@ -511,6 +520,12 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 	// Process any xref
 	if hasXref {
 		if IsNil(xrefAny) || xref == "" {
+			newEpochAny := meta.Object["#epoch"]
+			newEpoch := NotNilInt(&newEpochAny)
+			if targetEpoch > newEpoch {
+				newEpoch = targetEpoch
+			}
+
 			delete(meta.NewObject, "xref")
 			if err = meta.JustSet("xref", nil); err != nil {
 				return nil, false, err
@@ -522,12 +537,12 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 				meta.JustSet("#nextversionid", 1)
 			}
 
-			meta.JustSet("epoch", meta.Object["#epoch"])
+			meta.JustSet("epoch", newEpoch)
 			meta.JustSet("#epoch", nil)
 
 			// We have to fake out the updateFn to think the existing values
 			// are the # values
-			meta.Object["epoch"] = meta.Object["#epoch"]
+			meta.Object["epoch"] = newEpoch
 
 			meta.EpochSet = false
 

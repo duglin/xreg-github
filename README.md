@@ -154,3 +154,4 @@ TODOs:
 - make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
   support it. Like pagination or enforcecompatibility
 - support/test ?inline, ?filter and ?export on write operations
+- add support for shortself

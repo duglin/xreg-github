@@ -259,7 +259,7 @@ func TestXrefBasic(t *testing.T) {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
       "xid": "/dirs/d1/files/fx/meta",
-      "epoch": 1,
+      "epoch": 3,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:03Z",
 
@@ -457,7 +457,7 @@ func TestXrefBasic(t *testing.T) {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
       "xid": "/dirs/d1/files/fx/meta",
-      "epoch": 2,
+      "epoch": 4,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:04Z",
 

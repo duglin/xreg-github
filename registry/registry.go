@@ -800,3 +800,66 @@ func WildcardIt(str string) (string, bool) {
 
 	return res.String(), wild
 }
+
+func (r *Registry) XID2Entity(xid string) (*Entity, error) {
+	xid = strings.TrimSpace(xid)
+	if xid == "" {
+		return nil, nil
+	}
+	if xid[0] != '/' {
+		return nil, fmt.Errorf("%q isn't an xid", xid)
+	}
+
+	if xid == "/" {
+		return &r.Entity, nil
+	}
+	parts := strings.Split(xid[1:], "/")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("%q isn't an xid", xid)
+	}
+
+	g, err := r.FindGroup(parts[0], parts[1], false)
+	if err != nil {
+		return nil, err
+	}
+	if g == nil {
+		return nil, fmt.Errorf("Cant find Group %q from xid %q", parts[0], xid)
+	}
+	if len(parts) == 2 {
+		return &g.Entity, nil
+	}
+
+	if len(parts) < 4 {
+		return nil, fmt.Errorf("%q isn't an xid", xid)
+	}
+
+	res, err := g.FindResource(parts[2], parts[3], false)
+	if err != nil {
+		return nil, err
+	}
+
+	if res == nil {
+		return nil, fmt.Errorf("Can't find Resource %q from xid %q", parts[1],
+			xid)
+	}
+	if len(parts) == 4 {
+		return &res.Entity, nil
+	}
+
+	if len(parts) < 6 {
+		return nil, fmt.Errorf("%q isn't an xid", xid)
+	}
+	v, err := res.FindVersion(parts[5], false)
+	if err != nil {
+		return nil, err
+	}
+	if v == nil {
+		return nil, fmt.Errorf("Can't find Version %q from xid %q", parts[2],
+			xid)
+	}
+	if len(parts) == 6 {
+		return &v.Entity, nil
+	}
+
+	return nil, fmt.Errorf("xid %q isn't valid", xid)
+}
