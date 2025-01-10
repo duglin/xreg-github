@@ -4919,6 +4919,24 @@ func TestHTTPIfValue(t *testing.T) {
 	})
 	xCheckErr(t, err, "")
 
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name: "badone",
+		Type: registry.INTEGER,
+		IfValues: registry.IfValues{
+			"": &registry.IfValue{},
+		},
+	})
+	xCheckErr(t, err, "\"model\" has an empty ifvalues key")
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name: "badone",
+		Type: registry.INTEGER,
+		IfValues: registry.IfValues{
+			"^6": &registry.IfValue{},
+		},
+	})
+	xCheckErr(t, err, "\"model\" has an ifvalues key that starts with \"^\"")
+
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "PUT reg - ifvalue - 1",
 		URL:    "",

@@ -140,7 +140,6 @@ TODOs:
 - multi-delete must ignore all attributes except id and epoch
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
 - add support for inline=endpoints.*
-- ban the use of ^ in ifvalue VALUES for now
 - support ETag/If-Match
 - update epoch/modifiedat of parent when nested entity is added/removed
 - ?nested isn't needed to update `model` or `meta` attributes

@@ -2390,6 +2390,11 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 				return fmt.Errorf("%q has an empty ifvalues key", ld.Path.UI())
 			}
 
+			if valStr[0] == '^' {
+				return fmt.Errorf("%q has an ifvalues key that starts "+
+					"with \"^\"", ld.Path.UI())
+			}
+
 			nextLD := &LevelData{
 				ld.Model,
 				ld.AttrNames,
