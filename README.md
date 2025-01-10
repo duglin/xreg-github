@@ -134,7 +134,6 @@ TODOs:
 - add "validation" attribute - schema
 - error w/o ?nested + children
 - Add content-disposition header for hasdoc resources
-- make sure ID only has valid chars
 - inline=model, requires ?nested. Make sure /meta requires ?nested too
 - add "compatibility" to resources
 - multi-delete must ignore all attributes except id and epoch
@@ -142,8 +141,8 @@ TODOs:
 - add support for inline=endpoints.*
 - support ETag/If-Match
 - update epoch/modifiedat of parent when nested entity is added/removed
-- ?nested isn't needed to update `model` or `meta` attributes
 - test to ensure meta epoch changes as versions are added/removed
+- ?nested isn't needed to update `model` or `meta` attributes
 - test the timestamps in meta. Should change as versions are added/removed.
 - remove entities from cache upon delete
 - test creating a resource + lots of versions w/o ?defaultversionid-should fail

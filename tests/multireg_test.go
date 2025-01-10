@@ -86,5 +86,4 @@ func TestMultiReg(t *testing.T) {
   "versionscount": 1
 }
 `)
-
 }

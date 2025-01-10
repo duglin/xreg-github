@@ -85,7 +85,7 @@ func NotNilString(val *any) string {
 	}
 
 	if reflect.ValueOf(*val).Kind() != reflect.Slice {
-		panic("Not a slice")
+		panic(fmt.Sprintf("Not a slice: %T (%#v)", *val, *val))
 	}
 
 	b := (*val).([]byte)

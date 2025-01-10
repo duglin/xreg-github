@@ -43,7 +43,7 @@ CREATE TABLE Registries (
 CREATE TRIGGER RegistryTrigger BEFORE DELETE ON Registries
 FOR EACH ROW
 BEGIN
-    DELETE FROM Props    WHERE EntitySID=OLD.SID @
+    DELETE FROM Props    WHERE RegistrySID=OLD.SID @
     DELETE FROM "Groups" WHERE RegistrySID=OLD.SID @
     DELETE FROM Models   WHERE RegistrySID=OLD.SID @
 END ;

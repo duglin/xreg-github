@@ -284,6 +284,14 @@ func (e *Entity) Query(query string, args ...any) ([][]any, error) {
 	}
 
 	data := ([][]any)(nil)
+	/*
+		Ks := make([]string, len(results.colTypes))
+
+		for i, t := range results.colTypes {
+			Ks[i] = t.Kind().String()
+		}
+	*/
+
 	for row := results.NextRow(); row != nil; row = results.NextRow() {
 		if data == nil {
 			data = [][]any{}
@@ -292,6 +300,20 @@ func (e *Entity) Query(query string, args ...any) ([][]any, error) {
 		r := make([]any, len(row))
 		for i, d := range row {
 			r[i] = d
+			/*
+				k := Ks[i]
+				if k == "slice" {
+					r[i] = NotNilString(d)
+				} else if k == "int64" || k == "uint64" {
+					r[i] = NotNilInt(d)
+				} else {
+					log.Printf("%v", reflect.ValueOf(*d).Type().String())
+					log.Printf("%v", reflect.ValueOf(*d).Type().Kind().String())
+					log.Printf("Ks: %v", Ks)
+					log.Printf("i: %d", i)
+					panic("help")
+				}
+			*/
 		}
 		data = append(data, r)
 	}

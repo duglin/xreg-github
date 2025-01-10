@@ -4720,6 +4720,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 }
 `)
 }
+
 func TestHTTPEnum(t *testing.T) {
 	reg := NewRegistry("TestHTTPEnum")
 	defer PassDeleteReg(t, reg)

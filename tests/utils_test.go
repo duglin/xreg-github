@@ -93,6 +93,14 @@ func PassDeleteReg(t *testing.T, reg *registry.Registry) {
 			// We do this to make sure that we can support more than
 			// one registry in the DB at a time
 			reg.Delete()
+
+			/*
+				rows, err := reg.Query("select * from Props")
+				if err != nil || len(rows) != 0 {
+					fmt.Printf("Rows: %s", ToJSON(rows))
+					panic(fmt.Sprintf("Props left around: %s / %d", err, len(rows)))
+				}
+			*/
 		}
 		registry.DefaultRegDbSID = ""
 	}
