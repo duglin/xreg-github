@@ -631,7 +631,9 @@ func TestXrefRevert(t *testing.T) {
 
 	// Notice epoch will be 2 not 1 since it's max(0,fx.epoch)+1
 	// Notice meta.createat == f0's createdat, others are now()
+	// Make sure we pick up def ver attrs
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta", `{
+  "description": "hello",
   "meta":{"xref":null}
 } `, 200, `{
   "fileid": "fx",
@@ -640,6 +642,7 @@ func TestXrefRevert(t *testing.T) {
   "xid": "/dirs/d1/files/fx",
   "epoch": 1,
   "isdefault": true,
+  "description": "hello",
   "createdat": "2025-01-01T12:00:02Z",
   "modifiedat": "2025-01-01T12:00:02Z",
 
@@ -764,7 +767,9 @@ func TestXrefRevert(t *testing.T) {
 }
 `)
 
+	// Notice "description:bye" is ignored
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested", `{
+  "description": "bye",
   "meta":{"xref":null},
   "versions": { "v1": { "description": "ver1" } }
 } `, 200, `{
@@ -832,7 +837,9 @@ func TestXrefRevert(t *testing.T) {
 }
 `)
 
+	// "description:bye" is ignored
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested", `{
+  "description": "bye",
   "meta":{"xref":null},
   "versions": { "z1": {}, "a1": {} }
 } `, 200, `{
@@ -899,6 +906,8 @@ func TestXrefRevert(t *testing.T) {
 }
 `)
 
+	// Not 100% this is legal per the spec, we should probably reject the
+	// query parameter since I think it's only allowed on 'POST /versions'
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested&setdefaultversionid=bb", `{
   "meta":{"xref":null },
   "versions": { "z2": {}, "b3": {} }
@@ -1035,7 +1044,7 @@ func TestXrefRevert(t *testing.T) {
 }
 `)
 
-	// defaultversionid is ignored
+	// defaultversionid is ignored because we're not sticky
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
 		`{"xref":null,
           "defaultversionid": "bb"}`, 200, `{

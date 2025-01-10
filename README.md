@@ -118,6 +118,8 @@ TODOs:
 - support the DB vanishing for a while
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
 - support ?export  /export
+- support ximport
+- support validating that xref points to the same resource def
 - test xref more
   - in particular PATCH on an xref resource where body doesn't have xref
   - testing doing a PUT/POST/PATCH on an xref - fail? ignore attrs?
