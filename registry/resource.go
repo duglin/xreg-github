@@ -382,8 +382,13 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 	return meta.SetSave("defaultversionid", newDefault.UID)
 }
 
-// *Meta, isNew, error
-func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, bool, error) {
+// returns *Meta, isNew, error
+// "createVersion" means we should create a version if there isn't already
+// one there. This will only happen when the client talks directly to "meta"
+// w/o the surrounding Resource object. AND, for now, we only do it when
+// we're removing the 'xref' attr. Other cases, the http layer would have
+// already create the Resource and default version for us.
+func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersion bool) (*Meta, bool, error) {
 	log.VPrintf(3, ">Enter: UpsertMeta(%s,%v)", r.UID, addType)
 	defer log.VPrintf(3, "<Exit: UpsertMeta")
 
@@ -415,10 +420,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		r.Singular + "id",
 		"#nextversionid",
 		"#epoch", // Last used epoch so we can restore it when xref is cleared
-		// "epoch",
-		"#createdat",
-		"#modifiedat"}
-	//, "defaultversionid"
+		"#createdat"}
 
 	if r.tx.IgnoreDefaultVersionID && !IsNil(obj) {
 		delete(obj, "defaultversionid")
@@ -525,6 +527,12 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 			if targetEpoch > newEpoch {
 				newEpoch = targetEpoch
 			}
+			meta.JustSet("epoch", newEpoch)
+			meta.JustSet("#epoch", nil)
+			// We have to fake out the updateFn to think the existing values
+			// are the # values
+			meta.EpochSet = false
+			meta.Object["epoch"] = newEpoch
 
 			delete(meta.NewObject, "xref")
 			if err = meta.JustSet("xref", nil); err != nil {
@@ -537,24 +545,25 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 				meta.JustSet("#nextversionid", 1)
 			}
 
-			meta.JustSet("epoch", newEpoch)
-			meta.JustSet("#epoch", nil)
-
-			// We have to fake out the updateFn to think the existing values
-			// are the # values
-			meta.Object["epoch"] = newEpoch
-
-			meta.EpochSet = false
-
 			if IsNil(meta.NewObject["createdat"]) {
 				meta.JustSet("createdat", meta.Object["#createdat"])
 				meta.JustSet("#createdat", nil)
 				meta.Object["createdat"] = meta.Object["#createdat"]
 			}
-			if IsNil(meta.NewObject["modifiedat"]) {
-				meta.JustSet("modifiedat", meta.Object["#modifiedat"])
-				meta.JustSet("#modifiedat", nil)
-				meta.Object["modifiedat"] = meta.Object["#modifiedat"]
+
+			// if createVersion is true, make sure we have at least one
+			// version
+			if createVersion {
+				vs, err := r.GetVersionIDs()
+				if err != nil {
+					return nil, false, err
+				}
+				if len(vs) == 0 {
+					_, _, err = r.UpsertVersionWithObject("", nil, ADD_ADD)
+					if err != nil {
+						return nil, false, err
+					}
+				}
 			}
 
 			/*
@@ -566,11 +575,19 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 			*/
 		} else {
 			// Clear all existing attributes except ID
-			meta.JustSet("#epoch", meta.Object["epoch"])
-			meta.JustSet("#createdat", meta.Object["createdat"])
+			oldEpoch := meta.Object["epoch"]
+			if IsNil(oldEpoch) {
+				oldEpoch = 0
+			}
+			meta.JustSet("#epoch", oldEpoch)
+
+			oldCA := meta.Object["createdat"]
+			if IsNil(oldCA) {
+				oldCA = meta.tx.CreateTime
+			}
+			meta.JustSet("#createdat", oldCA)
+
 			// meta.JustSet("createdat", nil)
-			meta.JustSet("#modifiedat", meta.Object["modifiedat"])
-			// meta.JustSet("modifiedat", nil)
 
 			extraAttrs := []string{}
 			for k, _ := range meta.NewObject {
@@ -622,7 +639,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 	// - defaultversionsticky, if there
 	// - defaultversionid, if defaultversionsticky is set
 
-	stickyAny := meta.NewObject["defaultversionsticky"]
+	stickyAny := meta.Get("defaultversionsticky")
 	if !IsNil(stickyAny) && stickyAny != true && stickyAny != false {
 		return nil, false, fmt.Errorf("'defaultversionsticky' must be a " +
 			"boolean or null")
@@ -645,7 +662,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType) (*Meta, boo
 		Must(err)
 		if defaultVersionID != "" && IsNil(v) {
 			return nil, false,
-				fmt.Errorf("Can't find version %q", defaultVersionID)
+				fmt.Errorf("Version %q not found", defaultVersionID)
 		}
 
 		meta.JustSet(r.Singular+"id", r.UID)
@@ -752,7 +769,6 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 			return nil, false, err
 		}
 	}
-
 	// Apply properties
 	if obj != nil {
 		// If there's a doc but no "contenttype" value then:

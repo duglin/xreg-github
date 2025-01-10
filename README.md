@@ -142,9 +142,6 @@ TODOs:
 - support ETag/If-Match
 - update epoch/modifiedat of parent when nested entity is added/removed
 - ?nested isn't needed to update `model` or `meta` attributes
-- test for PUT with "versions" on an existing resource/xref - should igore
-  the versions
-- test clearing xref and setting defver attrs, via res and via meta directly
 - test to ensure meta epoch changes as versions are added/removed
 - test the timestamps in meta. Should change as versions are added/removed.
 - remove entities from cache upon delete

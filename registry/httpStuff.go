@@ -1609,7 +1609,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Technically, this will always "update" not "insert"
-		meta, _, err := resource.UpsertMetaWithObject(IncomingObj, addType)
+		meta, _, err := resource.UpsertMetaWithObject(IncomingObj, addType, true)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err

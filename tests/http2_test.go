@@ -5780,7 +5780,7 @@ func TestHTTPNestedResources(t *testing.T) {
         }`,
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Can't find version "v2"
+		ResBody: `Version "v2" not found
 `,
 	})
 

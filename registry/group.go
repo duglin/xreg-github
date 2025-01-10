@@ -300,7 +300,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 	// Process the "meta" sub-object if there
 	if !IsNil(metaObj) {
-		_, _, err := r.UpsertMetaWithObject(metaObj, addType)
+		_, _, err := r.UpsertMetaWithObject(metaObj, addType, false)
 		if err != nil {
 			if isNew {
 				// Needed if doing local func calls to create the Resource
