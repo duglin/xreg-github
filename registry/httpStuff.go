@@ -606,7 +606,8 @@ func (pw *PageWriter) Done() {
     border-radius: 5px ;
     background-color: lightgrey ;
     margin-right: 2px ;
-	font-family: menlo ;
+    font-family: menlo ;
+	font-size: 16px ;
   }
 
   .spc {
@@ -631,7 +632,7 @@ func (pw *PageWriter) Done() {
     // background-color: lightsteelblue ; // #e7eff7 ;
     color: black ;
     // font-weight: bold ;
-	font-family: menlo ;
+    font-family: menlo ;
     font-size: medium ;
     overflow: hidden ;
     line-height: 10px ;
@@ -663,7 +664,7 @@ func (pw *PageWriter) Done() {
   <div id=buttonList>
     `+filters+`
     `+inlines+`
-	`+apply+`
+    `+apply+`
   </div>
   <div style="height:12px"></div> <!-- buffer for "Commmit:" line -->
   <div id=commit><a target=_blank
@@ -712,6 +713,10 @@ function apply() {
 
 function toggleExp(elem, exp) {
   if ( !elem ) {
+    elem = document.getElementById("expAll")
+	exp = (elem.show == true)
+	elem.show = !exp
+    elem.innerHTML = (exp ? '`+HTML_MIN+`' : '`+HTML_EXP+`')
     for ( var i = 1 ;; i++ ) {
       elem = document.getElementById("s"+i)
       if ( !elem ) return false
@@ -755,8 +760,7 @@ function dokeydown(event) {
   <b>Path:</b> `+urlPath+`
   </div>
   <div id=myOutput tabindex=0 onkeydown=dokeydown(event)><div class=expandAll>
-    <span class=expandBtn title="Collapse all" onclick=toggleExp(null,false)>`+HTML_MIN+`</span>
-    <span class=expandBtn title="Expand all" onclick=toggleExp(null,true)>`+HTML_EXP+`</span>
+    <span id=expAll class=expandBtn title="Collapse/Expand all" onclick=toggleExp(null,false)>`+HTML_MIN+`</span>
   </div><div id='text'>%s</div></div> <!--myOutput-->
 </div> <!--right-->
 
