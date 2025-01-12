@@ -632,7 +632,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 	return g, isNew, nil
 }
 
-func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*FilterExpr) (string, []interface{}, error) {
+func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*FilterExpr, export bool) (string, []interface{}, error) {
 	query := ""
 	args := []any{}
 
@@ -640,7 +640,14 @@ func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*Filt
 	query = `
 SELECT
   RegSID,Type,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-FROM FullTree WHERE RegSID=?`
+FROM FullTree WHERE RegSID=?` // and Export=true
+
+	// Exclude generated attributes/entityes if export is turned on.
+	// Meaning, only grab Props that have 'Export' set to 'true'. These
+	// should be (mainly) just the ones we set explicitly.
+	if export {
+		query += ` AND Export=true`
+	}
 
 	// Remove entities that are higher than the GET PATH specified
 	if what != "Registry" && len(paths) > 0 {

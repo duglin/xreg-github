@@ -15,6 +15,7 @@ type RequestInfo struct {
 	OriginalPath     string
 	OriginalRequest  *http.Request       `json:"-"`
 	OriginalResponse http.ResponseWriter `json:"-"`
+	RootPath         string              // rootPath or "" for registry
 	Parts            []string
 	Root             string
 	Abstract         string
@@ -25,21 +26,23 @@ type RequestInfo struct {
 	ResourceUID      string
 	ResourceModel    *ResourceModel
 	VersionUID       string
-	What             string // Registry, Coll, Entity
-	HasNested        bool
-	Inlines          []string        // TODO store a PropPaths instead
-	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
-	ShowStructure    bool            //	was $structure present
+	What             string            // Registry, Coll, Entity
+	Flags            map[string]string // Query params (and str value, if there)
+	Inlines          []string          // TODO store a PropPaths instead
+	Filters          [][]*FilterExpr   // [OR][AND] filter=e,e(and) &(or) filter=e
+	ShowStructure    bool              //	is $structure present
 
 	StatusCode int
 	SentStatus bool
 	HTTPWriter HTTPWriter `json:"-"`
 
+	// extra stuff if we ever need to pass around data while processing
 	extras map[string]any
 }
 
 var explicitInlines = []string{"capabilities", "model"}
 var nonModelInlines = append([]string{"*"}, explicitInlines...)
+var rootPaths = []string{"capabilities", "model", "export"}
 
 func (info *RequestInfo) AddInline(path string) error {
 	// use "*" to inline all
@@ -140,10 +143,6 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		extras: map[string]any{},
 	}
 
-	tx.IgnoreEpoch = info.HasFlag("noepoch")
-	tx.IgnoreDefaultVersionSticky = info.HasFlag("nodefaultversionsticky")
-	tx.IgnoreDefaultVersionID = info.HasFlag("nodefaultversionid")
-
 	if info.Registry != nil && tx.Registry == nil {
 		tx.Registry = info.Registry
 	}
@@ -158,15 +157,24 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		tx.User = tmp
 	}
 
+	// Notice boolean flags end up with "" as a value
+	info.Flags = map[string]string{}
+	params := info.OriginalRequest.URL.Query()
+	for _, flag := range AllowableFlags {
+		val, ok := params[flag]
+		if ok {
+			info.Flags[flag] = val[0]
+		}
+	}
+
 	err := info.ParseRequestURL()
 	if err != nil {
-		if info.StatusCode == 0 {
-			info.StatusCode = http.StatusBadRequest
-		}
 		return info, err
 	}
 
-	info.HasNested = info.HasFlag("nested")
+	tx.IgnoreEpoch = info.HasFlag("noepoch")
+	tx.IgnoreDefaultVersionSticky = info.HasFlag("nodefaultversionsticky")
+	tx.IgnoreDefaultVersionID = info.HasFlag("nodefaultversionid")
 
 	if info.HasFlag("inline") {
 		// OLD: Only pick up inlining values if we're doing a GET, not write ops
@@ -182,19 +190,16 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 						// want: p = info.Abstract + "." + p  in UI format
 						absPP, err := PropPathFromPath(info.Abstract)
 						if err != nil {
-							info.StatusCode = http.StatusBadRequest
 							return info, err
 						}
 						pPP, err := PropPathFromUI(p)
 						if err != nil {
-							info.StatusCode = http.StatusBadRequest
 							return info, err
 						}
 						p = absPP.Append(pPP).UI()
 					}
 				}
 				if err := info.AddInline(p); err != nil {
-					info.StatusCode = http.StatusBadRequest
 					return info, err
 				}
 			}
@@ -203,10 +208,6 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 
 	// if  strings.EqualFold(r.Method, "GET")
 	err = info.ParseFilters()
-	if err != nil {
-		info.StatusCode = http.StatusBadRequest
-	}
-
 	return info, err
 }
 
@@ -231,7 +232,6 @@ func (info *RequestInfo) ParseFilters() error {
 
 			/*
 				if info.What != "Coll" && strings.Index(path, "/") < 0 {
-					info.StatusCode = http.StatusBadRequest
 					return fmt.Errorf("A filter with just an attribute name (%s) "+
 						"isn't allowed in this context", path)
 				}
@@ -305,13 +305,14 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /???
-	if len(info.Parts) > 0 && info.Parts[0] == "model" || info.Parts[0] == "capabilities" {
+	info.RootPath = ""
+	if len(info.Parts) > 0 && ArrayContains(rootPaths, info.Parts[0]) {
+		info.RootPath = info.Parts[0]
 		return nil
 	}
 
 	// /GROUPs
 	if strings.HasSuffix(info.Parts[0], "$structure") {
-		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("$structure isn't allowed on %q", "/"+info.Parts[0])
 	}
 
@@ -335,7 +336,6 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	// /GROUPs/gID
 	if strings.HasSuffix(info.Parts[1], "$structure") {
-		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:2], "/"))
 	}
@@ -350,7 +350,6 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	// /GROUPs/gID/RESOURCEs
 	if strings.HasSuffix(info.Parts[2], "$structure") {
-		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:3], "/"))
 	}
@@ -383,7 +382,6 @@ func (info *RequestInfo) ParseRequestURL() error {
 			strings.CutSuffix(info.ResourceUID, "$structure")
 
 		if info.ResourceUID == "" {
-			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Resource id in URL can't be blank")
 		}
 
@@ -394,13 +392,11 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	// GROUPs/gID/RESOURCEs/rID/???
 	if strings.HasSuffix(info.ResourceUID, "$structure") {
-		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:4], "/"))
 	}
 
 	if strings.HasSuffix(info.Parts[4], "$structure") {
-		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf("$structure isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:5], "/"))
 	}
@@ -446,7 +442,6 @@ func (info *RequestInfo) ParseRequestURL() error {
 			strings.CutSuffix(info.VersionUID, "$structure")
 
 		if info.VersionUID == "" {
-			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("Version id in URL can't be blank")
 		}
 
@@ -464,7 +459,7 @@ func (info *RequestInfo) GetFlag(name string) string {
 	if !info.Registry.Capabilities.FlagEnabled(name) {
 		return ""
 	}
-	return info.OriginalRequest.URL.Query().Get(name)
+	return info.Flags[name]
 }
 
 func (info *RequestInfo) GetFlagValues(name string) []string {
@@ -478,5 +473,6 @@ func (info *RequestInfo) HasFlag(name string) bool {
 	if !info.Registry.Capabilities.FlagEnabled(name) {
 		return false
 	}
-	return info.OriginalRequest.URL.Query().Has(name)
+	_, ok := info.Flags[name]
+	return ok
 }

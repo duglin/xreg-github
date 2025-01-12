@@ -240,6 +240,15 @@ CREATE TABLE Props (
     PropName    VARCHAR(64) NOT NULL,
     PropValue   VARCHAR($MAX_VARCHAR),
     PropType    CHAR(64) NOT NULL,          # string, boolean, int, ...
+    Export      BOOL NOT NULL,              # Should include during export?
+
+    # non-Export-able attributes are ones that are generated at runtime
+    # due to things like showing the Default Version props in the Resource
+    # or entities/props that materialize due to an xref. Normally a GET
+    # will show all props, but during /export or ?export we want to exclude
+    # these non-Export ones. In case where all of the props for an entity
+    # are generated, the entire entity should vanish from the serialization.
+    # e.g. Versions of an xref'd Resource.
 
     PRIMARY KEY (EntitySID, PropName),
     INDEX (EntitySID),
@@ -265,7 +274,7 @@ JOIN Resources AS tR ON (tR.RegistrySID=sR.RegistrySID AND
 
 CREATE VIEW xRefVersions AS
 SELECT
-    CONCAT(xR.SourceSID, '-', V.SID) AS SID,
+    CONCAT('-', xR.SourceSID, '-', V.SID) AS SID,
     V.UID,
     xR.RegistrySID AS RegistrySID,
     xR.SourceSID AS ResourceSID,
@@ -361,7 +370,8 @@ SELECT
     Ms.SID AS EntitySID,
     P.PropName,
     P.PropValue,
-    P.PropType
+    P.PropType,
+    false                         # Export
 FROM xRefSrc2TgtResources AS xR
 JOIN Metas AS Ms ON (Ms.ResourceSID=xR.SourceSID)
 JOIN Metas AS Mt ON (Mt.ResourceSID=xR.TargetSID)
@@ -385,10 +395,11 @@ JOIN Props AS P ON (              # Grab the Target Resource's attributes
 
 UNION SELECT                      # Find all Version attributes (not meta)
     xR.RegistrySID,
-    CONCAT(xR.SourceSID, '-', P.EntitySID),
+    CONCAT('-', xR.SourceSID, '-', P.EntitySID),
     P.PropName,
     P.PropValue,
-    P.PropType
+    P.PropType,
+    false                         # Export
 FROM xRefSrc2TgtResources AS xR
 JOIN Props AS P ON (
     P.EntitySID IN (
@@ -417,7 +428,8 @@ SELECT
     m.ResourceSID AS EntitySID,
     p.PropName,
     p.PropValue,
-    p.PropType
+    p.PropType,
+    false                          # Export
 FROM EffectiveProps AS p
 JOIN EffectiveVersions AS v ON (p.EntitySID=v.SID)
 JOIN Metas AS m ON (m.ResourceSID=v.ResourceSID)
@@ -444,7 +456,8 @@ UNION SELECT                    # Add Resource.isdefault, always 'true'
     m.ResourceSID,
     'isdefault$DB_IN',
     'true',
-    'boolean'
+    'boolean',
+    false                       # Export
 FROM Metas AS m ;
 
 CREATE VIEW AllProps AS
@@ -456,7 +469,8 @@ UNION SELECT                    # Add Version.isdefault, which is calculated
   v.eSID,
   'isdefault$DB_IN',
   'true',
-  'boolean'
+  'boolean',
+  IF(LEFT(v.eSID,1)='-',false,true)   # Lie if it's not an xref'd prop/ver
 FROM Entities AS v
 JOIN Metas AS m ON (m.ResourceSID=v.ParentSID)
 JOIN EffectiveProps AS p ON (
@@ -469,7 +483,8 @@ UNION SELECT                   # Add in Version.RESOURCEid, which is calculated
   v.eSID,
   CONCAT(mE.Singular, 'id$DB_IN'),
   r.UID,
-  'string'
+  'string',
+  IF(LEFT(v.eSID,1)='-',false,true)  # Lie if it's not an xref'd prop/ver
 FROM Entities AS v
 JOIN Resources AS r ON (r.SID=v.ParentSID)
 JOIN ModelEntities AS mE ON (mE.SID=r.ModelSID)
@@ -499,7 +514,8 @@ SELECT
     PropName,
     PropValue,
     PropType,
-    Abstract
+    Abstract,
+    Export
 FROM Entities
 JOIN AllProps ON (AllProps.EntitySID=Entities.eSID)
 ORDER by Path, PropName;

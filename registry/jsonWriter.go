@@ -163,6 +163,9 @@ func (jw *JsonWriter) WriteEntity() error {
 		return nil
 	}
 
+	// Is this entity a Resource and does it have a meta.xref value?
+	hasXref := false
+
 	extra := "" // stuff to go at end of line during next print - eg: ,
 	myType := jw.Entity.Type
 	myAbstract := jw.Entity.Abstract
@@ -226,6 +229,8 @@ func (jw *JsonWriter) WriteEntity() error {
 	// Note, we're getting lucky that "meta" comes before "versions".
 	// We really should fix this.
 	if jw.Entity != nil && jw.Entity.Type == ENTITY_META {
+		hasXref = !IsNil(jw.Entity.Get("xref"))
+
 		p, _ := PropPathFromPath(jw.Entity.Abstract)
 		if jw.info.ShouldInline(p.DB()) {
 			jw.Printf("%s\n%s%q: ", extra, jw.indent, "meta")
@@ -248,13 +253,13 @@ func (jw *JsonWriter) WriteEntity() error {
 		(myAbstract == "" ||
 			strings.HasPrefix(jw.Entity.Abstract, myAbstract+string(DB_IN))) {
 
-		extra = jw.WritePreCollections(extra, jw.Entity.Plural, myType)
+		extra = jw.WritePreCollections(hasXref, extra, jw.Entity.Plural, myType)
 
 		if extra, err = jw.WriteCollectionHeader(extra); err != nil {
 			return err
 		}
 	}
-	extra = jw.WritePostCollections(extra, myType)
+	extra = jw.WritePostCollections(hasXref, extra, myType)
 
 	// And finally done with this Entity
 	jw.Outdent()
@@ -368,44 +373,45 @@ func (jw *JsonWriter) LoadCollections(eType int) {
 	jw.collPaths[eType] = p
 }
 
-func (jw *JsonWriter) WritePreCollections(extra string, plural string, eType int) string {
+func (jw *JsonWriter) WritePreCollections(hasXref bool, extra string, plural string, eType int) string {
 	for i, collName := range jw.unusedColls[eType] {
 		if collName == plural {
 			jw.unusedColls[eType] = jw.unusedColls[eType][i+1:]
 			break
 		}
-		p := Path2Abstract(jw.collPaths[eType] + collName)
-
-		jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
-			collName, jw.info.BaseURL, jw.collPaths[eType], collName)
-
-		if jw.info.ShouldInline(p) {
-			jw.Printf("%s\"%s\": {},\n", jw.indent, collName)
-		}
-
-		jw.Printf("%s\"%scount\": 0", jw.indent, collName)
-		extra = ","
+		extra = jw.WriteEmptyCollection(hasXref, extra, eType, collName)
 	}
 	return extra
 }
 
-func (jw *JsonWriter) WritePostCollections(extra string, eType int) string {
+func (jw *JsonWriter) WritePostCollections(hasXref bool, extra string, eType int) string {
 	for _, collName := range jw.unusedColls[eType] {
-		p := Path2Abstract(jw.collPaths[eType] + collName)
-
-		jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
-			collName, jw.info.BaseURL, jw.collPaths[eType], collName)
-
-		if jw.info.ShouldInline(p) {
-			jw.Printf("%s\"%s\": {},\n", jw.indent, collName)
-		}
-
-		jw.Printf("%s\"%scount\": 0", jw.indent, collName)
-		extra = ","
+		extra = jw.WriteEmptyCollection(hasXref, extra, eType, collName)
 	}
 
 	delete(jw.collPaths, eType)
 	delete(jw.unusedColls, eType)
+	return extra
+}
+
+func (jw *JsonWriter) WriteEmptyCollection(hasXref bool, extra string, eType int, collName string) string {
+	// If we're doing a Resource that has a meta.xref, skip "versions"
+	if hasXref && collName == "versions" {
+		return extra
+	}
+
+	p := Path2Abstract(jw.collPaths[eType] + collName)
+
+	jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
+		collName, jw.info.BaseURL, jw.collPaths[eType], collName)
+
+	if jw.info.ShouldInline(p) {
+		jw.Printf("%s\"%s\": {},\n", jw.indent, collName)
+	}
+
+	jw.Printf("%s\"%scount\": 0", jw.indent, collName)
+	extra = ","
+
 	return extra
 }
 

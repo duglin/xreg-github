@@ -555,7 +555,7 @@ func (e *Entity) SetPP(pp *PropPath, val any) error {
 // This will save a single property/value in the DB. This assumes
 // the caller is traversing the Object and splitting it into individual props
 func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
-	log.VPrintf(3, ">Enter: SetDBProperty(%s=%v)", pp.UI(), val)
+	log.VPrintf(3, ">Enter: SetDBProperty(%s=%v)", pp, val)
 	defer log.VPrintf(3, "<Exit SetDBProperty")
 
 	PanicIf(pp.UI() == "", "pp is empty")
@@ -656,8 +656,8 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 
 		err = DoOneTwo(e.tx, `
             REPLACE INTO Props(
-              RegistrySID, EntitySID, PropName, PropValue, PropType)
-            VALUES( ?,?,?,?,? )`,
+              RegistrySID, EntitySID, PropName, PropValue, PropType, Export)
+            VALUES( ?,?,?,?,?, true )`,
 			e.Registry.DbSID, e.DbSID, name, dbVal, propType)
 	}
 
@@ -1917,7 +1917,7 @@ func (e *Entity) GetBaseAttributes() Attributes {
 // structures to 'obj' to materialize PropPath and set the appropriate
 // fields to 'val'
 func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
-	log.VPrintf(4, "ObjectSetProp(%s=%v)", pp.UI(), val)
+	log.VPrintf(4, "ObjectSetProp(%s=%v)", pp, val)
 	if pp.Len() == 0 && IsNil(val) {
 		// A bit of a special case, not 100% sure if this is ok.
 		// Treat nil val as a request to delete all properties.
@@ -1934,7 +1934,7 @@ func ObjectSetProp(obj map[string]any, pp *PropPath, val any) error {
 }
 
 func MaterializeProp(current any, pp *PropPath, val any, prev *PropPath) (any, error) {
-	log.VPrintf(4, ">Enter: MaterializeProp(%s)", pp.UI())
+	log.VPrintf(4, ">Enter: MaterializeProp(%s)", pp)
 	log.VPrintf(4, "<Exit: MaterializeProp")
 
 	// current is existing value, used for adding to maps/arrays
@@ -2030,7 +2030,7 @@ func (e *Entity) Validate() error {
 // been removed - such as collections
 func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) error {
 
-	log.VPrintf(3, ">Enter: ValidateObject(path: %s)", path.UI())
+	log.VPrintf(3, ">Enter: ValidateObject(path: %s)", path)
 	defer log.VPrintf(3, "<Exit: ValidateObject")
 
 	if log.GetVerbose() > 2 {
@@ -2228,7 +2228,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 }
 
 func (e *Entity) ValidateAttribute(val any, attr *Attribute, path *PropPath) error {
-	log.VPrintf(3, ">Enter: ValidateAttribute(%s)", path.UI())
+	log.VPrintf(3, ">Enter: ValidateAttribute(%s)", path)
 	defer log.VPrintf(3, "<Exit: ValidateAttribute")
 
 	if log.GetVerbose() > 2 {
@@ -2263,7 +2263,7 @@ func (e *Entity) ValidateAttribute(val any, attr *Attribute, path *PropPath) err
 }
 
 func (e *Entity) ValidateMap(val any, item *Item, path *PropPath) error {
-	log.VPrintf(3, ">Enter: ValidateMap(%s)", path.UI())
+	log.VPrintf(3, ">Enter: ValidateMap(%s)", path)
 	defer log.VPrintf(3, "<Exit: ValidateMap")
 
 	if log.GetVerbose() > 2 {
@@ -2302,7 +2302,7 @@ func (e *Entity) ValidateMap(val any, item *Item, path *PropPath) error {
 }
 
 func (e *Entity) ValidateArray(val any, item *Item, path *PropPath) error {
-	log.VPrintf(3, ">Enter: ValidateArray(%s)", path.UI())
+	log.VPrintf(3, ">Enter: ValidateArray(%s)", path)
 	defer log.VPrintf(3, "<Exit: ValidateArray")
 
 	if log.GetVerbose() > 2 {
@@ -2338,7 +2338,7 @@ func (e *Entity) ValidateArray(val any, item *Item, path *PropPath) error {
 
 func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error {
 	if log.GetVerbose() > 2 {
-		log.VPrintf(0, ">Enter: ValidateScalar(%s:%s)", path.UI(), ToJSON(val))
+		log.VPrintf(0, ">Enter: ValidateScalar(%s:%s)", path, ToJSON(val))
 		defer log.VPrintf(3, "<Exit: ValidateScalar")
 	}
 

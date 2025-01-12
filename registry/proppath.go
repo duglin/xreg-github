@@ -26,6 +26,10 @@ func NewPP() *PropPath {
 	return &PropPath{}
 }
 
+func (pp *PropPath) String() string {
+	return pp.UI()
+}
+
 func (pp *PropPath) Len() int {
 	if pp == nil {
 		return 0

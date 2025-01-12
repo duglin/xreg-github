@@ -110,6 +110,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	info, err = ParseRequest(tx, w, r)
 
 	if err != nil {
+		if info.StatusCode == 0 {
+			info.StatusCode = http.StatusBadRequest
+		}
 		w.WriteHeader(info.StatusCode)
 		w.Write([]byte(fmt.Sprintf("%s\n", err.Error())))
 		return
@@ -332,12 +335,47 @@ func (pw *PageWriter) Done() {
 	}
 	list += "\n"
 
-	// Only do "inline" and "filter" stuff if we're not showing a special root
-	// object, like 'capabilities' or 'model'
-	specialObj := (pw.Info.GroupType == "" && len(pw.Info.Parts) > 0)
-
+	roots := ""
+	options := ""
 	filters := ""
-	if !specialObj {
+	inlines := ""
+	apply := ""
+
+	rootList := []struct {
+		u    string
+		name string
+	}{
+		{"", "Registry Root"},
+		{"capabilities", "Capabilities"},
+		{"model", "Model"},
+		{"export", "Export"},
+	}
+
+	for _, r := range rootList {
+		name := r.name
+		if pw.Info.RootPath == r.u {
+			name = "<b>" + name + "</b>"
+		}
+		roots += fmt.Sprintf("    <li><a href=\"%s?ui\">%s</a>\n",
+			pw.Info.BaseURL+"/"+r.u, name)
+	}
+
+	if pw.Info.RootPath == "" {
+		checked := ""
+		if pw.Info.HasFlag("export") {
+			checked = " checked"
+		}
+		options += "    <div class=export>\n" +
+			"      <input id=export type='checkbox'" + checked + "/>export\n" +
+			"    </div>\n"
+
+		if options != "" { // Wrapper if any
+			options = "<b>Options:</b>\n\n" + options +
+				"\n    <hr style=\"width: 100%%\">\n"
+		}
+	}
+
+	if pw.Info.RootPath == "" || pw.Info.RootPath == "export" {
 		prefix := MustPropPathFromPath(pw.Info.Abstract).UI()
 		if prefix != "" {
 			prefix += string(UX_IN)
@@ -360,35 +398,38 @@ func (pw *PageWriter) Done() {
 			}
 			filters += subF
 		}
-		filters = `<b>Filters:</b>
-    <textarea id=filters>` + filters + `</textarea>`
+		filters = "<b>Filters:</b>\n    <textarea id=filters>" +
+			filters + "</textarea>\n"
 	}
 
-	inlines := ""
-	if !specialObj {
-		inlines = "<b>Inlines:</b>"
+	// Process inlines
+
+	// check to see if the currently selected inlines are the default
+	// ones based on any variant of 'export'
+	defaultInlines := false
+	if pw.Info.RootPath == "export" {
+		defaultInlines = (len(pw.Info.Inlines) == 3 &&
+			pw.Info.IsInlineSet(NewPPP("capabilities").DB()) &&
+			pw.Info.IsInlineSet(NewPPP("model").DB()) &&
+			pw.Info.IsInlineSet(NewPPP("*").DB()))
+	} else if pw.Info.RootPath == "" && pw.Info.HasFlag("export") {
+		defaultInlines = (len(pw.Info.Inlines) == 1 &&
+			pw.Info.IsInlineSet(NewPPP("*").DB()))
+	}
+
+	if pw.Info.RootPath == "" || pw.Info.RootPath == "export" {
 		inlineCount := 0
 		checked := ""
 
-		inlineOptions := []string{}
-		if !specialObj {
-			if len(pw.Info.Parts) == 0 {
-				inlineOptions = GetRegistryModelInlines(pw.Info.Registry.Model)
-			} else if len(pw.Info.Parts) <= 2 {
-				inlineOptions = GetGroupModelInlines(pw.Info.GroupModel)
-			} else if len(pw.Info.Parts) <= 4 {
-				inlineOptions = GetResourceModelInlines(pw.Info.ResourceModel)
-			} else {
-				inlineOptions = GetVersionModelInlines(pw.Info.ResourceModel)
-			}
-		}
+		// ----  Add model,capabilitie only if we're at the root
 
-		// ----
+		if pw.Info.GroupType == "" {
+			if !defaultInlines &&
+				pw.Info.IsInlineSet(NewPPP("capabilities").DB()) {
 
-		if len(pw.Info.Parts) == 0 {
-			if pw.Info.IsInlineSet(NewPPP("capabilities").DB()) {
 				checked = " checked"
 			}
+
 			inlines += fmt.Sprintf(`
     <div class=inlines>
       <input id=inline%d type='checkbox' value='capabilities'`+
@@ -399,7 +440,7 @@ func (pw *PageWriter) Done() {
 
 			// ----
 
-			if pw.Info.IsInlineSet(NewPPP("model").DB()) {
+			if !defaultInlines && pw.Info.IsInlineSet(NewPPP("model").DB()) {
 				checked = " checked"
 			}
 			inlines += fmt.Sprintf(`
@@ -408,28 +449,41 @@ func (pw *PageWriter) Done() {
     </div>`, inlineCount)
 			inlineCount++
 			checked = ""
-
-			inlines += `
-    <div class=line></div>`
 		}
 
-		// ----
-
-		if pw.Info.IsInlineSet(NewPPP("*").DB()) {
-			checked = " checked"
+		if inlines != "" {
+			inlines += "\n    <div class=line></div>"
 		}
-		except := ""
-		// if len(pw.Info.Parts) == 0 {
-		// except = " but model,capabilities"
-		// }
-		inlines += fmt.Sprintf(`
+
+		// ----  * (all)
+		if len(pw.Info.Parts) != 5 || pw.Info.Parts[4] != "meta" {
+			if !defaultInlines && pw.Info.IsInlineSet(NewPPP("*").DB()) {
+				checked = " checked"
+			}
+			inlines += fmt.Sprintf(`
     <div class=inlines>
-      <input id=inline%d type='checkbox' value='*'`+checked+`/>* (all%s)
-    </div>`, inlineCount, except)
-		inlineCount++
-		checked = ""
+      <input id=inline%d type='checkbox' value='*'`+checked+`/>* (all)
+    </div>`, inlineCount)
+			inlineCount++
+			checked = ""
+		}
 
-		// ----
+		// ---- Now add based on the model and depth
+
+		inlineOptions := []string{}
+		if pw.Info.RootPath == "" || pw.Info.RootPath == "export" {
+			if pw.Info.GroupType == "" {
+				inlineOptions = GetRegistryModelInlines(pw.Info.Registry.Model)
+			} else if len(pw.Info.Parts) <= 2 {
+				inlineOptions = GetGroupModelInlines(pw.Info.GroupModel)
+			} else if len(pw.Info.Parts) <= 4 {
+				inlineOptions = GetResourceModelInlines(pw.Info.ResourceModel)
+			} else {
+				if pw.Info.Parts[4] != "meta" {
+					inlineOptions = GetVersionModelInlines(pw.Info.ResourceModel)
+				}
+			}
+		}
 
 		pp, _ := PropPathFromPath(pw.Info.Abstract)
 		for _, inline := range inlineOptions {
@@ -444,6 +498,12 @@ func (pw *PageWriter) Done() {
       <input id=inline%d type='checkbox' value='%s'%s/>%s
     </div>`, inlineCount, inline, checked, inline)
 			inlineCount++
+
+		}
+
+		// If we have any, wrapper it
+		if inlines != "" {
+			inlines = "<b>Inlines:</b>\n" + inlines
 		}
 	}
 
@@ -454,9 +514,8 @@ func (pw *PageWriter) Done() {
 		urlPath += fmt.Sprintf(`/<a href="%s?ui">%s</a>`, tmp, p)
 	}
 
-	apply := ""
 	structureswitch := "false"
-	if !specialObj {
+	if pw.Info.RootPath == "" || pw.Info.RootPath == "export" {
 		structuretext := ""
 		structureButton := ""
 		if pw.Info.ShowStructure {
@@ -483,6 +542,9 @@ func (pw *PageWriter) Done() {
 
 	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
 <style>
+  a:visited {
+    color: black ;
+  }
   form {
     display: inline ;
   }
@@ -526,6 +588,7 @@ func (pw *PageWriter) Done() {
   }
   #buttonList {
     margin-top: 10px ;
+    padding-top: 5px ;
     display: flex ;
     flex-direction: column ;
     align-items: start ;
@@ -562,6 +625,11 @@ func (pw *PageWriter) Done() {
   }
   select {
     font-weight: bold ;
+  }
+  .export {
+    margin-top: 5px ;
+    font-size: 13px ;
+    font-family: courier ;
   }
   .inlines {
     font-size: 13px ;
@@ -607,7 +675,7 @@ func (pw *PageWriter) Done() {
     background-color: lightgrey ;
     margin-right: 2px ;
     font-family: menlo ;
-	font-size: 16px ;
+    font-size: 16px ;
   }
 
   .spc {
@@ -658,10 +726,9 @@ func (pw *PageWriter) Done() {
   <select onchange="changeRegistry(value)">`+list+`  </select>
   <br>
   <hr>
-    <li><a href="`+pw.Info.BaseURL+`?ui">Registry Root</a>
-    <li><a href="`+pw.Info.BaseURL+`/capabilities?ui">Capabilities</a>
-    <li><a href="`+pw.Info.BaseURL+`/model?ui">Model</a>
+`+roots+`
   <div id=buttonList>
+    `+options+`
     `+filters+`
     `+inlines+`
     `+apply+`
@@ -692,6 +759,9 @@ function apply() {
   if (structureswitch) loc += "$structure"
   loc += "?ui"
 
+  ex = document.getElementById("export")
+  if (ex != null && ex.checked) loc += "&export"
+
   var filters = document.getElementById("filters").value
   var lines = filters.split("\n")
   for (var i = 0 ; i < lines.length ; i++ ) {
@@ -714,8 +784,8 @@ function apply() {
 function toggleExp(elem, exp) {
   if ( !elem ) {
     elem = document.getElementById("expAll")
-	exp = (elem.show == true)
-	elem.show = !exp
+    exp = (elem.show == true)
+    elem.show = !exp
     elem.innerHTML = (exp ? '`+HTML_MIN+`' : '`+HTML_EXP+`')
     for ( var i = 1 ;; i++ ) {
       elem = document.getElementById("s"+i)
@@ -773,7 +843,8 @@ function dokeydown(event) {
 func GetRegistryModelInlines(m *Model) []string {
 	res := []string{}
 
-	for _, gm := range m.Groups {
+	for _, key := range SortedKeys(m.Groups) {
+		gm := m.Groups[key]
 		res = append(res, gm.Plural)
 		for _, inline := range GetGroupModelInlines(gm) {
 			res = append(res, gm.Plural+"."+inline)
@@ -788,7 +859,8 @@ func GetRegistryModelInlines(m *Model) []string {
 func GetGroupModelInlines(gm *GroupModel) []string {
 	res := []string{}
 
-	for _, rm := range gm.Resources {
+	for _, key := range SortedKeys(gm.Resources) {
+		rm := gm.Resources[key]
 		res = append(res, rm.Plural)
 		for _, inline := range GetResourceModelInlines(rm) {
 			res = append(res, rm.Plural+"."+inline)
@@ -1088,12 +1160,16 @@ func HTTPGet(info *RequestInfo) error {
 
 	info.Root = strings.Trim(info.Root, "/")
 
-	if len(info.Parts) > 0 && info.Parts[0] == "model" {
+	if info.RootPath == "model" {
 		return HTTPGETModel(info)
 	}
 
-	if len(info.Parts) > 0 && info.Parts[0] == "capabilities" {
+	if info.RootPath == "capabilities" {
 		return HTTPGETCapabilities(info)
+	}
+
+	if info.RootPath == "export" {
+		return SerializeQuery(info, nil, "Registry", info.Filters)
 	}
 
 	// 'metaInBody' tells us whether xReg metadata should be in the http
@@ -1123,7 +1199,19 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 		}
 	}()
 
-	query, args, err := GenerateQuery(info.Registry, what, paths, filters)
+	if info.RootPath == "export" && len(info.Inlines) == 0 {
+		info.AddInline("*")
+		info.AddInline("capabilities")
+		info.AddInline("model")
+	}
+	if info.RootPath == "" && info.HasFlag("export") && len(info.Inlines) == 0 {
+		info.AddInline("*")
+	}
+
+	doExport := info.HasFlag("export") || info.RootPath == "export"
+
+	query, args, err := GenerateQuery(info.Registry, what, paths, filters,
+		doExport)
 	results, err := Query(info.tx, query, args...)
 	defer results.Close()
 
@@ -1212,12 +1300,12 @@ func HTTPPutPost(info *RequestInfo) error {
 	info.Root = strings.Trim(info.Root, "/")
 
 	// Capabilities has its own special func
-	if len(info.Parts) > 0 && info.Parts[0] == "capabilities" {
+	if info.RootPath == "capabilities" {
 		return HTTPPUTCapabilities(info)
 	}
 
 	// The model has its own special func
-	if len(info.Parts) > 0 && info.Parts[0] == "model" {
+	if info.RootPath == "model" {
 		return HTTPPUTModel(info)
 	}
 
@@ -1316,7 +1404,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if method == "PATCH" {
 			addType = ADD_PATCH
 		}
-		err = info.Registry.Update(IncomingObj, addType, info.HasNested)
+		err = info.Registry.Update(IncomingObj, addType, info.HasFlag("nested"))
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1353,7 +1441,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			g, _, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-				id, obj, addType, info.HasNested)
+				id, obj, addType, info.HasFlag("nested"))
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1383,7 +1471,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		group, isNew, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-			info.GroupUID, IncomingObj, addType, info.HasNested)
+			info.GroupUID, IncomingObj, addType, info.HasFlag("nested"))
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1449,7 +1537,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			r, _, err := group.UpsertResourceWithObject(info.ResourceType,
-				id, "", obj, addType, info.HasNested, false)
+				id, "", obj, addType, info.HasFlag("nested"), false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1512,7 +1600,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 			resource, _, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
-				addType, info.HasNested, false)
+				addType, info.HasFlag("nested"), false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1528,7 +1616,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 			resource, isNew, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
-				addType, info.HasNested, false)
+				addType, info.HasFlag("nested"), false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1561,7 +1649,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			// Implicitly create the resource
 			resource, isNew, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, propsID, IncomingObj,
-				ADD_ADD, info.HasNested, true)
+				ADD_ADD, info.HasFlag("nested"), true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1695,7 +1783,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, vID, IncomingObj, info.HasNested, true)
+				resourceUID, vID, IncomingObj, info.HasFlag("nested"), true)
 
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
@@ -1762,7 +1850,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if resource == nil {
 			// Implicitly create the resource
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, versionUID, IncomingObj, info.HasNested, true)
+				resourceUID, versionUID, IncomingObj, info.HasFlag("nested"), true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
