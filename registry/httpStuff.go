@@ -717,7 +717,6 @@ func (pw *PageWriter) Done() {
   }
   li {
     white-space: nowrap ;
-    cursor: pointer ;
     list-style-type: disc ;
   }
 </style>
