@@ -15,6 +15,7 @@ func TestParseUI(t *testing.T) {
 	tests := []Test{
 		{"", `{null}`},
 		{"prop", `{[{"prop",-1}]}`},
+		{"*", `{[{"*",-1}]}`},
 		{"#prop", `{[{"#prop",-1}]}`},
 		{"_", `{[{"_",-1}]}`},
 		{"_1", `{[{"_1",-1}]}`},
@@ -24,14 +25,17 @@ func TestParseUI(t *testing.T) {
 		{"['prop1-prop2']", `{[{"prop1-prop2",-1}]}`},
 		{"['1']", `{[{"1",-1}]}`},
 
+		{"a1.*", `{[{"a1",-1},{"*",-1}]}`},
 		{"a1.a2", `{[{"a1",-1},{"a2",-1}]}`},
 		{"a1.a2.a3", `{[{"a1",-1},{"a2",-1},{"a3",-1}]}`},
 		{"a1.2", `{[{"a1",-1},{"2",-1}]}`},
 
+		{"a1['*']", `{[{"a1",-1},{"*",-1}]}`},
 		{"a1['a2']", `{[{"a1",-1},{"a2",-1}]}`},
 		{"a1['2']", `{[{"a1",-1},{"2",-1}]}`},
 
 		{"a1[2]", `{[{"a1",-1},{"2",2}]}`},
+		{"a1['*'].a3", `{[{"a1",-1},{"*",-1},{"a3",-1}]}`},
 		{"a1['a2'].a3", `{[{"a1",-1},{"a2",-1},{"a3",-1}]}`},
 		{"a1['a2'].3", `{[{"a1",-1},{"a2",-1},{"3",-1}]}`},
 		{"a1['a2']['a3']", `{[{"a1",-1},{"a2",-1},{"a3",-1}]}`},
@@ -42,6 +46,7 @@ func TestParseUI(t *testing.T) {
 
 		// Errors
 		{".prop", `Unexpected . in ".prop" at pos 1`},
+		{".*", `Unexpected . in ".*" at pos 1`},
 		{"1", `Unexpected 1 in "1" at pos 1`},
 		{"_#1", `Unexpected # in "_#1" at pos 2`},
 		{"a1..a2", `Unexpected . in "a1..a2" at pos 4`},
@@ -50,6 +55,7 @@ func TestParseUI(t *testing.T) {
 		{"[prop1.prop2]", `Expecting a ' at pos 2 in "[prop1.prop2]"`},
 
 		{"a1.", `Unexpected end of property in "a1."`},
+		{"*.", `Unexpected end of property in "*."`},
 		{"a1['a", `Unexpected end of property in "a1['a"`},
 		{"a1['a'", `Unexpected end of property in "a1['a'"`},
 		{"a1[1", `Unexpected end of property in "a1[1"`},

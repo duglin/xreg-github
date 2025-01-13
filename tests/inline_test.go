@@ -10,8 +10,8 @@ import (
 	"github.com/duglin/xreg-github/registry"
 )
 
-func TestBasicInline(t *testing.T) {
-	reg := NewRegistry("TestBasicInline")
+func TestInlineBasic(t *testing.T) {
+	reg := NewRegistry("TestInlineBasic")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
@@ -45,7 +45,7 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "registryid": "TestBasicInline",
+  "registryid": "TestInlineBasic",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 1,
@@ -64,7 +64,7 @@ func TestBasicInline(t *testing.T) {
 			URL:  "?inline",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "registryid": "TestBasicInline",
+  "registryid": "TestInlineBasic",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 1,
@@ -375,8 +375,8 @@ func TestBasicInline(t *testing.T) {
 	}
 }
 
-func TestResourceInline(t *testing.T) {
-	reg := NewRegistry("TestResourceInline")
+func TestInlineResource(t *testing.T) {
+	reg := NewRegistry("TestInlineResource")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
@@ -667,4 +667,566 @@ func TestResourceInline(t *testing.T) {
 
 		xCheckEqual(t, "Test: "+test.Name+"\n", string(body), test.Exp)
 	}
+}
+
+func TestInlineWildcards(t *testing.T) {
+	reg := NewRegistry("TestInlineWildcards")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
+		`{"file": { "hello": "world"}}}`, 201, `*`)
+
+	xHTTP(t, reg, "GET", "?inline=*", ``,
+		200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineWildcards",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 2,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "xid": "/dirs/d1/files/f1",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "2025-01-01T12:00:02Z",
+          "modifiedat": "2025-01-01T12:00:02Z",
+          "contenttype": "application/json",
+          "file": {
+            "hello": "world"
+          },
+
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "meta": {
+            "fileid": "f1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "xid": "/dirs/d1/files/f1/meta",
+            "epoch": 1,
+            "createdat": "2025-01-01T12:00:02Z",
+            "modifiedat": "2025-01-01T12:00:02Z",
+
+            "defaultversionid": "v1",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "xid": "/dirs/d1/files/f1/versions/v1",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "2025-01-01T12:00:02Z",
+              "modifiedat": "2025-01-01T12:00:02Z",
+              "contenttype": "application/json",
+              "file": {
+                "hello": "world"
+              }
+            }
+          },
+          "versionscount": 1
+        }
+      },
+      "filescount": 1
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "?inline=dirs.*", ``,
+		200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineWildcards",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 2,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "xid": "/dirs/d1/files/f1",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "2025-01-01T12:00:02Z",
+          "modifiedat": "2025-01-01T12:00:02Z",
+          "contenttype": "application/json",
+          "file": {
+            "hello": "world"
+          },
+
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "meta": {
+            "fileid": "f1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "xid": "/dirs/d1/files/f1/meta",
+            "epoch": 1,
+            "createdat": "2025-01-01T12:00:02Z",
+            "modifiedat": "2025-01-01T12:00:02Z",
+
+            "defaultversionid": "v1",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "xid": "/dirs/d1/files/f1/versions/v1",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "2025-01-01T12:00:02Z",
+              "modifiedat": "2025-01-01T12:00:02Z",
+              "contenttype": "application/json",
+              "file": {
+                "hello": "world"
+              }
+            }
+          },
+          "versionscount": 1
+        }
+      },
+      "filescount": 1
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "?inline=dirs.files.*", ``,
+		200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineWildcards",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 2,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "xid": "/dirs/d1/files/f1",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "2025-01-01T12:00:02Z",
+          "modifiedat": "2025-01-01T12:00:02Z",
+          "contenttype": "application/json",
+          "file": {
+            "hello": "world"
+          },
+
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "meta": {
+            "fileid": "f1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+            "xid": "/dirs/d1/files/f1/meta",
+            "epoch": 1,
+            "createdat": "2025-01-01T12:00:02Z",
+            "modifiedat": "2025-01-01T12:00:02Z",
+
+            "defaultversionid": "v1",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+          },
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "xid": "/dirs/d1/files/f1/versions/v1",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "2025-01-01T12:00:02Z",
+              "modifiedat": "2025-01-01T12:00:02Z",
+              "contenttype": "application/json",
+              "file": {
+                "hello": "world"
+              }
+            }
+          },
+          "versionscount": 1
+        }
+      },
+      "filescount": 1
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "?inline=dirs.files.versions.*", ``,
+		200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineWildcards",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 2,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {
+        "f1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "xid": "/dirs/d1/files/f1",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "2025-01-01T12:00:02Z",
+          "modifiedat": "2025-01-01T12:00:02Z",
+          "contenttype": "application/json",
+
+          "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+          "versions": {
+            "v1": {
+              "fileid": "f1",
+              "versionid": "v1",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "xid": "/dirs/d1/files/f1/versions/v1",
+              "epoch": 1,
+              "isdefault": true,
+              "createdat": "2025-01-01T12:00:02Z",
+              "modifiedat": "2025-01-01T12:00:02Z",
+              "contenttype": "application/json",
+              "file": {
+                "hello": "world"
+              }
+            }
+          },
+          "versionscount": 1
+        }
+      },
+      "filescount": 1
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "dirs/?inline=files.versions.*", ``,
+		200, `{
+  "d1": {
+    "dirid": "d1",
+    "self": "http://localhost:8181/dirs/d1",
+    "xid": "/dirs/d1",
+    "epoch": 1,
+    "createdat": "2025-01-01T12:00:02Z",
+    "modifiedat": "2025-01-01T12:00:02Z",
+
+    "filesurl": "http://localhost:8181/dirs/d1/files",
+    "files": {
+      "f1": {
+        "fileid": "f1",
+        "versionid": "v1",
+        "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+        "xid": "/dirs/d1/files/f1",
+        "epoch": 1,
+        "isdefault": true,
+        "createdat": "2025-01-01T12:00:02Z",
+        "modifiedat": "2025-01-01T12:00:02Z",
+        "contenttype": "application/json",
+
+        "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+        "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+        "versions": {
+          "v1": {
+            "fileid": "f1",
+            "versionid": "v1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+            "xid": "/dirs/d1/files/f1/versions/v1",
+            "epoch": 1,
+            "isdefault": true,
+            "createdat": "2025-01-01T12:00:02Z",
+            "modifiedat": "2025-01-01T12:00:02Z",
+            "contenttype": "application/json",
+            "file": {
+              "hello": "world"
+            }
+          }
+        },
+        "versionscount": 1
+      }
+    },
+    "filescount": 1
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "dirs/?inline=files.*", ``,
+		200, `{
+  "d1": {
+    "dirid": "d1",
+    "self": "http://localhost:8181/dirs/d1",
+    "xid": "/dirs/d1",
+    "epoch": 1,
+    "createdat": "2025-01-01T12:00:02Z",
+    "modifiedat": "2025-01-01T12:00:02Z",
+
+    "filesurl": "http://localhost:8181/dirs/d1/files",
+    "files": {
+      "f1": {
+        "fileid": "f1",
+        "versionid": "v1",
+        "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+        "xid": "/dirs/d1/files/f1",
+        "epoch": 1,
+        "isdefault": true,
+        "createdat": "2025-01-01T12:00:02Z",
+        "modifiedat": "2025-01-01T12:00:02Z",
+        "contenttype": "application/json",
+        "file": {
+          "hello": "world"
+        },
+
+        "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+        "meta": {
+          "fileid": "f1",
+          "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+          "xid": "/dirs/d1/files/f1/meta",
+          "epoch": 1,
+          "createdat": "2025-01-01T12:00:02Z",
+          "modifiedat": "2025-01-01T12:00:02Z",
+
+          "defaultversionid": "v1",
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+        },
+        "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+        "versions": {
+          "v1": {
+            "fileid": "f1",
+            "versionid": "v1",
+            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+            "xid": "/dirs/d1/files/f1/versions/v1",
+            "epoch": 1,
+            "isdefault": true,
+            "createdat": "2025-01-01T12:00:02Z",
+            "modifiedat": "2025-01-01T12:00:02Z",
+            "contenttype": "application/json",
+            "file": {
+              "hello": "world"
+            }
+          }
+        },
+        "versionscount": 1
+      }
+    },
+    "filescount": 1
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "dirs/d1?inline=files.versions.*", ``,
+		200, `{
+  "dirid": "d1",
+  "self": "http://localhost:8181/dirs/d1",
+  "xid": "/dirs/d1",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:02Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "filesurl": "http://localhost:8181/dirs/d1/files",
+  "files": {
+    "f1": {
+      "fileid": "f1",
+      "versionid": "v1",
+      "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+      "xid": "/dirs/d1/files/f1",
+      "epoch": 1,
+      "isdefault": true,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+      "contenttype": "application/json",
+
+      "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+      "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+      "versions": {
+        "v1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+          "xid": "/dirs/d1/files/f1/versions/v1",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "2025-01-01T12:00:02Z",
+          "modifiedat": "2025-01-01T12:00:02Z",
+          "contenttype": "application/json",
+          "file": {
+            "hello": "world"
+          }
+        }
+      },
+      "versionscount": 1
+    }
+  },
+  "filescount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "dirs/d1?inline=files.*", ``,
+		200, `{
+  "dirid": "d1",
+  "self": "http://localhost:8181/dirs/d1",
+  "xid": "/dirs/d1",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:02Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "filesurl": "http://localhost:8181/dirs/d1/files",
+  "files": {
+    "f1": {
+      "fileid": "f1",
+      "versionid": "v1",
+      "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+      "xid": "/dirs/d1/files/f1",
+      "epoch": 1,
+      "isdefault": true,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+      "contenttype": "application/json",
+      "file": {
+        "hello": "world"
+      },
+
+      "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+      "meta": {
+        "fileid": "f1",
+        "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+        "xid": "/dirs/d1/files/f1/meta",
+        "epoch": 1,
+        "createdat": "2025-01-01T12:00:02Z",
+        "modifiedat": "2025-01-01T12:00:02Z",
+
+        "defaultversionid": "v1",
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+      },
+      "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+      "versions": {
+        "v1": {
+          "fileid": "f1",
+          "versionid": "v1",
+          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+          "xid": "/dirs/d1/files/f1/versions/v1",
+          "epoch": 1,
+          "isdefault": true,
+          "createdat": "2025-01-01T12:00:02Z",
+          "modifiedat": "2025-01-01T12:00:02Z",
+          "contenttype": "application/json",
+          "file": {
+            "hello": "world"
+          }
+        }
+      },
+      "versionscount": 1
+    }
+  },
+  "filescount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "?inline=.*", ``, 400,
+		"Unexpected . in \".*\" at pos 1\n")
+	xHTTP(t, reg, "GET", "?inline=foo.*", ``, 400,
+		"Invalid 'inline' value: foo.*\n")
+	xHTTP(t, reg, "GET", "?inline=foo*", ``, 400,
+		"Invalid 'inline' value: foo*\n")
+
+	xHTTP(t, reg, "GET", "?inline=dirs.bad*", ``, 400,
+		"Invalid 'inline' value: dirs.bad*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.bad.*", ``, 400,
+		"Invalid 'inline' value: dirs.bad.*\n")
+
+	xHTTP(t, reg, "GET", "?inline=dirs.files.bad*", ``, 400,
+		"Invalid 'inline' value: dirs.files.bad*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.files.bad.*", ``, 400,
+		"Invalid 'inline' value: dirs.files.bad.*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.files.file*", ``, 400,
+		"Invalid 'inline' value: dirs.files.file*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.files.file.*", ``, 400,
+		"Invalid 'inline' value: dirs.files.file.*\n")
+
+	xHTTP(t, reg, "GET", "?inline=dirs.files.meta*", ``, 400,
+		"Invalid 'inline' value: dirs.files.meta*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.files.meta.*", ``, 400,
+		"Invalid 'inline' value: dirs.files.meta.*\n")
+
+	xHTTP(t, reg, "GET", "?inline=dirs.files.versions.bad*", ``, 400,
+		"Invalid 'inline' value: dirs.files.versions.bad*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.files.versions.file*", ``, 400,
+		"Invalid 'inline' value: dirs.files.versions.file*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.files.versions.file.*", ``, 400,
+		"Invalid 'inline' value: dirs.files.versions.file.*\n")
+	xHTTP(t, reg, "GET", "?inline=dirs.files.versions.file.bad*", ``, 400,
+		"Invalid 'inline' value: dirs.files.versions.file.bad*\n")
+
+	xHTTP(t, reg, "GET", "?inline=model.*", ``, 400,
+		"Invalid 'inline' value: model.*\n")
+	xHTTP(t, reg, "GET", "?inline=model.bad*", ``, 400,
+		"Invalid 'inline' value: model.bad*\n")
+	xHTTP(t, reg, "GET", "?inline=capabilities.*", ``, 400,
+		"Invalid 'inline' value: capabilities.*\n")
+	xHTTP(t, reg, "GET", "?inline=capabilities.bad*", ``, 400,
+		"Invalid 'inline' value: capabilities.bad*\n")
+
 }

@@ -127,7 +127,6 @@ TODOs:
 - inline=model, requires ?nested. Make sure /meta requires ?nested too
 - add "compatibility" to resources
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
-- add support for inline=endpoints.*
 - support ETag/If-Match
 - update epoch/modifiedat of parent when nested entity is added/removed
 - test to ensure meta epoch changes as versions are added/removed

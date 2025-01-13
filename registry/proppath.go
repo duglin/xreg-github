@@ -44,6 +44,13 @@ func (pp *PropPath) Top() string {
 	return pp.Parts[0].Text
 }
 
+func (pp *PropPath) Bottom() string {
+	if len(pp.Parts) == 0 {
+		return ""
+	}
+	return pp.Parts[len(pp.Parts)-1].Text
+}
+
 func (pp *PropPath) IsIndexed() int {
 	if pp.Len() > 1 && pp.Parts[1].Index >= 0 {
 		return pp.Parts[1].Index
@@ -181,7 +188,7 @@ func PropPathFromDB(str string) (*PropPath, error) {
 var stateTable = [][]string{
 	// TODO: switch to a-z instead of 0-9 for state char if we need more than 10
 	// nextState + ACTIONS    nextState of '/' means stop
-	// a-z   0-9    -      _      .       [      ]     '     \0    else
+	// a-z*  0-9    -      _      .       [      ]     '     \0    else
 	{"1  ", "/U ", "/U ", "2BI", "/U ", "9I ", "/U ", "/U", "/U", "/U"}, // 0-nothing
 	{"2BI", "2BI", "/U ", "2BI", "/U ", "/U ", "/U ", "/U", "/U", "/U"}, // 1-strtAttr
 	{"2BI", "2BI", "2BI", "2BI", "1IS", "3IS", "/U ", "/U", "/S", "/U"}, // 2-in attr
@@ -211,6 +218,8 @@ func init() {
 	ch2Col[']'] = 6
 	ch2Col['\''] = 7
 	ch2Col[0] = 8
+
+	ch2Col['*'] = 0
 }
 
 func MustPropPathFromUI(str string) *PropPath {
@@ -360,6 +369,12 @@ func (pp *PropPath) Clone() *PropPath {
 func (pp *PropPath) Append(addPP *PropPath) *PropPath {
 	newPP := NewPP()
 	newPP.Parts = append(pp.Parts, addPP.Parts...)
+	return newPP
+}
+
+func (pp *PropPath) RemoveLast() *PropPath {
+	newPP := NewPP()
+	newPP.Parts = append([]PropPart{}, pp.Parts[:len(pp.Parts)-1]...)
 	return newPP
 }
 

@@ -15,7 +15,7 @@ type RequestInfo struct {
 	OriginalPath     string
 	OriginalRequest  *http.Request       `json:"-"`
 	OriginalResponse http.ResponseWriter `json:"-"`
-	RootPath         string              // rootPath or "" for registry
+	RootPath         string              // rootPath or "" for registry itself
 	Parts            []string
 	Root             string
 	Abstract         string
@@ -28,9 +28,9 @@ type RequestInfo struct {
 	VersionUID       string
 	What             string            // Registry, Coll, Entity
 	Flags            map[string]string // Query params (and str value, if there)
-	Inlines          []string          // TODO store a PropPaths instead
-	Filters          [][]*FilterExpr   // [OR][AND] filter=e,e(and) &(or) filter=e
-	ShowStructure    bool              //	is $structure present
+	Inlines          []*Inline
+	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
+	ShowStructure    bool            //	is $structure present
 
 	StatusCode int
 	SentStatus bool
@@ -44,12 +44,23 @@ var explicitInlines = []string{"capabilities", "model"}
 var nonModelInlines = append([]string{"*"}, explicitInlines...)
 var rootPaths = []string{"capabilities", "model", "export"}
 
+type Inline struct {
+	path    string    // value from ?inline query param
+	pp      *PropPath // PP for 'value'
+	nonWild *PropPath // PP for value w/o .* if present, else nil
+}
+
 func (info *RequestInfo) AddInline(path string) error {
 	// use "*" to inline all
 	// path = strings.TrimLeft(path, "/.") // To be nice
+	originalPath := path
 
 	if ArrayContains(nonModelInlines, path) {
-		info.Inlines = append(info.Inlines, NewPPP(path).DB())
+		info.Inlines = append(info.Inlines, &Inline{
+			path:    path,
+			pp:      NewPPP(path),
+			nonWild: nil,
+		})
 		return nil
 	}
 
@@ -58,28 +69,63 @@ func (info *RequestInfo) AddInline(path string) error {
 		return err
 	}
 
+	storeInline := &Inline{
+		path:    path,
+		pp:      pp,
+		nonWild: nil,
+	}
+
+	if pp.Bottom() == "*" {
+		pp = pp.RemoveLast()
+		storeInline.nonWild = pp
+	}
+
 	// Check to make sure the requested inline attribute exists, else error
 
+	hasErr := false
 	for _, group := range info.Registry.Model.Groups {
-		if pp.Equals(NewPPP(group.Plural)) {
-			info.Inlines = append(info.Inlines, NewPPP(path).DB())
+		gPPP := NewPPP(group.Plural)
+
+		if pp.Equals(gPPP) {
+			info.Inlines = append(info.Inlines, storeInline)
 			return nil
 		}
-		for _, res := range group.Resources {
-			if pp.Equals(NewPPP(group.Plural).P(res.Plural)) ||
-				pp.Equals(NewPPP(group.Plural).P(res.Plural).P(res.Singular)) ||
-				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("meta")) ||
-				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("versions")) ||
-				pp.Equals(NewPPP(group.Plural).P(res.Plural).P("versions").P(res.Singular)) {
 
-				info.Inlines = append(info.Inlines, pp.DB())
+		for _, res := range group.Resources {
+			// Check for wildcard available ones first
+			rPPP := gPPP.P(res.Plural)
+			vPPP := rPPP.P("versions")
+
+			// Check for ones that allow * at the end, first
+			if pp.Equals(rPPP) || pp.Equals(vPPP) {
+				info.Inlines = append(info.Inlines, storeInline)
+				return nil
+			}
+
+			// Now look for ones that don't allow wildcards
+			if pp.Equals(rPPP.P(res.Singular)) ||
+				pp.Equals(rPPP.P("meta")) ||
+				pp.Equals(vPPP.P(res.Singular)) {
+
+				// We have a match, but these don't allow wildcards, so err
+				// if * was in ?inline value
+				if storeInline.nonWild != nil {
+					hasErr = true
+					break
+				}
+
+				info.Inlines = append(info.Inlines, storeInline)
 				return nil
 			}
 		}
+		if hasErr {
+			break
+		}
 	}
 
-	// Convert back to UI version for the error message
-	path = pp.UI()
+	// // Convert back to UI version for the error message
+	// path = pp.UI()
+	path = originalPath
 
 	// Remove Abstract value just to print a nicer error message
 	if info.Abstract != "" && strings.HasPrefix(path, info.Abstract) {
@@ -93,8 +139,8 @@ func (info *RequestInfo) IsInlineSet(entityPath string) bool {
 	if entityPath == "" {
 		entityPath = "*"
 	}
-	for _, path := range info.Inlines {
-		if path == entityPath {
+	for _, inline := range info.Inlines {
+		if inline.path == entityPath {
 			return true
 		}
 	}
@@ -102,13 +148,33 @@ func (info *RequestInfo) IsInlineSet(entityPath string) bool {
 }
 
 func (info *RequestInfo) ShouldInline(entityPath string) bool {
+	// ePP is the abstract path to the prop we're checking/serializing
+	// iPP is the ?inline value the the client provided
+	// Note that iPP will likely end with ","
+	// e.g. Inline cmp: "dirs,datas" in "dirs,files,"
+
 	ePP, _ := PropPathFromDB(entityPath) // entity-PP
-	for _, path := range info.Inlines {
-		iPP, _ := PropPathFromDB(path) // Inline-PP
-		// * doesn't include "model" because it's special, they need to
-		// be explicit if they want to include it
-		if (iPP.Top() == "*" && !ArrayContains(explicitInlines, ePP.UI())) || ePP.Equals(iPP) || iPP.HasPrefix(ePP) {
-			log.VPrintf(4, "Inline match: %q in %q", entityPath, path)
+
+	for _, inline := range info.Inlines {
+		iPP := inline.pp
+		log.VPrintf(4, "Inline cmp: %q in %q", entityPath, inline.path)
+
+		// * doesn't include "model"... because they're special, they need to
+		// be explicit if they want to include those
+		// ||
+		// prop == ?inline-value
+		// ||
+		// inline-value has prop as a prefix. Inline parents of requested value
+		//     e.g. inline=endpoints.message has endpoints as prefix
+		// ||
+		// inline-value ends with "*", prop has inline-value as prefix
+		if (iPP.Top() == "*" && !ArrayContains(explicitInlines, ePP.UI())) ||
+			ePP.Equals(iPP) ||
+			iPP.HasPrefix(ePP) ||
+			(inline.nonWild != nil && ePP.HasPrefix(inline.nonWild)) {
+			// (iPP.Len() > 1 && iPP.Bottom() == "*" && ePP.HasPrefix(iPP.RemoveLast())) {
+
+			log.VPrintf(4, "Inline match: %q in %q", entityPath, inline.path)
 			return true
 		}
 	}
