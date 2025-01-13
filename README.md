@@ -117,7 +117,6 @@ TODOs:
 - add model tests for typemap - just that we can set via full model updates
 - support the DB vanishing for a while
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
-- support ?export  /export
 - support ximport
 - support validating that xref points to the same resource def
 - test xref more
@@ -150,5 +149,4 @@ TODOs:
 - Split the model.verify stuff so it doesn't verify the data unless asked to
 - make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
   support it. Like pagination or enforcecompatibility
-- support/test ?inline, ?filter and ?export on write operations
 - add support for shortself

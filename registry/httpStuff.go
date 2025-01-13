@@ -1406,7 +1406,7 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	// URL: /
 	// ////////////////////////////////////////////////////////////////
-	if len(info.Parts) == 0 {
+	if info.GroupType == "" {
 		// PUT /
 
 		err = ConvertRegistryContents(IncomingObj, info.Registry.Model)
