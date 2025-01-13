@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Usage: sql [ dbName: registry | testreg ] SQL_CMD
+# Don't forget to escape things, e.g. sql select \* from Props
+
+registry=registry
+if [[ "$1" == "registry" || "$1" == "testreg" ]]; then
+  registry=$1
+  shift
+fi
+
+docker run -ti --rm --network host --name mysql-client-cmd mysql mysql \
+	--host 127.0.0.1 --user root --password=password --protocol tcp \
+	$registry -e "$*"

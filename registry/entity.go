@@ -121,7 +121,19 @@ func (e *Entity) GetAsInt(path string) int {
 }
 
 func (e *Entity) GetPP(pp *PropPath) any {
-	name := pp.DB()
+	// See if we have an updated value in NewObject, if not grab from Object
+	var val any
+	if e.NewObject != nil {
+		var ok bool
+		val, ok, _ = ObjectGetProp(e.NewObject, pp)
+		if !ok {
+			// TODO: DUG - we should not need this
+			// val, _, _ = ObjectGetProp(e.Object, pp)
+		}
+	} else {
+		val, _, _ = ObjectGetProp(e.Object, pp)
+	}
+
 	if pp.Len() == 1 && pp.Top() == "#resource" {
 		results, err := Query(e.tx, `
             SELECT Content
@@ -149,19 +161,6 @@ func (e *Entity) GetPP(pp *PropPath) any {
 		return (*(row[0])).([]byte)
 	}
 
-	// See if we have an updated value in NewObject, if not grab from Object
-	var val any
-	if e.NewObject != nil {
-		var ok bool
-		val, ok, _ = ObjectGetProp(e.NewObject, pp)
-		if !ok {
-			// TODO: DUG - we should not need this
-			// val, _, _ = ObjectGetProp(e.Object, pp)
-		}
-	} else {
-		val, _, _ = ObjectGetProp(e.Object, pp)
-	}
-
 	// We used to just grab from Object, not NewObject
 	/*
 		// An error from ObjectGetProp is ignored because if they tried to
@@ -170,7 +169,8 @@ func (e *Entity) GetPP(pp *PropPath) any {
 		// should return the 'error'
 		val, _ , _ := ObjectGetProp(e.Object, pp)
 	*/
-	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, name, val)
+
+	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, pp.DB(), val)
 	return val
 }
 
@@ -1709,7 +1709,10 @@ func (e *Entity) Save() error {
 
 	e.RemoveCollections(newObj)
 
-	err := Do(e.tx, `DELETE FROM Props WHERE EntitySID=?`, e.DbSID)
+	// We exclude #resource because we need to leave it around until
+	// a user action causes us to explictly delete it
+	err := Do(e.tx, "DELETE FROM Props WHERE EntitySID=? "+
+		"AND PropName!='"+NewPPP("#resource").DB()+"'", e.DbSID)
 	if err != nil {
 		return fmt.Errorf("Error deleting all prop: %s", err)
 	}

@@ -126,6 +126,63 @@ func TestResourceContents(t *testing.T) {
 		},
 	})
 
+	// v4 = #resourceURL
+	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1/versions/v4$structure?inline=file",
+		`{"contenttype":null, "description":"hi"}`, 200, `{
+  "fileid": "f1",
+  "versionid": "v4",
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v4$structure",
+  "xid": "/dirs/d1/files/f1/versions/v4",
+  "epoch": 2,
+  "isdefault": true,
+  "description": "hi",
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+  "fileurl": "http://example.com"
+}
+`)
+
+	xHTTP(t, reg, "GET", "dirs/d1/files/f1$structure?export&inline=file",
+		`{"contenttype":null, "description":"hi"}`, 200, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "xid": "/dirs/d1/files/f1",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 4
+}
+`)
+
+	// Set default to v2
+	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1/meta",
+		`{"defaultversionid":"v2", "defaultversionsticky":true}`, 200, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "epoch": 5,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "defaultversionsticky": true
+}
+`)
+
+	// v2 = #resource
+	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$structure?export&inline=file",
+		`{"contenttype":null, "description":"hi"}`, 200, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "xid": "/dirs/d1/files/f1",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 4
+}
+`)
+
 }
 
 type Test struct {

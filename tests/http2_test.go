@@ -1995,7 +1995,7 @@ func TestHTTPContent(t *testing.T) {
 }
 `)
 
-	// patch - has ct, set ct to null
+	// patch - has ct, set ct to null, file contents should remain
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/dirs/d1/files/f18$structure",
 		Method: "PATCH",

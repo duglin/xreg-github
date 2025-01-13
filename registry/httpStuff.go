@@ -1172,6 +1172,12 @@ func HTTPGet(info *RequestInfo) error {
 		return SerializeQuery(info, nil, "Registry", info.Filters)
 	}
 
+	// Might need to check other flags, but if we're exporting, it makes
+	// no sense to show just the resource contents
+	if info.HasFlag("export") {
+		info.ShowStructure = true
+	}
+
 	// 'metaInBody' tells us whether xReg metadata should be in the http
 	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
@@ -1253,6 +1259,16 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 			info.StatusCode = http.StatusNotFound
 			return fmt.Errorf("Not found")
 		}
+	}
+
+	// Another special case... .../rID/versions?export when rID has xref set
+	if jw.Entity == nil && info.HasFlag("export") && len(info.Parts) == 5 && info.Parts[4] == "versions" {
+		// Should be our case since "versions" can never be empty except
+		// when xref is set. If this is not longer true then we'll need to
+		// check this Resource's xref to see if it's set.
+		// Can copy the RawEntityFromPath... stuff above
+		info.StatusCode = http.StatusNotFound
+		return fmt.Errorf("Not found")
 	}
 
 	info.AddHeader("Content-Type", "application/json")

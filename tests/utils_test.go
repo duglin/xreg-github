@@ -308,6 +308,26 @@ type HTTPTest struct {
 	ResBody     string
 }
 
+// http code, body
+func xGET(t *testing.T, url string) (int, string) {
+	t.Helper()
+	url = "http://localhost:8181/" + url
+	res, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("HTTP GET error: %s", err)
+	}
+
+	body, _ := io.ReadAll(res.Body)
+	/*
+		if res.StatusCode != 200 {
+			t.Logf("URL: %s", url)
+			t.Logf("Code: %d\n%s", res.StatusCode, string(body))
+		}
+	*/
+
+	return res.StatusCode, string(body)
+}
+
 func xHTTP(t *testing.T, reg *registry.Registry, verb, url, reqBody string, code int, resBody string) {
 	t.Helper()
 	xCheckHTTP(t, reg, &HTTPTest{
