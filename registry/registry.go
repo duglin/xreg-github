@@ -413,7 +413,13 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 }
 
 func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error {
-	reg.NewObject = obj
+	reg.SetNewObject(obj)
+
+	// Make sure we always have an ID
+	if IsNil(reg.NewObject["registryid"]) {
+		reg.EnsureNewObject()
+		reg.NewObject["registryid"] = reg.UID
+	}
 
 	if doChildren {
 		colls := reg.GetCollections()
@@ -453,12 +459,6 @@ func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error 
 				reg.NewObject[k] = val
 			}
 		}
-	}
-
-	// Make sure we always have an ID
-	if IsNil(reg.NewObject["registryid"]) {
-		reg.EnsureNewObject()
-		reg.NewObject["registryid"] = reg.UID
 	}
 
 	return reg.ValidateAndSave()
@@ -575,7 +575,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 
 	if isNew || obj != nil {
 		if obj != nil {
-			g.NewObject = obj
+			g.SetNewObject(obj)
 		}
 
 		if addType == ADD_PATCH {
@@ -627,6 +627,10 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 				}
 			}
 		}
+	}
+
+	if err = reg.ValidateAndSave(); err != nil {
+		return nil, false, err
 	}
 
 	return g, isNew, nil

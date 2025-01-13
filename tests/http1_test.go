@@ -6173,11 +6173,12 @@ func TestHTTPDelete(t *testing.T) {
 `,
 	})
 
+	// Make sure we ignore random attributes too
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:    "DELETE /dirs - d3",
 		URL:     "/dirs",
 		Method:  "DELETE",
-		ReqBody: `{"d3":{"dirid": "d3", "epoch":1}}`,
+		ReqBody: `{"d3":{"dirid": "d3", "epoch":1, "foo": "bar"}}`,
 		Code:    204,
 		ResBody: ``,
 	})
@@ -6474,8 +6475,9 @@ func TestHTTPDelete(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
 		`{"f2":{},"f4":{"meta":{"epoch":3}}}`,
 		400, "Epoch value for \"f4\" must be 1 not 3\n")
+	// Make sure we ignore random attributes too
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files",
-		`{"f4":{},"f5":{"meta":{"epoch":1}}}`,
+		`{"f4":{},"f5":{"meta":{"epoch":1,"foo":"bar"}, "foo":"bar"}}`,
 		204, "")
 
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files", `{}`, 204, "") // no-op

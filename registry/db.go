@@ -221,6 +221,25 @@ func (tx *Tx) RemoveFromCache(e *Entity) {
 	delete(tx.Cache, e.Registry.UID+"/"+e.Path)
 }
 
+func (tx *Tx) IsCacheDirty() bool {
+	dirty := false
+	for _, e := range tx.Cache {
+		if len(e.NewObject) != 0 {
+			log.Printf("Dirty: %q", e.Path)
+			log.Printf("NewObj:\n%s", ToJSON(e.NewObject))
+			log.Printf("Stack for NewObj:")
+			for _, s := range e.NewObjectStack {
+				log.Printf("  %s", s)
+			}
+			if len(e.NewObjectStack) == 0 {
+				log.Printf("  Enable this via entity.SetNewObject")
+			}
+			dirty = true
+		}
+	}
+	return dirty
+}
+
 func (tx *Tx) WriteCache(force bool) error {
 	for _, e := range tx.Cache {
 		PanicIf(!force && e.NewObject != nil, "Entity %s/%q not saved",

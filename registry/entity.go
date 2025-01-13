@@ -35,6 +35,9 @@ type Entity struct {
 	EpochSet bool   `json:"-"` // Has epoch been updated this transaction?
 	ModSet   bool   `json:"-"` // Has modifiedat been updated this transaction?
 	Self     any    `json:"-"` // Pointer to typed Entity (e.g. *Resource)
+
+	// Debugging
+	NewObjectStack []string `json:"-"` // stack when NewObj created via Ensure
 }
 
 type EntitySetter interface {
@@ -75,17 +78,32 @@ func (e *Entity) ToString() string {
 	return str
 }
 
+// We use this just to make sure we can set NewObjectStack when we need to
+// debug stuff
+func (e *Entity) SetNewObject(newObj map[string]any) {
+	e.NewObject = newObj
+
+	// Enable the next line when we need to debug when NewObject was created
+	// e.NewObjectStack = GetStack()
+}
+
 func (e *Entity) Touch() {
 	log.VPrintf(3, "Touch: %s/%s", e.Singular, e.UID)
+
+	// See if it's already been modified (and saved) this Tx, if so exit
+	if e.ModSet && e.EpochSet {
+		return
+	}
+
 	e.EnsureNewObject()
 }
 
 func (e *Entity) EnsureNewObject() {
 	if e.NewObject == nil {
 		if e.Object == nil {
-			e.NewObject = map[string]any{}
+			e.SetNewObject(map[string]any{})
 		} else {
-			e.NewObject = maps.Clone(e.Object)
+			e.SetNewObject(maps.Clone(e.Object))
 		}
 	}
 }
@@ -914,6 +932,14 @@ var OrderedSpecProps = []*Attribute{
 							ToJSON(e.Object), ToJSON(e.NewObject))
 						ShowStack()
 						log.Printf(`========`)
+						log.Printf("Path: %s", e.Path)
+						log.Printf("Stack for NewObject:")
+						for _, s := range e.NewObjectStack {
+							log.Printf("  %s", s)
+						}
+						if len(e.NewObjectStack) == 0 {
+							log.Printf("  Enable this in entity.SetNewObject")
+						}
 						panic(fmt.Sprintf(`%q is nil - that's bad, fix it!`,
 							singular))
 						return fmt.Errorf(`%q is nil - that's bad, fix it!`,

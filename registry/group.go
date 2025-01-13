@@ -323,6 +323,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 					"\"xref\" is set", strings.Join(SortedKeys(obj), ","))
 		}
 
+		if err = g.ValidateAndSave(); err != nil {
+			return nil, false, err
+		}
+
 		// All versions should have been deleted already so just return
 		return r, isNew, nil
 	}
@@ -397,6 +401,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			}
 		}
 	*/
+
+	if err = g.ValidateAndSave(); err != nil {
+		return nil, false, err
+	}
 
 	return r, isNew, err
 }

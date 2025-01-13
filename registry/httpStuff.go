@@ -357,7 +357,7 @@ func (pw *PageWriter) Done() {
 			name = "<b>" + name + "</b>"
 		}
 		roots += fmt.Sprintf("    <li><a href=\"%s?ui\">%s</a>\n",
-			pw.Info.BaseURL+"/"+r.u, name)
+			pw.Info.BaseURL+"/"+r.u+"</li>", name)
 	}
 
 	if pw.Info.RootPath == "" {
@@ -1196,6 +1196,11 @@ func HTTPGet(info *RequestInfo) error {
 func SerializeQuery(info *RequestInfo, paths []string, what string,
 	filters [][]*FilterExpr) error {
 	start := time.Now()
+
+	// TODO comment this out at some point... maybe
+	// Make sure we've saved everything in the cache before we generate
+	// the results. If the stack isn't shown, enable it in entity.SetNewObject
+	PanicIf(info.tx.IsCacheDirty(), "Unwritten stuff in cache")
 
 	defer func() {
 		if log.GetVerbose() > 3 {

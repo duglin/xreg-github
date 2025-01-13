@@ -431,7 +431,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 
 	// Apply properties
 	existingNewObj := meta.NewObject // Should be nil when using http
-	meta.NewObject = obj
+	meta.SetNewObject(obj)
 	meta.Entity.EnsureNewObject()
 
 	if meta.NewObject != nil && addType == ADD_PATCH {
@@ -631,6 +631,10 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 				}
 			}
 
+			if err = meta.ValidateAndSave(); err != nil {
+				return nil, false, err
+			}
+
 			return meta, isNew, nil
 		}
 	}
@@ -784,7 +788,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 			}
 		}
 
-		v.NewObject = obj
+		v.SetNewObject(obj)
 
 		if addType == ADD_PATCH {
 			// Copy existing props over if the incoming obj doesn't set them
