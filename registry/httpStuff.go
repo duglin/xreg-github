@@ -356,8 +356,8 @@ func (pw *PageWriter) Done() {
 		if pw.Info.RootPath == r.u {
 			name = "<b>" + name + "</b>"
 		}
-		roots += fmt.Sprintf("    <li><a href=\"%s?ui\">%s</a>\n",
-			pw.Info.BaseURL+"/"+r.u+"</li>", name)
+		roots += fmt.Sprintf("    <li><a href=\"%s?ui\">%s</a></li>\n",
+			pw.Info.BaseURL+"/"+r.u, name)
 	}
 
 	if pw.Info.RootPath == "" {
@@ -527,17 +527,19 @@ func (pw *PageWriter) Done() {
 			structuretext = "Show structure"
 		}
 		if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
-			structureButton = fmt.Sprintf(`
-    <div><button id=structure onclick='structureswitch=!structureswitch ; apply()' style="font-weight:bold">%s</button></div>
+			structureButton = fmt.Sprintf(`<div>
+    <button id=structure onclick='structureswitch=!structureswitch ; apply()' style="font-weight:bold">%s</button>
+  </div>
 `, structuretext)
 		}
 
 		apply = `
-    <hr style="width:100%% ; margin-top:15px ; margin-bottom:15px">
-    <div style="display:ruby">
-      <button onclick="apply()" style="font-weight:bold">Apply</button>` +
-			structureButton + `
-    </div>`
+    ` + structureButton
+	}
+
+	applyBtn := ""
+	if options != "" || filters != "" || inlines != "" {
+		applyBtn = "<button id=applyBtn onclick='apply()'>Apply</button>"
 	}
 
 	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
@@ -592,6 +594,7 @@ func (pw *PageWriter) Done() {
     display: flex ;
     flex-direction: column ;
     align-items: start ;
+	margin-top: -15 ;
   }
   #buttonBar {
     background-color: lightsteelblue;
@@ -602,8 +605,17 @@ func (pw *PageWriter) Done() {
   }
   #structure {
     display: inline ;
+	margin-top: 10px ;
     margin-bottom: 10px ;
   }
+
+  #applyBtn {
+    font-weight: bold ;
+	align-self: end ;
+	position: relative ;
+	top: 20 ;
+  }
+
   #commit {
     background-color: lightsteelblue ;
     font-size: 12px ;
@@ -727,6 +739,7 @@ func (pw *PageWriter) Done() {
   <hr>
 `+roots+`
   <div id=buttonList>
+    `+applyBtn+`
     `+options+`
     `+filters+`
     `+inlines+`
@@ -1171,16 +1184,11 @@ func HTTPGet(info *RequestInfo) error {
 		return SerializeQuery(info, nil, "Registry", info.Filters)
 	}
 
-	// Might need to check other flags, but if we're exporting, it makes
-	// no sense to show just the resource contents
-	if info.HasFlag("export") {
-		info.ShowStructure = true
-	}
-
 	// 'metaInBody' tells us whether xReg metadata should be in the http
 	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
 		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure ||
+			info.HasFlag("export") ||
 			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
 	// Return the Resource's document

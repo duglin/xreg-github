@@ -5,14 +5,18 @@ MAKEFLAGS  += --no-print-directory
 # Notes:
 # export VERBOSE=[0-9]
 # Override these env vars as needed:
-DBHOST     ?= 127.0.0.1
-DBPORT     ?= 3306
-DBUSER     ?= root
-DBPASSWORD ?= password
-IMAGE      ?= duglin/xreg-server
-XR_SPEC    ?= $(HOME)/go/src/github.com/xregistry/spec
-GIT_COMMIT ?= $(shell git rev-list -1 HEAD)
-BUILDFLAGS := -ldflags -X=main.GitCommit=$(GIT_COMMIT)
+# DOCKERHUB must end with /, if it's set at all
+export GIT_ORG    ?= duglin
+export GIT_REPO   ?= $(shell basename `git rev-parse --show-toplevel`)
+export DOCKERHUB  ?=
+export DBHOST     ?= 127.0.0.1
+export DBPORT     ?= 3306
+export DBUSER     ?= root
+export DBPASSWORD ?= password
+export IMAGE      ?= $(DOCKERHUB)xreg-server
+export XR_SPEC    ?= $(HOME)/go/src/github.com/xregistry/spec
+export GIT_COMMIT ?= $(shell git rev-list -1 HEAD)
+export BUILDFLAGS := -ldflags -X=main.GitCommit=$(GIT_COMMIT)
 
 TESTDIRS := $(shell find . -name *_test.go -exec dirname {} \; | sort -u)
 UTESTDIRS := $(shell find . -path ./tests -prune -o -name *_test.go -exec dirname {} \; | sort -u)
@@ -177,7 +181,7 @@ prof: server
 	@# May need to install: apt-get install graphviz
 	NO_DELETE_REGISTRY=1 \
 		go test -cpuprofile cpu.prof -memprofile mem.prof -bench . \
-		github.com/duglin/xreg-github/tests
+		github.com/$(GIT_ORG)/$(GIT_REPO)/tests
 	@# go tool pprof -http:0.0.0.0:9999 cpu.prof
 	@go tool pprof -top -cum cpu.prof | sed -n '0,/flat/p;/xreg/p' | more
 	@rm -f cpu.prof mem.prof tests.test
@@ -186,7 +190,7 @@ devimage:
 	@# See the misc/Dockerfile-dev for more info
 	@echo
 	@echo "# Build the dev image"
-	@misc/errOutput docker build -t duglin/xreg-dev --no-cache \
+	@misc/errOutput docker build -t $(DOCKERHUB)xreg-dev --no-cache \
 		--build-arg GIT_COMMIT=$(GIT_COMMIT) -f misc/Dockerfile-dev .
 
 testdev: devimage
@@ -197,7 +201,7 @@ testdev: devimage
 	@echo
 	@echo "## Build, test and run the server all within the dev image"
 	docker run -ti -v /var/run/docker.sock:/var/run/docker.sock \
-		-e VERIFY=--verify --network host duglin/xreg-dev make clean all
+		-e VERIFY=--verify --network host $(DOCKERHUB)xreg-dev make clean all
 	@echo "## Done! Exit the dev image testing"
 
 clean:

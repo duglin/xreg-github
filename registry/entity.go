@@ -1012,7 +1012,9 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
-					meta := info != nil && (info.ShowStructure || info.ResourceUID == "" || len(info.Parts) == 5)
+					meta := info != nil && (info.ShowStructure ||
+						info.HasFlag("export") ||
+						info.ResourceUID == "" || len(info.Parts) == 5)
 					_, rm := e.GetModels()
 					if rm.GetHasDocument() == false {
 						meta = false
@@ -1045,7 +1047,9 @@ var OrderedSpecProps = []*Attribute{
 						base = info.BaseURL
 					}
 					if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
-						meta := info != nil && (info.ShowStructure || info.ResourceUID == "" || len(info.Parts) == 5)
+						meta := info != nil && (info.ShowStructure ||
+						info.HasFlag("export") ||
+						info.ResourceUID == "" || len(info.Parts) == 5)
 						_, rm := e.GetModels()
 						if rm.GetHasDocument() == false {
 							meta = false
@@ -1451,7 +1455,8 @@ var OrderedSpecProps = []*Attribute{
 
 				tmp := base + "/" + rPath + "/versions/" + val.(string)
 
-				meta := info != nil && (info.ShowStructure || info.ResourceUID == "")
+				meta := info != nil && (info.ShowStructure ||
+					info.HasFlag("export") || info.ResourceUID == "")
 				_, rm := e.GetModels()
 				if rm.GetHasDocument() == false {
 					meta = false
