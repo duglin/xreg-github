@@ -45,9 +45,9 @@ var nonModelInlines = append([]string{"*"}, explicitInlines...)
 var rootPaths = []string{"capabilities", "model", "export"}
 
 type Inline struct {
-	path    string    // value from ?inline query param
-	pp      *PropPath // PP for 'value'
-	nonWild *PropPath // PP for value w/o .* if present, else nil
+	Path    string    // value from ?inline query param
+	PP      *PropPath // PP for 'value'
+	NonWild *PropPath // PP for value w/o .* if present, else nil
 }
 
 func (info *RequestInfo) AddInline(path string) error {
@@ -57,9 +57,9 @@ func (info *RequestInfo) AddInline(path string) error {
 
 	if ArrayContains(nonModelInlines, path) {
 		info.Inlines = append(info.Inlines, &Inline{
-			path:    NewPPP(path).DB(),
-			pp:      NewPPP(path),
-			nonWild: nil,
+			Path:    NewPPP(path).DB(),
+			PP:      NewPPP(path),
+			NonWild: nil,
 		})
 		return nil
 	}
@@ -70,14 +70,14 @@ func (info *RequestInfo) AddInline(path string) error {
 	}
 
 	storeInline := &Inline{
-		path:    NewPPP(path).DB(),
-		pp:      pp,
-		nonWild: nil,
+		Path:    pp.DB(),
+		PP:      pp,
+		NonWild: nil,
 	}
 
 	if pp.Bottom() == "*" {
 		pp = pp.RemoveLast()
-		storeInline.nonWild = pp
+		storeInline.NonWild = pp
 	}
 
 	// Check to make sure the requested inline attribute exists, else error
@@ -109,7 +109,7 @@ func (info *RequestInfo) AddInline(path string) error {
 
 				// We have a match, but these don't allow wildcards, so err
 				// if * was in ?inline value
-				if storeInline.nonWild != nil {
+				if storeInline.NonWild != nil {
 					hasErr = true
 					break
 				}
@@ -140,7 +140,7 @@ func (info *RequestInfo) IsInlineSet(entityPath string) bool {
 		entityPath = "*"
 	}
 	for _, inline := range info.Inlines {
-		if inline.path == entityPath {
+		if inline.Path == entityPath {
 			return true
 		}
 	}
@@ -156,8 +156,8 @@ func (info *RequestInfo) ShouldInline(entityPath string) bool {
 	ePP, _ := PropPathFromDB(entityPath) // entity-PP
 
 	for _, inline := range info.Inlines {
-		iPP := inline.pp
-		log.VPrintf(4, "Inline cmp: %q in %q", entityPath, inline.path)
+		iPP := inline.PP
+		log.VPrintf(4, "Inline cmp: %q in %q", entityPath, inline.Path)
 
 		// * doesn't include "model"... because they're special, they need to
 		// be explicit if they want to include those
@@ -171,10 +171,10 @@ func (info *RequestInfo) ShouldInline(entityPath string) bool {
 		if (iPP.Top() == "*" && !ArrayContains(explicitInlines, ePP.UI())) ||
 			ePP.Equals(iPP) ||
 			iPP.HasPrefix(ePP) ||
-			(inline.nonWild != nil && ePP.HasPrefix(inline.nonWild)) {
+			(inline.NonWild != nil && ePP.HasPrefix(inline.NonWild)) {
 			// (iPP.Len() > 1 && iPP.Bottom() == "*" && ePP.HasPrefix(iPP.RemoveLast())) {
 
-			log.VPrintf(4, "Inline match: %q in %q", entityPath, inline.path)
+			log.VPrintf(4, "Inline match: %q in %q", entityPath, inline.Path)
 			return true
 		}
 	}

@@ -486,17 +486,37 @@ func (pw *PageWriter) Done() {
 		}
 
 		pp, _ := PropPathFromPath(pw.Info.Abstract)
-		for _, inline := range inlineOptions {
+		for i, inline := range inlineOptions {
+			hilight := ""
+			if i%2 == 0 {
+				hilight = " inlinehilight"
+			}
 			checked = ""
 			pInline := MustPropPathFromUI(inline)
-			fullInline := pp.Append(pInline).DB()
-			if pw.Info.IsInlineSet(fullInline) {
+			fullPP := pp.Append(pInline)
+			if pw.Info.IsInlineSet(fullPP.DB()) {
 				checked = " checked"
 			}
+
+			mini := ""
+			if (fullPP.Len() != 3 || fullPP.Parts[2].Text == "versions") &&
+				fullPP.Len() != 4 {
+				minichecked := ""
+				if pw.Info.IsInlineSet(fullPP.Append(NewPPP("*")).DB()) {
+					minichecked = " checked"
+				}
+				mini = fmt.Sprintf(`
+      <div class=minicheckdiv>
+        <input id=inline%d type='checkbox' class=minicheck value='%s'%s/>.*
+      </div>`, inlineCount, inline+".*", minichecked)
+				inlineCount++
+			}
+
 			inlines += fmt.Sprintf(`
-    <div class=inlines>
-      <input id=inline%d type='checkbox' value='%s'%s/>%s
-    </div>`, inlineCount, inline, checked, inline)
+    <div class='inlines%s'>
+      <input id=inline%d type='checkbox' value='%s'%s/>%s%s
+    </div>`, hilight, inlineCount, inline, checked, inline, mini)
+
 			inlineCount++
 
 		}
@@ -515,9 +535,9 @@ func (pw *PageWriter) Done() {
 	}
 
 	structureswitch := "false"
+	structureButton := ""
 	if pw.Info.RootPath == "" || pw.Info.RootPath == "export" {
 		structuretext := ""
-		structureButton := ""
 		if pw.Info.ShowStructure {
 			structureswitch = "true"
 			structuretext = "Show document"
@@ -527,14 +547,11 @@ func (pw *PageWriter) Done() {
 			structuretext = "Show structure"
 		}
 		if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
-			structureButton = fmt.Sprintf(`<div>
-      <button id=structure onclick='structureswitch=!structureswitch ; apply()' style="font-weight:bold">%s</button>
-    </div>
+			structureButton = fmt.Sprintf(`<center>
+      <button id=structure onclick='structureswitch=!structureswitch ; apply()'>%s</button>
+    </center>
 `, structuretext)
 		}
-
-		apply = `
-    ` + structureButton
 	}
 
 	applyBtn := ""
@@ -607,28 +624,39 @@ func (pw *PageWriter) Done() {
     align-items: start ;
     padding: 2px ;
   }
-  #structure {
-    display: inline ;
-    margin-top: 10px ;
-    margin-bottom: 10px ;
-  }
 
-  fieldset {
-    // padding: 0 ;
-    border-width: 2 0 0 2 ;
-    border-color: black ;
-    padding: 0 0 0 2 ;
-    margin-bottom: 10 ;
-  }
-
-  #applyBtn {
-    font-weight: bold ;
-    margin: 0 5 0 5 ;
+  .colorButton, #applyBtn, #structure {
     border-radius: 13px ;
     border: 1px solid #407d16 ;
     background: #407d16 ;
     padding: 5 20 6 20 ;
     color: white ;
+  }
+
+  #structure {
+    font-weight: bold ;
+    display: inline ;
+    margin-top: 10px ;
+    margin-bottom: 10px ;
+    padding: 1 10 2 10 ;
+  }
+  #structure:hover { background: #c4c4c4 ; color : black ; }
+  #structure:active { background: #c4c4c4 ; color : black ; }
+  #structure:focus { background: darkgray ; color : black ; }
+
+  legend {
+    margin-bottom: 3 ;
+  }
+
+  fieldset {
+    border-width: 1 0 1 1 ;
+    border-color: black ;
+    padding: 0 0 4 4 ;
+  }
+
+  #applyBtn {
+    font-weight: bold ;
+    margin: 5 5 0 5 ;
   }
 
   #applyBtn:hover { background: #c4c4c4 ; color : black ; }
@@ -663,16 +691,34 @@ func (pw *PageWriter) Done() {
     font-family: courier ;
   }
   .inlines {
+    display: flex ;
     font-size: 13px ;
     font-family: courier ;
+    align-items: center ;
   }
+
+  .inlinehilight {
+    background-color : #d0d0d0 ;
+  }
+
+  .minicheckdiv {
+    margin-left: auto ;
+    padding: 0 2 0 5 ;
+  }
+
+  .minicheck {
+    height: 10px ;
+    width: 10px ;
+    margin: 0px ;
+  }
+
   .line {
     width: 90%% ;
     border-bottom: 1px solid black ;
     margin: 3 0 3 20 ;
   }
   #urlPath {
-    background-color: lightgray ;
+    background-color: ghostwhite; // lightgray ;
     padding: 3px ;
     font-size: 16px ;
     font-family: courier ;
@@ -759,6 +805,7 @@ func (pw *PageWriter) Done() {
 `+roots+`
   <div id=buttonList>
     `+applyBtn+`
+    `+structureButton+`
   </div>
   <div style="height:12px"></div> <!-- buffer for "Commmit:" line -->
   <div id=commit><a target=_blank
