@@ -68,10 +68,10 @@ func InitDB() {
 			go LoadLargeSample(nil)
 		}
 	}
-	log.Printf("Default registry: %s", reg.UID)
+	log.Printf("Default(/): reg-%s", reg.UID)
 
 	if reg == nil {
-		fmt.Fprintf(os.Stderr, "No registry loaded\n")
+		fmt.Fprintf(os.Stderr, "No default registry defined\n")
 		os.Exit(1)
 	}
 
