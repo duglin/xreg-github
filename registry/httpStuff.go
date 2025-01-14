@@ -331,7 +331,7 @@ func (pw *PageWriter) Done() {
 		} else if strings.Contains(pw.Info.BaseURL, "/reg-"+name) {
 			checked = " selected"
 		}
-		list += fmt.Sprintf("\n    <option%s>%s</option>", checked, name)
+		list += fmt.Sprintf("\n      <option%s>%s</option>", checked, name)
 	}
 	list += "\n"
 
@@ -356,7 +356,7 @@ func (pw *PageWriter) Done() {
 		if pw.Info.RootPath == r.u {
 			name = "<b>" + name + "</b>"
 		}
-		roots += fmt.Sprintf("    <li><a href=\"%s?ui\">%s</a></li>\n",
+		roots += fmt.Sprintf("  <li><a href=\"%s?ui\">%s</a></li>\n",
 			pw.Info.BaseURL+"/"+r.u, name)
 	}
 
@@ -610,6 +610,22 @@ func (pw *PageWriter) Done() {
   #myURL {
     width: 40em ;
   }
+
+  #registry {
+    display: flex ;
+    align-items: baseline ;
+    margin-right: -10 ;
+    margin-top: 2 ;
+  }
+
+  #xRegLogo {
+    cursor: pointer ;
+    height: 20px ;
+    width: 20px ;
+    // margin-left: auto ;
+    padding-left: 5px ;
+  }
+
   button {
     // margin-left: 5px ;
   }
@@ -663,14 +679,6 @@ func (pw *PageWriter) Done() {
   #applyBtn:active { background: #c4c4c4 ; color : black ; }
   #applyBtn:focus { background: darkgray ; color : black ; }
 
-  #commit {
-    background-color: #e3e3e3 ; // lightsteelblue ;
-    font-size: 12px ;
-    font-family: courier ;
-    position: fixed ;
-    bottom: 0 ;
-    z-index: 0 ;
-  }
   textarea {
     margin-bottom: 10px ;
     min-width: 100%% ;
@@ -684,6 +692,7 @@ func (pw *PageWriter) Done() {
   }
   select {
     font-weight: bold ;
+    margin-left: 3px ;
   }
   .export {
     margin-top: 5px ;
@@ -798,21 +807,30 @@ func (pw *PageWriter) Done() {
   }
 </style>
 <div id=left>
-  <b>Registry:</b>
-  <select onchange="changeRegistry(value)">`+list+`  </select>
-  <br>
-  <hr>
+  <div id=registry>
+    <svg id=xRegLogo viewBox="0 0 663 800" fill="none" onclick="opensrc()">
+      <title>https://xRegistry.io</title>
+      <g clip-path="url(#clip0_1_142)">
+      <path d="M490.6 800H662.2L494.2 461.6C562.2 438.2 648.6 380.5 648.6 238.8C648.6 5.3 413.9 0 413.9 0H3.40002L80.39 155.3H391.8C391.8 155.3 492.3 153.8 492.3 238.9C492.3 323.9 391.8 322.5 391.8 322.5H390.6L316.2 449L490.6 800Z" fill="black"/>
+      <path d="M392.7 322.4H281L266.7 346.6L196.4 466.2L111.7 322.4H0L140.5 561.2L0 800H111.7L196.4 656.2L281 800H392.7L252.2 561.2L317.9 449.6L392.7 322.4Z" fill="#0066FF"/>
+      </g>
+      <defs>
+        <clipPath id="clip0_1_142">
+          <rect width="662.2" height="800" fill="white"/>
+        </clipPath>
+      </defs>
+    </svg>
+    <b>egistry:</b>
+    <select onchange="changeRegistry(value)">`+list+`    </select>
+  </div>
+  <hr style="margin-right:-15">
 `+roots+`
   <div id=buttonList>
     `+applyBtn+`
     `+structureButton+`
   </div>
-  <div style="height:12px"></div> <!-- buffer for "Commmit:" line -->
-  <div id=commit><a target=_blank
-        href="http://github.com/duglin/xreg-github/tree/`+
-		GitCommit+`">Commit: `+fmt.Sprintf("%.12s", GitCommit)+
-		`&nbsp;&nbsp;</a></div>
-</div>
+  <br style="height:20px">  <!-- buffer for octocat logo -->
+</div>  <!-- left -->
 
 <script>
 
@@ -825,6 +843,14 @@ function changeRegistry(name) {
   else loc = "/reg-" + name + "?ui"
 
   window.location = loc
+}
+
+function opensrc(loc) {
+  if (loc == null) loc = "https://xregistry.io"
+  else if (loc == "commit") {
+    loc = "https://github.com/duglin/xreg-github/tree/`+GitCommit+`"
+  }
+  window.open( loc )
 }
 
 function apply() {
@@ -905,8 +931,13 @@ function dokeydown(event) {
   </div>
   <div id=myOutput tabindex=0 onkeydown=dokeydown(event)><div class=expandAll>
     <span id=expAll class=expandBtn title="Collapse/Expand all" onclick=toggleExp(null,false)>`+HTML_MIN+`</span>
-  </div><div id='text'>%s</div></div> <!--myOutput-->
-</div> <!--right-->
+  </div><div id='text'>%s</div></div> <!-- myOutput -->
+</div> <!-- right -->
+
+<svg height="20" aria-hidden="true" viewBox="0 0 24 24" width="20" style="position:absolute;left:0;bottom:0;cursor:pointer;margin:5" onclick="opensrc('commit')">
+  <title>Open commit: `+GitCommit+`</title>
+  <path d="M12.5.75C6.146.75 1 5.896 1 12.25c0 5.089 3.292 9.387 7.863 10.91.575.101.79-.244.79-.546 0-.273-.014-1.178-.014-2.142-2.889.532-3.636-.704-3.866-1.35-.13-.331-.69-1.352-1.18-1.625-.402-.216-.977-.748-.014-.762.906-.014 1.553.834 1.769 1.179 1.035 1.74 2.688 1.25 3.349.948.1-.747.402-1.25.733-1.538-2.559-.287-5.232-1.279-5.232-5.678 0-1.25.445-2.285 1.178-3.09-.115-.288-.517-1.467.115-3.048 0 0 .963-.302 3.163 1.179.92-.259 1.897-.388 2.875-.388.977 0 1.955.13 2.875.388 2.2-1.495 3.162-1.179 3.162-1.179.633 1.581.23 2.76.115 3.048.733.805 1.179 1.825 1.179 3.09 0 4.413-2.688 5.39-5.247 5.678.417.36.776 1.05.776 2.128 0 1.538-.014 2.774-.014 3.162 0 .302.216.662.79.547C20.709 21.637 24 17.324 24 12.25 24 5.896 18.854.75 12.5.75Z"></path>
+</svg>
 
 </html>
 `, RegHTMLify(pw.Info.OriginalRequest, buf))))
