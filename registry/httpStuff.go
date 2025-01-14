@@ -546,7 +546,8 @@ func (pw *PageWriter) Done() {
 			structureswitch = "false"
 			structuretext = "Show structure"
 		}
-		if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
+		if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" &&
+			(len(pw.Info.Parts) != 5 || pw.Info.Parts[4] != "meta") {
 			structureButton = fmt.Sprintf(`<center>
       <button id=structure onclick='structureswitch=!structureswitch ; apply()'>%s</button>
     </center>
