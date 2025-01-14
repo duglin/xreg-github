@@ -528,8 +528,8 @@ func (pw *PageWriter) Done() {
 		}
 		if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" {
 			structureButton = fmt.Sprintf(`<div>
-    <button id=structure onclick='structureswitch=!structureswitch ; apply()' style="font-weight:bold">%s</button>
-  </div>
+      <button id=structure onclick='structureswitch=!structureswitch ; apply()' style="font-weight:bold">%s</button>
+    </div>
 `, structuretext)
 		}
 
@@ -539,7 +539,15 @@ func (pw *PageWriter) Done() {
 
 	applyBtn := ""
 	if options != "" || filters != "" || inlines != "" {
-		applyBtn = "<button id=applyBtn onclick='apply()'>Apply</button>"
+		applyBtn = `<fieldset>
+    <legend align=center>
+      <button id=applyBtn onclick='apply()'>Apply</button>
+    </legend>
+    ` + options + `
+    ` + filters + `
+    ` + inlines + `
+    ` + apply + `
+    </fieldset>`
 	}
 
 	pw.OldWriter.Write([]byte(fmt.Sprintf(`<html>
@@ -560,7 +568,7 @@ func (pw *PageWriter) Done() {
   }
   #left {
     padding: 8 20 8 8 ;
-    background-color: lightsteelblue;
+    background-color: #e3e3e3 ; // gainsboro ; // lightsteelblue;
     white-space: nowrap ;
     overflow-y: auto ;
     min-width: fit-content ;
@@ -589,15 +597,11 @@ func (pw *PageWriter) Done() {
     // margin-left: 5px ;
   }
   #buttonList {
-    margin-top: 10px ;
-    padding-top: 5px ;
-    display: flex ;
-    flex-direction: column ;
-    align-items: start ;
-	margin-top: -15 ;
+    // margin-top: 10px ;
+    // padding-top: 5px ;
   }
   #buttonBar {
-    background-color: lightsteelblue;
+    background-color: #e3e3e3 ; // lightsteelblue;
     display: flex ;
     flex-direction: column ;
     align-items: start ;
@@ -605,19 +609,34 @@ func (pw *PageWriter) Done() {
   }
   #structure {
     display: inline ;
-	margin-top: 10px ;
+    margin-top: 10px ;
     margin-bottom: 10px ;
+  }
+
+  fieldset {
+    // padding: 0 ;
+    border-width: 2 0 0 2 ;
+    border-color: black ;
+    padding: 0 0 0 2 ;
+    margin-bottom: 10 ;
   }
 
   #applyBtn {
     font-weight: bold ;
-	align-self: end ;
-	position: relative ;
-	top: 20 ;
+    margin: 0 5 0 5 ;
+    border-radius: 13px ;
+    border: 1px solid #407d16 ;
+    background: #407d16 ;
+    padding: 5 20 6 20 ;
+    color: white ;
   }
 
+  #applyBtn:hover { background: #c4c4c4 ; color : black ; }
+  #applyBtn:active { background: #c4c4c4 ; color : black ; }
+  #applyBtn:focus { background: darkgray ; color : black ; }
+
   #commit {
-    background-color: lightsteelblue ;
+    background-color: #e3e3e3 ; // lightsteelblue ;
     font-size: 12px ;
     font-family: courier ;
     position: fixed ;
@@ -657,7 +676,7 @@ func (pw *PageWriter) Done() {
     padding: 3px ;
     font-size: 16px ;
     font-family: courier ;
-    border-bottom: 4px solid lightsteelblue ;
+    border-bottom: 4px solid #e3e3e3 ; // lightsteelblue ;
   }
   #myOutput {
     background-color: ghostwhite;
@@ -740,10 +759,6 @@ func (pw *PageWriter) Done() {
 `+roots+`
   <div id=buttonList>
     `+applyBtn+`
-    `+options+`
-    `+filters+`
-    `+inlines+`
-    `+apply+`
   </div>
   <div style="height:12px"></div> <!-- buffer for "Commmit:" line -->
   <div id=commit><a target=_blank

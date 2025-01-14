@@ -57,7 +57,7 @@ func (info *RequestInfo) AddInline(path string) error {
 
 	if ArrayContains(nonModelInlines, path) {
 		info.Inlines = append(info.Inlines, &Inline{
-			path:    path,
+			path:    NewPPP(path).DB(),
 			pp:      NewPPP(path),
 			nonWild: nil,
 		})
@@ -70,7 +70,7 @@ func (info *RequestInfo) AddInline(path string) error {
 	}
 
 	storeInline := &Inline{
-		path:    path,
+		path:    NewPPP(path).DB(),
 		pp:      pp,
 		nonWild: nil,
 	}
