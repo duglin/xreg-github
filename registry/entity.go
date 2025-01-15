@@ -1018,7 +1018,7 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
-					meta := info != nil && (info.ShowStructure ||
+					meta := info != nil && (info.ShowDetails ||
 						info.HasFlag("compact") ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 					_, rm := e.GetModels()
@@ -1027,7 +1027,7 @@ var OrderedSpecProps = []*Attribute{
 					}
 
 					if meta {
-						path += "$structure"
+						path += "$details"
 					}
 				}
 				return base + "/" + path
@@ -1053,7 +1053,7 @@ var OrderedSpecProps = []*Attribute{
 						base = info.BaseURL
 					}
 					if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
-						meta := info != nil && (info.ShowStructure ||
+						meta := info != nil && (info.ShowDetails ||
 						info.HasFlag("compact") ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 						_, rm := e.GetModels()
@@ -1062,7 +1062,7 @@ var OrderedSpecProps = []*Attribute{
 						}
 
 						if meta {
-							path += "$structure"
+							path += "$details"
 						}
 					}
 
@@ -1461,7 +1461,7 @@ var OrderedSpecProps = []*Attribute{
 
 				tmp := base + "/" + rPath + "/versions/" + val.(string)
 
-				meta := info != nil && (info.ShowStructure ||
+				meta := info != nil && (info.ShowDetails ||
 					info.HasFlag("compact") || info.ResourceUID == "")
 				_, rm := e.GetModels()
 				if rm.GetHasDocument() == false {
@@ -1469,7 +1469,7 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if meta {
-					tmp += "$structure"
+					tmp += "$details"
 				}
 				return tmp
 			},

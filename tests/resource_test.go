@@ -40,11 +40,11 @@ func TestCreateResource(t *testing.T) {
 	//      /d2/f2/v1
 
 	// Check basic GET first
-	xCheckGet(t, reg, "/dirs/d1/files/f1$structure",
+	xCheckGet(t, reg, "/dirs/d1/files/f1$details",
 		`{
   "fileid": "f1",
   "versionid": "v2",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,

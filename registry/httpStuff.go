@@ -133,9 +133,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false &&
-		info.ShowStructure {
+		info.ShowDetails {
 		info.StatusCode = http.StatusBadRequest
-		err = fmt.Errorf("Specifying \"$structure\" for a Resource that has " +
+		err = fmt.Errorf("Specifying \"$details\" for a Resource that has " +
 			"the model \"hasdocument\" value set to \"false\" is invalid")
 	}
 
@@ -531,24 +531,24 @@ func (pw *PageWriter) Done() {
 		urlPath += fmt.Sprintf(`/<a href="%s?ui">%s</a>`, tmp, p)
 	}
 
-	structureswitch := "false"
-	structureButton := ""
+	detailsSwitch := "false"
+	detailsButton := ""
 	if pw.Info.RootPath == "" || pw.Info.RootPath == "export" {
-		structuretext := ""
-		if pw.Info.ShowStructure {
-			structureswitch = "true"
-			structuretext = "Show document"
-			urlPath += fmt.Sprintf(`$<a href="%s$structure?ui">structure</a>`, tmp)
+		detailsText := ""
+		if pw.Info.ShowDetails {
+			detailsSwitch = "true"
+			detailsText = "Show document"
+			urlPath += fmt.Sprintf(`$<a href="%s$details?ui">details</a>`, tmp)
 		} else {
-			structureswitch = "false"
-			structuretext = "Show structure"
+			detailsSwitch = "false"
+			detailsText = "Show details"
 		}
 		if pw.Info.ResourceUID != "" && pw.Info.What == "Entity" &&
 			(len(pw.Info.Parts) != 5 || pw.Info.Parts[4] != "meta") {
-			structureButton = fmt.Sprintf(`<center>
-      <button id=structure onclick='structureswitch=!structureswitch ; apply()'>%s</button>
+			detailsButton = fmt.Sprintf(`<center>
+      <button id=details onclick='detailsSwitch=!detailsSwitch ; apply()'>%s</button>
     </center>
-`, structuretext)
+`, detailsText)
 		}
 	}
 
@@ -639,7 +639,7 @@ func (pw *PageWriter) Done() {
     padding: 2px ;
   }
 
-  .colorButton, #applyBtn, #structure {
+  .colorButton, #applyBtn, #details {
     border-radius: 13px ;
     border: 1px solid #407d16 ;
     background: #407d16 ;
@@ -647,16 +647,16 @@ func (pw *PageWriter) Done() {
     color: white ;
   }
 
-  #structure {
+  #details {
     font-weight: bold ;
     display: inline ;
     margin-top: 10px ;
     margin-bottom: 10px ;
     padding: 1 10 2 10 ;
   }
-  #structure:hover { background: #c4c4c4 ; color : black ; }
-  #structure:active { background: #c4c4c4 ; color : black ; }
-  #structure:focus { background: darkgray ; color : black ; }
+  #details:hover { background: #c4c4c4 ; color : black ; }
+  #details:active { background: #c4c4c4 ; color : black ; }
+  #details:focus { background: darkgray ; color : black ; }
 
   legend {
     margin-bottom: 3 ;
@@ -825,14 +825,14 @@ func (pw *PageWriter) Done() {
 `+roots+`
   <div id=buttonList>
     `+applyBtn+`
-    `+structureButton+`
+    `+detailsButton+`
   </div>
   <br style="height:20px">  <!-- buffer for octocat logo -->
 </div>  <!-- left -->
 
 <script>
 
-var structureswitch = `+structureswitch+`;
+var detailsSwitch = `+detailsSwitch+`;
 
 function changeRegistry(name) {
   var loc = ""
@@ -854,7 +854,7 @@ function opensrc(loc) {
 function apply() {
   var loc = "`+pw.Info.BaseURL+`/`+strings.Join(pw.Info.Parts, "/")+`"
 
-  if (structureswitch) loc += "$structure"
+  if (detailsSwitch) loc += "$details"
   loc += "?ui"
 
   ex = document.getElementById("compact")
@@ -1283,7 +1283,7 @@ func HTTPGet(info *RequestInfo) error {
 	// 'metaInBody' tells us whether xReg metadata should be in the http
 	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure ||
+		(info.ResourceModel.GetHasDocument() == false || info.ShowDetails ||
 			info.HasFlag("compact") ||
 			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
@@ -1435,7 +1435,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	what := "Entity"
 
 	metaInBody := (info.ResourceModel == nil) ||
-		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure ||
+		(info.ResourceModel.GetHasDocument() == false || info.ShowDetails ||
 			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
 	log.VPrintf(3, "HTTPPutPost: %s %s", method, info.OriginalPath)
@@ -1709,7 +1709,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if len(info.Parts) == 4 && (method == "PUT" || method == "PATCH") {
-		// PUT GROUPs/gID/RESOURCEs/rID [$structure]
+		// PUT GROUPs/gID/RESOURCEs/rID [$details]
 
 		propsID := "" // RESOURCEid
 		if v, ok := IncomingObj[info.ResourceModel.Singular+"id"]; ok {
@@ -1774,7 +1774,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if method == "POST" && len(info.Parts) == 4 {
-		// POST GROUPs/gID/RESOURCEs/rID[$structure], body=obj or doc
+		// POST GROUPs/gID/RESOURCEs/rID[$details], body=obj or doc
 		propsID := "" // versionid
 		if v, ok := IncomingObj["versionid"]; ok {
 			if reflect.ValueOf(v).Kind() == reflect.String {
@@ -1866,10 +1866,10 @@ func HTTPPutPost(info *RequestInfo) error {
 
 	// GROUPs/gID/RESOURCEs/rID/versions...
 
-	if info.ShowStructure && method == "POST" && len(info.Parts) == 5 {
-		// POST GROUPs/gID/RESOURCEs/rID/versions$structure - error
+	if info.ShowDetails && method == "POST" && len(info.Parts) == 5 {
+		// POST GROUPs/gID/RESOURCEs/rID/versions$details - error
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("Use of \"$structure\" on the \"versions\" " +
+		return fmt.Errorf("Use of \"$details\" on the \"versions\" " +
 			" collection is not allowed")
 	}
 
@@ -1976,7 +1976,7 @@ func HTTPPutPost(info *RequestInfo) error {
 	}
 
 	if len(info.Parts) == 6 {
-		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [$structure]
+		// PUT GROUPs/gID/RESOURCEs/rID/versions/vID [$details]
 		propsID := "" //versionid
 		if v, ok := IncomingObj["versionid"]; ok {
 			if reflect.ValueOf(v).Kind() == reflect.String {
@@ -2049,7 +2049,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		info.Parts[2], resourceUID}
 	info.What = "Entity"
 	info.GroupUID = groupUID
-	info.ResourceUID = resourceUID // needed for $structure in URLs
+	info.ResourceUID = resourceUID // needed for $details in URLs
 
 	location := info.BaseURL + "/" + resource.Path
 	if originalLen > 4 || (originalLen == 4 && method == "POST") {
@@ -2058,8 +2058,8 @@ func HTTPPutPost(info *RequestInfo) error {
 		location += "/versions/" + version.UID
 	}
 
-	if info.ShowStructure { // not 100% sure this the right way/spot
-		location += "$structure"
+	if info.ShowDetails { // not 100% sure this the right way/spot
+		location += "$details"
 	}
 
 	if isNew { // 201, else let it default to 200
@@ -2687,10 +2687,10 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	}
 
 	// len=5 is a special case where we know .../versions always has the
-	// metadata in the body so $structure isn't needed, and in fact an error
+	// metadata in the body so $details isn't needed, and in fact an error
 
 	// GROUPS/gID/RESOURCES/rID/meta|versions/vID
-	metaInBody := (info.ShowStructure ||
+	metaInBody := (info.ShowDetails ||
 		len(info.Parts) == 3 ||
 		len(info.Parts) == 5 ||
 		(info.ResourceModel != nil && info.ResourceModel.GetHasDocument() == false))
@@ -2706,7 +2706,7 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 						"value of \"false\" is invalid")
 				}
 				return nil, fmt.Errorf("Including \"xRegistry\" headers " +
-					"when \"$structure\" is used is invalid")
+					"when \"$details\" is used is invalid")
 			}
 		}
 

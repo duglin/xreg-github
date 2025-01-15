@@ -30,7 +30,7 @@ type RequestInfo struct {
 	Flags            map[string]string // Query params (and str value, if there)
 	Inlines          []*Inline
 	Filters          [][]*FilterExpr // [OR][AND] filter=e,e(and) &(or) filter=e
-	ShowStructure    bool            //	is $structure present
+	ShowDetails      bool            //	is $details present
 
 	StatusCode int
 	SentStatus bool
@@ -378,8 +378,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /GROUPs
-	if strings.HasSuffix(info.Parts[0], "$structure") {
-		return fmt.Errorf("$structure isn't allowed on %q", "/"+info.Parts[0])
+	if strings.HasSuffix(info.Parts[0], "$details") {
+		return fmt.Errorf("$details isn't allowed on %q", "/"+info.Parts[0])
 	}
 
 	gModel := (*GroupModel)(nil)
@@ -401,8 +401,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /GROUPs/gID
-	if strings.HasSuffix(info.Parts[1], "$structure") {
-		return fmt.Errorf("$structure isn't allowed on %q",
+	if strings.HasSuffix(info.Parts[1], "$details") {
+		return fmt.Errorf("$details isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:2], "/"))
 	}
 
@@ -415,8 +415,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /GROUPs/gID/RESOURCEs
-	if strings.HasSuffix(info.Parts[2], "$structure") {
-		return fmt.Errorf("$structure isn't allowed on %q",
+	if strings.HasSuffix(info.Parts[2], "$details") {
+		return fmt.Errorf("$details isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:3], "/"))
 	}
 
@@ -444,8 +444,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 
 	// GROUPs/gID/RESOURCEs/rID
 	if len(info.Parts) == 4 {
-		info.ResourceUID, info.ShowStructure =
-			strings.CutSuffix(info.ResourceUID, "$structure")
+		info.ResourceUID, info.ShowDetails =
+			strings.CutSuffix(info.ResourceUID, "$details")
 
 		if info.ResourceUID == "" {
 			return fmt.Errorf("Resource id in URL can't be blank")
@@ -457,13 +457,13 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// GROUPs/gID/RESOURCEs/rID/???
-	if strings.HasSuffix(info.ResourceUID, "$structure") {
-		return fmt.Errorf("$structure isn't allowed on %q",
+	if strings.HasSuffix(info.ResourceUID, "$details") {
+		return fmt.Errorf("$details isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:4], "/"))
 	}
 
-	if strings.HasSuffix(info.Parts[4], "$structure") {
-		return fmt.Errorf("$structure isn't allowed on %q",
+	if strings.HasSuffix(info.Parts[4], "$details") {
+		return fmt.Errorf("$details isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:5], "/"))
 	}
 
@@ -504,8 +504,8 @@ func (info *RequestInfo) ParseRequestURL() error {
 	info.Root += "/" + info.Parts[5]
 
 	if len(info.Parts) == 6 {
-		info.VersionUID, info.ShowStructure =
-			strings.CutSuffix(info.VersionUID, "$structure")
+		info.VersionUID, info.ShowDetails =
+			strings.CutSuffix(info.VersionUID, "$details")
 
 		if info.VersionUID == "" {
 			return fmt.Errorf("Version id in URL can't be blank")

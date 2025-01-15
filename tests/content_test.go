@@ -127,11 +127,11 @@ func TestResourceContents(t *testing.T) {
 	})
 
 	// v4 = #resourceURL
-	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1/versions/v4$structure?inline=file",
+	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1/versions/v4$details?inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
   "versionid": "v4",
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v4$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v4$details",
   "xid": "/dirs/d1/files/f1/versions/v4",
   "epoch": 2,
   "isdefault": true,
@@ -142,10 +142,10 @@ func TestResourceContents(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "dirs/d1/files/f1$structure?compact&inline=file",
+	xHTTP(t, reg, "GET", "dirs/d1/files/f1$details?compact&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -171,10 +171,10 @@ func TestResourceContents(t *testing.T) {
 `)
 
 	// v2 = #resource
-	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$structure?compact&inline=file",
+	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$details?compact&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -199,7 +199,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 	u := test.URL
 
 	t.Logf("Testing: URL: %s", test.URL)
-	metaResp, err := http.Get("http://localhost:8181/" + u + "$structure")
+	metaResp, err := http.Get("http://localhost:8181/" + u + "$details")
 	xNoErr(t, err)
 	if metaResp == nil {
 		t.Fatalf("metaResp is nil")
@@ -290,7 +290,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 			str := ""
 			str = fmt.Sprintf("%v", propValue)
 			if name == "self" || name == "defaultversionurl" {
-				xCheckEqual(t, propName, value[0]+"$structure", str)
+				xCheckEqual(t, propName, value[0]+"$details", str)
 				break
 			}
 
@@ -298,7 +298,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 			break
 		}
 		if !foundIt {
-			t.Fatalf("Missing %q in $structure version(%s)", name, u)
+			t.Fatalf("Missing %q in $details version(%s)", name, u)
 		}
 	}
 
@@ -329,6 +329,6 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 		if propName == "labels" {
 			continue
 		}
-		t.Fatalf("Extra prop %q in $structure, not in header: %s", propName, u)
+		t.Fatalf("Extra prop %q in $details, not in header: %s", propName, u)
 	}
 }

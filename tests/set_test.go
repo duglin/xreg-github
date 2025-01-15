@@ -331,7 +331,7 @@ func TestSetLabels(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v2",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 3,
           "isdefault": true,
@@ -356,14 +356,14 @@ func TestSetLabels(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:03Z",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 4,
               "labels": {
@@ -375,7 +375,7 @@ func TestSetLabels(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
               "xid": "/dirs/d1/files/f1/versions/v2",
               "epoch": 3,
               "isdefault": true,
@@ -432,7 +432,7 @@ func TestSetLabels(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 4,
           "isdefault": true,
@@ -452,7 +452,7 @@ func TestSetLabels(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:04Z",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
             "defaultversionsticky": true
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
@@ -460,7 +460,7 @@ func TestSetLabels(t *testing.T) {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 4,
               "isdefault": true,
@@ -473,7 +473,7 @@ func TestSetLabels(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
               "xid": "/dirs/d1/files/f1/versions/v2",
               "epoch": 3,
               "labels": {

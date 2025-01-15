@@ -150,11 +150,11 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version - match",
-			URL:  "dirs/d1/files/f1/versions/v1$structure?inline&filter=versionid=v1",
+			URL:  "dirs/d1/files/f1/versions/v1$details?inline&filter=versionid=v1",
 			Exp: `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
   "xid": "/dirs/d1/files/f1/versions/v1",
   "epoch": 1,
   "createdat": "2024-12-01T12:00:00Z",
@@ -164,7 +164,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{
 			Name: "Get/filter version - no match",
-			URL:  "dirs/d1/files/f1/versions/v1$structure?inline&oneline&filter=versionid=xxx",
+			URL:  "dirs/d1/files/f1/versions/v1$details?inline&oneline&filter=versionid=xxx",
 			// Nothing, matched, so 404
 			Exp: `Not found`,
 		},
@@ -246,7 +246,7 @@ func TestBasicFilters(t *testing.T) {
         "f2": {
           "fileid": "f2",
           "versionid": "v1.1",
-          "self": "http://localhost:8181/dirs/d2/files/f2$structure",
+          "self": "http://localhost:8181/dirs/d2/files/f2$details",
           "xid": "/dirs/d2/files/f2",
           "epoch": 1,
           "isdefault": true,
@@ -266,14 +266,14 @@ func TestBasicFilters(t *testing.T) {
             "modifiedat": "2024-12-01T12:00:02Z",
 
             "defaultversionid": "v1.1",
-            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
             "v1": {
               "fileid": "f2",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$details",
               "xid": "/dirs/d2/files/f2/versions/v1",
               "epoch": 1,
               "createdat": "2024-12-01T12:00:02Z",
@@ -282,7 +282,7 @@ func TestBasicFilters(t *testing.T) {
             "v1.1": {
               "fileid": "f2",
               "versionid": "v1.1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details",
               "xid": "/dirs/d2/files/f2/versions/v1.1",
               "epoch": 1,
               "isdefault": true,
@@ -348,7 +348,7 @@ func TestBasicFilters(t *testing.T) {
         "f2": {
           "fileid": "f2",
           "versionid": "v1.1",
-          "self": "http://localhost:8181/dirs/d2/files/f2$structure",
+          "self": "http://localhost:8181/dirs/d2/files/f2$details",
           "xid": "/dirs/d2/files/f2",
           "epoch": 1,
           "isdefault": true,
@@ -368,14 +368,14 @@ func TestBasicFilters(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1.1",
-            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
             "v1": {
               "fileid": "f2",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$details",
               "xid": "/dirs/d2/files/f2/versions/v1",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
@@ -384,7 +384,7 @@ func TestBasicFilters(t *testing.T) {
             "v1.1": {
               "fileid": "f2",
               "versionid": "v1.1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details",
               "xid": "/dirs/d2/files/f2/versions/v1.1",
               "epoch": 1,
               "isdefault": true,

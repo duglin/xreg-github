@@ -86,7 +86,7 @@ func TestInlineBasic(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v2",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -103,14 +103,14 @@ func TestInlineBasic(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
@@ -119,7 +119,7 @@ func TestInlineBasic(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
               "xid": "/dirs/d1/files/f1/versions/v2",
               "epoch": 1,
               "isdefault": true,
@@ -145,7 +145,7 @@ func TestInlineBasic(t *testing.T) {
         "f2": {
           "fileid": "f2",
           "versionid": "v1.1",
-          "self": "http://localhost:8181/dirs/d2/files/f2$structure",
+          "self": "http://localhost:8181/dirs/d2/files/f2$details",
           "xid": "/dirs/d2/files/f2",
           "epoch": 1,
           "isdefault": true,
@@ -162,14 +162,14 @@ func TestInlineBasic(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1.1",
-            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
             "v1": {
               "fileid": "f2",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$details",
               "xid": "/dirs/d2/files/f2/versions/v1",
               "epoch": 1,
               "createdat": "2024-01-01T12:00:02Z",
@@ -178,7 +178,7 @@ func TestInlineBasic(t *testing.T) {
             "v1.1": {
               "fileid": "f2",
               "versionid": "v1.1",
-              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$structure",
+              "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details",
               "xid": "/dirs/d2/files/f2/versions/v1.1",
               "epoch": 1,
               "isdefault": true,
@@ -208,7 +208,7 @@ func TestInlineBasic(t *testing.T) {
         "f2": {
           "fileid": "f2",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs2/d2/files/f2$structure",
+          "self": "http://localhost:8181/dirs2/d2/files/f2$details",
           "xid": "/dirs2/d2/files/f2",
           "epoch": 1,
           "isdefault": true,
@@ -225,14 +225,14 @@ func TestInlineBasic(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$details"
           },
           "versionsurl": "http://localhost:8181/dirs2/d2/files/f2/versions",
           "versions": {
             "v1": {
               "fileid": "f2",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$structure",
+              "self": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$details",
               "xid": "/dirs2/d2/files/f2/versions/v1",
               "epoch": 1,
               "isdefault": true,
@@ -580,7 +580,7 @@ func TestInlineResource(t *testing.T) {
 		},
 		{
 			Name: "Inline - at file + inline file,meta",
-			URL:  "/dirs/d1/files/f1-proxy$structure?inline=file,meta",
+			URL:  "/dirs/d1/files/f1-proxy$details?inline=file,meta",
 			Exp: `{
   "filebase64": "aGVsbG8tUHJveHk=",
   "meta": {
@@ -592,7 +592,7 @@ func TestInlineResource(t *testing.T) {
 		},
 		{
 			Name: "Inline - at file + inline versions.file,meta",
-			URL:  "/dirs/d1/files/f1-proxy$structure?inline=versions.file,meta",
+			URL:  "/dirs/d1/files/f1-proxy$details?inline=versions.file,meta",
 			Exp: `{
   "meta": {
     "defaultversionid": "v3",
@@ -614,7 +614,7 @@ func TestInlineResource(t *testing.T) {
 		},
 		{
 			Name: "Bad inline xx",
-			URL:  "/dirs/d1/files/f1-proxy$structure?inline=XXversions.file",
+			URL:  "/dirs/d1/files/f1-proxy$details?inline=XXversions.file",
 			Exp:  "Invalid 'inline' value: dirs.files.XXversions.file\n",
 		},
 		{
@@ -676,7 +676,7 @@ func TestInlineWildcards(t *testing.T) {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$details",
 		`{"file": { "hello": "world"}}}`, 201, `*`)
 
 	xHTTP(t, reg, "GET", "?inline=*", ``,
@@ -704,7 +704,7 @@ func TestInlineWildcards(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -725,14 +725,14 @@ func TestInlineWildcards(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "isdefault": true,
@@ -779,7 +779,7 @@ func TestInlineWildcards(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -800,14 +800,14 @@ func TestInlineWildcards(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "isdefault": true,
@@ -854,7 +854,7 @@ func TestInlineWildcards(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -875,14 +875,14 @@ func TestInlineWildcards(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "isdefault": true,
@@ -929,7 +929,7 @@ func TestInlineWildcards(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -943,7 +943,7 @@ func TestInlineWildcards(t *testing.T) {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "isdefault": true,
@@ -980,7 +980,7 @@ func TestInlineWildcards(t *testing.T) {
       "f1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1$details",
         "xid": "/dirs/d1/files/f1",
         "epoch": 1,
         "isdefault": true,
@@ -994,7 +994,7 @@ func TestInlineWildcards(t *testing.T) {
           "v1": {
             "fileid": "f1",
             "versionid": "v1",
-            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
             "xid": "/dirs/d1/files/f1/versions/v1",
             "epoch": 1,
             "isdefault": true,
@@ -1029,7 +1029,7 @@ func TestInlineWildcards(t *testing.T) {
       "f1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1$details",
         "xid": "/dirs/d1/files/f1",
         "epoch": 1,
         "isdefault": true,
@@ -1050,14 +1050,14 @@ func TestInlineWildcards(t *testing.T) {
           "modifiedat": "2025-01-01T12:00:02Z",
 
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
         },
         "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
         "versions": {
           "v1": {
             "fileid": "f1",
             "versionid": "v1",
-            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
             "xid": "/dirs/d1/files/f1/versions/v1",
             "epoch": 1,
             "isdefault": true,
@@ -1091,7 +1091,7 @@ func TestInlineWildcards(t *testing.T) {
     "f1": {
       "fileid": "f1",
       "versionid": "v1",
-      "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f1$details",
       "xid": "/dirs/d1/files/f1",
       "epoch": 1,
       "isdefault": true,
@@ -1105,7 +1105,7 @@ func TestInlineWildcards(t *testing.T) {
         "v1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
           "xid": "/dirs/d1/files/f1/versions/v1",
           "epoch": 1,
           "isdefault": true,
@@ -1138,7 +1138,7 @@ func TestInlineWildcards(t *testing.T) {
     "f1": {
       "fileid": "f1",
       "versionid": "v1",
-      "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f1$details",
       "xid": "/dirs/d1/files/f1",
       "epoch": 1,
       "isdefault": true,
@@ -1159,14 +1159,14 @@ func TestInlineWildcards(t *testing.T) {
         "modifiedat": "2025-01-01T12:00:02Z",
 
         "defaultversionid": "v1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
       },
       "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
       "versions": {
         "v1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
           "xid": "/dirs/d1/files/f1/versions/v1",
           "epoch": 1,
           "isdefault": true,

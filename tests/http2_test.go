@@ -22,18 +22,18 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 	_, err = rm.AddAttr("*", registry.STRING)
 	xNoErr(t, err)
 
-	xHTTP(t, reg, "POST", "/dirs/d1/files$structure", `{}`, 400,
-		"$structure isn't allowed on \"/dirs/d1/files$structure\"\n")
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{}`, 400,
-		"Specifying \"$structure\" for a Resource that has the model "+
+	xHTTP(t, reg, "POST", "/dirs/d1/files$details", `{}`, 400,
+		"$details isn't allowed on \"/dirs/d1/files$details\"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details", `{}`, 400,
+		"Specifying \"$details\" for a Resource that has the model "+
 			"\"hasdocument\" value set to \"false\" is invalid\n")
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$structure", `{}`, 400,
-		"Specifying \"$structure\" for a Resource that has the model "+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$details", `{}`, 400,
+		"Specifying \"$details\" for a Resource that has the model "+
 			"\"hasdocument\" value set to \"false\" is invalid\n")
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions$structure", `{}`, 400,
-		"$structure isn't allowed on \"/dirs/d1/files/f1/versions$structure\"\n")
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure", `{}`, 400,
-		"Specifying \"$structure\" for a Resource that has the model "+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions$details", `{}`, 400,
+		"$details isn't allowed on \"/dirs/d1/files/f1/versions$details\"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$details", `{}`, 400,
+		"Specifying \"$details\" for a Resource that has the model "+
 			"\"hasdocument\" value set to \"false\" is invalid\n")
 
 	// Not really a "hasdoc" test, but it has to go someplace :-)
@@ -46,15 +46,15 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 		ReqBody: `{}`,
 
 		Code: 400,
-		ResBody: `Including "xRegistry" headers when "$structure" is used is invalid
+		ResBody: `Including "xRegistry" headers when "$details" is used is invalid
 `,
 	})
 
 	// Load up one that has hasdocument=true
-	xHTTP(t, reg, "PUT", "/dirs/d1/bars/b1$structure", "", 201, `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/bars/b1$details", "", 201, `{
   "barid": "b1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/bars/b1$structure",
+  "self": "http://localhost:8181/dirs/d1/bars/b1$details",
   "xid": "/dirs/d1/bars/b1",
   "epoch": 1,
   "isdefault": true,
@@ -95,7 +95,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 `})
 
 	// Make sure that each type of Resource (w/ and w/o hasdoc) has the
-	// correct self/defaultversionurl URL (meaing w/ and w/o $structure)
+	// correct self/defaultversionurl URL (meaing w/ and w/o $details)
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:    "/dirs/d1?inline",
 		Method: "GET",
@@ -114,7 +114,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
     "b1": {
       "barid": "b1",
       "versionid": "1",
-      "self": "http://localhost:8181/dirs/d1/bars/b1$structure",
+      "self": "http://localhost:8181/dirs/d1/bars/b1$details",
       "xid": "/dirs/d1/bars/b1",
       "epoch": 1,
       "isdefault": true,
@@ -131,14 +131,14 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
         "modifiedat": "2024-01-01T12:00:01Z",
 
         "defaultversionid": "1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$structure"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$details"
       },
       "versionsurl": "http://localhost:8181/dirs/d1/bars/b1/versions",
       "versions": {
         "1": {
           "barid": "b1",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/bars/b1/versions/1$structure",
+          "self": "http://localhost:8181/dirs/d1/bars/b1/versions/1$details",
           "xid": "/dirs/d1/bars/b1/versions/1",
           "epoch": 1,
           "isdefault": true,
@@ -480,7 +480,7 @@ func TestHTTPReadOnlyResource(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f1$details",
     "xid": "/dirs/dir1/files/f1",
     "epoch": 1,
     "isdefault": true,
@@ -494,10 +494,10 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/dir1/files/f1/versions/v1$structure", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/dir1/files/f1/versions/v1$details", "", 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 1,
   "isdefault": true,
@@ -583,9 +583,9 @@ func TestDefaultVersionThis(t *testing.T) {
 		},
 	})
 
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$structure?setdefaultversionid", "", 400, `"setdefaultversionid" must not be empty`+"\n")
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$structure?setdefaultversionid=", "", 400, `"setdefaultversionid" must not be empty`+"\n")
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$structure?setdefaultversionid=request", "", 400, `Can't use 'request' if a version wasn't processed`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$details?setdefaultversionid", "", 400, `"setdefaultversionid" must not be empty`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$details?setdefaultversionid=", "", 400, `"setdefaultversionid" must not be empty`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$details?setdefaultversionid=request", "", 400, `Can't use 'request' if a version wasn't processed`+"\n")
 
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?setdefaultversionid", "", 400, `"setdefaultversionid" must not be empty`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?setdefaultversionid=", "", 400, `"setdefaultversionid" must not be empty`+"\n")
@@ -625,13 +625,13 @@ func TestDefaultVersionThis(t *testing.T) {
 
 	// Just move sticky ptr
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure?setdefaultversionid=1",
+		URL:    "/dirs/d1/files/f1$details?setdefaultversionid=1",
 		Method: "POST",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -655,13 +655,13 @@ func TestDefaultVersionThis(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "check v1",
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "4",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -684,13 +684,13 @@ func TestDefaultVersionThis(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:   "check v1",
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "2",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -716,7 +716,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// Simple string
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": "hello"
@@ -726,7 +726,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -764,10 +764,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `hello`,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline=file", "", 200, `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -784,7 +784,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// Escaped string
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": "\"hel\nlo"
@@ -794,7 +794,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 2,
   "isdefault": true,
@@ -832,10 +832,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: "\"hel\nlo",
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline=file", "", 200, `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 2,
   "isdefault": true,
@@ -852,7 +852,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// Pure JSON - map
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"contenttype": "application/json",
@@ -863,7 +863,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 3,
   "isdefault": true,
@@ -900,10 +900,10 @@ func TestHTTPContent(t *testing.T) {
 		},
 		ResBody: `{"foo":"bar"}`,
 	})
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline=file", "", 200, `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 3,
   "isdefault": true,
@@ -922,7 +922,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// Pure JSON - array
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"contenttype": "application/json",
@@ -933,7 +933,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 4,
   "isdefault": true,
@@ -970,10 +970,10 @@ func TestHTTPContent(t *testing.T) {
 		},
 		ResBody: `["hello",null,5]`,
 	})
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline=file", "", 200, `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 4,
   "isdefault": true,
@@ -994,7 +994,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// Pure JSON - numeric
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"contenttype": "application/json",
@@ -1005,7 +1005,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 5,
   "isdefault": true,
@@ -1042,10 +1042,10 @@ func TestHTTPContent(t *testing.T) {
 		},
 		ResBody: `123`,
 	})
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline=file", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline=file", "", 200, `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 5,
   "isdefault": true,
@@ -1062,7 +1062,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// base64 - string - with quotes
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"filebase64": "ImhlbGxvIgo="
@@ -1072,7 +1072,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 6,
   "isdefault": true,
@@ -1087,13 +1087,13 @@ func TestHTTPContent(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure?inline=file",
+		URL:    "/dirs/d1/files/f1$details?inline=file",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 6,
   "isdefault": true,
@@ -1110,7 +1110,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// base64 - string - w/o quotes
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"filebase64": "aGVsbG8K"
@@ -1120,7 +1120,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 7,
   "isdefault": true,
@@ -1135,13 +1135,13 @@ func TestHTTPContent(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure?inline=file",
+		URL:    "/dirs/d1/files/f1$details?inline=file",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 7,
   "isdefault": true,
@@ -1158,7 +1158,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// base64 - json
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"filebase64": "eyAiZm9vIjoiYmFyIjogfQo="
@@ -1168,7 +1168,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 8,
   "isdefault": true,
@@ -1183,13 +1183,13 @@ func TestHTTPContent(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure?inline=file",
+		URL:    "/dirs/d1/files/f1$details?inline=file",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 8,
   "isdefault": true,
@@ -1206,7 +1206,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// base64 - empty
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"filebase64": ""
@@ -1216,7 +1216,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 9,
   "isdefault": true,
@@ -1231,13 +1231,13 @@ func TestHTTPContent(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure?inline=file",
+		URL:    "/dirs/d1/files/f1$details?inline=file",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 9,
   "isdefault": true,
@@ -1253,7 +1253,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// base64 - null
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"filebase64": null
@@ -1263,7 +1263,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 10,
   "isdefault": true,
@@ -1278,13 +1278,13 @@ func TestHTTPContent(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure?inline=file",
+		URL:    "/dirs/d1/files/f1$details?inline=file",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 10,
   "isdefault": true,
@@ -1300,7 +1300,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// file - null
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": null
@@ -1310,7 +1310,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 11,
   "isdefault": true,
@@ -1325,13 +1325,13 @@ func TestHTTPContent(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure?inline=file",
+		URL:    "/dirs/d1/files/f1$details?inline=file",
 		Method: "GET",
 		Code:   200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 11,
   "isdefault": true,
@@ -1347,7 +1347,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// Pure JSON - error
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$structure",
+		URL:    "/dirs/d1/files/f1$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": { bad bad json }
@@ -1359,7 +1359,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New implied json - empty string
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f11$structure",
+		URL:    "/dirs/d1/files/f11$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": ""
@@ -1369,7 +1369,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f11",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f11$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f11$details",
   "xid": "/dirs/d1/files/f11",
   "epoch": 1,
   "isdefault": true,
@@ -1409,7 +1409,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New implied json - obj
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f12$structure",
+		URL:    "/dirs/d1/files/f12$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": { "foo": "bar" }
@@ -1419,7 +1419,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f12",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f12$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f12$details",
   "xid": "/dirs/d1/files/f12",
   "epoch": 1,
   "isdefault": true,
@@ -1459,7 +1459,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New implied json - numeric
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f13$structure",
+		URL:    "/dirs/d1/files/f13$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": 123
@@ -1469,7 +1469,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f13",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f13$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f13$details",
   "xid": "/dirs/d1/files/f13",
   "epoch": 1,
   "isdefault": true,
@@ -1509,7 +1509,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New implied json - array
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f14$structure",
+		URL:    "/dirs/d1/files/f14$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": [ 123, 0 ]
@@ -1519,7 +1519,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f14",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f14$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f14$details",
   "xid": "/dirs/d1/files/f14",
   "epoch": 1,
   "isdefault": true,
@@ -1559,7 +1559,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New implied json - bool
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f15$structure",
+		URL:    "/dirs/d1/files/f15$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": true
@@ -1569,7 +1569,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f15",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f15$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f15$details",
   "xid": "/dirs/d1/files/f15",
   "epoch": 1,
   "isdefault": true,
@@ -1609,7 +1609,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New implied json - string
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f16$structure",
+		URL:    "/dirs/d1/files/f16$details",
 		Method: "PUT",
 		ReqBody: `{
 	"file": "he\tllo"
@@ -1619,7 +1619,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f16",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f16$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f16$details",
   "xid": "/dirs/d1/files/f16",
   "epoch": 1,
   "isdefault": true,
@@ -1659,7 +1659,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New unknown type
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f17$structure",
+		URL:    "/dirs/d1/files/f17$details",
 		Method: "PUT",
 		ReqBody: `{
 	"contenttype": "foo/bar",
@@ -1670,7 +1670,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f17",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f17$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f17$details",
   "xid": "/dirs/d1/files/f17",
   "epoch": 1,
   "isdefault": true,
@@ -1708,10 +1708,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: "he\tllo",
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f17$structure?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f17$details?inline=file", ``, 200, `{
   "fileid": "f17",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f17$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f17$details",
   "xid": "/dirs/d1/files/f17",
   "epoch": 1,
   "isdefault": true,
@@ -1728,7 +1728,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New unknown type - contenttype:null
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f18$structure",
+		URL:    "/dirs/d1/files/f18$details",
 		Method: "PUT",
 		ReqBody: `{
 	"contenttype": null,
@@ -1739,7 +1739,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 1,
   "isdefault": true,
@@ -1775,10 +1775,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: "he\tllo",
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$structure?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$details?inline=file", ``, 200, `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 1,
   "isdefault": true,
@@ -1794,7 +1794,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// patch - contenttype:null
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f18$structure",
+		URL:    "/dirs/d1/files/f18$details",
 		Method: "PATCH",
 		ReqBody: `{
 	"contenttype": null,
@@ -1805,7 +1805,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 2,
   "isdefault": true,
@@ -1841,10 +1841,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: "foo",
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$structure?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$details?inline=file", ``, 200, `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 2,
   "isdefault": true,
@@ -1860,7 +1860,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// patch - no ct saved, implied json, set ct
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f18$structure",
+		URL:    "/dirs/d1/files/f18$details",
 		Method: "PATCH",
 		ReqBody: `{
 	"file": "foo"
@@ -1870,7 +1870,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 3,
   "isdefault": true,
@@ -1908,10 +1908,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: "foo",
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$structure?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$details?inline=file", ``, 200, `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 3,
   "isdefault": true,
@@ -1928,7 +1928,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// patch - include odd ct
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f18$structure",
+		URL:    "/dirs/d1/files/f18$details",
 		Method: "PATCH",
 		ReqBody: `{
 	"contenttype": "foo/bar",
@@ -1939,7 +1939,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 4,
   "isdefault": true,
@@ -1977,10 +1977,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: "bar",
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$structure?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$details?inline=file", ``, 200, `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 4,
   "isdefault": true,
@@ -1997,7 +1997,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// patch - has ct, set ct to null, file contents should remain
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f18$structure",
+		URL:    "/dirs/d1/files/f18$details",
 		Method: "PATCH",
 		ReqBody: `{
 	"contenttype": null
@@ -2007,7 +2007,7 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 5,
   "isdefault": true,
@@ -2043,10 +2043,10 @@ func TestHTTPContent(t *testing.T) {
 		ResBody: "bar",
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$structure?inline=file", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f18$details?inline=file", ``, 200, `{
   "fileid": "f18",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f18$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f18$details",
   "xid": "/dirs/d1/files/f18",
   "epoch": 5,
   "isdefault": true,
@@ -2142,7 +2142,7 @@ func TestHTTPContent2(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:        "/dirs/d1/files/f2$structure",
+		URL:        "/dirs/d1/files/f2$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -2154,7 +2154,7 @@ func TestHTTPContent2(t *testing.T) {
 		ResBody: `{
   "fileid": "f2",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f2$details",
   "xid": "/dirs/d1/files/f2",
   "epoch": 1,
   "isdefault": true,
@@ -2170,7 +2170,7 @@ func TestHTTPContent2(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:        "/dirs/d1/files/f2$structure",
+		URL:        "/dirs/d1/files/f2$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -2181,7 +2181,7 @@ func TestHTTPContent2(t *testing.T) {
 		ResBody: `{
   "fileid": "f2",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f2$details",
   "xid": "/dirs/d1/files/f2",
   "epoch": 2,
   "isdefault": true,
@@ -2219,7 +2219,7 @@ func TestHTTPContent2(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 4,
     "isdefault": true,
@@ -2233,7 +2233,7 @@ func TestHTTPContent2(t *testing.T) {
   "f2": {
     "fileid": "f2",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f2$details",
     "xid": "/dirs/d1/files/f2",
     "epoch": 3,
     "isdefault": true,
@@ -2247,7 +2247,7 @@ func TestHTTPContent2(t *testing.T) {
   "f3": {
     "fileid": "f3",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/f3$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f3$details",
     "xid": "/dirs/d1/files/f3",
     "epoch": 1,
     "isdefault": true,
@@ -2262,7 +2262,7 @@ func TestHTTPContent2(t *testing.T) {
   "f4": {
     "fileid": "f4",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/f4$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f4$details",
     "xid": "/dirs/d1/files/f4",
     "epoch": 1,
     "isdefault": true,
@@ -2301,7 +2301,7 @@ func TestHTTPContent2(t *testing.T) {
   "v1": {
     "fileid": "fv",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v1$details",
     "xid": "/dirs/d1/files/fv/versions/v1",
     "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
@@ -2310,7 +2310,7 @@ func TestHTTPContent2(t *testing.T) {
   "v2": {
     "fileid": "fv",
     "versionid": "v2",
-    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v2$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v2$details",
     "xid": "/dirs/d1/files/fv/versions/v2",
     "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
@@ -2319,7 +2319,7 @@ func TestHTTPContent2(t *testing.T) {
   "v3": {
     "fileid": "fv",
     "versionid": "v3",
-    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v3$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v3$details",
     "xid": "/dirs/d1/files/fv/versions/v3",
     "epoch": 1,
     "isdefault": true,
@@ -2330,7 +2330,7 @@ func TestHTTPContent2(t *testing.T) {
   "v4": {
     "fileid": "fv",
     "versionid": "v4",
-    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v4$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fv/versions/v4$details",
     "xid": "/dirs/d1/files/fv/versions/v4",
     "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
@@ -2394,7 +2394,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "f22": {
     "fileid": "f22",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/dir1/files/f22$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f22$details",
     "xid": "/dirs/dir1/files/f22",
     "epoch": 1,
     "isdefault": true,
@@ -2439,7 +2439,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "f2": {
     "fileid": "f2",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/dir1/files/f2$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f2$details",
     "xid": "/dirs/dir1/files/f2",
     "epoch": 1,
     "isdefault": true,
@@ -2472,7 +2472,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "f2": {
     "fileid": "f2",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/dir1/files/f2$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f2$details",
     "xid": "/dirs/dir1/files/f2",
     "epoch": 2,
     "isdefault": true,
@@ -2530,7 +2530,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "f2": {
     "fileid": "f2",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/dir1/files/f2$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f2$details",
     "xid": "/dirs/dir1/files/f2",
     "epoch": 3,
     "isdefault": true,
@@ -2545,7 +2545,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "f3": {
     "fileid": "f3",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/dir1/files/f3$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f3$details",
     "xid": "/dirs/dir1/files/f3",
     "epoch": 1,
     "isdefault": true,
@@ -2564,8 +2564,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT resources/f1$structure - two, bad metadata",
-		URL:        "/dirs/dir1/files/f1$structure",
+		Name:       "PUT resources/f1$details - two, bad metadata",
+		URL:        "/dirs/dir1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -2586,8 +2586,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 `})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT resources/f4$structure - new resource - bad id",
-		URL:        "/dirs/dir1/files/f4$structure",
+		Name:       "PUT resources/f4$details - new resource - bad id",
+		URL:        "/dirs/dir1/files/f4$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -2602,8 +2602,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 `})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT resources/f4$structure - new resource",
-		URL:        "/dirs/dir1/files/f4$structure",
+		Name:       "PUT resources/f4$details - new resource",
+		URL:        "/dirs/dir1/files/f4$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -2614,12 +2614,12 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code: 201,
 		ResHeaders: []string{
 			"Content-Type:application/json",
-			"Location:http://localhost:8181/dirs/dir1/files/f4$structure",
+			"Location:http://localhost:8181/dirs/dir1/files/f4$details",
 		},
 		ResBody: `{
   "fileid": "f4",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/dir1/files/f4$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f4$details",
   "xid": "/dirs/dir1/files/f4",
   "epoch": 1,
   "isdefault": true,
@@ -2662,8 +2662,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT resources/f4$structure - new resource - no id",
-		URL:        "/dirs/dir1/files/f5$structure",
+		Name:       "PUT resources/f4$details - new resource - no id",
+		URL:        "/dirs/dir1/files/f5$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -2672,12 +2672,12 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		Code: 201,
 		ResHeaders: []string{
 			"Content-Type:application/json",
-			"Location:http://localhost:8181/dirs/dir1/files/f5$structure",
+			"Location:http://localhost:8181/dirs/dir1/files/f5$details",
 		},
 		ResBody: `{
   "fileid": "f5",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/dir1/files/f5$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f5$details",
   "xid": "/dirs/dir1/files/f5",
   "epoch": 1,
   "isdefault": true,
@@ -2819,8 +2819,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST resources/f8$structure - new res,version - extra headers",
-		URL:    "/dirs/dir1/files/f8$structure",
+		Name:   "POST resources/f8$details - new res,version - extra headers",
+		URL:    "/dirs/dir1/files/f8$details",
 		Method: "POST",
 		ReqHeaders: []string{
 			"xRegistry-description: my f8",
@@ -2828,13 +2828,13 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ReqBody:    `hello`,
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Including "xRegistry" headers when "$structure" is used is invalid
+		ResBody: `Including "xRegistry" headers when "$details" is used is invalid
 `,
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f9$structure - new res,version - empty",
-		URL:        "/dirs/dir1/files/f9$structure",
+		Name:       "POST resources/f9$details - new res,version - empty",
+		URL:        "/dirs/dir1/files/f9$details",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
@@ -2843,7 +2843,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "fileid": "f9",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/dir1/files/f9/versions/1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f9/versions/1$details",
   "xid": "/dirs/dir1/files/f9/versions/1",
   "epoch": 1,
   "isdefault": true,
@@ -2854,8 +2854,8 @@ func TestHTTPResourcesBulk(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST resources/f9$structure - new res,version - empty",
-		URL:        "/dirs/dir1/files/f9$structure",
+		Name:       "POST resources/f9$details - new res,version - empty",
+		URL:        "/dirs/dir1/files/f9$details",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    `{}`,
@@ -2864,7 +2864,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "fileid": "f9",
   "versionid": "2",
-  "self": "http://localhost:8181/dirs/dir1/files/f9/versions/2$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f9/versions/2$details",
   "xid": "/dirs/dir1/files/f9/versions/2",
   "epoch": 1,
   "isdefault": true,
@@ -2904,7 +2904,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v1": {
     "fileid": "f9",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f9/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f9/versions/v1$details",
     "xid": "/dirs/dir1/files/f9/versions/v1",
     "epoch": 1,
     "isdefault": true,
@@ -2963,7 +2963,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v1": {
     "fileid": "f10a",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f10a/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f10a/versions/v1$details",
     "xid": "/dirs/dir1/files/f10a/versions/v1",
     "epoch": 1,
     "isdefault": true,
@@ -2989,7 +2989,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v1": {
     "fileid": "f99",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v1$details",
     "xid": "/dirs/dir1/files/f99/versions/v1",
     "epoch": 1,
     "createdat": "2025-01-04T13:31:22.013338763Z",
@@ -2998,7 +2998,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v2": {
     "fileid": "f99",
     "versionid": "v2",
-    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v2$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v2$details",
     "xid": "/dirs/dir1/files/f99/versions/v2",
     "epoch": 1,
     "createdat": "2025-01-04T13:31:22.013338763Z",
@@ -3007,7 +3007,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v9": {
     "fileid": "f99",
     "versionid": "v9",
-    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v9$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v9$details",
     "xid": "/dirs/dir1/files/f99/versions/v9",
     "epoch": 1,
     "isdefault": true,
@@ -3050,7 +3050,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v1": {
     "fileid": "f10",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f10/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f10/versions/v1$details",
     "xid": "/dirs/dir1/files/f10/versions/v1",
     "epoch": 1,
     "isdefault": true,
@@ -3078,7 +3078,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v1": {
     "fileid": "f11",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v1$details",
     "xid": "/dirs/dir1/files/f11/versions/v1",
     "epoch": 1,
     "isdefault": true,
@@ -3088,7 +3088,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v2": {
     "fileid": "f11",
     "versionid": "v2",
-    "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v2$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v2$details",
     "xid": "/dirs/dir1/files/f11/versions/v2",
     "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
@@ -3115,7 +3115,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v1": {
     "fileid": "f12",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1$details",
     "xid": "/dirs/dir1/files/f12/versions/v1",
     "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
@@ -3124,7 +3124,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v2": {
     "fileid": "f12",
     "versionid": "v2",
-    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2$details",
     "xid": "/dirs/dir1/files/f12/versions/v2",
     "epoch": 1,
     "isdefault": true,
@@ -3153,7 +3153,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v1": {
     "fileid": "f12",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1$details",
     "xid": "/dirs/dir1/files/f12/versions/v1",
     "epoch": 2,
     "isdefault": true,
@@ -3164,7 +3164,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v2": {
     "fileid": "f12",
     "versionid": "v2",
-    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2$details",
     "xid": "/dirs/dir1/files/f12/versions/v2",
     "epoch": 2,
     "description": "my v2",
@@ -3174,7 +3174,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v3": {
     "fileid": "f12",
     "versionid": "v3",
-    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v3$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v3$details",
     "xid": "/dirs/dir1/files/f12/versions/v3",
     "epoch": 1,
     "description": "my v3",
@@ -3202,7 +3202,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
   "v4": {
     "fileid": "f12",
     "versionid": "v4",
-    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v4$structure",
+    "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v4$details",
     "xid": "/dirs/dir1/files/f12/versions/v4",
     "epoch": 1,
     "description": "my v4",
@@ -3290,7 +3290,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT resources/f13/versions + meta - empty",
-		URL:        "/dirs/dir1/files/f13/versions/5$structure",
+		URL:        "/dirs/dir1/files/f13/versions/5$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
@@ -3299,7 +3299,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "fileid": "f13",
   "versionid": "5",
-  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/5$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/5$details",
   "xid": "/dirs/dir1/files/f13/versions/5",
   "epoch": 1,
   "isdefault": true,
@@ -3311,7 +3311,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT resources/f13/versions + meta - {}",
-		URL:        "/dirs/dir1/files/f13/versions/6$structure",
+		URL:        "/dirs/dir1/files/f13/versions/6$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    `{}`,
@@ -3320,7 +3320,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "fileid": "f13",
   "versionid": "6",
-  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6$details",
   "xid": "/dirs/dir1/files/f13/versions/6",
   "epoch": 1,
   "isdefault": true,
@@ -3332,7 +3332,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT resources/f13/versions + meta - {} again",
-		URL:        "/dirs/dir1/files/f13/versions/6$structure",
+		URL:        "/dirs/dir1/files/f13/versions/6$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    `{}`,
@@ -3341,7 +3341,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 		ResBody: `{
   "fileid": "f13",
   "versionid": "6",
-  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f13/versions/6$details",
   "xid": "/dirs/dir1/files/f13/versions/6",
   "epoch": 2,
   "isdefault": true,
@@ -3353,7 +3353,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT resources/f13/versions + meta - bad id update",
-		URL:        "/dirs/dir1/files/f13/versions/7$structure",
+		URL:        "/dirs/dir1/files/f13/versions/7$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    `{ "versionid": "77" }`,
@@ -3707,10 +3707,10 @@ func TestHTTPRegistryPatch(t *testing.T) {
 		`PATCH is not allowed on Resource documents
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{}`, 200, `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 2,
   "isdefault": true,
@@ -3726,12 +3726,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	v.Refresh()
 	xCheck(t, v.GetAsString("modifiedat") != vmod, "Should be diff")
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "description": "testing"
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 3,
   "isdefault": true,
@@ -3745,12 +3745,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "description": null
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 4,
   "isdefault": true,
@@ -3763,7 +3763,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "labels": {
 	    "foo": "bar"
 	  },
@@ -3771,7 +3771,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 5,
   "isdefault": true,
@@ -3787,12 +3787,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "labels": {}
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 6,
   "isdefault": true,
@@ -3806,12 +3806,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "labels": null
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 7,
   "isdefault": true,
@@ -3824,12 +3824,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "rext": "str"
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 8,
   "isdefault": true,
@@ -3843,12 +3843,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "rext": null
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 9,
   "isdefault": true,
@@ -3861,7 +3861,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", `{
 	  "badext": "str"
 	}`, 400, `Invalid extension(s): badext
 `)
@@ -3881,10 +3881,10 @@ func TestHTTPRegistryPatch(t *testing.T) {
 		`PATCH is not allowed on Resource documents
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{}`, 200, `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 10,
   "isdefault": true,
@@ -3896,12 +3896,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	v.Refresh()
 	xCheck(t, v.GetAsString("modifiedat") != vmod, "Should be diff")
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "description": "testing"
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 11,
   "isdefault": true,
@@ -3911,12 +3911,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "description": null
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 12,
   "isdefault": true,
@@ -3925,7 +3925,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "labels": {
 	    "foo": "bar"
 	  },
@@ -3933,7 +3933,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 13,
   "isdefault": true,
@@ -3945,12 +3945,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "labels": {}
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 14,
   "isdefault": true,
@@ -3960,12 +3960,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "labels": null
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 15,
   "isdefault": true,
@@ -3974,12 +3974,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "rext": "str"
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 16,
   "isdefault": true,
@@ -3989,12 +3989,12 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "rext": null
 	}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 17,
   "isdefault": true,
@@ -4003,7 +4003,7 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{
 	  "badext": "str"
 	}`, 400, `Invalid extension(s): badext
 `)
@@ -4023,10 +4023,10 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2$structure", `{}`, 201, `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2$details", `{}`, 201, `{
   "fileid": "f2",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/dir2/files/f2$structure",
+  "self": "http://localhost:8181/dirs/dir2/files/f2$details",
   "xid": "/dirs/dir2/files/f2",
   "epoch": 1,
   "isdefault": true,
@@ -4039,10 +4039,10 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2/versions/v2$structure", `{}`, 201, `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir2/files/f2/versions/v2$details", `{}`, 201, `{
   "fileid": "f2",
   "versionid": "v2",
-  "self": "http://localhost:8181/dirs/dir2/files/f2/versions/v2$structure",
+  "self": "http://localhost:8181/dirs/dir2/files/f2/versions/v2$details",
   "xid": "/dirs/dir2/files/f2/versions/v2",
   "epoch": 1,
   "isdefault": true,
@@ -4051,10 +4051,10 @@ func TestHTTPRegistryPatch(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir3/files/f3/versions/v3$structure", `{}`, 201, `{
+	xHTTP(t, reg, "PATCH", "/dirs/dir3/files/f3/versions/v3$details", `{}`, 201, `{
   "fileid": "f3",
   "versionid": "v3",
-  "self": "http://localhost:8181/dirs/dir3/files/f3/versions/v3$structure",
+  "self": "http://localhost:8181/dirs/dir3/files/f3/versions/v3$details",
   "xid": "/dirs/dir3/files/f3/versions/v3",
   "epoch": 1,
   "isdefault": true,
@@ -4072,11 +4072,11 @@ func TestHTTPEpoch(t *testing.T) {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure", `{}`,
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", `{}`,
 		201, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 1,
   "isdefault": true,
@@ -4098,11 +4098,11 @@ func TestHTTPEpoch(t *testing.T) {
   "filescount": 1
 }
 `)
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure",
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details",
 		`{"epoch":null}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1$details",
   "xid": "/dirs/dir1/files/f1",
   "epoch": 2,
   "isdefault": true,
@@ -4114,11 +4114,11 @@ func TestHTTPEpoch(t *testing.T) {
   "versionscount": 1
 }
 `)
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure",
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details",
 		`{"epoch":null}`, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 3,
   "isdefault": true,
@@ -4141,8 +4141,8 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 
 	xNoErr(t, err)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$structure",
-		`{}`, 400, `Specifying "$structure" for a Resource that has the model "hasdocument" value set to "false" is invalid
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details",
+		`{}`, 400, `Specifying "$details" for a Resource that has the model "hasdocument" value set to "false" is invalid
 `)
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1",
@@ -4180,8 +4180,8 @@ func TestHTTPRegistryPatchNoDoc(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$structure",
-		`{}`, 400, `Specifying "$structure" for a Resource that has the model "hasdocument" value set to "false" is invalid
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details",
+		`{}`, 400, `Specifying "$details" for a Resource that has the model "hasdocument" value set to "false" is invalid
 `)
 
 	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1",
@@ -4434,11 +4434,11 @@ func TestHTTPmeta(t *testing.T) {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1$structure", `{}`, 201,
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1$details", `{}`, 201,
 		`{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$structure",
+  "self": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
   "xid": "/dirs/dir1/files/f1/versions/v1",
   "epoch": 1,
   "isdefault": true,
@@ -4447,30 +4447,30 @@ func TestHTTPmeta(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PUT", "$structure", `{}`, 400, `$structure isn't allowed on "/$structure"
+	xHTTP(t, reg, "PUT", "$details", `{}`, 400, `$details isn't allowed on "/$details"
 `)
-	xHTTP(t, reg, "PUT", "/$structure", `{}`, 400, `$structure isn't allowed on "/$structure"
+	xHTTP(t, reg, "PUT", "/$details", `{}`, 400, `$details isn't allowed on "/$details"
 `)
-	xHTTP(t, reg, "PUT", "/dirs$structure", `{}`, 400, `$structure isn't allowed on "/dirs$structure"
+	xHTTP(t, reg, "PUT", "/dirs$details", `{}`, 400, `$details isn't allowed on "/dirs$details"
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1$structure", `{}`, 400, `$structure isn't allowed on "/dirs/dir1$structure"
+	xHTTP(t, reg, "PUT", "/dirs/dir1$details", `{}`, 400, `$details isn't allowed on "/dirs/dir1$details"
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1/$structure", `{}`, 400,
-		`$structure isn't allowed on "/dirs/dir1/$structure"
+	xHTTP(t, reg, "PUT", "/dirs/dir1/$details", `{}`, 400,
+		`$details isn't allowed on "/dirs/dir1/$details"
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files$structure", `{}`, 400,
-		`$structure isn't allowed on "/dirs/dir1/files$structure"
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files$details", `{}`, 400,
+		`$details isn't allowed on "/dirs/dir1/files$details"
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/$structure", `{}`, 400,
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/$details", `{}`, 400,
 		`Resource id in URL can't be blank
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions$structure", `{}`, 400,
-		`$structure isn't allowed on "/dirs/dir1/files/f1/versions$structure"
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions$details", `{}`, 400,
+		`$details isn't allowed on "/dirs/dir1/files/f1/versions$details"
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/$structure", `{}`, 400,
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/$details", `{}`, 400,
 		`Version id in URL can't be blank
 `)
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1/$structure", `{}`, 404,
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1/$details", `{}`, 404,
 		`URL is too long
 `)
 }
@@ -4779,7 +4779,7 @@ func TestHTTPURLs(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d2/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d2/files/f1$details",
     "xid": "/dirs/d2/files/f1",
     "epoch": 1,
     "isdefault": true,
@@ -4894,10 +4894,10 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `this is a new version`,
 	})
 
-	// GET /GROUPs/gID/RESOURCEs/rID$structure
+	// GET /GROUPs/gID/RESOURCEs/rID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "GET /GROUPs/gID/REOURCES/rID$structure",
-		URL:        "/dirs/d2/files/f1$structure",
+		Name:       "GET /GROUPs/gID/REOURCES/rID$details",
+		URL:        "/dirs/d2/files/f1$details",
 		Method:     "GET",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
@@ -4906,7 +4906,7 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "2",
-  "self": "http://localhost:8181/dirs/d2/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d2/files/f1$details",
   "xid": "/dirs/d2/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -4920,10 +4920,10 @@ func TestHTTPURLs(t *testing.T) {
 }
 `})
 
-	// PUT /GROUPs/gID/RESOURCEs/rID$structure
+	// PUT /GROUPs/gID/RESOURCEs/rID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /GROUPs/gID/REOURCES/rID$structure",
-		URL:        "/dirs/d2/files/f1$structure",
+		Name:       "PUT /GROUPs/gID/REOURCES/rID$details",
+		URL:        "/dirs/d2/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    `{ "description": "update 2" }`,
@@ -4932,7 +4932,7 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "2",
-  "self": "http://localhost:8181/dirs/d2/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d2/files/f1$details",
   "xid": "/dirs/d2/files/f1",
   "epoch": 2,
   "isdefault": true,
@@ -4946,10 +4946,10 @@ func TestHTTPURLs(t *testing.T) {
 }
 `})
 
-	// PATCH /GROUPs/gID/RESOURCEs/rID$structure
+	// PATCH /GROUPs/gID/RESOURCEs/rID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /GROUPs/gID/REOURCES/rID$structure",
-		URL:        "/dirs/d2/files/f1$structure",
+		Name:       "PATCH /GROUPs/gID/REOURCES/rID$details",
+		URL:        "/dirs/d2/files/f1$details",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody:    `{ "labels": {"l1":"v1"} }`,
@@ -4958,7 +4958,7 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "2",
-  "self": "http://localhost:8181/dirs/d2/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d2/files/f1$details",
   "xid": "/dirs/d2/files/f1",
   "epoch": 3,
   "isdefault": true,
@@ -4975,10 +4975,10 @@ func TestHTTPURLs(t *testing.T) {
 }
 `})
 
-	// POST /GROUPs/gID/RESOURCEs/rID$structure
+	// POST /GROUPs/gID/RESOURCEs/rID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST /GROUPs/gID/REOURCES/rID$structure",
-		URL:        "/dirs/d2/files/f1$structure",
+		Name:       "POST /GROUPs/gID/REOURCES/rID$details",
+		URL:        "/dirs/d2/files/f1$details",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -4990,7 +4990,7 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "3",
-  "self": "http://localhost:8181/dirs/d2/files/f1/versions/3$structure",
+  "self": "http://localhost:8181/dirs/d2/files/f1/versions/3$details",
   "xid": "/dirs/d2/files/f1/versions/3",
   "epoch": 1,
   "isdefault": true,
@@ -5003,7 +5003,7 @@ func TestHTTPURLs(t *testing.T) {
 
 	// GET /GROUPs/gID/RESOURCEs/rID/versions
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "GET /GROUPs/gID/REOURCES/rID$structure",
+		Name:       "GET /GROUPs/gID/REOURCES/rID$details",
 		URL:        "/dirs/d2/files/f1/versions",
 		Method:     "GET",
 		ReqHeaders: []string{},
@@ -5014,7 +5014,7 @@ func TestHTTPURLs(t *testing.T) {
   "1": {
     "fileid": "f1",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d2/files/f1/versions/1$structure",
+    "self": "http://localhost:8181/dirs/d2/files/f1/versions/1$details",
     "xid": "/dirs/d2/files/f1/versions/1",
     "epoch": 2,
     "description": "new f1",
@@ -5025,7 +5025,7 @@ func TestHTTPURLs(t *testing.T) {
   "2": {
     "fileid": "f1",
     "versionid": "2",
-    "self": "http://localhost:8181/dirs/d2/files/f1/versions/2$structure",
+    "self": "http://localhost:8181/dirs/d2/files/f1/versions/2$details",
     "xid": "/dirs/d2/files/f1/versions/2",
     "epoch": 3,
     "description": "update 2",
@@ -5038,7 +5038,7 @@ func TestHTTPURLs(t *testing.T) {
   "3": {
     "fileid": "f1",
     "versionid": "3",
-    "self": "http://localhost:8181/dirs/d2/files/f1/versions/3$structure",
+    "self": "http://localhost:8181/dirs/d2/files/f1/versions/3$details",
     "xid": "/dirs/d2/files/f1/versions/3",
     "epoch": 1,
     "isdefault": true,
@@ -5087,7 +5087,7 @@ func TestHTTPURLs(t *testing.T) {
   "v4": {
     "fileid": "f1",
     "versionid": "v4",
-    "self": "http://localhost:8181/dirs/d2/files/f1/versions/v4$structure",
+    "self": "http://localhost:8181/dirs/d2/files/f1/versions/v4$details",
     "xid": "/dirs/d2/files/f1/versions/v4",
     "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
@@ -5096,7 +5096,7 @@ func TestHTTPURLs(t *testing.T) {
   "v5": {
     "fileid": "f1",
     "versionid": "v5",
-    "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$structure",
+    "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$details",
     "xid": "/dirs/d2/files/f1/versions/v5",
     "epoch": 1,
     "isdefault": true,
@@ -5177,10 +5177,10 @@ func TestHTTPURLs(t *testing.T) {
 `,
 	})
 
-	// GET /GROUPs/gID/RESOURCEs/rID/versions/vID$structure
+	// GET /GROUPs/gID/RESOURCEs/rID/versions/vID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "GET /GROUPs/gID/REOURCES/rID/versions/vID$structure",
-		URL:        "/dirs/d2/files/f1/versions/v5$structure",
+		Name:       "GET /GROUPs/gID/REOURCES/rID/versions/vID$details",
+		URL:        "/dirs/d2/files/f1/versions/v5$details",
 		Method:     "GET",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
@@ -5189,7 +5189,7 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v5",
-  "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$structure",
+  "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$details",
   "xid": "/dirs/d2/files/f1/versions/v5",
   "epoch": 2,
   "isdefault": true,
@@ -5199,10 +5199,10 @@ func TestHTTPURLs(t *testing.T) {
 }
 `})
 
-	// PUT /GROUPs/gID/RESOURCEs/rID/versions/vID$structure
+	// PUT /GROUPs/gID/RESOURCEs/rID/versions/vID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /GROUPs/gID/REOURCES/rID/versions/vID$structure",
-		URL:        "/dirs/d2/files/f1/versions/v5$structure",
+		Name:       "PUT /GROUPs/gID/REOURCES/rID/versions/vID$details",
+		URL:        "/dirs/d2/files/f1/versions/v5$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5213,7 +5213,7 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v5",
-  "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$structure",
+  "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$details",
   "xid": "/dirs/d2/files/f1/versions/v5",
   "epoch": 3,
   "isdefault": true,
@@ -5223,10 +5223,10 @@ func TestHTTPURLs(t *testing.T) {
 }
 `})
 
-	// PATCH /GROUPs/gID/RESOURCEs/rID/versions/vID$structure
+	// PATCH /GROUPs/gID/RESOURCEs/rID/versions/vID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /GROUPs/gID/REOURCES/rID/versions/vID$structure",
-		URL:        "/dirs/d2/files/f1/versions/v5$structure",
+		Name:       "PATCH /GROUPs/gID/REOURCES/rID/versions/vID$details",
+		URL:        "/dirs/d2/files/f1/versions/v5$details",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5237,7 +5237,7 @@ func TestHTTPURLs(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v5",
-  "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$structure",
+  "self": "http://localhost:8181/dirs/d2/files/f1/versions/v5$details",
   "xid": "/dirs/d2/files/f1/versions/v5",
   "epoch": 4,
   "isdefault": true,
@@ -5250,10 +5250,10 @@ func TestHTTPURLs(t *testing.T) {
 }
 `})
 
-	// POST /GROUPs/gID/RESOURCEs/rID/versions/vID$structure
+	// POST /GROUPs/gID/RESOURCEs/rID/versions/vID$details
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST /GROUPs/gID/REOURCES/rID/versions/vID$structure",
-		URL:        "/dirs/d2/files/f1/versions/v5$structure",
+		Name:       "POST /GROUPs/gID/REOURCES/rID/versions/vID$details",
+		URL:        "/dirs/d2/files/f1/versions/v5$details",
 		Method:     "POST",
 		ReqHeaders: []string{},
 		ReqBody:    ``,
@@ -5403,7 +5403,7 @@ func TestHTTPNestedRegistry(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -5420,14 +5420,14 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "1": {
               "fileid": "f1",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -5513,7 +5513,7 @@ func TestHTTPNestedRegistry(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 2,
           "isdefault": true,
@@ -5531,14 +5531,14 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:04Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "1": {
               "fileid": "f1",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 2,
               "isdefault": true,
@@ -5633,7 +5633,7 @@ func TestHTTPNestedRegistry(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "2",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -5651,7 +5651,7 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "2",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$structure",
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$details",
             "defaultversionsticky": true
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
@@ -5659,7 +5659,7 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "1": {
               "fileid": "f1",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 3,
               "description": "f1-1.1",
@@ -5669,7 +5669,7 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "2": {
               "fileid": "f1",
               "versionid": "2",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/2$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/2$details",
               "xid": "/dirs/d1/files/f1/versions/2",
               "epoch": 1,
               "isdefault": true,
@@ -5700,7 +5700,7 @@ func TestHTTPNestedResources(t *testing.T) {
 	// Registry + Nested Groups
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + new",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    `{ "description": "f1" }`,
@@ -5709,7 +5709,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -5724,11 +5724,11 @@ func TestHTTPNestedResources(t *testing.T) {
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline", ``, 200,
 		`{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -5746,14 +5746,14 @@ func TestHTTPNestedResources(t *testing.T) {
     "modifiedat": "2024-01-01T12:00:00Z",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versions": {
     "1": {
       "fileid": "f1",
       "versionid": "1",
-      "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
       "xid": "/dirs/d1/files/f1/versions/1",
       "epoch": 1,
       "isdefault": true,
@@ -5768,7 +5768,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + bad defaultversionid",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5786,7 +5786,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + sticky not bool",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5804,7 +5804,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + sticky null",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5819,7 +5819,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 2,
   "isdefault": true,
@@ -5849,7 +5849,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + missing sticky",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5863,7 +5863,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 3,
   "isdefault": true,
@@ -5893,7 +5893,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + sticky",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5906,7 +5906,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 4,
   "isdefault": true,
@@ -5937,7 +5937,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + new version, sticky",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5950,7 +5950,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 5,
   "isdefault": true,
@@ -5980,11 +5980,11 @@ func TestHTTPNestedResources(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline", ``, 200,
 		`{
   "fileid": "f1",
   "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 5,
   "isdefault": true,
@@ -6002,7 +6002,7 @@ func TestHTTPNestedResources(t *testing.T) {
     "modifiedat": "2024-01-01T12:00:02Z",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
     "defaultversionsticky": true
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
@@ -6010,7 +6010,7 @@ func TestHTTPNestedResources(t *testing.T) {
     "1": {
       "fileid": "f1",
       "versionid": "1",
-      "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
       "xid": "/dirs/d1/files/f1/versions/1",
       "epoch": 5,
       "isdefault": true,
@@ -6021,7 +6021,7 @@ func TestHTTPNestedResources(t *testing.T) {
     "v2": {
       "fileid": "f1",
       "versionid": "v2",
-      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
       "xid": "/dirs/d1/files/f1/versions/v2",
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
@@ -6034,7 +6034,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + new version, non-sticky",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6050,7 +6050,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v3",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -6079,7 +6079,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + sticky old ver, add newV",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6097,7 +6097,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v2",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 2,
   "isdefault": true,
@@ -6128,7 +6128,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + defaultversionid=newV",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6146,7 +6146,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v5",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -6177,7 +6177,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + defaultversionid=oldV",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6190,7 +6190,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v2",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 3,
   "isdefault": true,
@@ -6221,7 +6221,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + sticky-nochange",
-		URL:        "/dirs/d1/files/f1$structure",
+		URL:        "/dirs/d1/files/f1$details",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6234,7 +6234,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v2",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 4,
   "isdefault": true,
@@ -6265,7 +6265,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + nodefaultversionsticky",
-		URL:        "/dirs/d1/files/f1$structure?nodefaultversionsticky",
+		URL:        "/dirs/d1/files/f1$details?nodefaultversionsticky",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6278,7 +6278,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v2",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 5,
   "isdefault": true,
@@ -6309,7 +6309,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + nodefaultversionid",
-		URL:        "/dirs/d1/files/f1$structure?nodefaultversionid",
+		URL:        "/dirs/d1/files/f1$details?nodefaultversionid",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6322,7 +6322,7 @@ func TestHTTPNestedResources(t *testing.T) {
 		ResBody: `{
   "fileid": "f1",
   "versionid": "v2",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 6,
   "isdefault": true,
@@ -6642,7 +6642,7 @@ func TestHTTPRecursiveData(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -6663,14 +6663,14 @@ func TestHTTPRecursiveData(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "isdefault": true,
@@ -6687,7 +6687,7 @@ func TestHTTPRecursiveData(t *testing.T) {
         "f2": {
           "fileid": "f2",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f2$details",
           "xid": "/dirs/d1/files/f2",
           "epoch": 1,
           "isdefault": true,
@@ -6706,14 +6706,14 @@ func TestHTTPRecursiveData(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
           "versions": {
             "1": {
               "fileid": "f2",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
               "xid": "/dirs/d1/files/f2/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -6728,7 +6728,7 @@ func TestHTTPRecursiveData(t *testing.T) {
         "f3": {
           "fileid": "f3",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f3$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f3$details",
           "xid": "/dirs/d1/files/f3",
           "epoch": 1,
           "isdefault": true,
@@ -6747,14 +6747,14 @@ func TestHTTPRecursiveData(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f3/versions",
           "versions": {
             "1": {
               "fileid": "f3",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f3/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f3/versions/1$details",
               "xid": "/dirs/d1/files/f3/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -6769,7 +6769,7 @@ func TestHTTPRecursiveData(t *testing.T) {
         "f4": {
           "fileid": "f4",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f4$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f4$details",
           "xid": "/dirs/d1/files/f4",
           "epoch": 1,
           "isdefault": true,
@@ -6790,14 +6790,14 @@ func TestHTTPRecursiveData(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f4/versions/1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f4/versions/1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f4/versions",
           "versions": {
             "1": {
               "fileid": "f4",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f4/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f4/versions/1$details",
               "xid": "/dirs/d1/files/f4/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -6814,7 +6814,7 @@ func TestHTTPRecursiveData(t *testing.T) {
         "f5": {
           "fileid": "f5",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f5$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f5$details",
           "xid": "/dirs/d1/files/f5",
           "epoch": 1,
           "isdefault": true,
@@ -6832,14 +6832,14 @@ func TestHTTPRecursiveData(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f5/versions",
           "versions": {
             "1": {
               "fileid": "f5",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f5/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f5/versions/1$details",
               "xid": "/dirs/d1/files/f5/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -6917,7 +6917,7 @@ func TestHTTPRecursiveData(t *testing.T) {
         "f1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1$details",
           "xid": "/dirs/d1/files/f1",
           "epoch": 1,
           "isdefault": true,
@@ -6938,14 +6938,14 @@ func TestHTTPRecursiveData(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "isdefault": true,
@@ -6962,7 +6962,7 @@ func TestHTTPRecursiveData(t *testing.T) {
         "f2": {
           "fileid": "f2",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f2$details",
           "xid": "/dirs/d1/files/f2",
           "epoch": 1,
           "isdefault": true,
@@ -6981,14 +6981,14 @@ func TestHTTPRecursiveData(t *testing.T) {
             "modifiedat": "2024-01-01T12:00:02Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
           "versions": {
             "1": {
               "fileid": "f2",
               "versionid": "1",
-              "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+              "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
               "xid": "/dirs/d1/files/f2/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -7056,7 +7056,7 @@ func TestHTTPRecursiveData(t *testing.T) {
       "f1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1$details",
         "xid": "/dirs/d1/files/f1",
         "epoch": 1,
         "isdefault": true,
@@ -7077,14 +7077,14 @@ func TestHTTPRecursiveData(t *testing.T) {
           "modifiedat": "2024-01-01T12:00:01Z",
 
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
         },
         "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
         "versions": {
           "v1": {
             "fileid": "f1",
             "versionid": "v1",
-            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+            "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
             "xid": "/dirs/d1/files/f1/versions/v1",
             "epoch": 1,
             "isdefault": true,
@@ -7101,7 +7101,7 @@ func TestHTTPRecursiveData(t *testing.T) {
       "f2": {
         "fileid": "f2",
         "versionid": "1",
-        "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f2$details",
         "xid": "/dirs/d1/files/f2",
         "epoch": 1,
         "isdefault": true,
@@ -7120,14 +7120,14 @@ func TestHTTPRecursiveData(t *testing.T) {
           "modifiedat": "2024-01-01T12:00:01Z",
 
           "defaultversionid": "1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure"
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
         },
         "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
         "versions": {
           "1": {
             "fileid": "f2",
             "versionid": "1",
-            "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+            "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
             "xid": "/dirs/d1/files/f2/versions/1",
             "epoch": 1,
             "isdefault": true,
@@ -7188,7 +7188,7 @@ func TestHTTPRecursiveData(t *testing.T) {
     "f1": {
       "fileid": "f1",
       "versionid": "v1",
-      "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f1$details",
       "xid": "/dirs/d1/files/f1",
       "epoch": 1,
       "isdefault": true,
@@ -7209,14 +7209,14 @@ func TestHTTPRecursiveData(t *testing.T) {
         "modifiedat": "2024-01-01T12:00:01Z",
 
         "defaultversionid": "v1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
       },
       "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
       "versions": {
         "v1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
           "xid": "/dirs/d1/files/f1/versions/v1",
           "epoch": 1,
           "isdefault": true,
@@ -7233,7 +7233,7 @@ func TestHTTPRecursiveData(t *testing.T) {
     "f2": {
       "fileid": "f2",
       "versionid": "1",
-      "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f2$details",
       "xid": "/dirs/d1/files/f2",
       "epoch": 1,
       "isdefault": true,
@@ -7252,14 +7252,14 @@ func TestHTTPRecursiveData(t *testing.T) {
         "modifiedat": "2024-01-01T12:00:01Z",
 
         "defaultversionid": "1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
       },
       "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
       "versions": {
         "1": {
           "fileid": "f2",
           "versionid": "1",
-          "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+          "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
           "xid": "/dirs/d1/files/f2/versions/1",
           "epoch": 1,
           "isdefault": true,
@@ -7295,7 +7295,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 1,
     "isdefault": true,
@@ -7310,7 +7310,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "f2": {
     "fileid": "f2",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f2$details",
     "xid": "/dirs/d1/files/f2",
     "epoch": 1,
     "isdefault": true,
@@ -7329,7 +7329,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 1,
     "isdefault": true,
@@ -7350,14 +7350,14 @@ func TestHTTPRecursiveData(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
       "v1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 1,
         "isdefault": true,
@@ -7374,7 +7374,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "f2": {
     "fileid": "f2",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f2$details",
     "xid": "/dirs/d1/files/f2",
     "epoch": 1,
     "isdefault": true,
@@ -7393,14 +7393,14 @@ func TestHTTPRecursiveData(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
     "versions": {
       "1": {
         "fileid": "f2",
         "versionid": "1",
-        "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
         "xid": "/dirs/d1/files/f2/versions/1",
         "epoch": 1,
         "isdefault": true,
@@ -7417,7 +7417,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details", `{
   "file": { "foo": "bar" },
   "versions": {
 	"v1": {
@@ -7428,7 +7428,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 		`{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -7442,10 +7442,10 @@ func TestHTTPRecursiveData(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$structure?inline", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline", ``, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
   "epoch": 1,
   "isdefault": true,
@@ -7466,14 +7466,14 @@ func TestHTTPRecursiveData(t *testing.T) {
     "modifiedat": "2024-01-01T12:00:01Z",
 
     "defaultversionid": "v1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versions": {
     "v1": {
       "fileid": "f1",
       "versionid": "v1",
-      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+      "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
       "xid": "/dirs/d1/files/f1/versions/v1",
       "epoch": 1,
       "isdefault": true,
@@ -7500,7 +7500,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "v1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
     "xid": "/dirs/d1/files/f1/versions/v1",
     "epoch": 1,
     "isdefault": true,
@@ -7515,7 +7515,7 @@ func TestHTTPRecursiveData(t *testing.T) {
   "v1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
     "xid": "/dirs/d1/files/f1/versions/v1",
     "epoch": 1,
     "isdefault": true,
@@ -7586,7 +7586,7 @@ func TestHTTPDefVer(t *testing.T) {
   "f2": {
     "fileid": "f2",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f2$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f2$details",
     "xid": "/dirs/d1/files/f2",
     "epoch": 1,
     "isdefault": true,
@@ -7626,11 +7626,11 @@ func TestHTTPInvalidID(t *testing.T) {
 	xHTTP(t, reg, "POST", "/dirs/", `{"d1":{"dirid": "d2*" }}`, 400,
 		`Invalid ID "d2*", must match: `+match+"\n")
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1*$structure", `{}`, 400,
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1*$details", `{}`, 400,
 		`Invalid ID "f1*", must match: `+match+"\n")
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{"fileid":"f1*"}`, 400,
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details", `{"fileid":"f1*"}`, 400,
 		"The \"fileid\" attribute must be set to \"f1\", not \"f1*\"\n")
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{"versionid":"v1*"}`,
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details", `{"versionid":"v1*"}`,
 		400,
 		`Invalid ID "v1*", must match: `+match+"\n")
 
@@ -7638,10 +7638,10 @@ func TestHTTPInvalidID(t *testing.T) {
 		`Invalid ID "v1*", must match: `+match+"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1*", `{}`, 400,
 		`Invalid ID "v1*", must match: `+match+"\n")
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$details",
 		`{"versionid": "v1*"}`, 400,
 		`Invalid ID "v1*", must match: `+match+"\n")
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$structure",
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$details",
 		`{"fileid": "f1*"}`, 400,
 		`Invalid ID "f1*", must match: `+match+"\n")
 }

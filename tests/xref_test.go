@@ -58,7 +58,7 @@ func TestXrefBasic(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 1,
     "isdefault": true,
@@ -72,7 +72,7 @@ func TestXrefBasic(t *testing.T) {
   "fx": {
     "fileid": "fx",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fx$details",
     "xid": "/dirs/d1/files/fx",
     "epoch": 1,
     "isdefault": true,
@@ -97,7 +97,7 @@ func TestXrefBasic(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
@@ -116,14 +116,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
       "v1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
@@ -138,7 +138,7 @@ func TestXrefBasic(t *testing.T) {
   "fx": {
     "fileid": "fx",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fx$details",
     "xid": "/dirs/d1/files/fx",
     "epoch": 2,
     "name": "v1 name",
@@ -158,14 +158,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
       "v1": {
         "fileid": "fx",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details",
         "xid": "/dirs/d1/files/fx/versions/v1",
         "epoch": 2,
         "name": "v1 name",
@@ -206,7 +206,7 @@ func TestXrefBasic(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
@@ -225,14 +225,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
       "v1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
@@ -247,7 +247,7 @@ func TestXrefBasic(t *testing.T) {
   "fx": {
     "fileid": "fx",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fx$details",
     "xid": "/dirs/d1/files/fx",
     "epoch": 1,
     "isdefault": true,
@@ -264,14 +264,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:03Z",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
       "1": {
         "fileid": "fx",
         "versionid": "1",
-        "self": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/fx/versions/1$details",
         "xid": "/dirs/d1/files/fx/versions/1",
         "epoch": 1,
         "isdefault": true,
@@ -303,7 +303,7 @@ func TestXrefBasic(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
@@ -322,14 +322,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
       "v1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
@@ -344,7 +344,7 @@ func TestXrefBasic(t *testing.T) {
   "fx": {
     "fileid": "fx",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fx$details",
     "xid": "/dirs/d1/files/fx",
     "epoch": 2,
     "name": "v1 name",
@@ -364,14 +364,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
       "v1": {
         "fileid": "fx",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details",
         "xid": "/dirs/d1/files/fx/versions/v1",
         "epoch": 2,
         "name": "v1 name",
@@ -402,7 +402,7 @@ func TestXrefBasic(t *testing.T) {
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
     "epoch": 2,
     "name": "v1 name",
@@ -421,14 +421,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:01Z",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
       "v1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 2,
         "name": "v1 name",
@@ -443,7 +443,7 @@ func TestXrefBasic(t *testing.T) {
   "fx": {
     "fileid": "fx",
     "versionid": "1",
-    "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "self": "http://localhost:8181/dirs/d1/files/fx$details",
     "xid": "/dirs/d1/files/fx",
     "epoch": 1,
     "name": "fx name",
@@ -462,14 +462,14 @@ func TestXrefBasic(t *testing.T) {
       "modifiedat": "2024-01-01T12:00:03Z",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
       "1": {
         "fileid": "fx",
         "versionid": "1",
-        "self": "http://localhost:8181/dirs/d1/files/fx/versions/1$structure",
+        "self": "http://localhost:8181/dirs/d1/files/fx/versions/1$details",
         "xid": "/dirs/d1/files/fx/versions/1",
         "epoch": 1,
         "name": "fx name",
