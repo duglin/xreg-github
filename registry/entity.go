@@ -601,7 +601,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	PanicIf(e.Registry == nil, "Registry should not be nil")
 
 	// #resource is special and is saved in it's own table
-	// Need to explicitly set #resoure to nil to delete it.
+	// Need to explicitly set #resource to nil to delete it.
 	if pp.Len() == 1 && pp.Top() == "#resource" {
 		if IsNil(val) {
 			err = Do(e.tx, `DELETE FROM ResourceContents WHERE VersionSID=?`,
@@ -618,6 +618,12 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 			if err != nil {
 				return err
 			}
+
+			// DUG TODO for fixing xref #resource issue
+			// Store versionSID as #resource's value, we'll use that
+			// as the look-up into the ResourceContents table. We can't
+			// count on the VersionSID because when we're in an xref'd
+			// entity the VersionSID won't be correct
 			val = ""
 			// Fall thru to normal processing so we save a placeholder
 			// attribute in the resource
@@ -674,7 +680,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 
 		err = DoOneTwo(e.tx, `
             REPLACE INTO Props(
-              RegistrySID, EntitySID, PropName, PropValue, PropType, Export)
+              RegistrySID, EntitySID, PropName, PropValue, PropType, Compact)
             VALUES( ?,?,?,?,?, true )`,
 			e.Registry.DbSID, e.DbSID, name, dbVal, propType)
 	}
@@ -1013,7 +1019,7 @@ var OrderedSpecProps = []*Attribute{
 
 				if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 					meta := info != nil && (info.ShowStructure ||
-						info.HasFlag("export") ||
+						info.HasFlag("compact") ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 					_, rm := e.GetModels()
 					if rm.GetHasDocument() == false {
@@ -1048,7 +1054,7 @@ var OrderedSpecProps = []*Attribute{
 					}
 					if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 						meta := info != nil && (info.ShowStructure ||
-						info.HasFlag("export") ||
+						info.HasFlag("compact") ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 						_, rm := e.GetModels()
 						if rm.GetHasDocument() == false {
@@ -1456,7 +1462,7 @@ var OrderedSpecProps = []*Attribute{
 				tmp := base + "/" + rPath + "/versions/" + val.(string)
 
 				meta := info != nil && (info.ShowStructure ||
-					info.HasFlag("export") || info.ResourceUID == "")
+					info.HasFlag("compact") || info.ResourceUID == "")
 				_, rm := e.GetModels()
 				if rm.GetHasDocument() == false {
 					meta = false

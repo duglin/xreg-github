@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -935,6 +936,41 @@ func (m *Meta) Delete() error {
 	defer log.VPrintf(3, "<Exit: Meta.Delete")
 
 	return DoOne(m.tx, `DELETE FROM Metas WHERE SID=?`, m.DbSID)
+}
+
+func (m *Meta) xGet(name string) any {
+	log.VPrintf(4, "Meta.Get: r(%s).Get(%s)", m.UID, name)
+
+	if name == m.Singular+"id" {
+		return m.Entity.Get(name)
+	}
+
+	// No matching attr, so check if we need to follow xref, and if there
+	// use that meta
+	if IsNil(m.NewObject[name]) && IsNil(m.Object[name]) {
+		_, xRes, err := m.Resource.GetXref()
+		Must(err)
+		if xRes != nil {
+			m, err = xRes.FindMeta(false)
+			Must(err)
+		}
+	}
+
+	return m.Entity.Get(name)
+}
+
+func (m *Meta) xGetAsString(path string) string {
+	val := m.Get(path)
+	if IsNil(val) {
+		return ""
+	}
+
+	if tmp := reflect.ValueOf(val).Kind(); tmp != reflect.String {
+		panic(fmt.Sprintf("Not a string - got %T(%v)", val, val))
+	}
+
+	str, _ := val.(string)
+	return str
 }
 
 func (r *Resource) GetVersions() ([]*Version, error) {

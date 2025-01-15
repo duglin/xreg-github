@@ -331,11 +331,12 @@ func xGET(t *testing.T, url string) (int, string) {
 func xHTTP(t *testing.T, reg *registry.Registry, verb, url, reqBody string, code int, resBody string) {
 	t.Helper()
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:     url,
-		Method:  verb,
-		ReqBody: reqBody,
-		Code:    code,
-		ResBody: resBody,
+		URL:        url,
+		Method:     verb,
+		ReqBody:    reqBody,
+		Code:       code,
+		ResBody:    resBody,
+		ResHeaders: []string{"*"},
 	})
 }
 
@@ -448,6 +449,11 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 	}
 
 	for name, value := range testHeaders {
+		if name == "*" {
+			continue
+			// see comment in next section
+		}
+
 		// Make sure headers that start with '-' are NOT in the response
 		if name[0] == '-' {
 			if _, ok := resHeaders[name[1:]]; ok {
@@ -488,12 +494,15 @@ func xCheckHTTP(t *testing.T, reg *registry.Registry, test *HTTPTest) {
 	}
 
 	// Make sure we don't have any extra xReg headers
-	for name, _ := range resHeaders {
-		if !strings.HasPrefix(name, "xregistry-") {
-			continue
+	// testHeaders with just "*":"" means skip all header checks
+	// didn't use len(testHeaders) == 0 to ensure we don't skip by accident
+	if len(testHeaders) != 1 || testHeaders["*"] != "" {
+		for name, _ := range resHeaders {
+			if !strings.HasPrefix(name, "xregistry-") {
+				continue
+			}
+			t.Fatalf("%s\nExtra header(%s)\nGot:%s", test.Name, name, gotHeaders)
 		}
-		t.Errorf("%s\nExtra header(%s)\nGot:%s", test.Name, name, gotHeaders)
-		t.FailNow()
 	}
 
 	// Only check body if not "*"

@@ -291,7 +291,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 	ErrFatalf(reg.Model.Verify())
 
-	g, err := reg.AddGroup("dirs", "dir1")
+	g, err := reg.AddGroup("dirs", "d1")
 	ErrFatalf(err)
 	ErrFatalf(g.SetSave("labels.private", "true"))
 	r, err := g.AddResource("files", "f1", "v1")
@@ -303,9 +303,15 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(r.SetSaveMeta("labels.none", ""))
 	ErrFatalf(r.SetSaveMeta("rext", "a string"))
 	ErrFatalf(r.SetSaveDefault("vext", "a ver string"))
-	ErrFatalf(reg.SetSave("resptr", "/dirs/dir1/files/f1/versions/v1"))
+	ErrFatalf(reg.SetSave("resptr", "/dirs/d1/files/f1/versions/v1"))
 
 	_, err = g.AddResource("datas", "d1", "v1")
+
+	_, err = g.AddResourceWithObject("files", "fx", "",
+		map[string]any{
+			"meta": map[string]any{"xref": "/dirs/d1/files/f1"},
+		}, true, false)
+	ErrFatalf(err)
 
 	reg.Commit()
 	return reg

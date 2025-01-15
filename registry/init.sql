@@ -240,13 +240,13 @@ CREATE TABLE Props (
     PropName    VARCHAR(64) NOT NULL,
     PropValue   VARCHAR($MAX_VARCHAR),
     PropType    CHAR(64) NOT NULL,          # string, boolean, int, ...
-    Export      BOOL NOT NULL,              # Should include during export?
+    Compact     BOOL NOT NULL,              # Should include during compact?
 
-    # non-Export-able attributes are ones that are generated at runtime
+    # non-compact-able attributes are ones that are generated at runtime
     # due to things like showing the Default Version props in the Resource
     # or entities/props that materialize due to an xref. Normally a GET
-    # will show all props, but during /export or ?export we want to exclude
-    # these non-Export ones. In case where all of the props for an entity
+    # will show all props, but during /export or ?compact we want to exclude
+    # these non-compact ones. In case where all of the props for an entity
     # are generated, the entire entity should vanish from the serialization.
     # e.g. Versions of an xref'd Resource.
 
@@ -371,7 +371,7 @@ SELECT
     P.PropName,
     P.PropValue,
     P.PropType,
-    false                         # Export
+    false                         # Compact
 FROM xRefSrc2TgtResources AS xR
 JOIN Metas AS Ms ON (Ms.ResourceSID=xR.SourceSID)
 JOIN Metas AS Mt ON (Mt.ResourceSID=xR.TargetSID)
@@ -399,7 +399,7 @@ UNION SELECT                      # Find all Version attributes (not meta)
     P.PropName,
     P.PropValue,
     P.PropType,
-    false                         # Export
+    false                         # Compact
 FROM xRefSrc2TgtResources AS xR
 JOIN Props AS P ON (
     P.EntitySID IN (
@@ -429,7 +429,7 @@ SELECT
     p.PropName,
     p.PropValue,
     p.PropType,
-    false                          # Export
+    false                          # Compact
 FROM EffectiveProps AS p
 JOIN EffectiveVersions AS v ON (p.EntitySID=v.SID)
 JOIN Metas AS m ON (m.ResourceSID=v.ResourceSID)
@@ -457,7 +457,7 @@ UNION SELECT                    # Add Resource.isdefault, always 'true'
     'isdefault$DB_IN',
     'true',
     'boolean',
-    false                       # Export
+    false                       # Compact
 FROM Metas AS m ;
 
 CREATE VIEW AllProps AS
@@ -515,7 +515,7 @@ SELECT
     PropValue,
     PropType,
     Abstract,
-    Export
+    Compact
 FROM Entities
 JOIN AllProps ON (AllProps.EntitySID=Entities.eSID)
 ORDER by Path, PropName;

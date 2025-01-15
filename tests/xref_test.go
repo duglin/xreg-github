@@ -1092,3 +1092,31 @@ func TestXrefRevert(t *testing.T) {
 	xCheckGreater(t, "ts check", fx.Get("createdat").(string), f0TS)
 
 }
+
+func TestXrefDocs(t *testing.T) {
+	reg := NewRegistry("TestXrefRevert")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", "hello world", 201, "hello world")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
+		`{"xref":"/dirs/d1/files/f1"}`, 201, `{
+  "fileid": "fx",
+  "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "xid": "/dirs/d1/files/fx/meta",
+  "xref": "/dirs/d1/files/f1",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1", "", 200, `hello world`)
+	// DUG TODO Add more tests around hasdoc + xref
+	// xHTTP(t, reg, "GET", "/dirs/d1/files/fx", "", 200, `hello world`)
+}

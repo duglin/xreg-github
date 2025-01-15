@@ -22,7 +22,7 @@ func TestExportRoot(t *testing.T) {
 	code, fullBody := xGET(t, "export")
 	xCheckEqual(t, "", code, 200)
 
-	code, manualBody := xGET(t, "?export&inline=*,capabilities,model")
+	code, manualBody := xGET(t, "?compact&inline=*,capabilities,model")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -38,8 +38,8 @@ func TestExportRoot(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [
+      "compact",
       "epoch",
-      "export",
       "filter",
       "inline",
       "nested",
@@ -408,7 +408,7 @@ func TestExportRoot(t *testing.T) {
 	// Play with ?export vanilla
 	code, fullBody = xGET(t, "export?inline=*")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?export")
+	code, manualBody = xGET(t, "?compact&inline=*")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -503,10 +503,10 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	// Play with ?export inline just capabilities
+	// Play with ?compact inline just capabilities
 	code, fullBody = xGET(t, "export?inline=capabilities")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?export&inline=capabilities")
+	code, manualBody = xGET(t, "?compact&inline=capabilities")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -522,8 +522,8 @@ func TestExportRoot(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [
+      "compact",
       "epoch",
-      "export",
       "filter",
       "inline",
       "nested",
@@ -555,10 +555,10 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	// Play with ?export inline just model
+	// Play with ?compact inline just model
 	code, fullBody = xGET(t, "export?inline=model")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?export&inline=model")
+	code, manualBody = xGET(t, "?compact&inline=model")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -834,8 +834,8 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	// Play with ?export not at root
-	xHTTP(t, reg, "GET", "/dirs?export", ``, 200, `{
+	// Play with ?compact not at root
+	xHTTP(t, reg, "GET", "/dirs?compact&inline=*", ``, 200, `{
   "d1": {
     "dirid": "d1",
     "self": "http://localhost:8181/dirs/d1",
@@ -914,7 +914,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1?compact&inline=*", ``, 200, `{
   "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
   "xid": "/dirs/d1",
@@ -991,7 +991,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=*", ``, 200, `{
   "f1": {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1$structure",
@@ -1057,7 +1057,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline=*", ``, 200, `{
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1$structure",
   "xid": "/dirs/d1/files/f1",
@@ -1108,7 +1108,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact&inline=*", ``, 200, `{
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
@@ -1121,7 +1121,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact&inline=*", ``, 200, `{
   "fileid": "fx",
   "self": "http://localhost:8181/dirs/d1/files/fx$structure",
   "xid": "/dirs/d1/files/fx",
@@ -1136,7 +1136,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?compact&inline=*", ``, 200, `{
   "fileid": "fx",
   "self": "http://localhost:8181/dirs/d1/files/fx/meta",
   "xid": "/dirs/d1/files/fx/meta",
@@ -1144,7 +1144,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?compact&inline=*", ``, 200, `{
   "v1": {
     "fileid": "f1",
     "versionid": "v1",
@@ -1175,7 +1175,7 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?export", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?compact&inline=*", ``, 200, `{
   "fileid": "f1",
   "versionid": "v1",
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
@@ -1190,16 +1190,16 @@ func TestExportRoot(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions?export", ``, 404,
-		"Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions?compact", ``, 400,
+		"'compact' flag not allowed on xref'd Versions\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/v1?export", ``, 404,
-		"Not found\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/v1?compact", ``, 400,
+		"'compact' flag not allowed on xref'd Versions\n")
 
 	// Just some filtering too for fun
 	code, fullBody = xGET(t, "export?filter=dirs.files.versions.versionid=v2&inline=*")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?export&filter=dirs.files.versions.versionid=v2")
+	code, manualBody = xGET(t, "?compact&inline=*&filter=dirs.files.versions.versionid=v2")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -1283,14 +1283,14 @@ func TestExportRoot(t *testing.T) {
 
 	code, fullBody = xGET(t, "export?filter=dirs.files.versions.versionid=vx&inline=*")
 	xCheckEqual(t, "", code, 404)
-	code, manualBody = xGET(t, "?export&filter=dirs.files.versions.versionid=vx")
+	code, manualBody = xGET(t, "?compact&inline=*&filter=dirs.files.versions.versionid=vx")
 	xCheckEqual(t, "", code, 404)
 	xCheckEqual(t, "", fullBody, manualBody)
 	xCheckEqual(t, "", fullBody, "Not found\n")
 
 	code, fullBody = xGET(t, "export?filter=dirs.files.versions.versionid=v2,dirs.files.fileid=fx&inline=*")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?export&filter=dirs.files.versions.versionid=v2,dirs.files.fileid=fx")
+	code, manualBody = xGET(t, "?compact&inline=*&filter=dirs.files.versions.versionid=v2,dirs.files.fileid=fx")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -1335,5 +1335,191 @@ func TestExportRoot(t *testing.T) {
   "dirscount": 1
 }
 `)
+
+	// Make sure that ?compact doesn't turn on ?inline by mistake.
+	// At one point ?export (?compact) implied ?inline=*
+
+	xHTTP(t, reg, "GET", "?compact", ``, 200,
+		`{
+  "specversion": "0.5",
+  "registryid": "TestExportRoot",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 2,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs?compact", ``, 200,
+		`{
+  "d1": {
+    "dirid": "d1",
+    "self": "http://localhost:8181/dirs/d1",
+    "xid": "/dirs/d1",
+    "epoch": 2,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+    "filesurl": "http://localhost:8181/dirs/d1/files",
+    "filescount": 2
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1?compact", ``, 200,
+		`{
+  "dirid": "d1",
+  "self": "http://localhost:8181/dirs/d1",
+  "xid": "/dirs/d1",
+  "epoch": 2,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "filesurl": "http://localhost:8181/dirs/d1/files",
+  "filescount": 2
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files?compact", ``, 200,
+		`{
+  "f1": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+    "xid": "/dirs/d1/files/f1",
+
+    "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+    "versionscount": 2
+  },
+  "fx": {
+    "fileid": "fx",
+    "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+    "xid": "/dirs/d1/files/fx",
+
+    "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta"
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact", ``, 200,
+		`{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$structure",
+  "xid": "/dirs/d1/files/f1",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 2
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact", ``, 200,
+		`{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "epoch": 2,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "defaultversionid": "v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?compact", ``, 200,
+		`{
+  "v1": {
+    "fileid": "f1",
+    "versionid": "v1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+    "xid": "/dirs/d1/files/f1/versions/v1",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "contenttype": "application/json"
+  },
+  "v2": {
+    "fileid": "f1",
+    "versionid": "v2",
+    "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$structure",
+    "xid": "/dirs/d1/files/f1/versions/v2",
+    "epoch": 1,
+    "isdefault": true,
+    "createdat": "YYYY-MM-DDTHH:MM:02Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+    "contenttype": "application/json"
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?compact", ``, 200,
+		`{
+  "fileid": "f1",
+  "versionid": "v1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$structure",
+  "xid": "/dirs/d1/files/f1/versions/v1",
+  "epoch": 1,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "contenttype": "application/json"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact", ``, 200,
+		`{
+  "fileid": "fx",
+  "self": "http://localhost:8181/dirs/d1/files/fx$structure",
+  "xid": "/dirs/d1/files/fx",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?compact", ``, 200,
+		`{
+  "fileid": "fx",
+  "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "xid": "/dirs/d1/files/fx/meta",
+  "xref": "/dirs/d1/files/f1"
+}
+`)
+
+	// Test some error cases. Make sure ?compact doesn't change our
+	// error checking logic
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1/foo?compact", ``, 404,
+		"URL is too long\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/v1/foo?compact", ``, 404,
+		"URL is too long\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/vx?compact", ``, 404,
+		"Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fz/versions?compact", ``, 404,
+		"Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fz?compact", ``, 404,
+		"Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/dx/files?compact", ``, 404,
+		"Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirs/d1/filesx?compact", ``, 404,
+		"Unknown Resource type: filesx\n")
+
+	xHTTP(t, reg, "GET", "/dirs/dx?compact", ``, 404,
+		"Not found\n")
+
+	xHTTP(t, reg, "GET", "/dirsx?compact", ``, 404,
+		"Unknown Group type: dirsx\n")
+
+	xHTTP(t, reg, "GET", "/dirs/dx/files/fz/versions/vx?compact", ``, 404,
+		"Not found\n")
 
 }

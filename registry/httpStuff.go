@@ -362,11 +362,11 @@ func (pw *PageWriter) Done() {
 
 	if pw.Info.RootPath == "" {
 		checked := ""
-		if pw.Info.HasFlag("export") {
+		if pw.Info.HasFlag("compact") {
 			checked = " checked"
 		}
-		options += "    <div class=export>\n" +
-			"      <input id=export type='checkbox'" + checked + "/>export\n" +
+		options += "    <div class=compact>\n" +
+			"      <input id=compact type='checkbox'" + checked + "/>compact\n" +
 			"    </div>\n"
 
 		if options != "" { // Wrapper if any
@@ -405,15 +405,12 @@ func (pw *PageWriter) Done() {
 	// Process inlines
 
 	// check to see if the currently selected inlines are the default
-	// ones based on any variant of 'export'
+	// ones based on presence of '/export'
 	defaultInlines := false
 	if pw.Info.RootPath == "export" {
 		defaultInlines = (len(pw.Info.Inlines) == 3 &&
 			pw.Info.IsInlineSet(NewPPP("capabilities").DB()) &&
 			pw.Info.IsInlineSet(NewPPP("model").DB()) &&
-			pw.Info.IsInlineSet(NewPPP("*").DB()))
-	} else if pw.Info.RootPath == "" && pw.Info.HasFlag("export") {
-		defaultInlines = (len(pw.Info.Inlines) == 1 &&
 			pw.Info.IsInlineSet(NewPPP("*").DB()))
 	}
 
@@ -695,7 +692,7 @@ func (pw *PageWriter) Done() {
     font-weight: bold ;
     margin-left: 3px ;
   }
-  .export {
+  .compact {
     margin-top: 5px ;
     font-size: 13px ;
     font-family: courier ;
@@ -860,8 +857,8 @@ function apply() {
   if (structureswitch) loc += "$structure"
   loc += "?ui"
 
-  ex = document.getElementById("export")
-  if (ex != null && ex.checked) loc += "&export"
+  ex = document.getElementById("compact")
+  if (ex != null && ex.checked) loc += "&compact"
 
   var filters = document.getElementById("filters").value
   var lines = filters.split("\n")
@@ -1131,7 +1128,12 @@ FROM FullTree WHERE RegSID=? AND `
 			v, err := readNextEntity(info.tx, results)
 
 			if v != nil && v.Type == ENTITY_META {
-				// Skip the "meta" subobject
+				// Skip the "meta" subobject, but first grab the
+				// "defaultversionid if we don't already have it,
+				// which should only be true in the xref case
+				if vID == "" {
+					vID = v.GetAsString("defaultversionid")
+				}
 				continue
 			}
 
@@ -1282,7 +1284,7 @@ func HTTPGet(info *RequestInfo) error {
 	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
 		(info.ResourceModel.GetHasDocument() == false || info.ShowStructure ||
-			info.HasFlag("export") ||
+			info.HasFlag("compact") ||
 			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
 	// Return the Resource's document
@@ -1316,14 +1318,11 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 		info.AddInline("capabilities")
 		info.AddInline("model")
 	}
-	if info.RootPath == "" && info.HasFlag("export") && len(info.Inlines) == 0 {
-		info.AddInline("*")
-	}
 
-	doExport := info.HasFlag("export") || info.RootPath == "export"
+	doCompact := info.HasFlag("compact") || info.RootPath == "export"
 
 	query, args, err := GenerateQuery(info.Registry, what, paths, filters,
-		doExport)
+		doCompact)
 	results, err := Query(info.tx, query, args...)
 	defer results.Close()
 
@@ -1345,6 +1344,27 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 	// Collections will need to print the {}, so don't error for them
 	if what != "Coll" {
 		if jw.Entity == nil {
+			// Special case, if the URL is ../rID/versions/vID?compact then
+			// check to see if Resource has xref set, if so then the error
+			// is 400, not 404
+			if info.VersionUID != "" && info.HasFlag("compact") {
+				path := strings.Join(info.Parts[:len(info.Parts)-2], "/")
+				path += "/meta"
+				entity, err := RawEntityFromPath(info.tx, info.Registry.DbSID,
+					path, false)
+				if err != nil {
+					return err
+				}
+
+				// Assume that if we cant' find the Resource's meta object
+				// then the Resource doesn't exist, so a 404 really is the
+				// best response in those cases, so skip the 400
+				if entity != nil && !IsNil(entity.Object["xref"]) {
+					info.StatusCode = http.StatusBadRequest
+					return fmt.Errorf("'compact' flag not allowed on xref'd Versions")
+				}
+			}
+
 			info.StatusCode = http.StatusNotFound
 			return fmt.Errorf("Not found")
 		}
@@ -1367,14 +1387,15 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 		}
 	}
 
-	// Another special case... .../rID/versions?export when rID has xref set
-	if jw.Entity == nil && info.HasFlag("export") && len(info.Parts) == 5 && info.Parts[4] == "versions" {
+	// GROUPS/gID/RESOURCES/rID/versions
+	// Another special case .../rID/versions?compact when rID has xref
+	if jw.Entity == nil && info.HasFlag("compact") && len(info.Parts) == 5 && info.Parts[4] == "versions" {
 		// Should be our case since "versions" can never be empty except
 		// when xref is set. If this is not longer true then we'll need to
 		// check this Resource's xref to see if it's set.
 		// Can copy the RawEntityFromPath... stuff above
-		info.StatusCode = http.StatusNotFound
-		return fmt.Errorf("Not found")
+		info.StatusCode = http.StatusBadRequest
+		return fmt.Errorf("'compact' flag not allowed on xref'd Versions")
 	}
 
 	info.AddHeader("Content-Type", "application/json")
