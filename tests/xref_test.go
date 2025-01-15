@@ -24,7 +24,7 @@ func TestXrefBasic(t *testing.T) {
 		"meta": map[string]any{
 			"xref": f1.Path, // missing leading /
 		},
-	}, false, false)
+	}, false)
 	xCheckErr(t, err, `'xref' (`+f1.Path+`) must be of the form: `+
 		`/GROUPS/gID/RESOURCES/rID`)
 
@@ -32,7 +32,7 @@ func TestXrefBasic(t *testing.T) {
 		"meta": map[string]any{
 			"xref": "foo/" + f1.Path, // make it bad
 		},
-	}, false, false)
+	}, false)
 	xCheckErr(t, err, `'xref' (foo/`+f1.Path+`) must be of the form: `+
 		`/GROUPS/gID/RESOURCES/rID`)
 
@@ -40,7 +40,7 @@ func TestXrefBasic(t *testing.T) {
 		"meta": map[string]any{
 			"xref": "/dirs/d1/files/f1",
 		},
-	}, false, false)
+	}, false)
 	xNoErr(t, err)
 
 	// Grab #createdat so we can make sure it's used when we remove 'xref'
@@ -186,7 +186,7 @@ func TestXrefBasic(t *testing.T) {
 			"meta": map[string]any{
 				"xref": nil,
 			},
-		}, registry.ADD_UPDATE, false, false)
+		}, registry.ADD_UPDATE, false)
 	xNoErr(t, err)
 	xCheckEqual(t, "", isNew, false)
 
@@ -290,7 +290,7 @@ func TestXrefBasic(t *testing.T) {
 			"meta": map[string]any{
 				"xref": "/" + f1.Path,
 			},
-		}, registry.ADD_UPDATE, false, false)
+		}, registry.ADD_UPDATE, false)
 	xNoErr(t, err)
 	xCheckEqual(t, "", isNew, false)
 
@@ -394,7 +394,7 @@ func TestXrefBasic(t *testing.T) {
 			},
 			"name":        "fx name",
 			"description": "very cool",
-		}, registry.ADD_UPDATE, false, false)
+		}, registry.ADD_UPDATE, false)
 	xNoErr(t, err)
 	xCheckEqual(t, "", isNew, false)
 
@@ -768,7 +768,7 @@ func TestXrefRevert(t *testing.T) {
 `)
 
 	// Notice "description:bye" is ignored
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta", `{
   "description": "bye",
   "meta":{"xref":null},
   "versions": { "v1": { "description": "ver1" } }
@@ -838,7 +838,7 @@ func TestXrefRevert(t *testing.T) {
 `)
 
 	// "description:bye" is ignored
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta", `{
   "description": "bye",
   "meta":{"xref":null},
   "versions": { "z1": {}, "a1": {} }
@@ -908,13 +908,13 @@ func TestXrefRevert(t *testing.T) {
 
 	// Not 100% this is legal per the spec, we should probably reject the
 	// query parameter since I think it's only allowed on 'POST /versions'
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested&setdefaultversionid=bb", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&setdefaultversionid=bb", `{
   "meta":{"xref":null },
   "versions": { "z2": {}, "b3": {} }
 } `, 400, `Version "bb" not found
 `)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested&setdefaultversionid=b3", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&setdefaultversionid=b3", `{
   "meta":{"xref":null },
   "versions": { "z2": {}, "b3": {} }
 } `, 200, `{
@@ -982,7 +982,7 @@ func TestXrefRevert(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta", `{
   "meta":{"xref":null,
           "defaultversionid": "bb",
           "defaultversionsticky": true },
@@ -990,7 +990,7 @@ func TestXrefRevert(t *testing.T) {
 } `, 400, `Version "bb" not found
 `)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta&nested", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx?inline=meta", `{
   "meta":{"xref":null,
           "defaultversionid": "b3",
           "defaultversionsticky": true },

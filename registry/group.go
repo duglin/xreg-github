@@ -61,22 +61,22 @@ func (g *Group) FindResource(rType string, id string, anyCase bool) (*Resource, 
 }
 
 func (g *Group) AddResource(rType string, id string, vID string) (*Resource, error) {
-	return g.AddResourceWithObject(rType, id, vID, nil, false, false)
+	return g.AddResourceWithObject(rType, id, vID, nil, false)
 }
 
-func (g *Group) AddResourceWithObject(rType string, id string, vID string, obj Object, doChildren bool, objIsVer bool) (*Resource, error) {
+func (g *Group) AddResourceWithObject(rType string, id string, vID string, obj Object, objIsVer bool) (*Resource, error) {
 
 	r, _, err := g.UpsertResourceWithObject(rType, id, vID, obj,
-		ADD_ADD, doChildren, objIsVer)
+		ADD_ADD, objIsVer)
 	return r, err
 }
 
 func (g *Group) UpsertResource(rType string, id string, vID string) (*Resource, bool, error) {
-	return g.UpsertResourceWithObject(rType, id, vID, nil, ADD_ADD, false, false)
+	return g.UpsertResourceWithObject(rType, id, vID, nil, ADD_ADD, false)
 }
 
 // Return: *Resource, isNew, error
-func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, obj Object, addType AddType, doChildren bool, objIsVer bool) (*Resource, bool, error) {
+func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, obj Object, addType AddType, objIsVer bool) (*Resource, bool, error) {
 	log.VPrintf(3, ">Enter: UpsertResourceWithObject(%s,%s)", rType, id)
 	defer log.VPrintf(3, "<Exit: UpsertResourceWithObject")
 
@@ -275,7 +275,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	//   version wasn't already uploaded as part of the "versions" collection
 
 	// If we're processing children, and have a versions collection, process it
-	if doChildren && len(versions) > 0 {
+	if len(versions) > 0 {
 		plural := "versions"
 		singular := "version"
 

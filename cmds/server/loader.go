@@ -310,7 +310,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	_, err = g.AddResourceWithObject("files", "fx", "",
 		map[string]any{
 			"meta": map[string]any{"xref": "/dirs/d1/files/f1"},
-		}, true, false)
+		}, false)
 	ErrFatalf(err)
 
 	reg.Commit()
@@ -347,7 +347,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 
 	g, err := reg.AddGroupWithObject("endpoints", "e1", registry.Object{
 		"usage": "producer",
-	}, false)
+	})
 	ErrFatalf(err)
 	ErrFatalf(g.SetSave("name", "end1"))
 	ErrFatalf(g.SetSave("epoch", 1))
@@ -376,7 +376,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 
 	g, err = reg.AddGroupWithObject("endpoints", "e2", registry.Object{
 		"usage": "consumer",
-	}, false)
+	})
 	ErrFatalf(err)
 	ErrFatalf(g.SetSave("name", "end1"))
 	ErrFatalf(g.SetSave("epoch", 1))
@@ -593,7 +593,7 @@ func LoadCESample(reg *registry.Registry) *registry.Registry {
 	// Endpoints
 	g, err := reg.AddGroupWithObject("endpoints", "e1", registry.Object{
 		"usage": "producer",
-	}, false)
+	})
 	ErrFatalf(err)
 
 	r, err := g.AddResource("messages", "blobCreated", "v1")
@@ -604,7 +604,7 @@ func LoadCESample(reg *registry.Registry) *registry.Registry {
 
 	g, err = reg.AddGroupWithObject("endpoints", "e2", registry.Object{
 		"usage": "consumer",
-	}, false)
+	})
 	ErrFatalf(err)
 	r, err = g.AddResource("messages", "popped", "v1.0")
 	ErrFatalf(err)
@@ -612,10 +612,10 @@ func LoadCESample(reg *registry.Registry) *registry.Registry {
 	// Schemas
 	g, err = reg.AddGroupWithObject("schemagroups", "g1", registry.Object{
 		"format": "text",
-	}, false)
+	})
 	ErrFatalf(err)
 	r, err = g.AddResourceWithObject("schemas", "popped", "v1.0",
-		registry.Object{"format": "text"}, false, false)
+		registry.Object{"format": "text"}, false)
 	ErrFatalf(err)
 	_, err = r.AddVersionWithObject("v2.0", registry.Object{
 		"format": "text",

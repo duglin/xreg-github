@@ -4613,7 +4613,7 @@ func TestHTTPEpochTimesAddRemove(t *testing.T) {
 	// Now add everything at once, epoch=1 and times are same
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/?nested",
+		URL:    "/",
 		Method: "PUT",
 		ReqBody: `{
           "dirs": {

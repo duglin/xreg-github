@@ -143,7 +143,7 @@ func TestResourceRequiredFields(t *testing.T) {
 	reg.Refresh()
 
 	f1, err := group.AddResourceWithObject("files", "f1", "v1",
-		registry.Object{"clireq": "test"}, false, false)
+		registry.Object{"clireq": "test"}, false)
 	xNoErr(t, err)
 	reg.SaveAllAndCommit()
 

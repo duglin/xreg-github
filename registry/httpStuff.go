@@ -1547,7 +1547,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if method == "PATCH" {
 			addType = ADD_PATCH
 		}
-		err = info.Registry.Update(IncomingObj, addType, info.HasFlag("nested"))
+		err = info.Registry.Update(IncomingObj, addType)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1584,7 +1584,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			g, _, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-				id, obj, addType, info.HasFlag("nested"))
+				id, obj, addType)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1614,7 +1614,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		group, isNew, err := info.Registry.UpsertGroupWithObject(info.GroupType,
-			info.GroupUID, IncomingObj, addType, info.HasFlag("nested"))
+			info.GroupUID, IncomingObj, addType)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1680,7 +1680,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			r, _, err := group.UpsertResourceWithObject(info.ResourceType,
-				id, "", obj, addType, info.HasFlag("nested"), false)
+				id, "", obj, addType, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1743,7 +1743,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 			resource, _, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
-				addType, info.HasFlag("nested"), false)
+				addType, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1759,7 +1759,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 			resource, isNew, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, "" /*versionUID*/, IncomingObj,
-				addType, info.HasFlag("nested"), false)
+				addType, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1792,7 +1792,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			// Implicitly create the resource
 			resource, isNew, err = group.UpsertResourceWithObject(
 				info.ResourceType, resourceUID, propsID, IncomingObj,
-				ADD_ADD, info.HasFlag("nested"), true)
+				ADD_ADD, true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1836,7 +1836,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			resource, _, err = group.UpsertResourceWithObject(
 				// TODO check to see if "" should be propsID
 				info.ResourceType, resourceUID, "", map[string]any{},
-				ADD_ADD, false, false)
+				ADD_ADD, false)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err
@@ -1926,7 +1926,7 @@ func HTTPPutPost(info *RequestInfo) error {
 			}
 
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, vID, IncomingObj, info.HasFlag("nested"), true)
+				resourceUID, vID, IncomingObj, true)
 
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
@@ -1993,7 +1993,7 @@ func HTTPPutPost(info *RequestInfo) error {
 		if resource == nil {
 			// Implicitly create the resource
 			resource, err = group.AddResourceWithObject(info.ResourceType,
-				resourceUID, versionUID, IncomingObj, info.HasFlag("nested"), true)
+				resourceUID, versionUID, IncomingObj, true)
 			if err != nil {
 				info.StatusCode = http.StatusBadRequest
 				return err

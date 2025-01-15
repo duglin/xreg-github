@@ -412,7 +412,7 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 	return nil
 }
 
-func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error {
+func (reg *Registry) Update(obj Object, addType AddType) error {
 	reg.SetNewObject(obj)
 
 	// Make sure we always have an ID
@@ -421,32 +421,30 @@ func (reg *Registry) Update(obj Object, addType AddType, doChildren bool) error 
 		reg.NewObject["registryid"] = reg.UID
 	}
 
-	if doChildren {
-		colls := reg.GetCollections()
-		for _, coll := range colls {
-			plural := coll[0]
-			singular := coll[1]
+	colls := reg.GetCollections()
+	for _, coll := range colls {
+		plural := coll[0]
+		singular := coll[1]
 
-			collVal := obj[plural]
-			if IsNil(collVal) {
-				continue
-			}
-			collMap, ok := collVal.(map[string]any)
+		collVal := obj[plural]
+		if IsNil(collVal) {
+			continue
+		}
+		collMap, ok := collVal.(map[string]any)
+		if !ok {
+			return fmt.Errorf("Attribute %q doesn't appear to be of a "+
+				"map of %q", plural, plural)
+		}
+		for key, val := range collMap {
+			valObj, ok := val.(map[string]any)
 			if !ok {
-				return fmt.Errorf("Attribute %q doesn't appear to be of a "+
-					"map of %q", plural, plural)
+				return fmt.Errorf("Key %q in attribute %q doesn't "+
+					"appear to be of type %q", key, plural, singular)
 			}
-			for key, val := range collMap {
-				valObj, ok := val.(map[string]any)
-				if !ok {
-					return fmt.Errorf("Key %q in attribute %q doesn't "+
-						"appear to be of type %q", key, plural, singular)
-				}
-				_, _, err := reg.UpsertGroupWithObject(plural, key, valObj,
-					addType, doChildren)
-				if err != nil {
-					return err
-				}
+			_, _, err := reg.UpsertGroupWithObject(plural, key, valObj,
+				addType)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -484,21 +482,21 @@ func (reg *Registry) FindGroup(gType string, id string, anyCase bool) (*Group, e
 }
 
 func (reg *Registry) AddGroup(gType string, id string) (*Group, error) {
-	g, _, err := reg.UpsertGroupWithObject(gType, id, nil, ADD_ADD, false)
+	g, _, err := reg.UpsertGroupWithObject(gType, id, nil, ADD_ADD)
 	return g, err
 }
 
-func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object, doChildren bool) (*Group, error) {
-	g, _, err := reg.UpsertGroupWithObject(gType, id, obj, ADD_ADD, doChildren)
+func (reg *Registry) AddGroupWithObject(gType string, id string, obj Object) (*Group, error) {
+	g, _, err := reg.UpsertGroupWithObject(gType, id, obj, ADD_ADD)
 	return g, err
 }
 
 // *Group, isNew, error
 func (reg *Registry) UpsertGroup(gType string, id string) (*Group, bool, error) {
-	return reg.UpsertGroupWithObject(gType, id, nil, ADD_UPSERT, false)
+	return reg.UpsertGroupWithObject(gType, id, nil, ADD_UPSERT)
 }
 
-func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, addType AddType, doChildren bool) (*Group, bool, error) {
+func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, addType AddType) (*Group, bool, error) {
 	log.VPrintf(3, ">Enter UpsertGroupWithObject(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit UpsertGroupWithObject")
 
@@ -597,34 +595,32 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 		}
 	}
 
-	if doChildren {
-		colls := g.GetCollections()
-		for _, coll := range colls {
-			plural := coll[0]
-			singular := coll[1]
+	colls := g.GetCollections()
+	for _, coll := range colls {
+		plural := coll[0]
+		singular := coll[1]
 
-			collVal := obj[plural]
-			if IsNil(collVal) {
-				continue
-			}
-			collMap, ok := collVal.(map[string]any)
+		collVal := obj[plural]
+		if IsNil(collVal) {
+			continue
+		}
+		collMap, ok := collVal.(map[string]any)
+		if !ok {
+			return nil, false,
+				fmt.Errorf("Attribute %q doesn't appear to be of a "+
+					"map of %q", plural, plural)
+		}
+		for key, val := range collMap {
+			valObj, ok := val.(map[string]any)
 			if !ok {
 				return nil, false,
-					fmt.Errorf("Attribute %q doesn't appear to be of a "+
-						"map of %q", plural, plural)
+					fmt.Errorf("Key %q in attribute %q doesn't "+
+						"appear to be of type %q", key, plural, singular)
 			}
-			for key, val := range collMap {
-				valObj, ok := val.(map[string]any)
-				if !ok {
-					return nil, false,
-						fmt.Errorf("Key %q in attribute %q doesn't "+
-							"appear to be of type %q", key, plural, singular)
-				}
-				_, _, err := g.UpsertResourceWithObject(plural, key, "",
-					valObj, addType, doChildren, false)
-				if err != nil {
-					return nil, false, err
-				}
+			_, _, err := g.UpsertResourceWithObject(plural, key, "",
+				valObj, addType, false)
+			if err != nil {
+				return nil, false, err
 			}
 		}
 	}

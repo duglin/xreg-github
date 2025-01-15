@@ -20,7 +20,6 @@ func TestCapabilitySimple(t *testing.T) {
     "epoch",
     "filter",
     "inline",
-    "nested",
     "nodefaultversionid",
     "nodefaultversionsticky",
     "noepoch",
@@ -61,7 +60,6 @@ func TestCapabilitySimple(t *testing.T) {
       "epoch",
       "filter",
       "inline",
-      "nested",
       "nodefaultversionid",
       "nodefaultversionsticky",
       "noepoch",
@@ -260,7 +258,6 @@ func TestCapabilityPath(t *testing.T) {
     "epoch",
     "filter",
     "inline",
-    "nested",
     "nodefaultversionid",
     "nodefaultversionsticky",
     "noepoch",
@@ -385,7 +382,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/capabilities", `{
   "enforcecompatibility": false,
   "flags": [
-    "compact", "epoch", "filter", "inline", "nested", "nodefaultversionid",
+    "compact", "epoch", "filter", "inline", "nodefaultversionid",
     "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
 	"setdefaultversionid", "specversion"
   ],
@@ -402,7 +399,6 @@ func TestCapabilityPath(t *testing.T) {
     "epoch",
     "filter",
     "inline",
-    "nested",
     "nodefaultversionid",
     "nodefaultversionsticky",
     "noepoch",
@@ -434,7 +430,6 @@ func TestCapabilityPath(t *testing.T) {
     "epoch",
     "filter",
     "inline",
-    "nested",
     "nodefaultversionid",
     "nodefaultversionsticky",
     "noepoch",
@@ -646,7 +641,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/?inline=capabilities", `{ "capabilities": {
   "enforcecompatibility": false,
   "flags": [
-    "compact", "epoch", "filter", "inline", "nested", "nodefaultversionid",
+    "compact", "epoch", "filter", "inline", "nodefaultversionid",
     "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
 	"setdefaultversionid", "specversion"
   ],
@@ -674,7 +669,6 @@ func TestCapabilityAttr(t *testing.T) {
     "epoch",
     "filter",
     "inline",
-    "nested",
     "nodefaultversionid",
     "nodefaultversionsticky",
     "noepoch",
@@ -773,7 +767,7 @@ func TestCapabilityAttr(t *testing.T) {
 }
 
 // "compact", "epoch", "filter", "inline",
-// "nested", "nodefaultversionid", "nodefaultversionsticky",
+// "nodefaultversionid", "nodefaultversionsticky",
 // "noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
 
 func TestCapabilityFlagsOff(t *testing.T) {
@@ -819,7 +813,24 @@ func TestCapabilityFlagsOff(t *testing.T) {
 }
 `)
 
-	// TODO add a test for ?compact once we support it
+	// Test ?compact
+	xHTTP(t, reg, "GET", "/dirs/d1/files?compact", `{}`, 200, `{
+  "f1": {
+    "fileid": "f1",
+    "versionid": "1",
+    "self": "http://localhost:8181/dirs/d1/files/f1",
+    "xid": "/dirs/d1/files/f1",
+    "epoch": 1,
+    "isdefault": true,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+
+    "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+    "versionscount": 1
+  }
+}
+`)
 
 	// Test ?filter & ?inline - notice value isn't even analyzed
 	xHTTP(t, reg, "GET", "/dirs/d1/files?filter=foo&inline=bar", `{}`, 200, `{
@@ -843,9 +854,8 @@ func TestCapabilityFlagsOff(t *testing.T) {
 	// Bad epoch should be ignored
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/f1?epoch=99", `{}`, 204, ``)
 
-	// Test ?nested & ?setdefaultversionid
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?nested&setdefaultversionid=x", `{
-  "versions": { "v1":{}, "v2":{} }
+	// Test ?setdefaultversionid
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?setdefaultversionid=x", `{
 }`, 201, `{
   "fileid": "f1",
   "versionid": "1",

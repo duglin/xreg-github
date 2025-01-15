@@ -21,7 +21,7 @@ type Capabilities struct {
 
 var AllowableFlags = ArrayToLower([]string{
 	"epoch", "compact", "filter", "inline",
-	"nested", "nodefaultversionid", "nodefaultversionsticky",
+	"nodefaultversionid", "nodefaultversionsticky",
 	"noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
 
 var AllowableMutable = ArrayToLower([]string{

@@ -5274,8 +5274,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 
 	// Registry + Nested Groups
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + no groups",
-		URL:        "/?nested",
+		Name:       "PUT / no groups",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    `{ "description": "myreg" }`,
@@ -5298,8 +5298,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + groups",
-		URL:        "/?nested",
+		Name:       "PUT / + groups",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5343,8 +5343,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + groups+resources",
-		URL:        "/?nested",
+		Name:       "PUT / + groups+resources",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5446,8 +5446,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + groups+resources+versions",
-		URL:        "/?nested",
+		Name:       "PUT / + groups+resources+versions",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5558,8 +5558,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + groups+resources+versions*2",
-		URL:        "/?nested",
+		Name:       "PUT / + groups+resources+versions*2",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5699,8 +5699,8 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	// Registry + Nested Groups
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /rID?nested + new",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PUT /rID + new",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    `{ "description": "f1" }`,
@@ -5767,8 +5767,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /rID?nested + bad defaultversionid",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PUT /rID + bad defaultversionid",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5785,8 +5785,8 @@ func TestHTTPNestedResources(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /rID?nested + sticky not bool",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PUT /rID + sticky not bool",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5803,8 +5803,8 @@ func TestHTTPNestedResources(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /rID?nested + sticky null",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PUT /rID + sticky null",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5848,8 +5848,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /rID?nested + missing sticky",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PUT /rID + missing sticky",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5892,8 +5892,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + sticky",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PATCH /rID + sticky",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5936,8 +5936,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + new version, sticky",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PATCH /rID + new version, sticky",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6033,8 +6033,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + new version, non-sticky",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PATCH /rID + new version, non-sticky",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6078,8 +6078,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /rID?nested + sticky old ver, add newV",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PUT /rID + sticky old ver, add newV",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6127,8 +6127,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /rID?nested + defaultversionid=newV",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PUT /rID + defaultversionid=newV",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6176,8 +6176,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + defaultversionid=oldV",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PATCH /rID + defaultversionid=oldV",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6220,8 +6220,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + sticky-nochange",
-		URL:        "/dirs/d1/files/f1$structure?nested",
+		Name:       "PATCH /rID + sticky-nochange",
+		URL:        "/dirs/d1/files/f1$structure",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6264,8 +6264,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + nodefaultversionsticky",
-		URL:        "/dirs/d1/files/f1$structure?nested&nodefaultversionsticky",
+		Name:       "PATCH /rID + nodefaultversionsticky",
+		URL:        "/dirs/d1/files/f1$structure?nodefaultversionsticky",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6308,8 +6308,8 @@ func TestHTTPNestedResources(t *testing.T) {
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID?nested + nodefaultversionid",
-		URL:        "/dirs/d1/files/f1$structure?nested&nodefaultversionid",
+		Name:       "PATCH /rID + nodefaultversionid",
+		URL:        "/dirs/d1/files/f1$structure?nodefaultversionid",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6361,8 +6361,8 @@ func TestHTTPExport(t *testing.T) {
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + init load",
-		URL:        "/?nested",
+		Name:       "PUT / + init load",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6406,8 +6406,8 @@ func TestHTTPExport(t *testing.T) {
 	xNoErr(t, err)
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + re-load, ok epoch",
-		URL:        "/?nested",
+		Name:       "PUT / + re-load, ok epoch",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    string(body),
@@ -6430,8 +6430,8 @@ func TestHTTPExport(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + re-load, bad epoch",
-		URL:        "/?nested",
+		Name:       "PUT / + re-load, bad epoch",
+		URL:        "/",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    string(body),
@@ -6442,8 +6442,8 @@ func TestHTTPExport(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PUT /?nested + re-load, ignore epoch",
-		URL:        "/?nested&noepoch",
+		Name:       "PUT / + re-load, ignore epoch",
+		URL:        "/?noepoch",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody:    string(body),
@@ -6576,7 +6576,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	// Converting the RESOURCE attributes from JSON into byte array tests
 
-	xHTTP(t, reg, "PATCH", "/?nested", `{
+	xHTTP(t, reg, "PATCH", "/", `{
   "dirs": {
     "d1": {
       "files": {
@@ -6860,7 +6860,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
 
-	xHTTP(t, reg, "PATCH", "/?nested", `{
+	xHTTP(t, reg, "PATCH", "/", `{
   "dirs": {
     "d1": {
       "files": {
@@ -7010,7 +7010,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
 
-	xHTTP(t, reg, "POST", "/dirs?nested", `{
+	xHTTP(t, reg, "POST", "/dirs", `{
   "d1": {
     "files": {
       "f1": {
@@ -7147,7 +7147,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1?nested", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{
   "files": {
     "f1": {
 	  "file": { "foo": "bar" },
@@ -7278,7 +7278,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
 
-	xHTTP(t, reg, "POST", "/dirs/d1/files?nested", `{
+	xHTTP(t, reg, "POST", "/dirs/d1/files", `{
   "f1": {
 	"file": { "foo": "bar" },
     "versions": {
@@ -7417,7 +7417,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure?nested", `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$structure", `{
   "file": { "foo": "bar" },
   "versions": {
 	"v1": {
@@ -7491,7 +7491,7 @@ func TestHTTPRecursiveData(t *testing.T) {
 
 	xHTTP(t, reg, "DELETE", "/dirs", ``, 204, ``)
 
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?nested", `{
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions", `{
   "v1": {
 	"file": { "bar": "foo" }
   }

@@ -104,7 +104,7 @@ func TestGroupRequiredFields(t *testing.T) {
 	reg.Refresh()
 
 	g1, err := reg.AddGroupWithObject("dirs", "d1",
-		registry.Object{"clireq": "test"}, false)
+		registry.Object{"clireq": "test"})
 	xNoErr(t, err)
 	reg.SaveAllAndCommit()
 

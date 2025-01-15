@@ -651,7 +651,7 @@ func TestVersionRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 
 	f1, err := group.AddResourceWithObject("files", "f1", "v1",
-		registry.Object{"clireq": "test"}, false, false)
+		registry.Object{"clireq": "test"}, false)
 	xNoErr(t, err)
 	reg.SaveAllAndCommit()
 
@@ -692,7 +692,7 @@ func TestVersionOrdering(t *testing.T) {
 	t1 := "2024-01-02T12:00:00Z"
 	t2 := "2023-11-22T01:02:03Z"
 	t9 := "2025-01-02T12:00:00Z"
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1?nested", `{
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1", `{
 	  "versions": {
 	    "z5": { "createdat": "`+t1+`","modifiedat":"`+t2+`" },
 	    "v2": { "createdat": "`+t1+`","modifiedat":"`+t2+`" },
@@ -765,7 +765,7 @@ func TestVersionOrdering2(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		// URL:        "/dirs/d1/files/f1/versions?setdefaultversionid=v5",
-		URL:        "/dirs/d1/files/f1?nested",
+		URL:        "/dirs/d1/files/f1",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{  "versions": {
