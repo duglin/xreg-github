@@ -305,6 +305,9 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(r.SetSaveDefault("vext", "a ver string"))
 	ErrFatalf(reg.SetSave("resptr", "/dirs/d1/files/f1/versions/v1"))
 
+	ErrFatalf(r.SetSave("#resource", `{"hello":"world"}`))
+	ErrFatalf(r.SetSave("contenttype", `application/json`))
+
 	_, err = g.AddResource("datas", "d1", "v1")
 
 	_, err = g.AddResourceWithObject("files", "fx", "",
