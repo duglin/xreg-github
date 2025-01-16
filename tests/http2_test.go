@@ -263,7 +263,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/3", `{"foo3.1":"test3.1"}`, 200,
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/3", `{"foo3_1":"test3.1"}`, 200,
 		`{
   "fileid": "f1",
   "versionid": "3",
@@ -273,7 +273,7 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
-  "foo3.1": "test3.1"
+  "foo3_1": "test3.1"
 }
 `)
 
@@ -5798,7 +5798,7 @@ func TestHTTPNestedResources(t *testing.T) {
         }`,
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `'defaultversionsticky' must be a boolean or null
+		ResBody: `Attribute "defaultversionsticky" must be a boolean
 `,
 	})
 

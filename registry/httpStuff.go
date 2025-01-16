@@ -1844,7 +1844,8 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		// Technically, this will always "update" not "insert"
-		meta, _, err := resource.UpsertMetaWithObject(IncomingObj, addType, true)
+		meta, _, err := resource.UpsertMetaWithObject(IncomingObj, addType,
+			true, true)
 		if err != nil {
 			info.StatusCode = http.StatusBadRequest
 			return err
@@ -1941,6 +1942,10 @@ func HTTPPutPost(info *RequestInfo) error {
 			// won't process it again, but add it to the reuslts collection
 			paths = append(paths, v.Path)
 			delete(objMap, vID)
+		} else {
+			if resource.IsXref() {
+				return fmt.Errorf(`Can't update "versions" if "xref" is set`)
+			}
 		}
 
 		// Process the remaining versions
@@ -2152,6 +2157,10 @@ func ProcessSetDefaultVersionIDFlag(info *RequestInfo, resource *Resource, versi
 		return nil
 	}
 
+	if resource.IsXref() {
+		return fmt.Errorf(`Can't update "defaultversionid" if "xref" is set`)
+	}
+
 	if info.ResourceModel.GetSetDefaultSticky() == false {
 		info.StatusCode = http.StatusBadRequest
 		return fmt.Errorf(`Resource %q doesn't allow setting of `+
@@ -2343,6 +2352,10 @@ func HTTPDelete(info *RequestInfo) error {
 		// DELETE /GROUPs/gID/RESOURCEs/rID/meta
 		info.StatusCode = http.StatusMethodNotAllowed
 		return fmt.Errorf(`DELETE is not allowed on a "meta"`)
+	}
+
+	if resource.IsXref() {
+		return fmt.Errorf(`Can't delete "versions" if "xref" is set`)
 	}
 
 	if len(info.Parts) == 5 {

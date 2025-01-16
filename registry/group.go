@@ -266,6 +266,18 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 	}
 
+	// Process the "meta" sub-object if there - but NOT versioninfo yet
+	if !IsNil(metaObj) {
+		_, _, err := r.UpsertMetaWithObject(metaObj, addType, false, false)
+		if err != nil {
+			if isNew {
+				// Needed if doing local func calls to create the Resource
+				// and we don't commit/rollback the tx upon failure
+				r.Delete()
+			}
+			return nil, false, err
+		}
+	}
 	// Now we have a Resource.
 	// Order of processing:
 	// - "versions" collection if there
@@ -273,6 +285,11 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	// - "defaultversionid" flag if sticky is set
 	// - Resource level properties applied to default version IFF default
 	//   version wasn't already uploaded as part of the "versions" collection
+
+	if r.IsXref() && versions != nil {
+		return nil, false,
+			fmt.Errorf(`Can't update "versions" if "xref" is set`)
+	}
 
 	// If we're processing children, and have a versions collection, process it
 	if len(versions) > 0 {
@@ -300,7 +317,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 	// Process the "meta" sub-object if there
 	if !IsNil(metaObj) {
-		_, _, err := r.UpsertMetaWithObject(metaObj, addType, false)
+		// _, _, err := r.UpsertMetaWithObject(metaObj, addType, false, true)
+		err := r.ProcessVersionInfo()
 		if err != nil {
 			if isNew {
 				// Needed if doing local func calls to create the Resource

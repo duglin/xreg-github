@@ -35,7 +35,7 @@ func (v *Version) Delete() error {
 
 // JustDelete will delete the Version w/o any additional logic like
 // "defaultversionid" manipulation.
-// Used when xref on the Resource is set.
+// Used when xref on the Resource is set and we need to clear existing vers
 func (v *Version) JustDelete() error {
 	v.Resource.Touch()
 
@@ -50,6 +50,10 @@ func (v *Version) JustDelete() error {
 func (v *Version) DeleteSetNextVersion(nextVersionID string) error {
 	log.VPrintf(3, ">Enter: Version.Delete(%s, %s)", v.UID, nextVersionID)
 	defer log.VPrintf(3, "<Exit: Version.Delete")
+
+	if v.Resource.IsXref() {
+		return fmt.Errorf(`Can't delete "versions" if "xref" is set`)
+	}
 
 	if nextVersionID == v.UID {
 		return fmt.Errorf("Can't set defaultversionid to Version being deleted")

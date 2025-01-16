@@ -14,10 +14,12 @@ var GitCommit string
 var Port = 8080
 var DBName = "registry"
 var Verbose = 2
+var RegistryName = "CloudEvents"
 
 var doDelete *bool
 var doRecreate *bool
 var doVerify *bool
+var noLoad *bool
 var firstTimeDB = true
 
 func InitDB() {
@@ -46,7 +48,7 @@ func InitDB() {
 		return
 	}
 
-	reg, err := registry.FindRegistry(nil, "CloudEvents")
+	reg, err := registry.FindRegistry(nil, RegistryName)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		return
@@ -93,9 +95,14 @@ func main() {
 	doDelete = flag.Bool("delete", false, "Delete DB and exit")
 	doRecreate = flag.Bool("recreate", false, "Recreate DB, then run")
 	doVerify = flag.Bool("verify", false, "Exit after loading - for testing")
+	noLoad = flag.Bool("noload", false, "Don't load any models")
 	flag.IntVar(&Verbose, "v", Verbose, "Verbose level")
 	flag.IntVar(&Port, "p", Port, "Listen port")
 	flag.Parse()
+
+	if flag.NArg() > 0 {
+		RegistryName = flag.Arg(0)
+	}
 
 	log.SetVerbose(Verbose)
 

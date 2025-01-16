@@ -209,6 +209,8 @@ func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo,
 		extras: map[string]any{},
 	}
 
+	PanicIf(info.Registry == nil, "No default registry")
+
 	if info.Registry != nil && tx.Registry == nil {
 		tx.Registry = info.Registry
 	}

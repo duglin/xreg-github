@@ -1117,6 +1117,58 @@ func TestXrefDocs(t *testing.T) {
 `)
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1", "", 200, `hello world`)
-	// DUG TODO Add more tests around hasdoc + xref
-	// xHTTP(t, reg, "GET", "/dirs/d1/files/fx", "", 200, `hello world`)
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx", "", 200, `hello world`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/1", "", 200, `hello world`)
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/1", "", 200, `hello world`)
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx", `{"versions":{}}`, 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx$details", `{"versions":{}}`, 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx?setdefaultversionid=2", `{}`, 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx$details?setdefaultversionid=2",
+		`{}`, 400, `Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx$details?setdefaultversionid=2",
+		``, 400, `Can't update "defaultversionid" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx/versions", "{}", 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/versions/1", "hi", 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/versions/1$details", "{}", 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx/versions/1", "hi", 405,
+		`POST not allowed on a version`+"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/versions/2", "hi", 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/versions/2$details", "{}", 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fy$details?compact&inline",
+		`{"meta":{"xref":"/dirs/d1/files/f1"},"versions":{}}`, 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fy$details?compact&inline",
+		`{"meta":{"xref":"/dirs/d1/files/f1"},"versions":{"2":{},"3":{}}}`, 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+
+	xHTTP(t, reg, "POST", "/dirs/d1/files/",
+		`{"fy":{"meta":{"xref":"/dirs/d1/files/f1"},"versions":{}}}`, 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/",
+		`{"fy":{"meta":{"xref":"/dirs/d1/files/f1"},"versions":{"2":{},"3":{}}}}`, 400,
+		`Can't update "versions" if "xref" is set`+"\n")
+
+	xHTTP(t, reg, "PUT", "/dirs/d2",
+		`{"files":{"fy":{"meta":{"xref":"/dirs/d1/files/f1"},"versions":{}}}}`,
+		400, `Can't update "versions" if "xref" is set`+"\n")
+
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/fx/versions/1", ``,
+		400, `Can't delete "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/fx/versions/x", ``,
+		400, `Can't delete "versions" if "xref" is set`+"\n")
+
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/fx/versions/", `{"1":{}}`,
+		400, `Can't delete "versions" if "xref" is set`+"\n")
+	xHTTP(t, reg, "DELETE", "/dirs/d1/files/fx", ``, 204, ``)
 }

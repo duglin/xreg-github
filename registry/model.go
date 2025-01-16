@@ -1963,6 +1963,9 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 						e.NewObject["#resource"] = v
 						// e.NewObject["#resourceURL"] = nil
 						delete(e.NewObject, singular)
+						if !IsNil(v) && e.Type == ENTITY_VERSION {
+							e.NewObject["#contentid"] = e.DbSID
+						}
 					}
 					return nil
 				},
@@ -2028,6 +2031,9 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 					e.NewObject["#resource"] = v
 					// e.NewObject["#resourceURL"] = nil
 					delete(e.NewObject, singular+"base64")
+					if !IsNil(v) && e.Type == ENTITY_VERSION {
+						e.NewObject["#contentid"] = e.DbSID
+					}
 					return nil
 				},
 			},

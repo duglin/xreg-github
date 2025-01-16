@@ -142,6 +142,13 @@ func (r *Resource) GetXref() (string, *Resource, error) {
 	return xref, res, nil
 }
 
+func (r *Resource) IsXref() bool {
+	meta, err := r.FindMeta(false)
+	Must(err)
+
+	return !IsNil(meta.Get("xref"))
+}
+
 func (m *Meta) SetCommit(name string, val any) error {
 	log.VPrintf(4, "SetCommitMeta: m(%s).Set(%s,%v)", m.UID, name, val)
 
@@ -389,7 +396,7 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 // w/o the surrounding Resource object. AND, for now, we only do it when
 // we're removing the 'xref' attr. Other cases, the http layer would have
 // already create the Resource and default version for us.
-func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersion bool) (*Meta, bool, error) {
+func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersion bool, processVersionInfo bool) (*Meta, bool, error) {
 	log.VPrintf(3, ">Enter: UpsertMeta(%s,%v)", r.UID, addType)
 	defer log.VPrintf(3, "<Exit: UpsertMeta")
 
@@ -591,9 +598,9 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 			// meta.JustSet("createdat", nil)
 
 			extraAttrs := []string{}
-			for k, _ := range meta.NewObject {
+			for k, v := range meta.NewObject {
 				delIt := true
-				if k[0] == '#' || k == "xref" {
+				if k[0] == '#' || k == "xref" || IsNil(v) {
 					continue
 				}
 				for _, tmp := range attrsToKeep {
@@ -640,17 +647,34 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 		}
 	}
 
+	if processVersionInfo {
+		if err = r.ProcessVersionInfo(); err != nil {
+			return nil, false, err
+		}
+	}
+
+	if err = meta.ValidateAndSave(); err != nil {
+		return nil, false, err
+	}
+
+	return meta, isNew, nil
+}
+
+func (r *Resource) ProcessVersionInfo() error {
+	m, err := r.FindMeta(false)
+	Must(err)
+
 	// Process "defaultversion" attributes. Order of processing:
 	// - defaultversionsticky, if there
 	// - defaultversionid, if defaultversionsticky is set
 
-	stickyAny := meta.Get("defaultversionsticky")
+	stickyAny := m.Get("defaultversionsticky")
 	if !IsNil(stickyAny) && stickyAny != true && stickyAny != false {
-		return nil, false, fmt.Errorf("'defaultversionsticky' must be a " +
+		return fmt.Errorf("'defaultversionsticky' must be a " +
 			"boolean or null")
 	}
 	sticky := (stickyAny == true)
-	defaultVersionID := meta.GetAsString("defaultversionid")
+	defaultVersionID := m.GetAsString("defaultversionid")
 
 	if !sticky || IsNil(defaultVersionID) || defaultVersionID == "" {
 		v, err := r.GetNewest()
@@ -666,19 +690,14 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 		v, err := r.FindVersion(defaultVersionID, false)
 		Must(err)
 		if defaultVersionID != "" && IsNil(v) {
-			return nil, false,
-				fmt.Errorf("Version %q not found", defaultVersionID)
+			return fmt.Errorf("Version %q not found", defaultVersionID)
 		}
 
-		meta.JustSet(r.Singular+"id", r.UID)
-		meta.JustSet("defaultversionid", defaultVersionID)
+		m.JustSet(r.Singular+"id", r.UID)
+		m.JustSet("defaultversionid", defaultVersionID)
 	}
 
-	if err = meta.ValidateAndSave(); err != nil {
-		return nil, false, err
-	}
-
-	return meta, isNew, nil
+	return m.ValidateAndSave()
 }
 
 func (r *Resource) UpsertVersion(id string) (*Version, bool, error) {
@@ -692,6 +711,11 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
+
+	if r.IsXref() {
+		return nil, false,
+			fmt.Errorf(`Can't update "versions" if "xref" is set`)
+	}
 
 	var v *Version
 

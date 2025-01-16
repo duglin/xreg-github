@@ -136,3 +136,5 @@ TODOs:
 - make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
   support it. Like pagination or enforcecompatibility
 - add support for shortself
+- add tests for valid attribute names, at all levels, under ANY and #abc
+- add tests for valid map key names, at all levels, under ANY

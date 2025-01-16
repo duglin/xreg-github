@@ -153,13 +153,10 @@ func (e *Entity) GetPP(pp *PropPath) any {
 	}
 
 	if pp.Len() == 1 && pp.Top() == "#resource" {
+		contentID := e.Get("#contentid")
 		results, err := Query(e.tx, `
-            SELECT Content
-            FROM ResourceContents
-            WHERE VersionSID=? OR
-			      VersionSID=(SELECT eSID FROM FullTree WHERE ParentSID=? AND
-				  PropName=? and PropValue='true')
-			`, e.DbSID, e.DbSID, NewPPP("isdefault").DB())
+            SELECT Content FROM ResourceContents WHERE VersionSID=? `,
+			contentID)
 		defer results.Close()
 
 		if err != nil {
@@ -451,6 +448,18 @@ func (e *Entity) eSetSave(path string, val any) error {
 		err = e.SetPP(pp, val)
 	}
 
+	// TODO - find a better place for this.
+	// This will set the #contentID on a Version if #resource is
+	// present. We need to do this otherwise the entity in the cache
+	// will be not have it. We can't set this in Save() when we set
+	// #contentid in the DB because we're not allowed to change the
+	// contents of the Entity while saving it.
+	// Should not need this once we stop calling Set("#resource".
+	// We should be calling Set("SINGULARid") instead
+	if e.Type == ENTITY_VERSION && e.Object["#resource"] != nil {
+		e.Object["#contentid"] = e.DbSID
+	}
+
 	return err
 }
 
@@ -604,13 +613,23 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	// Need to explicitly set #resource to nil to delete it.
 	if pp.Len() == 1 && pp.Top() == "#resource" {
 		if IsNil(val) {
+			// Remove the content
 			err = Do(e.tx, `DELETE FROM ResourceContents WHERE VersionSID=?`,
 				e.DbSID)
-			return err
+			if err != nil {
+				return err
+			}
+
+			// Let 'nil' value fall thru so it'll delete #resource
 		} else {
+			// Update the content
+
 			if val == "" {
+				// For "" delete the content from ResourceContents but
+				// keep #resource around. Just saving space
 				return nil
 			}
+
 			// The actual contents
 			err = DoOneTwo(e.tx, `
                 REPLACE INTO ResourceContents(VersionSID, Content)
@@ -619,11 +638,8 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 				return err
 			}
 
-			// DUG TODO for fixing xref #resource issue
-			// Store versionSID as #resource's value, we'll use that
-			// as the look-up into the ResourceContents table. We can't
-			// count on the VersionSID because when we're in an xref'd
-			// entity the VersionSID won't be correct
+			PanicIf(IsNil(e.NewObject["#contentid"]), "Missing cid")
+
 			val = ""
 			// Fall thru to normal processing so we save a placeholder
 			// attribute in the resource
@@ -1375,7 +1391,15 @@ var OrderedSpecProps = []*Attribute{
 	{
 		Name: "$resource",
 		internals: AttrInternals{
-			types: StrTypes(ENTITY_RESOURCE),
+			types: StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			updateFn: func(e *Entity) error {
+				if e.Type == ENTITY_VERSION {
+					if !IsNil(e.NewObject["#resource"]) {
+						e.NewObject["#contentid"] = e.DbSID
+					}
+				}
+				return nil
+			},
 		},
 	},
 	{
@@ -1748,6 +1772,7 @@ func (e *Entity) Save() error {
 
 	// We exclude #resource because we need to leave it around until
 	// a user action causes us to explictly delete it
+	// TODO we may need to exclude #contentid at some point too
 	err := Do(e.tx, "DELETE FROM Props WHERE EntitySID=? "+
 		"AND PropName!='"+NewPPP("#resource").DB()+"'", e.DbSID)
 	if err != nil {
@@ -2146,7 +2171,8 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 
 		// For each attribute (key) in newObj, check its type
 		for _, key = range keys {
-			if key[0] == '#' {
+			if key[0] == '#' && path.Len() == 0 {
+				// Skip system attributes, but only at top level
 				continue
 			}
 
@@ -2161,11 +2187,11 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				}
 			}
 
-			val, ok := newObj[key]
+			val, keyPresent := newObj[key]
 
 			// A Default value is defined but there's no value, so set it
 			// and then let normal processing continue
-			if !IsNil(attr.Default) && (!ok || IsNil(val)) {
+			if !IsNil(attr.Default) && (!keyPresent || IsNil(val)) {
 				newObj[key] = attr.Default
 			}
 
@@ -2222,13 +2248,13 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			}
 
 			// Required but not present - note that nil means will be deleted
-			if attr.ClientRequired && (!ok || IsNil(val)) {
+			if attr.ClientRequired && (!keyPresent || IsNil(val)) {
 				return fmt.Errorf("Required property %q is missing",
 					path.P(key).UI())
 			}
 
 			// Not ClientRequired && not there (or being deleted)
-			if !attr.ClientRequired && (!ok || IsNil(val)) {
+			if !attr.ClientRequired && (!keyPresent || IsNil(val)) {
 				delete(objKeys, key)
 				continue
 			}
@@ -2236,6 +2262,14 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			// Call the attr's checkFn if there - for more refined checks
 			if attr.internals.checkFn != nil {
 				if err := attr.internals.checkFn(e); err != nil {
+					return err
+				}
+			}
+
+			// And finally check to make sure it's a valid attribute name,
+			// but only if it's actually present in the object.
+			if keyPresent {
+				if err := IsValidAttributeName(key); err != nil {
 					return err
 				}
 			}
