@@ -1960,17 +1960,44 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular]
 					if ok {
-						e.NewObject["#resource"] = v
-						// e.NewObject["#resourceURL"] = nil
 						delete(e.NewObject, singular)
-						if !IsNil(v) && e.Type == ENTITY_VERSION {
+						e.NewObject["#resource"] = v
+						if !IsNil(v) {
+							e.NewObject["#resourceURL"] = nil
+							e.NewObject["#resourceProxyURL"] = nil
 							e.NewObject["#contentid"] = e.DbSID
+						} else {
+							e.NewObject["#contentid"] = nil
 						}
 					}
 					return nil
 				},
 			},
 		}
+		attrs["#resource"] = &Attribute{
+			Name: "#resource",
+			Type: ANY,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity) error {
+					v, ok := e.NewObject["#resource"]
+					if ok {
+						// Either clear(delete) contentid or make sure
+						// it's set based on whether we have data
+						if IsNil(v) {
+							e.NewObject["#contentid"] = nil
+						} else {
+							e.NewObject["#contentid"] = e.DbSID
+							e.NewObject["#resourceURL"] = nil
+							e.NewObject["#resourceProxyURL"] = nil
+						}
+					}
+					return nil
+				},
+			},
+		}
+
 		attrs[singular+"url"] = &Attribute{
 			Name: singular + "url",
 			Type: URL,
@@ -1982,9 +2009,31 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 					if !ok {
 						return nil
 					}
-					e.NewObject["#resource"] = nil
+					if !IsNil(v) {
+						e.NewObject["#resource"] = nil
+						e.NewObject["#resourceProxyURL"] = nil
+						e.NewObject["#contentid"] = nil
+					}
 					e.NewObject["#resourceURL"] = v
 					delete(e.NewObject, singular+"url")
+					return nil
+				},
+			},
+		}
+
+		attrs["#resourceURL"] = &Attribute{
+			Name: singular + "url",
+			Type: URL,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity) error {
+					v, ok := e.NewObject["#resourceURL"]
+					if ok && !IsNil(v) {
+						e.NewObject["#resource"] = nil
+						e.NewObject["#resourceProxyURL"] = nil
+						e.NewObject["#contentid"] = nil
+					}
 					return nil
 				},
 			},
@@ -1998,16 +2047,40 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 				checkFn: checkFn,
 				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular+"proxyurl"]
-					if !ok {
+					if !ok || IsNil(v) {
 						return nil
 					}
-					e.NewObject["#resource"] = nil
+					if !IsNil(v) {
+						e.NewObject["#resource"] = nil
+						e.NewObject["#resourceURL"] = nil
+						e.NewObject["#contentid"] = nil
+					}
 					e.NewObject["#resourceProxyURL"] = v
 					delete(e.NewObject, singular+"proxyurl")
 					return nil
 				},
 			},
 		}
+
+		attrs["#resourceProxyURL"] = &Attribute{
+			Name: "resourceProxyURL",
+			Type: URL,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity) error {
+					v, ok := e.NewObject["#resourceProxyURL"]
+					if ok && !IsNil(v) {
+						e.NewObject["#resource"] = nil
+						e.NewObject["#resourceURL"] = nil
+						e.NewObject["#resourceBase64"] = nil
+						e.NewObject["#contentid"] = nil
+					}
+					return nil
+				},
+			},
+		}
+
 		attrs[singular+"base64"] = &Attribute{
 			Name: singular + "base64",
 			Type: STRING,
@@ -2028,12 +2101,51 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 						}
 						v = any(content)
 					}
+
 					e.NewObject["#resource"] = v
-					// e.NewObject["#resourceURL"] = nil
-					delete(e.NewObject, singular+"base64")
-					if !IsNil(v) && e.Type == ENTITY_VERSION {
+					if !IsNil(v) {
+						e.NewObject["#resourceURL"] = nil
+						e.NewObject["#resourceProxyURL"] = nil
 						e.NewObject["#contentid"] = e.DbSID
+					} else {
+						e.NewObject["#contentid"] = nil
 					}
+					delete(e.NewObject, singular+"base64")
+					return nil
+				},
+			},
+		}
+
+		attrs["#resourceBase64"] = &Attribute{
+			Name: "#resourceBase64",
+			Type: STRING,
+
+			internals: AttrInternals{
+				checkFn: checkFn,
+				updateFn: func(e *Entity) error {
+					v, ok := e.NewObject["#resourceBase64"]
+					if !ok {
+						return nil
+					}
+					if !IsNil(v) {
+						data := v.(string)
+						content, err := base64.StdEncoding.DecodeString(data)
+						if err != nil {
+							return fmt.Errorf("Error decoding \"%sbase64\" "+
+								"attribute: "+"%s", singular, err)
+						}
+						v = any(content)
+					}
+
+					e.NewObject["#resource"] = v
+					if !IsNil(v) {
+						e.NewObject["#resourceURL"] = nil
+						e.NewObject["#resourceProxyURL"] = nil
+						e.NewObject["#contentid"] = e.DbSID
+					} else {
+						e.NewObject["#contentid"] = nil
+					}
+					delete(e.NewObject, "#resourceBase64")
 					return nil
 				},
 			},

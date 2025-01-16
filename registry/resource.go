@@ -817,6 +817,16 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 					v.NewObject[k] = val
 				}
 			}
+		} else {
+			// Just for full obj replacement.
+			// the contents of any possible doc are special in that if the
+			// client doesn't include it in the update we won't touch it, so
+			// we need to copy it forward
+			if old, ok := v.Object["#contentid"]; ok {
+				if _, ok := v.NewObject["#contentid"]; !ok {
+					v.NewObject["#contentid"] = old
+				}
+			}
 		}
 	}
 

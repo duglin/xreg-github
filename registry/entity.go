@@ -448,18 +448,6 @@ func (e *Entity) eSetSave(path string, val any) error {
 		err = e.SetPP(pp, val)
 	}
 
-	// TODO - find a better place for this.
-	// This will set the #contentID on a Version if #resource is
-	// present. We need to do this otherwise the entity in the cache
-	// will be not have it. We can't set this in Save() when we set
-	// #contentid in the DB because we're not allowed to change the
-	// contents of the Entity while saving it.
-	// Should not need this once we stop calling Set("#resource".
-	// We should be calling Set("SINGULARid") instead
-	if e.Type == ENTITY_VERSION && e.Object["#resource"] != nil {
-		e.Object["#contentid"] = e.DbSID
-	}
-
 	return err
 }
 
@@ -616,11 +604,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 			// Remove the content
 			err = Do(e.tx, `DELETE FROM ResourceContents WHERE VersionSID=?`,
 				e.DbSID)
-			if err != nil {
-				return err
-			}
-
-			// Let 'nil' value fall thru so it'll delete #resource
+			return err
 		} else {
 			// Update the content
 			err = DoOneTwo(e.tx, `
@@ -1383,14 +1367,6 @@ var OrderedSpecProps = []*Attribute{
 		Name: "$resource",
 		internals: AttrInternals{
 			types: StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
-			updateFn: func(e *Entity) error {
-				if e.Type == ENTITY_VERSION {
-					if !IsNil(e.NewObject["#resource"]) {
-						e.NewObject["#contentid"] = e.DbSID
-					}
-				}
-				return nil
-			},
 		},
 	},
 	{
@@ -1761,11 +1737,9 @@ func (e *Entity) Save() error {
 
 	e.RemoveCollections(newObj)
 
-	// We exclude #resource because we need to leave it around until
-	// a user action causes us to explictly delete it
-	// TODO we may need to exclude #contentid at some point too
-	err := Do(e.tx, "DELETE FROM Props WHERE EntitySID=? "+
-		"AND PropName!='"+NewPPP("#resource").DB()+"'", e.DbSID)
+	// Delete all props for this entity, we assume that NewObject
+	// contains everything we want going forward
+	err := Do(e.tx, "DELETE FROM Props WHERE EntitySID=? ", e.DbSID)
 	if err != nil {
 		return fmt.Errorf("Error deleting all prop: %s", err)
 	}
@@ -2542,6 +2516,7 @@ func PrepUpdateEntity(e *Entity) error {
 		*/
 
 		if attr.InType(e.Type) && attr.internals.updateFn != nil {
+			// log.Printf("Calling upfn for %q (%s)", attr.Name, key)
 			if err := attr.internals.updateFn(e); err != nil {
 				return err
 			}
