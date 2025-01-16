@@ -279,7 +279,7 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 	// props won't show up in the Resorce but will on the default version
 	// TODO really should do this check in entity.SerializeProps
 	if IsNil(jw.Entity.Object["#resourceURL"]) &&
-		IsNil(jw.Entity.Object["#resource"]) &&
+		IsNil(jw.Entity.Object["#contentid"]) &&
 		IsNil(jw.Entity.Object["#resourceProxyURL"]) {
 		return nil
 	}
@@ -312,7 +312,7 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 				}
 			}
 
-			if len(data) > 0 {
+			if data != nil {
 				ct := jw.Entity.GetAsString("contenttype")
 				ct = rm.MapContentType(ct)
 

@@ -50,9 +50,9 @@ func TestResourceContents(t *testing.T) {
 	f1.SetSaveDefault("dec2", -456.876)
 	f1.SetSaveDefault("dec3", 0.0)
 
-	f1.SetSaveDefault("#resource", "Hello there")
+	f1.SetSaveDefault("file", "Hello there")
 
-	xCheckEqual(t, "", NotNilString(f1.Get("#resource")), "Hello there")
+	xCheckEqual(t, "", NotNilString(f1.Get("file")), "Hello there")
 
 	CompareContentMeta(t, reg, &Test{
 		Code:    200,
@@ -70,7 +70,7 @@ func TestResourceContents(t *testing.T) {
 
 	v2, err := f1.AddVersion("v2")
 	xNoErr(t, err)
-	v2.SetSave("#resource", "This is version 2")
+	v2.SetSave("file", "This is version 2")
 
 	CompareContentMeta(t, reg, &Test{
 		Code:    200,
@@ -87,7 +87,7 @@ func TestResourceContents(t *testing.T) {
 	})
 
 	v3, _ := f1.AddVersion("v3")
-	v3.SetSave("#resourceProxyURL", "http://example.com")
+	v3.SetSave("fileproxyurl", "http://example.com")
 
 	CompareContentMeta(t, reg, &Test{
 		Code:    200,
@@ -104,7 +104,7 @@ func TestResourceContents(t *testing.T) {
 	})
 
 	v4, _ := f1.AddVersion("v4")
-	v4.SetSave("#resourceURL", "http://example.com")
+	v4.SetSave("fileurl", "http://example.com")
 
 	CompareContentMeta(t, reg, &Test{
 		Code: 303,
@@ -126,7 +126,7 @@ func TestResourceContents(t *testing.T) {
 		},
 	})
 
-	// v4 = #resourceURL
+	// v4 = fileURL
 	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1/versions/v4$details?inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
@@ -170,7 +170,7 @@ func TestResourceContents(t *testing.T) {
 }
 `)
 
-	// v2 = #resource
+	// v2 = file
 	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$details?compact&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",

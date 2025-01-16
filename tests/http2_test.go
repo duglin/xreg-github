@@ -1243,6 +1243,7 @@ func TestHTTPContent(t *testing.T) {
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "filebase64": "",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
@@ -1359,7 +1360,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// New implied json - empty string
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f11$details",
+		URL:    "/dirs/d1/files/f11$details?inline=file",
 		Method: "PUT",
 		ReqBody: `{
 	"file": ""
@@ -1376,6 +1377,7 @@ func TestHTTPContent(t *testing.T) {
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
   "contenttype": "application/json",
+  "file": "",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f11/meta",
   "versionsurl": "http://localhost:8181/dirs/d1/files/f11/versions",
@@ -1997,7 +1999,7 @@ func TestHTTPContent(t *testing.T) {
 
 	// patch - has ct, set ct to null, file contents should remain
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f18$details",
+		URL:    "/dirs/d1/files/f18$details?inline=file",
 		Method: "PATCH",
 		ReqBody: `{
 	"contenttype": null
@@ -2013,6 +2015,7 @@ func TestHTTPContent(t *testing.T) {
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "filebase64": "YmFy",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f18/meta",
   "versionsurl": "http://localhost:8181/dirs/d1/files/f18/versions",

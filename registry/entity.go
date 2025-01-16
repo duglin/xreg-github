@@ -623,14 +623,6 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 			// Let 'nil' value fall thru so it'll delete #resource
 		} else {
 			// Update the content
-
-			if val == "" {
-				// For "" delete the content from ResourceContents but
-				// keep #resource around. Just saving space
-				return nil
-			}
-
-			// The actual contents
 			err = DoOneTwo(e.tx, `
                 REPLACE INTO ResourceContents(VersionSID, Content)
             	VALUES(?,?)`, e.DbSID, val)
@@ -640,9 +632,8 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 
 			PanicIf(IsNil(e.NewObject["#contentid"]), "Missing cid")
 
-			val = ""
-			// Fall thru to normal processing so we save a placeholder
-			// attribute in the resource
+			// Don't save #resource in the DB, #contentid is good enough
+			return nil
 		}
 	}
 

@@ -386,33 +386,33 @@ func TestInlineResource(t *testing.T) {
 
 	// ProxyURL
 	f, _ := d.AddResource("files", "f1-proxy", "v1")
-	f.SetSaveDefault(NewPP().P("#resource").UI(), "Hello world! v1")
+	f.SetSaveDefault(NewPP().P("file").UI(), "Hello world! v1")
 
 	v, _ := f.AddVersion("v2")
-	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+	v.SetSave(NewPP().P("fileurl").UI(), "http://localhost:8181/EMPTY-URL")
 
 	v, _ = f.AddVersion("v3")
-	v.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+	v.SetSave(NewPP().P("fileproxyurl").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	// URL
 	f, _ = d.AddResource("files", "f2-url", "v1")
-	f.SetSaveDefault(NewPP().P("#resource").UI(), "Hello world! v1")
+	f.SetSaveDefault(NewPP().P("file").UI(), "Hello world! v1")
 
 	v, _ = f.AddVersion("v2")
-	v.SetSave(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+	v.SetSave(NewPP().P("fileproxyurl").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	v, _ = f.AddVersion("v3")
-	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+	v.SetSave(NewPP().P("fileurl").UI(), "http://localhost:8181/EMPTY-URL")
 
 	// Resource
 	f, _ = d.AddResource("files", "f3-resource", "v1")
-	f.SetSaveDefault(NewPP().P("#resourceProxyURL").UI(), "http://localhost:8181/EMPTY-Proxy")
+	f.SetSaveDefault(NewPP().P("fileproxyurl").UI(), "http://localhost:8181/EMPTY-Proxy")
 
 	v, _ = f.AddVersion("v2")
-	v.SetSave(NewPP().P("#resourceURL").UI(), "http://localhost:8181/EMPTY-URL")
+	v.SetSave(NewPP().P("fileurl").UI(), "http://localhost:8181/EMPTY-URL")
 
 	v, _ = f.AddVersion("v3")
-	xNoErr(t, v.SetSave(NewPP().P("#resource").UI(), "Hello world! v3"))
+	xNoErr(t, v.SetSave(NewPP().P("file").UI(), "Hello world! v3"))
 
 	// /dirs/d1/files/f1-proxy/v1 - resource
 	//                        /v2 - URL

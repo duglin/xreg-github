@@ -13,19 +13,42 @@ type Version struct {
 
 var _ EntitySetter = &Version{}
 
+func twiddleContentName(name string, singular string) string {
+	if name == singular {
+		return "#resource"
+	} else if name == singular+"url" {
+		return "#resourceURL"
+	} else if name == singular+"proxyurl" {
+		return "#resourceProxyURL"
+	} else if name == singular+"fileproxyurl" {
+		return "#resourceFileProxyURL"
+	} else if name == singular+"base64" {
+		return "#resourceBase64"
+	}
+	return name
+}
+
 func (v *Version) Get(name string) any {
+	name = twiddleContentName(name, v.Resource.Singular)
+
 	return v.Entity.Get(name)
 }
 
 func (v *Version) SetCommit(name string, val any) error {
+	name = twiddleContentName(name, v.Resource.Singular)
+
 	return v.Entity.eSetCommit(name, val)
 }
 
 func (v *Version) JustSet(name string, val any) error {
+	name = twiddleContentName(name, v.Resource.Singular)
+
 	return v.Entity.eJustSet(NewPPP(name), val)
 }
 
 func (v *Version) SetSave(name string, val any) error {
+	name = twiddleContentName(name, v.Resource.Singular)
+
 	return v.Entity.eSetSave(name, val)
 }
 

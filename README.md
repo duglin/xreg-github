@@ -138,3 +138,4 @@ TODOs:
 - add support for shortself
 - add tests for valid attribute names, at all levels, under ANY and #abc
 - add tests for valid map key names, at all levels, under ANY
+- test more around file:"string", file:"" and file:null

@@ -184,11 +184,11 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 			"openapi-directory/main/APIs/"
 		switch iter % 3 {
 		case 0:
-			ErrFatalf(version.SetSave("#resource", buf.Bytes()))
+			ErrFatalf(version.SetSave("api", buf.Bytes()))
 		case 1:
-			ErrFatalf(version.SetSave("#resourceURL", base+header.Name[i+6:]))
+			ErrFatalf(version.SetSave("apiurl", base+header.Name[i+6:]))
 		case 2:
-			ErrFatalf(version.SetSave("#resourceProxyURL", base+header.Name[i+6:]))
+			ErrFatalf(version.SetSave("apiproxyurl", base+header.Name[i+6:]))
 		}
 		iter++
 	}
@@ -305,7 +305,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(r.SetSaveDefault("vext", "a ver string"))
 	ErrFatalf(reg.SetSave("resptr", "/dirs/d1/files/f1/versions/v1"))
 
-	ErrFatalf(r.SetSave("#resource", `{"hello":"world"}`))
+	ErrFatalf(r.SetSave("file", `{"hello":"world"}`))
 	ErrFatalf(r.SetSave("contenttype", `application/json`))
 
 	_, err = g.AddResource("datas", "d1", "v1")
