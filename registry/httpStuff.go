@@ -689,9 +689,20 @@ func (pw *PageWriter) Done() {
     width: 100%%
   }
   select {
+    background: #407d16 ;
+    border: 1px solid #407d16 ;
+    border-radius: 13px ;
+	color: white ;
     font-weight: bold ;
     margin-left: 3px ;
+    padding: 2 10 3 10 ;
+	align-self: center
   }
+
+  select:hover { background: #c4c4c4 ; color : black ; }
+  select:active { background: #c4c4c4 ; color : black ; }
+  select:focus { background: darkgray ; color : black ; }
+
   .compact {
     margin-top: 5px ;
     font-size: 13px ;
