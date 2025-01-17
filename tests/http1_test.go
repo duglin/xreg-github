@@ -5439,6 +5439,37 @@ func TestHTTPResources(t *testing.T) {
 `)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "filebase64": "fff",
+  "mystring": "hello",
+  "object": {}
+}`, 400, `Invalid extension(s): filebase64,object
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "fileurl": "fff",
+  "mystring": "hello",
+  "object": {}
+}`, 400, `Invalid extension(s): fileurl,object
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "fileproxyurl": "fff",
+  "mystring": "hello",
+  "object": {}
+}`, 400, `Invalid extension(s): fileproxyurl,object
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
+  "file": "fff",
+  "fileurl": "fff",
+  "filebase64": "fff",
+  "fileproxyurl": "fff",
+  "mystring": "hello",
+  "object": {}
+}`, 400, `Invalid extension(s): file,filebase64,fileproxyurl,fileurl,object
+`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1", `{
   "file": "fff",
   "mystring": "foo",
   "object": {}

@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sort"
 	"strconv"
@@ -258,6 +259,7 @@ func (r *Resource) FindMeta(anyCase bool) (*Meta, error) {
 
 	m := &Meta{Entity: *ent, Resource: r}
 	m.Self = m
+	m.ResSingular = &r.Singular
 	r.tx.AddMeta(m)
 	return m, nil
 }
@@ -284,6 +286,7 @@ func (r *Resource) FindVersion(id string, anyCase bool) (*Version, error) {
 
 	v := &Version{Entity: *ent, Resource: r}
 	v.Self = v
+	v.ResSingular = &r.Singular
 	v.tx.AddVersion(v)
 	return v, nil
 }
@@ -497,6 +500,8 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 				Type:     ENTITY_META,
 				Path:     r.Path + "/meta",
 				Abstract: r.Abstract + string(DB_IN) + "meta",
+
+				ResSingular: &r.Singular,
 			},
 			Resource: r,
 		}
@@ -770,6 +775,8 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 				Type:     ENTITY_VERSION,
 				Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
 				Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
+
+				ResSingular: &r.Singular,
 			},
 			Resource: r,
 		}
@@ -805,6 +812,32 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 				if IsNil(val) || addType != ADD_PATCH {
 					obj["contenttype"] = eval
 				}
+			}
+		}
+
+		// Rename "RESOURCE" attrs, only if hasDoc=true
+		if _, rm := r.GetModels(); rm.GetHasDocument() {
+			if err = EnsureJustOneRESOURCE(obj, r.Singular); err != nil {
+				return nil, false, err
+			}
+
+			if v, ok := obj[r.Singular]; ok {
+				obj["#resource"] = v
+				delete(obj, r.Singular)
+			}
+
+			if v, ok := obj[r.Singular+"base64"]; ok {
+				if !IsNil(v) {
+					content, err := base64.StdEncoding.DecodeString(v.(string))
+					if err != nil {
+						return nil, false,
+							fmt.Errorf("Error decoding \"%sbase64\" "+
+								"attribute: "+"%s", r.Singular, err)
+					}
+					v = any(content)
+				}
+				obj["#resource"] = v
+				delete(obj, r.Singular+"base64")
 			}
 		}
 
@@ -981,6 +1014,7 @@ func (r *Resource) GetVersions() ([]*Version, error) {
 		if v == nil {
 			v = &Version{Entity: *e, Resource: r}
 			v.Self = v
+			r.ResSingular = &r.Singular
 			v.tx.AddVersion(v)
 		}
 		list = append(list, v)

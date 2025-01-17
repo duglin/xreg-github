@@ -190,6 +190,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 				Type:     ENTITY_RESOURCE,
 				Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
 				Abstract: g.Plural + string(DB_IN) + rType,
+
+				ResSingular: &rModel.Singular,
 			},
 			Group: g,
 		}
@@ -212,6 +214,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 				Type:     ENTITY_META,
 				Path:     r.Path + "/meta",
 				Abstract: r.Abstract + string(DB_IN) + "meta",
+
+				ResSingular: &r.Singular,
 			},
 			Resource: r,
 		}

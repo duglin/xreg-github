@@ -1101,6 +1101,42 @@ func TestXrefDocs(t *testing.T) {
 	gm.AddResourceModel("files", "file", 0, true, true, true)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", "hello world", 201, "hello world")
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f2$details?inline=file",
+		`{"fileurl":"http://localhost:8181/EMPTY-URL"}`, 201, `{
+  "fileid": "f2",
+  "versionid": "1",
+  "self": "http://localhost:8181/dirs/d1/files/f2$details",
+  "xid": "/dirs/d1/files/f2",
+  "epoch": 1,
+  "isdefault": true,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "fileurl": "http://localhost:8181/EMPTY-URL",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f2/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
+  "versionscount": 1
+}
+`)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f3$details?inline=file",
+		`{"fileproxyurl":"http://localhost:8181/EMPTY-Proxy"}`, 201, `{
+  "fileid": "f3",
+  "versionid": "1",
+  "self": "http://localhost:8181/dirs/d1/files/f3$details",
+  "xid": "/dirs/d1/files/f3",
+  "epoch": 1,
+  "isdefault": true,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy",
+  "filebase64": "aGVsbG8tUHJveHk=",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f3/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f3/versions",
+  "versionscount": 1
+}
+`)
+
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
 		`{"xref":"/dirs/d1/files/f1"}`, 201, `{
   "fileid": "fx",
@@ -1171,4 +1207,20 @@ func TestXrefDocs(t *testing.T) {
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/fx/versions/", `{"1":{}}`,
 		400, `Can't delete "versions" if "xref" is set`+"\n")
 	xHTTP(t, reg, "DELETE", "/dirs/d1/files/fx", ``, 204, ``)
+
+	// Now test stuff that use fileurl and fileproxy
+
+	return
+
+	// fileurl
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta",
+		`{"xref":"/dirs/d1/files/f2"}`, 200, `{
+}
+`)
+
+	// fileProxyURL
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta",
+		`{"xref":"/dirs/d1/files/f2"}`, 200, `{
+}
+`)
 }

@@ -2,7 +2,6 @@ package registry
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"maps"
@@ -1785,7 +1784,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		attrs[rm.Singular] = &Attribute{Name: rm.Singular, Type: ANY}
 		attrs[rm.Singular+"url"] = &Attribute{Name: rm.Singular + "url", Type: URL}
 		attrs[rm.Singular+"proxyurl"] = &Attribute{Name: rm.Singular + "proxyurl", Type: URL}
-		attrs[rm.Singular+"base64"] = &Attribute{Name: rm.Singular + "base64", Type: STRING}
+		// attrs[rm.Singular+"base64"] = &Attribute{Name: rm.Singular + "base64", Type: STRING}
 	}
 
 	if err := attrs.Verify(ld); err != nil {
@@ -1898,22 +1897,25 @@ func (rm *ResourceModel) GetBaseMetaAttributes() Attributes {
 	return attrs
 }
 
-func RESOURCEcheckFn(e *Entity) error {
-	_, rm := AbstractToModels(e.Registry, e.Abstract)
-
+func EnsureJustOneRESOURCE(obj map[string]any, singular string) error {
 	count := 0
 	list := []string{"", "url", "base64", "proxyurl"}
 	for i, suffix := range list {
-		list[i] = rm.Singular + suffix
-		if v, ok := e.NewObject[list[i]]; ok && !IsNil(v) {
+		list[i] = singular + suffix
+		if v, ok := obj[list[i]]; ok && !IsNil(v) {
 			count++
 		}
 	}
 	if count > 1 {
 		return fmt.Errorf("Only one of %s can be present at a time",
-			strings.Join(list[:3], ",")) // exclude proxy
+			strings.Join(list[:3], ",")) // exclude proxyurl
 	}
 	return nil
+}
+
+func RESOURCEcheckFn(e *Entity) error {
+	_, rm := AbstractToModels(e.Registry, e.Abstract)
+	return EnsureJustOneRESOURCE(e.NewObject, rm.Singular)
 }
 
 func (rm *ResourceModel) GetBaseAttributes() Attributes {
@@ -1999,76 +2001,6 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 							e.NewObject[singular+"proxyurl"] = nil
 						}
 					}
-					return nil
-				},
-			},
-		}
-
-		attrs[singular+"base64"] = &Attribute{
-			Name: singular + "base64",
-			Type: STRING,
-
-			internals: AttrInternals{
-				checkFn: RESOURCEcheckFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular+"base64"]
-					if !ok {
-						return nil
-					}
-					if !IsNil(v) {
-						data := v.(string)
-						content, err := base64.StdEncoding.DecodeString(data)
-						if err != nil {
-							return fmt.Errorf("Error decoding \"%sbase64\" "+
-								"attribute: "+"%s", singular, err)
-						}
-						v = any(content)
-					}
-
-					e.NewObject["#resource"] = v
-					if !IsNil(v) {
-						e.NewObject[singular+"url"] = nil
-						e.NewObject[singular+"proxyurl"] = nil
-						e.NewObject["#contentid"] = e.DbSID
-					} else {
-						e.NewObject["#contentid"] = nil
-					}
-					delete(e.NewObject, singular+"base64")
-					return nil
-				},
-			},
-		}
-
-		attrs["#resourceBase64"] = &Attribute{
-			Name: "#resourceBase64",
-			Type: STRING,
-
-			internals: AttrInternals{
-				checkFn: RESOURCEcheckFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject["#resourceBase64"]
-					if !ok {
-						return nil
-					}
-					if !IsNil(v) {
-						data := v.(string)
-						content, err := base64.StdEncoding.DecodeString(data)
-						if err != nil {
-							return fmt.Errorf("Error decoding \"%sbase64\" "+
-								"attribute: "+"%s", singular, err)
-						}
-						v = any(content)
-					}
-
-					e.NewObject["#resource"] = v
-					if !IsNil(v) {
-						e.NewObject[singular+"url"] = nil
-						e.NewObject[singular+"proxyurl"] = nil
-						e.NewObject["#contentid"] = e.DbSID
-					} else {
-						e.NewObject["#contentid"] = nil
-					}
-					delete(e.NewObject, "#resourceBase64")
 					return nil
 				},
 			},

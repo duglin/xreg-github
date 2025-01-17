@@ -16,8 +16,6 @@ var _ EntitySetter = &Version{}
 func twiddleContentName(name string, singular string) string {
 	if name == singular {
 		return "#resource"
-	} else if name == singular+"base64" {
-		return "#resourceBase64"
 	}
 	return name
 }

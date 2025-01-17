@@ -29,12 +29,13 @@ type Entity struct {
 
 	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
-	Type     int    // ENTITY_REGISTRY(0)/GROUP(1)/RESOURCE(2)/VERSION(3)/...
-	Path     string // [GROUPS/gID[/RESOURCES/rID[/versions/vID]]]
-	Abstract string // [GROUPS[/RESOURCES[/versions]]]
-	EpochSet bool   `json:"-"` // Has epoch been updated this transaction?
-	ModSet   bool   `json:"-"` // Has modifiedat been updated this transaction?
-	Self     any    `json:"-"` // Pointer to typed Entity (e.g. *Resource)
+	Type        int     // ENTITY_REGISTRY(0)/GROUP(1)/RESOURCE(2)/VERSION(3)/...
+	Path        string  // [GROUPS/gID[/RESOURCES/rID[/versions/vID]]]
+	Abstract    string  // [GROUPS[/RESOURCES[/versions]]]
+	EpochSet    bool    `json:"-"` // Has epoch been updated this tx?
+	ModSet      bool    `json:"-"` // Has modifiedat been updated this tx?
+	Self        any     `json:"-"` // Pointer to typed Entity (e.g. *Group)
+	ResSingular *string `json:"-"` // If Res or Ver, save rm.Singular
 
 	// Debugging
 	NewObjectStack []string `json:"-"` // stack when NewObj created via Ensure
@@ -46,6 +47,21 @@ type EntitySetter interface {
 	JustSet(name string, val any) error
 	SetSave(name string, val any) error
 	Delete() error
+}
+
+func (e *Entity) GetResourceSingular() string {
+	none := ""
+	if e.ResSingular == nil {
+		if e.Type == ENTITY_RESOURCE {
+			e.ResSingular = &e.Singular
+		} else if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
+			_, rm := e.GetModels()
+			e.ResSingular = &rm.Singular
+		} else {
+			e.ResSingular = &none
+		}
+	}
+	return *e.ResSingular
 }
 
 func GoToOurType(val any) string {
@@ -1370,11 +1386,11 @@ var OrderedSpecProps = []*Attribute{
 			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
 			checkFn: RESOURCEcheckFn,
 			updateFn: func(e *Entity) error {
-				_, rm := e.GetModels()
-				v, ok := e.NewObject[rm.Singular+"url"]
+				singular := e.GetResourceSingular()
+				v, ok := e.NewObject[singular+"url"]
 				if ok && !IsNil(v) {
 					e.NewObject["#resource"] = nil
-					e.NewObject[rm.Singular+"proxyurl"] = nil
+					e.NewObject[singular+"proxyurl"] = nil
 					e.NewObject["#contentid"] = nil
 				}
 				return nil
@@ -1388,11 +1404,11 @@ var OrderedSpecProps = []*Attribute{
 			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
 			checkFn: RESOURCEcheckFn,
 			updateFn: func(e *Entity) error {
-				_, rm := e.GetModels()
-				v, ok := e.NewObject[rm.Singular+"proxyurl"]
+				singular := e.GetResourceSingular()
+				v, ok := e.NewObject[singular+"proxyurl"]
 				if ok && !IsNil(v) {
 					e.NewObject["#resource"] = nil
-					e.NewObject[rm.Singular+"proxyUrl"] = nil
+					e.NewObject[singular+"proxyUrl"] = nil
 					e.NewObject["#contentid"] = nil
 				}
 				return nil
