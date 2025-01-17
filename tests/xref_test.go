@@ -1210,17 +1210,65 @@ func TestXrefDocs(t *testing.T) {
 
 	// Now test stuff that use fileurl and fileproxy
 
-	return
-
 	// fileurl
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta",
-		`{"xref":"/dirs/d1/files/f2"}`, 200, `{
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
+		`{"xref":"/dirs/d1/files/f2"}`, 201, `{
+  "fileid": "fx",
+  "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "xid": "/dirs/d1/files/fx/meta",
+  "xref": "/dirs/d1/files/f2"
+}
+`)
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:   "",
+		URL:    "/dirs/d1/files/fx",
+		Method: "GET",
+
+		Code:       303,
+		ResHeaders: []string{"Location: http://localhost:8181/EMPTY-URL"},
+		ResBody:    ``})
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx$details", ``, 200, `{
+  "fileid": "fx",
+  "versionid": "1",
+  "self": "http://localhost:8181/dirs/d1/files/fx$details",
+  "xid": "/dirs/d1/files/fx",
+  "epoch": 1,
+  "isdefault": true,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "fileurl": "http://localhost:8181/EMPTY-URL",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
+  "versionscount": 1
 }
 `)
 
 	// fileProxyURL
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta",
-		`{"xref":"/dirs/d1/files/f2"}`, 200, `{
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
+		`{"xref":"/dirs/d1/files/f3"}`, 200, `{
+  "fileid": "fx",
+  "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "xid": "/dirs/d1/files/fx/meta",
+  "xref": "/dirs/d1/files/f3"
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx", ``, 200, `hello-Proxy`)
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx$details", ``, 200, `{
+  "fileid": "fx",
+  "versionid": "1",
+  "self": "http://localhost:8181/dirs/d1/files/fx$details",
+  "xid": "/dirs/d1/files/fx",
+  "epoch": 1,
+  "isdefault": true,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
+  "versionscount": 1
 }
 `)
 }

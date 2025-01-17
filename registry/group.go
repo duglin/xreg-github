@@ -271,8 +271,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	}
 
 	// Process the "meta" sub-object if there - but NOT versioninfo yet
+	var meta *Meta
+
 	if !IsNil(metaObj) {
-		_, _, err := r.UpsertMetaWithObject(metaObj, addType, false, false)
+		meta, _, err = r.UpsertMetaWithObject(metaObj, addType, false, false)
 		if err != nil {
 			if isNew {
 				// Needed if doing local func calls to create the Resource
@@ -282,6 +284,7 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			return nil, false, err
 		}
 	}
+
 	// Now we have a Resource.
 	// Order of processing:
 	// - "versions" collection if there
@@ -321,7 +324,6 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 
 	// Process the "meta" sub-object if there
 	if !IsNil(metaObj) {
-		// _, _, err := r.UpsertMetaWithObject(metaObj, addType, false, true)
 		err := r.ProcessVersionInfo()
 		if err != nil {
 			if isNew {
@@ -331,10 +333,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			}
 			return nil, false, err
 		}
+	} else {
+		meta, err = r.FindMeta(false)
+		PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 	}
-
-	meta, err := r.FindMeta(false)
-	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
 	if !IsNil(meta.Get("xref")) {
 		delete(obj, "meta")

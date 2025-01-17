@@ -422,11 +422,12 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 	hasXref := false
 	xref := ""
 
-	attrsToKeep := []string{
-		r.Singular + "id",
-		"#nextversionid",
-		"#epoch", // Last used epoch so we can restore it when xref is cleared
-		"#createdat"}
+	attrsToKeep := map[string]bool{
+		"#nextversionid": true,
+		"#epoc":          true, // Last epoch so we can restore it when xref is gone
+		"#createdat":     true,
+	}
+	attrsToKeep[r.Singular+"id"] = true
 
 	if r.tx.IgnoreDefaultVersionID && !IsNil(obj) {
 		delete(obj, "defaultversionid")
@@ -441,10 +442,16 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 	meta.Entity.EnsureNewObject()
 
 	if meta.NewObject != nil && addType == ADD_PATCH {
-		// Patching, so copy missing existing attributes
+		// Patching, so copy missing existing attributes.
+		xr, ok := meta.NewObject["xref"]
+		xrefSet := (ok && !IsNil(xr) && xr != "")
+
 		for k, val := range meta.Object {
-			if _, ok := meta.NewObject[k]; !ok {
-				meta.NewObject[k] = val
+			// if xref isn't set, grab all #'s and just attrsToKeep ones
+			if !xrefSet || k[0] == '#' || attrsToKeep[k] {
+				if _, ok := meta.NewObject[k]; !ok {
+					meta.NewObject[k] = val
+				}
 			}
 		}
 	}
@@ -452,7 +459,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 	// Mure sure these attributes are present in NewObject, and if not
 	// grab them from the previous version of NewObject or Object
 	// TODO: change to just blindly copy all "#..." attributes
-	for _, key := range attrsToKeep {
+	for key, _ := range attrsToKeep {
 		if tmp, ok := meta.NewObject[key]; !ok {
 			if tmp, ok = existingNewObj[key]; ok {
 				meta.NewObject[key] = tmp
@@ -599,20 +606,11 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 
 			extraAttrs := []string{}
 			for k, v := range meta.NewObject {
-				delIt := true
-				if k[0] == '#' || k == "xref" || IsNil(v) {
+				// Leave "epoch" in NewObject, the updateFn will delete it.
+				if k[0] == '#' || k == "xref" || IsNil(v) || k == "epoch" {
 					continue
 				}
-				for _, tmp := range attrsToKeep {
-					if tmp == k {
-						delIt = false
-						break
-					}
-				}
-
-				// Leave "epoch" in NewObject, the updateFn will delete it.
-				// So don't add it to "extraAttrs"
-				if delIt && k != "epoch" {
+				if !attrsToKeep[k] {
 					extraAttrs = append(extraAttrs, k)
 				}
 			}
