@@ -1898,6 +1898,24 @@ func (rm *ResourceModel) GetBaseMetaAttributes() Attributes {
 	return attrs
 }
 
+func RESOURCEcheckFn(e *Entity) error {
+	_, rm := AbstractToModels(e.Registry, e.Abstract)
+
+	count := 0
+	list := []string{"", "url", "base64", "proxyurl"}
+	for i, suffix := range list {
+		list[i] = rm.Singular + suffix
+		if v, ok := e.NewObject[list[i]]; ok && !IsNil(v) {
+			count++
+		}
+	}
+	if count > 1 {
+		return fmt.Errorf("Only one of %s can be present at a time",
+			strings.Join(list[:3], ",")) // exclude proxy
+	}
+	return nil
+}
+
 func (rm *ResourceModel) GetBaseAttributes() Attributes {
 	attrs := Attributes{}
 	maps.Copy(attrs, rm.Attributes)
@@ -1930,25 +1948,13 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 
 	// Add the RESOURCExxx attributes (for resources and versions)
 	if hasDoc && singular != "" {
-		checkFn := func(e *Entity) error {
-			list := []string{
-				singular,
-				singular + "url",
-				singular + "base64",
-				singular + "proxyurl",
-			}
-			count := 0
-			for _, name := range list {
-				if v, ok := e.NewObject[name]; ok && !IsNil(v) {
-					count++
-				}
-			}
-			if count > 1 {
-				return fmt.Errorf("Only one of %s can be present at a time",
-					strings.Join(list[:3], ",")) // exclude proxy
-			}
-			return nil
-		}
+		attrs[singular+"url"] =
+			SpecProps["$RESOURCEurl"].Clone(singular + "url")
+		delete(attrs, "$RESOURCEurl")
+
+		attrs[singular+"proxyurl"] =
+			SpecProps["$RESOURCEproxyurl"].Clone(singular + "proxyurl")
+		delete(attrs, "$RESOURCEproxyurl")
 
 		// Add resource content attributes
 		attrs[singular] = &Attribute{
@@ -1956,15 +1962,15 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 			Type: ANY,
 
 			internals: AttrInternals{
-				checkFn: checkFn,
+				checkFn: RESOURCEcheckFn,
 				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular]
 					if ok {
 						delete(e.NewObject, singular)
 						e.NewObject["#resource"] = v
 						if !IsNil(v) {
-							e.NewObject["#resourceURL"] = nil
-							e.NewObject["#resourceProxyURL"] = nil
+							e.NewObject[singular+"url"] = nil
+							e.NewObject[singular+"proxyurl"] = nil
 							e.NewObject["#contentid"] = e.DbSID
 						} else {
 							e.NewObject["#contentid"] = nil
@@ -1979,7 +1985,7 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 			Type: ANY,
 
 			internals: AttrInternals{
-				checkFn: checkFn,
+				checkFn: RESOURCEcheckFn,
 				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject["#resource"]
 					if ok {
@@ -1989,92 +1995,9 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 							e.NewObject["#contentid"] = nil
 						} else {
 							e.NewObject["#contentid"] = e.DbSID
-							e.NewObject["#resourceURL"] = nil
-							e.NewObject["#resourceProxyURL"] = nil
+							e.NewObject[singular+"url"] = nil
+							e.NewObject[singular+"proxyurl"] = nil
 						}
-					}
-					return nil
-				},
-			},
-		}
-
-		attrs[singular+"url"] = &Attribute{
-			Name: singular + "url",
-			Type: URL,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular+"url"]
-					if !ok {
-						return nil
-					}
-					if !IsNil(v) {
-						e.NewObject["#resource"] = nil
-						e.NewObject["#resourceProxyURL"] = nil
-						e.NewObject["#contentid"] = nil
-					}
-					e.NewObject["#resourceURL"] = v
-					delete(e.NewObject, singular+"url")
-					return nil
-				},
-			},
-		}
-
-		attrs["#resourceURL"] = &Attribute{
-			Name: singular + "url",
-			Type: URL,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject["#resourceURL"]
-					if ok && !IsNil(v) {
-						e.NewObject["#resource"] = nil
-						e.NewObject["#resourceProxyURL"] = nil
-						e.NewObject["#contentid"] = nil
-					}
-					return nil
-				},
-			},
-		}
-
-		attrs[singular+"proxyurl"] = &Attribute{
-			Name: singular + "proxyurl",
-			Type: URL,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular+"proxyurl"]
-					if !ok || IsNil(v) {
-						return nil
-					}
-					if !IsNil(v) {
-						e.NewObject["#resource"] = nil
-						e.NewObject["#resourceURL"] = nil
-						e.NewObject["#contentid"] = nil
-					}
-					e.NewObject["#resourceProxyURL"] = v
-					delete(e.NewObject, singular+"proxyurl")
-					return nil
-				},
-			},
-		}
-
-		attrs["#resourceProxyURL"] = &Attribute{
-			Name: "resourceProxyURL",
-			Type: URL,
-
-			internals: AttrInternals{
-				checkFn: checkFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject["#resourceProxyURL"]
-					if ok && !IsNil(v) {
-						e.NewObject["#resource"] = nil
-						e.NewObject["#resourceURL"] = nil
-						e.NewObject["#resourceBase64"] = nil
-						e.NewObject["#contentid"] = nil
 					}
 					return nil
 				},
@@ -2086,7 +2009,7 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 			Type: STRING,
 
 			internals: AttrInternals{
-				checkFn: checkFn,
+				checkFn: RESOURCEcheckFn,
 				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject[singular+"base64"]
 					if !ok {
@@ -2104,8 +2027,8 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 
 					e.NewObject["#resource"] = v
 					if !IsNil(v) {
-						e.NewObject["#resourceURL"] = nil
-						e.NewObject["#resourceProxyURL"] = nil
+						e.NewObject[singular+"url"] = nil
+						e.NewObject[singular+"proxyurl"] = nil
 						e.NewObject["#contentid"] = e.DbSID
 					} else {
 						e.NewObject["#contentid"] = nil
@@ -2121,7 +2044,7 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 			Type: STRING,
 
 			internals: AttrInternals{
-				checkFn: checkFn,
+				checkFn: RESOURCEcheckFn,
 				updateFn: func(e *Entity) error {
 					v, ok := e.NewObject["#resourceBase64"]
 					if !ok {
@@ -2139,8 +2062,8 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 
 					e.NewObject["#resource"] = v
 					if !IsNil(v) {
-						e.NewObject["#resourceURL"] = nil
-						e.NewObject["#resourceProxyURL"] = nil
+						e.NewObject[singular+"url"] = nil
+						e.NewObject[singular+"proxyurl"] = nil
 						e.NewObject["#contentid"] = e.DbSID
 					} else {
 						e.NewObject["#contentid"] = nil

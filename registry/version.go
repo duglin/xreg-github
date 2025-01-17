@@ -16,12 +16,6 @@ var _ EntitySetter = &Version{}
 func twiddleContentName(name string, singular string) string {
 	if name == singular {
 		return "#resource"
-	} else if name == singular+"url" {
-		return "#resourceURL"
-	} else if name == singular+"proxyurl" {
-		return "#resourceProxyURL"
-	} else if name == singular+"fileproxyurl" {
-		return "#resourceFileProxyURL"
 	} else if name == singular+"base64" {
 		return "#resourceBase64"
 	}

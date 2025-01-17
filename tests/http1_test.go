@@ -3161,6 +3161,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-fileproxyurl: http://localhost:8181/EMPTY-Proxy",
 			"xRegistry-metaurl: http://localhost:8181/dirs/d1/files/f1-proxy/meta",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 			"xRegistry-versionscount: 3",
@@ -3191,6 +3192,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-fileproxyurl: http://localhost:8181/EMPTY-Proxy",
 		},
 		ResBody: "hello-Proxy",
 	})
@@ -3734,7 +3736,7 @@ func TestHTTPVersions(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "PUT files/f2/versions/v2 - resourceProxyURL",
+		Name:   "PUT files/f2/versions/v2 - fileproxyurl",
 		URL:    "/dirs/d1/files/f2/versions/v2",
 		Method: "PUT",
 		ReqHeaders: []string{
@@ -3754,6 +3756,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-isdefault:true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-fileproxyurl: http://localhost:8181/EMPTY-Proxy",
 		},
 		ResBody: "hello-Proxy",
 	})
@@ -3864,7 +3867,8 @@ func TestHTTPVersions(t *testing.T) {
   "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z"
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
 }
 `,
 	})
@@ -3938,7 +3942,8 @@ func TestHTTPVersions(t *testing.T) {
   "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z"
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
 }
 `,
 	})
@@ -4012,7 +4017,8 @@ func TestHTTPVersions(t *testing.T) {
   "epoch": 1,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z"
+  "modifiedat": "2024-01-01T12:00:01Z",
+  "fileproxyurl": "http://localhost:8181/EMPTY-Proxy"
 }
 `,
 	})
@@ -4108,6 +4114,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-fileproxyurl: http://localhost:8181/EMPTY-Proxy",
 			"xRegistry-metaurl: http://localhost:8181/dirs/d1/files/ff1-proxy/meta",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions",
 			"xRegistry-versionscount: 3",
@@ -4132,6 +4139,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-fileproxyurl: http://localhost:8181/EMPTY-Proxy",
 		},
 		ResBody: "hello-Proxy",
 	})

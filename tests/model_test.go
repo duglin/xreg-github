@@ -5730,16 +5730,17 @@ func TestUseSpecAttrs(t *testing.T) {
 	xNoErr(t, err)
 	vals := map[string]any{}
 
-	for i, prop := range registry.OrderedSpecProps {
+	count := 0
+	for _, prop := range registry.OrderedSpecProps {
 		if prop.Name[0] == '$' {
 			continue
 		}
 
-		v := any(i)
+		v := any(count)
 		typ := registry.INTEGER
 		if prop.Type == registry.INTEGER || prop.Type == registry.UINTEGER {
 			typ = registry.STRING
-			v = fmt.Sprintf("%d-%s", i, prop.Name)
+			v = fmt.Sprintf("%d-%s", count, prop.Name)
 		}
 		_, err := obj.AddAttr(prop.Name, typ)
 		xNoErr(t, err)
@@ -5750,6 +5751,7 @@ func TestUseSpecAttrs(t *testing.T) {
 			xNoErr(t, err)
 			vals["obj.registryid"] = v
 		}
+		count++
 	}
 
 	for k, v := range vals {
@@ -5761,16 +5763,17 @@ func TestUseSpecAttrs(t *testing.T) {
 	xNoErr(t, err)
 	vals = map[string]any{}
 
-	for i, prop := range registry.OrderedSpecProps {
+	count = 0
+	for _, prop := range registry.OrderedSpecProps {
 		if prop.Name[0] == '$' {
 			continue
 		}
 
-		v := any(i)
+		v := any(count)
 		typ := registry.INTEGER
 		if prop.Type == registry.INTEGER || prop.Type == registry.UINTEGER {
 			typ = registry.STRING
-			v = fmt.Sprintf("%d-%s", i, prop.Name)
+			v = fmt.Sprintf("%d-%s", count, prop.Name)
 		}
 		_, err := obj.AddAttr(prop.Name, typ)
 		xNoErr(t, err)
@@ -5785,6 +5788,7 @@ func TestUseSpecAttrs(t *testing.T) {
 			vals["obj.dirid"] = v
 			vals["obj.fileid"] = v
 		}
+		count++
 	}
 
 	d1, err := reg.AddGroup("dirs", "d1")
@@ -5802,16 +5806,17 @@ func TestUseSpecAttrs(t *testing.T) {
 
 	vals = map[string]any{}
 
-	for i, prop := range registry.OrderedSpecProps {
+	count = 0
+	for _, prop := range registry.OrderedSpecProps {
 		if prop.Name[0] == '$' {
 			continue
 		}
 
-		v := any(i)
+		v := any(count)
 		typ := registry.INTEGER
 		if prop.Type == registry.INTEGER || prop.Type == registry.UINTEGER {
 			typ = registry.STRING
-			v = fmt.Sprintf("%d-%s", i, prop.Name)
+			v = fmt.Sprintf("%d-%s", count, prop.Name)
 		}
 		_, err := obj.AddAttr(prop.Name, typ)
 		xNoErr(t, err)
@@ -5843,6 +5848,7 @@ func TestUseSpecAttrs(t *testing.T) {
 			vals["obj.filebase64"] = v
 			vals["obj.fileurl"] = v
 		}
+		count++
 	}
 
 	r1, err := d1.AddResource("files", "f1", "v1")
@@ -5868,20 +5874,20 @@ func TestUseSpecAttrs(t *testing.T) {
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
   "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
   "obj": {
-    "capabilities": 24,
+    "capabilities": 19,
     "contenttype": 14,
     "createdat": 12,
-    "defaultversionid": 20,
-    "defaultversionsticky": 22,
-    "defaultversionurl": 21,
+    "defaultversionid": 16,
+    "defaultversionsticky": 18,
+    "defaultversionurl": 17,
     "description": 9,
     "documentation": 10,
     "epoch": "6-epoch",
     "id": 1,
     "isdefault": 8,
     "labels": 11,
-    "metaurl": 18,
-    "model": 25,
+    "metaurl": 15,
+    "model": 20,
     "modifiedat": 13,
     "name": 7,
     "registryid": 1,
@@ -6584,12 +6590,12 @@ func TestUseSpecAttrs(t *testing.T) {
       "createdat": "YYYY-MM-DDTHH:MM:02Z",
       "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
       "obj": {
-        "capabilities": 24,
+        "capabilities": 19,
         "contenttype": 14,
         "createdat": 12,
-        "defaultversionid": 20,
-        "defaultversionsticky": 22,
-        "defaultversionurl": 21,
+        "defaultversionid": 16,
+        "defaultversionsticky": 18,
+        "defaultversionurl": 17,
         "description": 9,
         "dirid": 1,
         "documentation": 10,
@@ -6598,8 +6604,8 @@ func TestUseSpecAttrs(t *testing.T) {
         "id": 1,
         "isdefault": 8,
         "labels": 11,
-        "metaurl": 18,
-        "model": 25,
+        "metaurl": 15,
+        "model": 20,
         "modifiedat": 13,
         "name": 7,
         "registryid": 1,
@@ -6622,12 +6628,12 @@ func TestUseSpecAttrs(t *testing.T) {
           "createdat": "YYYY-MM-DDTHH:MM:02Z",
           "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
           "obj": {
-            "capabilities": 24,
+            "capabilities": 19,
             "contenttype": 14,
             "createdat": 12,
-            "defaultversionid": 20,
-            "defaultversionsticky": 22,
-            "defaultversionurl": 21,
+            "defaultversionid": 16,
+            "defaultversionsticky": 18,
+            "defaultversionurl": 17,
             "description": 9,
             "dirid": 1,
             "documentation": 10,
@@ -6639,8 +6645,8 @@ func TestUseSpecAttrs(t *testing.T) {
             "id": 1,
             "isdefault": 8,
             "labels": 11,
-            "metaurl": 18,
-            "model": 25,
+            "metaurl": 15,
+            "model": 20,
             "modifiedat": 13,
             "name": 7,
             "registryid": 1,
@@ -6660,12 +6666,12 @@ func TestUseSpecAttrs(t *testing.T) {
             "createdat": "YYYY-MM-DDTHH:MM:02Z",
             "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
             "obj": {
-              "capabilities": 24,
+              "capabilities": 19,
               "contenttype": 14,
               "createdat": 12,
-              "defaultversionid": 20,
-              "defaultversionsticky": 22,
-              "defaultversionurl": 21,
+              "defaultversionid": 16,
+              "defaultversionsticky": 18,
+              "defaultversionurl": 17,
               "description": 9,
               "dirid": 1,
               "documentation": 10,
@@ -6677,8 +6683,8 @@ func TestUseSpecAttrs(t *testing.T) {
               "id": 1,
               "isdefault": 8,
               "labels": 11,
-              "metaurl": 18,
-              "model": 25,
+              "metaurl": 15,
+              "model": 20,
               "modifiedat": 13,
               "name": 7,
               "registryid": 1,
@@ -6704,12 +6710,12 @@ func TestUseSpecAttrs(t *testing.T) {
               "createdat": "YYYY-MM-DDTHH:MM:02Z",
               "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
               "obj": {
-                "capabilities": 24,
+                "capabilities": 19,
                 "contenttype": 14,
                 "createdat": 12,
-                "defaultversionid": 20,
-                "defaultversionsticky": 22,
-                "defaultversionurl": 21,
+                "defaultversionid": 16,
+                "defaultversionsticky": 18,
+                "defaultversionurl": 17,
                 "description": 9,
                 "dirid": 1,
                 "documentation": 10,
@@ -6721,8 +6727,8 @@ func TestUseSpecAttrs(t *testing.T) {
                 "id": 1,
                 "isdefault": 8,
                 "labels": 11,
-                "metaurl": 18,
-                "model": 25,
+                "metaurl": 15,
+                "model": 20,
                 "modifiedat": 13,
                 "name": 7,
                 "registryid": 1,

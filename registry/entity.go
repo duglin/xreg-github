@@ -1364,6 +1364,42 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
+		Name: "$RESOURCEurl", // Make sure to use attr.Clone("newname")
+		Type: URL,
+		internals: AttrInternals{
+			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			checkFn: RESOURCEcheckFn,
+			updateFn: func(e *Entity) error {
+				_, rm := e.GetModels()
+				v, ok := e.NewObject[rm.Singular+"url"]
+				if ok && !IsNil(v) {
+					e.NewObject["#resource"] = nil
+					e.NewObject[rm.Singular+"proxyurl"] = nil
+					e.NewObject["#contentid"] = nil
+				}
+				return nil
+			},
+		},
+	},
+	{
+		Name: "$RESOURCEproxyurl", // Make sure to use attr.Clone("newname")
+		Type: URL,
+		internals: AttrInternals{
+			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			checkFn: RESOURCEcheckFn,
+			updateFn: func(e *Entity) error {
+				_, rm := e.GetModels()
+				v, ok := e.NewObject[rm.Singular+"proxyurl"]
+				if ok && !IsNil(v) {
+					e.NewObject["#resource"] = nil
+					e.NewObject[rm.Singular+"proxyUrl"] = nil
+					e.NewObject["#contentid"] = nil
+				}
+				return nil
+			},
+		},
+	},
+	{
 		Name: "$resource",
 		internals: AttrInternals{
 			types: StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
@@ -1610,6 +1646,15 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		log.VPrintf(0, "SerProps attrs:\n%s", ToJSON(attrs))
 	}
 
+	resourceSingular := ""
+	if e.Type == ENTITY_RESOURCE {
+		resourceSingular = e.Singular
+	}
+	if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
+		_, rm := AbstractToModels(e.Registry, e.Abstract)
+		resourceSingular = rm.Singular
+	}
+
 	// Do spec defined props first, in order
 	for _, prop := range OrderedSpecProps {
 		name := prop.Name
@@ -1619,9 +1664,12 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 				name = e.Singular + "id"
 			} else {
 				// for versions, id=RESOURCEid
-				_, rm := AbstractToModels(e.Registry, e.Abstract)
-				name = rm.Singular + "id"
+				name = resourceSingular + "id"
 			}
+		}
+
+		if strings.HasPrefix(name, "$RESOURCE") {
+			name = resourceSingular + name[9:]
 		}
 
 		attr, ok := attrs[name]
@@ -2516,7 +2564,6 @@ func PrepUpdateEntity(e *Entity) error {
 		*/
 
 		if attr.InType(e.Type) && attr.internals.updateFn != nil {
-			// log.Printf("Calling upfn for %q (%s)", attr.Name, key)
 			if err := attr.internals.updateFn(e); err != nil {
 				return err
 			}

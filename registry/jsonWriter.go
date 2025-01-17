@@ -278,80 +278,77 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 	// This will happen when "export/compact" is enabled because the
 	// props won't show up in the Resorce but will on the default version
 	// TODO really should do this check in entity.SerializeProps
-	if IsNil(jw.Entity.Object["#resourceURL"]) &&
-		IsNil(jw.Entity.Object["#contentid"]) &&
-		IsNil(jw.Entity.Object["#resourceProxyURL"]) {
+	if IsNil(jw.Entity.Object["#contentid"]) &&
+		IsNil(jw.Entity.Object[singular+"proxyurl"]) {
 		return nil
 	}
 
-	if url := jw.Entity.GetAsString("#resourceURL"); url != "" {
-		jw.Printf("%s\n%s%q: %q", *extra, jw.indent, singular+"url", url)
-		*extra = ","
-	} else {
-		p2, _ := PropPathFromDB(jw.Entity.Abstract)
-		p := p2.P(singular).DB()
-		if jw.info.ShouldInline(p) {
-			data := []byte{}
-			if val := jw.Entity.Get("#resource"); val != nil {
-				var ok bool
-				data, ok = val.([]byte)
-				PanicIf(!ok, "Can't convert to []byte: %s", val)
-			}
+	p2, _ := PropPathFromDB(jw.Entity.Abstract)
+	p := p2.P(singular).DB()
+	if jw.info.ShouldInline(p) {
+		data := []byte{}
+		if val := jw.Entity.Get("#resource"); val != nil {
+			var ok bool
+			data, ok = val.([]byte)
+			PanicIf(!ok, "Can't convert to []byte: %s", val)
+		}
 
-			if url := jw.Entity.GetAsString("#resourceProxyURL"); url != "" {
-				resp, err := http.Get(url)
+		if url := jw.Entity.GetAsString(singular + "proxyurl"); url != "" {
+			resp, err := http.Get(url)
+			if err != nil {
+				data = []byte("GET error:" + err.Error())
+			} else if resp.StatusCode/100 != 2 {
+				data = []byte("GET error:" + resp.Status)
+			} else {
+				data, err = io.ReadAll(resp.Body)
 				if err != nil {
 					data = []byte("GET error:" + err.Error())
-				} else if resp.StatusCode/100 != 2 {
-					data = []byte("GET error:" + resp.Status)
-				} else {
-					data, err = io.ReadAll(resp.Body)
-					if err != nil {
-						data = []byte("GET error:" + err.Error())
-					}
 				}
-			}
-
-			if data != nil {
-				ct := jw.Entity.GetAsString("contenttype")
-				ct = rm.MapContentType(ct)
-
-				// Try to write the body in either JSON (the current
-				// raw bytes stored in the DB), or if not valid JSON then
-				// base64 encode it.
-				if ct == "json" {
-					if json.Valid(data) {
-						// Only write the data as raw JSON (with indents)
-						// if it doesn't start with quotes. For that case
-						// since we need to escape the quotes we're going to
-						// need to escape things, and in those cases
-						// we just base64 encode it (the 'else' clause)
-						pretty := bytes.Buffer{}
-						err := json.Indent(&pretty, data, jw.indent, "  ")
-						PanicIf(err != nil, "Bad JSON: %s", string(data))
-						jw.Printf("%s\n%s%q: %s", *extra, jw.indent,
-							singular, pretty.String())
-					} else {
-						// Write as escaped string
-						ct = "string"
-					}
-				}
-
-				if ct == "string" {
-					// Write as escaped string
-					buf, err := json.Marshal(string(data))
-					PanicIf(err != nil, "Can't serialize: %s", string(data))
-					jw.Printf("%s\n%s%q: %s", *extra, jw.indent,
-						singular, string(buf))
-				} else if ct == "binary" {
-					str := base64.StdEncoding.EncodeToString(data)
-					jw.Printf("%s\n%s\"%sbase64\": %q",
-						*extra, jw.indent, singular, str)
-				}
-				*extra = ","
 			}
 		}
+
+		if data == nil {
+			return nil
+		}
+
+		ct := jw.Entity.GetAsString("contenttype")
+		ct = rm.MapContentType(ct)
+
+		// Try to write the body in either JSON (the current
+		// raw bytes stored in the DB), or if not valid JSON then
+		// base64 encode it.
+		if ct == "json" {
+			if json.Valid(data) {
+				// Only write the data as raw JSON (with indents)
+				// if it doesn't start with quotes. For that case
+				// since we need to escape the quotes we're going to
+				// need to escape things, and in those cases
+				// we just base64 encode it (the 'else' clause)
+				pretty := bytes.Buffer{}
+				err := json.Indent(&pretty, data, jw.indent, "  ")
+				PanicIf(err != nil, "Bad JSON: %s", string(data))
+				jw.Printf("%s\n%s%q: %s", *extra, jw.indent,
+					singular, pretty.String())
+			} else {
+				// Write as escaped string
+				ct = "string"
+			}
+		}
+
+		if ct == "string" {
+			// Write as escaped string
+			buf, err := json.Marshal(string(data))
+			PanicIf(err != nil, "Can't serialize: %s", string(data))
+			jw.Printf("%s\n%s%q: %s", *extra, jw.indent,
+				singular, string(buf))
+		} else if ct == "binary" {
+			str := base64.StdEncoding.EncodeToString(data)
+			jw.Printf("%s\n%s\"%sbase64\": %q",
+				*extra, jw.indent, singular, str)
+		}
+		*extra = ","
 	}
+
 	return nil
 }
 

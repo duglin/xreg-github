@@ -237,7 +237,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 		value = strings.TrimSpace(value)
 		h := res.Header.Get(name)
 		xCheck(t, strings.Contains(h, value),
-			fmt.Sprintf("Test %s\nHeader %q(%s) missing %q",
+			fmt.Sprintf("Test %s\nHeader %q(%s) should be %q",
 				u, name, h, value))
 	}
 

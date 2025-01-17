@@ -1210,11 +1210,8 @@ FROM FullTree WHERE RegSID=? AND `
 	info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
 
 	url := ""
-	if url = entity.GetAsString("#resourceURL"); url != "" {
-		gModel := info.Registry.Model.Groups[info.GroupType]
-		rModel := gModel.Resources[info.ResourceType]
-		singular := rModel.Singular
-
+	singular := info.ResourceModel.Singular
+	if url = entity.GetAsString(singular + "url"); url != "" {
 		info.AddHeader("xRegistry-"+singular+"url", url)
 
 		if info.StatusCode == 0 {
@@ -1229,9 +1226,9 @@ FROM FullTree WHERE RegSID=? AND `
 		return nil
 	}
 
-	url = entity.GetAsString("#resourceProxyURL")
+	url = entity.GetAsString(singular + "proxyurl")
 
-	log.VPrintf(3, "#resourceProxyURL: %s", url)
+	log.VPrintf(3, singular+"proxyurl: %s", url)
 	if url != "" {
 		// Just act as a proxy and copy the remote resource as our response
 		resp, err := http.Get(url)
