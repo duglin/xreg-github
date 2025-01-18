@@ -193,8 +193,12 @@ func (jw *JsonWriter) WriteEntity() error {
 			return nil
 		}
 
-		if key == "$resource" {
-			return SerializeResourceContents(jw, jw.Entity, jw.info, &extra)
+		// "RESOURCE" has a special serialization func
+		if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
+			rm := e.GetResourceModel()
+			if rm.GetHasDocument() && key == rm.Singular {
+				return SerializeResourceContents(jw, jw.Entity, jw.info, &extra)
+			}
 		}
 
 		if addSpace {
@@ -274,7 +278,7 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 	_, rm := jw.Entity.GetModels()
 	singular := rm.Singular
 
-	// If the #resource* props aren't there then just exit.
+	// If the RESOURCE* props aren't there then just exit.
 	// This will happen when "export/compact" is enabled because the
 	// props won't show up in the Resorce but will on the default version
 	// TODO really should do this check in entity.SerializeProps
@@ -287,7 +291,7 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 	p := p2.P(singular).DB()
 	if jw.info.ShouldInline(p) {
 		data := []byte{}
-		if val := jw.Entity.Get("#resource"); val != nil {
+		if val := jw.Entity.Get(singular); val != nil {
 			var ok bool
 			data, ok = val.([]byte)
 			PanicIf(!ok, "Can't convert to []byte: %s", val)

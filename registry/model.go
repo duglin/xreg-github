@@ -68,9 +68,10 @@ type Attributes map[string]*Attribute // AttrName->Attr
 // that we can just copy them over in one statement in SetSpecPropsFields()
 // and so that if we add more we don't need to remember to update that func
 type AttrInternals struct {
-	types      string // show only for these eTypes, ""==all
-	dontStore  bool   // don't store this prop in the DB
-	httpHeader string // custom HTTP header name, not xRegistry-xxx
+	types           string // show only for these eTypes, ""==all
+	dontStore       bool   // don't store this prop in the DB
+	alwaysSerialize bool   // even if nil
+	httpHeader      string // custom HTTP header name, not xRegistry-xxx
 
 	getFn    func(*Entity, *RequestInfo) any // return prop's value
 	checkFn  func(*Entity) error             // validate incoming prop
@@ -1914,7 +1915,7 @@ func EnsureJustOneRESOURCE(obj map[string]any, singular string) error {
 }
 
 func RESOURCEcheckFn(e *Entity) error {
-	_, rm := AbstractToModels(e.Registry, e.Abstract)
+	_, rm := e.GetModels()
 	return EnsureJustOneRESOURCE(e.NewObject, rm.Singular)
 }
 
@@ -1932,9 +1933,6 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 	   }
 	*/
 
-	singular := rm.Singular
-	hasDoc := rm.GetHasDocument() == true
-
 	// Find all Resource level attributes (not Meta) so we can show them
 	// mixed in with the Default Version attributes - e.g. metaurl
 	for _, specProp := range OrderedSpecProps {
@@ -1948,64 +1946,21 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 		}
 	}
 
-	// Add the RESOURCExxx attributes (for resources and versions)
-	if hasDoc && singular != "" {
-		attrs[singular+"url"] =
-			SpecProps["$RESOURCEurl"].Clone(singular + "url")
-		delete(attrs, "$RESOURCEurl")
+	// Resource has hasDoc=true, then add $RESOUCE attrs
+	if rm.GetHasDocument() {
+		attrs[rm.Singular] =
+			SpecProps["$RESOURCE"].Clone(rm.Singular)
 
-		attrs[singular+"proxyurl"] =
-			SpecProps["$RESOURCEproxyurl"].Clone(singular + "proxyurl")
-		delete(attrs, "$RESOURCEproxyurl")
+		attrs[rm.Singular+"url"] =
+			SpecProps["$RESOURCEurl"].Clone(rm.Singular + "url")
 
-		// Add resource content attributes
-		attrs[singular] = &Attribute{
-			Name: singular,
-			Type: ANY,
-
-			internals: AttrInternals{
-				checkFn: RESOURCEcheckFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject[singular]
-					if ok {
-						delete(e.NewObject, singular)
-						e.NewObject["#resource"] = v
-						if !IsNil(v) {
-							e.NewObject[singular+"url"] = nil
-							e.NewObject[singular+"proxyurl"] = nil
-							e.NewObject["#contentid"] = e.DbSID
-						} else {
-							e.NewObject["#contentid"] = nil
-						}
-					}
-					return nil
-				},
-			},
-		}
-		attrs["#resource"] = &Attribute{
-			Name: "#resource",
-			Type: ANY,
-
-			internals: AttrInternals{
-				checkFn: RESOURCEcheckFn,
-				updateFn: func(e *Entity) error {
-					v, ok := e.NewObject["#resource"]
-					if ok {
-						// Either clear(delete) contentid or make sure
-						// it's set based on whether we have data
-						if IsNil(v) {
-							e.NewObject["#contentid"] = nil
-						} else {
-							e.NewObject["#contentid"] = e.DbSID
-							e.NewObject[singular+"url"] = nil
-							e.NewObject[singular+"proxyurl"] = nil
-						}
-					}
-					return nil
-				},
-			},
-		}
+		attrs[rm.Singular+"proxyurl"] =
+			SpecProps["$RESOURCEproxyurl"].Clone(rm.Singular + "proxyurl")
 	}
+	// Either way, delete the template ones since they're not used
+	delete(attrs, "$RESOURCE")
+	delete(attrs, "$RESOURCEurl")
+	delete(attrs, "$RESOURCEproxyurl")
 
 	return attrs
 }

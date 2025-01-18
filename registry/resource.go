@@ -259,7 +259,6 @@ func (r *Resource) FindMeta(anyCase bool) (*Meta, error) {
 
 	m := &Meta{Entity: *ent, Resource: r}
 	m.Self = m
-	m.ResSingular = &r.Singular
 	r.tx.AddMeta(m)
 	return m, nil
 }
@@ -286,7 +285,6 @@ func (r *Resource) FindVersion(id string, anyCase bool) (*Version, error) {
 
 	v := &Version{Entity: *ent, Resource: r}
 	v.Self = v
-	v.ResSingular = &r.Singular
 	v.tx.AddVersion(v)
 	return v, nil
 }
@@ -507,8 +505,6 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 				Type:     ENTITY_META,
 				Path:     r.Path + "/meta",
 				Abstract: r.Abstract + string(DB_IN) + "meta",
-
-				ResSingular: &r.Singular,
 			},
 			Resource: r,
 		}
@@ -716,6 +712,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 	}
 
 	var v *Version
+	gm, rm := r.GetModels()
 
 	if id == "" {
 		// No versionID provided so grab the next available one
@@ -774,7 +771,8 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 				Path:     r.Group.Plural + "/" + r.Group.UID + "/" + r.Plural + "/" + r.UID + "/versions/" + id,
 				Abstract: r.Group.Plural + string(DB_IN) + r.Plural + string(DB_IN) + "versions",
 
-				ResSingular: &r.Singular,
+				GroupModel:    gm,
+				ResourceModel: rm,
 			},
 			Resource: r,
 		}
@@ -814,14 +812,9 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		}
 
 		// Rename "RESOURCE" attrs, only if hasDoc=true
-		if _, rm := r.GetModels(); rm.GetHasDocument() {
+		if r.GetHasDocument() {
 			if err = EnsureJustOneRESOURCE(obj, r.Singular); err != nil {
 				return nil, false, err
-			}
-
-			if v, ok := obj[r.Singular]; ok {
-				obj["#resource"] = v
-				delete(obj, r.Singular)
 			}
 
 			if v, ok := obj[r.Singular+"base64"]; ok {
@@ -834,7 +827,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 					}
 					v = any(content)
 				}
-				obj["#resource"] = v
+				obj[r.Singular] = v
 				delete(obj, r.Singular+"base64")
 			}
 		}
@@ -885,7 +878,6 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 	// If we can only have one Version, then set the one we just created
 	// as the default.
 	// Also set it if we're not sticky w.r.t. default version
-	_, rm := r.GetModels()
 	if rm.MaxVersions == 1 || (isNew && meta.Get("defaultversionsticky") != true) {
 		err = meta.SetSave("defaultversionid", v.UID)
 		if err != nil {
@@ -940,7 +932,7 @@ func (r *Resource) GetVersionIDs() ([]string, error) {
 }
 
 func (r *Resource) EnsureMaxVersions() error {
-	_, rm := r.GetModels()
+	rm := r.GetResourceModel()
 	if rm.MaxVersions == 0 {
 		// No limit, so just exit
 		return nil
@@ -1012,11 +1004,14 @@ func (r *Resource) GetVersions() ([]*Version, error) {
 		if v == nil {
 			v = &Version{Entity: *e, Resource: r}
 			v.Self = v
-			r.ResSingular = &r.Singular
 			v.tx.AddVersion(v)
 		}
 		list = append(list, v)
 	}
 
 	return list, nil
+}
+
+func (r *Resource) GetHasDocument() bool {
+	return r.GetResourceModel().GetHasDocument()
 }

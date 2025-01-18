@@ -500,7 +500,8 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 	log.VPrintf(3, ">Enter UpsertGroupWithObject(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit UpsertGroupWithObject")
 
-	if reg.Model.Groups[gType] == nil {
+	gm := reg.Model.Groups[gType]
+	if gm == nil {
 		return nil, false, fmt.Errorf("Error adding Group, unknown type: %s",
 			gType)
 	}
@@ -518,7 +519,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 	if g != nil && g.UID != id {
 		return nil, false, fmt.Errorf("Attempting to create a Group "+
 			"with a \"%sid\" of %q, when one already exists as %q",
-			reg.Model.Groups[gType].Singular, id, g.UID)
+			gm.Singular, id, g.UID)
 	}
 	if addType == ADD_ADD && g != nil {
 		return nil, false, fmt.Errorf("Group %q of type %q already exists",
@@ -535,12 +536,14 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 				Registry: reg,
 				DbSID:    NewUUID(),
 				Plural:   gType,
-				Singular: reg.Model.Groups[gType].Singular,
+				Singular: gm.Singular,
 				UID:      id,
 
 				Type:     ENTITY_GROUP,
 				Path:     gType + "/" + id,
 				Abstract: gType,
+
+				GroupModel: gm,
 			},
 			Registry: reg,
 		}

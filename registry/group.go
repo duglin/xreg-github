@@ -83,7 +83,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	// vID is the version ID we want to use for the update/create.
 	// A value of "" means just use the default Version
 
-	rModel := g.Registry.Model.Groups[g.Plural].Resources[rType]
+	gModel := g.GetGroupModel()
+	rModel := gModel.Resources[rType]
 	if rModel == nil {
 		return nil, false, fmt.Errorf("Unknown Resource type (%s) for Group %q",
 			rType, g.Plural)
@@ -191,7 +192,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 				Path:     g.Plural + "/" + g.UID + "/" + rType + "/" + id,
 				Abstract: g.Plural + string(DB_IN) + rType,
 
-				ResSingular: &rModel.Singular,
+				GroupModel:    gModel,
+				ResourceModel: rModel,
 			},
 			Group: g,
 		}
@@ -215,7 +217,8 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 				Path:     r.Path + "/meta",
 				Abstract: r.Abstract + string(DB_IN) + "meta",
 
-				ResSingular: &r.Singular,
+				GroupModel:    gModel,
+				ResourceModel: rModel,
 			},
 			Resource: r,
 		}

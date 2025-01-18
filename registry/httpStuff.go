@@ -1255,7 +1255,7 @@ FROM FullTree WHERE RegSID=? AND `
 		return nil
 	}
 
-	buf := version.Get("#resource")
+	buf := version.Get(singular)
 	if buf == nil {
 		// No data so just return
 		/*

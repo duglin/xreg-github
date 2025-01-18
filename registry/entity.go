@@ -29,13 +29,16 @@ type Entity struct {
 
 	// These were added just for convenience and so we can use the same
 	// struct for traversing the SQL results
-	Type        int     // ENTITY_REGISTRY(0)/GROUP(1)/RESOURCE(2)/VERSION(3)/...
-	Path        string  // [GROUPS/gID[/RESOURCES/rID[/versions/vID]]]
-	Abstract    string  // [GROUPS[/RESOURCES[/versions]]]
-	EpochSet    bool    `json:"-"` // Has epoch been updated this tx?
-	ModSet      bool    `json:"-"` // Has modifiedat been updated this tx?
-	Self        any     `json:"-"` // Pointer to typed Entity (e.g. *Group)
-	ResSingular *string `json:"-"` // If Res or Ver, save rm.Singular
+	Type     int    // ENTITY_REGISTRY(0)/GROUP(1)/RESOURCE(2)/VERSION(3)/...
+	Path     string // [GROUPS/gID[/RESOURCES/rID[/versions/vID]]]
+	Abstract string // [GROUPS[/RESOURCES[/versions]]]
+	EpochSet bool   `json:"-"` // Has epoch changed this tx?
+	ModSet   bool   `json:"-"` // Has modifiedat changed this tx?
+	Self     any    `json:"-"` // ptr to typed Entity (e.g. *Group)
+
+	// Save these values in memory so we only need to get them once
+	GroupModel    *GroupModel    `json:"-"` // gModel if it's not a Registry
+	ResourceModel *ResourceModel `json:"-"` // If Res,Ver,Meta save rmModel
 
 	// Debugging
 	NewObjectStack []string `json:"-"` // stack when NewObj created via Ensure
@@ -50,18 +53,21 @@ type EntitySetter interface {
 }
 
 func (e *Entity) GetResourceSingular() string {
-	none := ""
-	if e.ResSingular == nil {
-		if e.Type == ENTITY_RESOURCE {
-			e.ResSingular = &e.Singular
-		} else if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
-			_, rm := e.GetModels()
-			e.ResSingular = &rm.Singular
-		} else {
-			e.ResSingular = &none
-		}
+	rm := e.GetResourceModel()
+	if rm != nil {
+		return rm.Singular
 	}
-	return *e.ResSingular
+	return ""
+}
+
+func (e *Entity) GetResourceModel() *ResourceModel {
+	_, rm := e.GetModels()
+	return rm
+}
+
+func (e *Entity) GetGroupModel() *GroupModel {
+	gm, _ := e.GetModels()
+	return gm
 }
 
 func GoToOurType(val any) string {
@@ -155,6 +161,42 @@ func (e *Entity) GetAsInt(path string) int {
 }
 
 func (e *Entity) GetPP(pp *PropPath) any {
+	if (e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION) && pp.Len() == 1 {
+		rm := e.GetResourceModel()
+		if rm.GetHasDocument() && pp.Top() == rm.Singular {
+			contentID := e.Get("#contentid")
+			results, err := Query(e.tx, `
+            SELECT Content FROM ResourceContents WHERE VersionSID=? `,
+				contentID)
+			defer results.Close()
+
+			if err != nil {
+				return fmt.Errorf("Error finding contents %q: %s", e.DbSID, err)
+			}
+
+			row := results.NextRow()
+			if row == nil {
+				// No data so just return
+				return nil
+			}
+
+			if results.NextRow() != nil {
+				panic("too many results")
+			}
+
+			return (*(row[0])).([]byte)
+		}
+	}
+
+	// We used to just grab from Object, not NewObject
+	/*
+		// An error from ObjectGetProp is ignored because if they tried to
+		// go into something incorrect/bad we should just return 'nil'.
+		// This may not be the best choice in the long-run - which in case we
+		// should return the 'error'
+		val, _ , _ := ObjectGetProp(e.Object, pp)
+	*/
+
 	// See if we have an updated value in NewObject, if not grab from Object
 	var val any
 	if e.NewObject != nil {
@@ -167,39 +209,6 @@ func (e *Entity) GetPP(pp *PropPath) any {
 	} else {
 		val, _, _ = ObjectGetProp(e.Object, pp)
 	}
-
-	if pp.Len() == 1 && pp.Top() == "#resource" {
-		contentID := e.Get("#contentid")
-		results, err := Query(e.tx, `
-            SELECT Content FROM ResourceContents WHERE VersionSID=? `,
-			contentID)
-		defer results.Close()
-
-		if err != nil {
-			return fmt.Errorf("Error finding contents %q: %s", e.DbSID, err)
-		}
-
-		row := results.NextRow()
-		if row == nil {
-			// No data so just return
-			return nil
-		}
-
-		if results.NextRow() != nil {
-			panic("too many results")
-		}
-
-		return (*(row[0])).([]byte)
-	}
-
-	// We used to just grab from Object, not NewObject
-	/*
-		// An error from ObjectGetProp is ignored because if they tried to
-		// go into something incorrect/bad we should just return 'nil'.
-		// This may not be the best choice in the long-run - which in case we
-		// should return the 'error'
-		val, _ , _ := ObjectGetProp(e.Object, pp)
-	*/
 
 	log.VPrintf(4, "%s(%s).Get(%s) -> %v", e.Plural, e.UID, pp.DB(), val)
 	return val
@@ -613,27 +622,30 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	PanicIf(e.DbSID == "", "DbSID should not be empty")
 	PanicIf(e.Registry == nil, "Registry should not be nil")
 
-	// #resource is special and is saved in it's own table
-	// Need to explicitly set #resource to nil to delete it.
-	if pp.Len() == 1 && pp.Top() == "#resource" {
-		if IsNil(val) {
-			// Remove the content
-			err = Do(e.tx, `DELETE FROM ResourceContents WHERE VersionSID=?`,
-				e.DbSID)
-			return err
-		} else {
-			// Update the content
-			err = DoOneTwo(e.tx, `
+	// "RESOURCE" is special and is saved in it's own table
+	// Need to explicitly set "RESOURCE" to nil to delete it.
+	if (e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION) && pp.Len() == 1 {
+		rm := e.GetResourceModel()
+		if rm.GetHasDocument() && pp.Top() == rm.Singular {
+			if IsNil(val) {
+				// Remove the content
+				err = Do(e.tx, `DELETE FROM ResourceContents WHERE VersionSID=?`,
+					e.DbSID)
+				return err
+			} else {
+				// Update the content
+				err = DoOneTwo(e.tx, `
                 REPLACE INTO ResourceContents(VersionSID, Content)
             	VALUES(?,?)`, e.DbSID, val)
-			if err != nil {
-				return err
+				if err != nil {
+					return err
+				}
+
+				PanicIf(IsNil(e.NewObject["#contentid"]), "Missing cid")
+
+				// Don't save "RESOURCE" in the DB, #contentid is good enough
+				return nil
 			}
-
-			PanicIf(IsNil(e.NewObject["#contentid"]), "Missing cid")
-
-			// Don't save #resource in the DB, #contentid is good enough
-			return nil
 		}
 	}
 
@@ -887,7 +899,7 @@ var OrderedSpecProps = []*Attribute{
 				singular := e.Singular
 				// PanicIf(singular == "", "singular is '' :  %v", e)
 				if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
-					_, rm := AbstractToModels(e.Registry, e.Abstract)
+					_, rm := e.GetModels()
 					singular = rm.Singular
 				}
 				singular += "id"
@@ -923,7 +935,7 @@ var OrderedSpecProps = []*Attribute{
 				// Make sure the ID is always set
 				singular := e.Singular
 				if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
-					_, rm := AbstractToModels(e.Registry, e.Abstract)
+					_, rm := e.GetModels()
 					singular = rm.Singular
 				}
 				singular += "id"
@@ -1028,8 +1040,7 @@ var OrderedSpecProps = []*Attribute{
 					meta := info != nil && (info.ShowDetails ||
 						info.HasFlag("compact") ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
-					_, rm := e.GetModels()
-					if rm.GetHasDocument() == false {
+					if e.GetResourceModel().GetHasDocument() == false {
 						meta = false
 					}
 
@@ -1063,8 +1074,7 @@ var OrderedSpecProps = []*Attribute{
 						meta := info != nil && (info.ShowDetails ||
 						info.HasFlag("compact") ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
-						_, rm := e.GetModels()
-						if rm.GetHasDocument() == false {
+					if e.GetResourceModel().GetHasDocument() == false {
 							meta = false
 						}
 
@@ -1379,8 +1389,11 @@ var OrderedSpecProps = []*Attribute{
 			types: "",
 		},
 	},
+	// For the $RESOURCE ones, make sure to use attr.Clone("newname")
+	// when the $RESOURCE is substituded with the Resource's singular
+	// name. Otherwise you'll be updating this shared entry.
 	{
-		Name: "$RESOURCEurl", // Make sure to use attr.Clone("newname")
+		Name: "$RESOURCEurl",
 		Type: URL,
 		internals: AttrInternals{
 			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
@@ -1389,7 +1402,7 @@ var OrderedSpecProps = []*Attribute{
 				singular := e.GetResourceSingular()
 				v, ok := e.NewObject[singular+"url"]
 				if ok && !IsNil(v) {
-					e.NewObject["#resource"] = nil
+					e.NewObject[singular] = nil
 					e.NewObject[singular+"proxyurl"] = nil
 					e.NewObject["#contentid"] = nil
 				}
@@ -1398,7 +1411,7 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "$RESOURCEproxyurl", // Make sure to use attr.Clone("newname")
+		Name: "$RESOURCEproxyurl",
 		Type: URL,
 		internals: AttrInternals{
 			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
@@ -1407,7 +1420,7 @@ var OrderedSpecProps = []*Attribute{
 				singular := e.GetResourceSingular()
 				v, ok := e.NewObject[singular+"proxyurl"]
 				if ok && !IsNil(v) {
-					e.NewObject["#resource"] = nil
+					e.NewObject[singular] = nil
 					e.NewObject[singular+"proxyUrl"] = nil
 					e.NewObject["#contentid"] = nil
 				}
@@ -1416,9 +1429,27 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "$resource",
+		Name: "$RESOURCE",
+		Type: ANY,
+
 		internals: AttrInternals{
-			types: StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			types:           StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			alwaysSerialize: true, // Will always be missing, so need this
+			checkFn:         RESOURCEcheckFn,
+			updateFn: func(e *Entity) error {
+				singular := e.GetResourceSingular()
+				v, ok := e.NewObject[singular]
+				if ok {
+					if !IsNil(v) {
+						e.NewObject[singular+"url"] = nil
+						e.NewObject[singular+"proxyurl"] = nil
+						e.NewObject["#contentid"] = e.DbSID
+					} else {
+						e.NewObject["#contentid"] = nil
+					}
+				}
+				return nil
+			},
 		},
 	},
 	{
@@ -1506,8 +1537,7 @@ var OrderedSpecProps = []*Attribute{
 
 				meta := info != nil && (info.ShowDetails ||
 					info.HasFlag("compact") || info.ResourceUID == "")
-				_, rm := e.GetModels()
-				if rm.GetHasDocument() == false {
+				if e.GetResourceModel().GetHasDocument() == false {
 					meta = false
 				}
 
@@ -1663,15 +1693,16 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 	}
 
 	resourceSingular := ""
-	if e.Type == ENTITY_RESOURCE {
-		resourceSingular = e.Singular
-	}
-	if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
-		_, rm := AbstractToModels(e.Registry, e.Abstract)
+	hasDoc := false
+	if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
+		_, rm := e.GetModels()
 		resourceSingular = rm.Singular
+		hasDoc = rm.GetHasDocument()
 	}
 
 	// Do spec defined props first, in order
+	// TODO we really should filter the OrderSpecProps based on
+	// the level and whether hasDoc is true or not
 	for _, prop := range OrderedSpecProps {
 		name := prop.Name
 		if name == "id" {
@@ -1684,7 +1715,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 			}
 		}
 
-		if strings.HasPrefix(name, "$RESOURCE") {
+		if hasDoc && strings.HasPrefix(name, "$RESOURCE") {
 			name = resourceSingular + name[9:]
 		}
 
@@ -1722,7 +1753,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 			continue
 		}
 
-		if name[0] == '$' {
+		if name[0] == '$' || prop.internals.alwaysSerialize {
 			if err := fn(e, info, name, nil, attr); err != nil {
 				return err
 			}
@@ -1808,6 +1839,13 @@ func (e *Entity) Save() error {
 		return fmt.Errorf("Error deleting all prop: %s", err)
 	}
 
+	resSingular := ""
+	resHasDoc := false
+	if rm := e.GetResourceModel(); rm != nil {
+		resSingular = rm.Singular
+		resHasDoc = rm.GetHasDocument()
+	}
+
 	var traverse func(pp *PropPath, val any, obj map[string]any) error
 	traverse = func(pp *PropPath, val any, obj map[string]any) error {
 		if IsNil(val) { // Skip empty attributes
@@ -1819,7 +1857,12 @@ func (e *Entity) Save() error {
 			vMap := val.(map[string]any)
 			count := 0
 			for k, v := range vMap {
-				if k[0] == '#' {
+				// "RESOURCE" is special - call SetDBProp if it's present
+				if resHasDoc && pp.Len() == 0 && k == resSingular {
+					if err := e.SetDBProperty(pp.P(k), v); err != nil {
+						return err
+					}
+				} else if k[0] == '#' {
 					if err := e.SetDBProperty(pp.P(k), v); err != nil {
 						return err
 					}
@@ -2557,7 +2600,16 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 }
 
 func (e *Entity) GetModels() (*GroupModel, *ResourceModel) {
-	return AbstractToModels(e.Registry, e.Abstract)
+	if e.GroupModel != nil {
+		return e.GroupModel, e.ResourceModel
+	}
+
+	if e.Type == ENTITY_REGISTRY || e.Type == ENTITY_MODEL {
+		return nil, nil
+	}
+
+	e.GroupModel, e.ResourceModel = AbstractToModels(e.Registry, e.Abstract)
+	return e.GroupModel, e.ResourceModel
 }
 
 func PrepUpdateEntity(e *Entity) error {

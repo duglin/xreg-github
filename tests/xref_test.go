@@ -1255,7 +1255,7 @@ func TestXrefDocs(t *testing.T) {
 `)
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx", ``, 200, `hello-Proxy`)
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx$details", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx$details?inline=file", ``, 200, `{
   "fileid": "fx",
   "versionid": "1",
   "self": "http://localhost:8181/dirs/d1/files/fx$details",
@@ -1265,6 +1265,7 @@ func TestXrefDocs(t *testing.T) {
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
   "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
   "fileproxyurl": "http://localhost:8181/EMPTY-Proxy",
+  "filebase64": "aGVsbG8tUHJveHk=",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta",
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",

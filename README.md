@@ -139,4 +139,5 @@ TODOs:
 - add tests for valid attribute names, at all levels, under ANY and #abc
 - add tests for valid map key names, at all levels, under ANY
 - test more around file:"string", file:"" and file:null
-- test more around files w/fileproxyurl, fileurl,baase64 with xref
+- see if we can create a $RESOURCEid SpecProp@Version&Meta level and then
+  use "id" for everything including Versions, but not Meta
