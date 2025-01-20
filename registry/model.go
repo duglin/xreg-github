@@ -1946,7 +1946,7 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 		}
 	}
 
-	// Resource has hasDoc=true, then add $RESOUCE attrs
+	// Resource has hasDoc=true, then add $RESOURCE attrs
 	if rm.GetHasDocument() {
 		attrs[rm.Singular] =
 			SpecProps["$RESOURCE"].Clone(rm.Singular)
@@ -1957,6 +1957,7 @@ func (rm *ResourceModel) GetBaseAttributes() Attributes {
 		attrs[rm.Singular+"proxyurl"] =
 			SpecProps["$RESOURCEproxyurl"].Clone(rm.Singular + "proxyurl")
 	}
+
 	// Either way, delete the template ones since they're not used
 	delete(attrs, "$RESOURCE")
 	delete(attrs, "$RESOURCEurl")

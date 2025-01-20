@@ -107,6 +107,13 @@ func (e *Entity) SetNewObject(newObj map[string]any) {
 
 	// Enable the next line when we need to debug when NewObject was created
 	// e.NewObjectStack = GetStack()
+
+	/* Sample code to print the stack for where this NewObject was created:
+	log.Printf("Stack for NewObject:")
+	for _, s := range e.NewObjectStack {
+		log.Printf("  %s", s)
+	}
+	*/
 }
 
 func (e *Entity) Touch() {
@@ -935,41 +942,16 @@ var OrderedSpecProps = []*Attribute{
 				// Make sure the ID is always set
 				singular := e.Singular
 				if e.Type == ENTITY_VERSION || e.Type == ENTITY_META {
-					_, rm := e.GetModels()
-					singular = rm.Singular
+					singular = e.GetResourceSingular()
 				}
 				singular += "id"
 
 				if e.Type == ENTITY_VERSION {
 					// Versions shouldn't store the RESOURCEid
 					delete(e.NewObject, singular)
-				} else {
-					if IsNil(e.NewObject[singular]) {
-						// e.NewObject[singular] = e.UID
-						// TODO - remove the previous line once we
-						// have Touch() stop calling validateandsave.
-						// Also, registry.Update should ensure the ID is set
-						// before creating the Group. E.g. it should copy
-						// it from reg.Object
-						log.Printf(`%q is nil on %q - that's bad, fix it!`,
-							singular, e.UID)
-						log.Printf("e.Obj: %s\nNew: %s",
-							ToJSON(e.Object), ToJSON(e.NewObject))
-						ShowStack()
-						log.Printf(`========`)
-						log.Printf("Path: %s", e.Path)
-						log.Printf("Stack for NewObject:")
-						for _, s := range e.NewObjectStack {
-							log.Printf("  %s", s)
-						}
-						if len(e.NewObjectStack) == 0 {
-							log.Printf("  Enable this in entity.SetNewObject")
-						}
-						panic(fmt.Sprintf(`%q is nil - that's bad, fix it!`,
-							singular))
-						return fmt.Errorf(`%q is nil - that's bad, fix it!`,
-							singular)
-					}
+				} else if IsNil(e.NewObject[singular]) {
+					panic(fmt.Sprintf(`%q is nil - that's bad, fix it!`,
+						singular))
 				}
 				return nil
 			},
@@ -982,7 +964,6 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			// types:     StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
 			types:     StrTypes(ENTITY_VERSION),
 			dontStore: false,
 			getFn:     nil,
@@ -1012,7 +993,7 @@ var OrderedSpecProps = []*Attribute{
 				// Make sure the ID is always set
 				if IsNil(e.NewObject["versionid"]) {
 					ShowStack()
-					return fmt.Errorf(`"versionid" is nil - fix it!`)
+					panic(fmt.Sprintf(`"versionid" is nil - fix it!`))
 				}
 				return nil
 			},
@@ -1025,8 +1006,7 @@ var OrderedSpecProps = []*Attribute{
 		ServerRequired: true,
 
 		internals: AttrInternals{
-			types: "", // Yes even ENTITY_RESOURCE
-			// types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
+			types:     "", // Yes even ENTITY_RESOURCE
 			dontStore: true,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
@@ -1396,7 +1376,7 @@ var OrderedSpecProps = []*Attribute{
 		Name: "$RESOURCEurl",
 		Type: URL,
 		internals: AttrInternals{
-			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			types:   StrTypes(ENTITY_VERSION),
 			checkFn: RESOURCEcheckFn,
 			updateFn: func(e *Entity) error {
 				singular := e.GetResourceSingular()
@@ -1414,7 +1394,7 @@ var OrderedSpecProps = []*Attribute{
 		Name: "$RESOURCEproxyurl",
 		Type: URL,
 		internals: AttrInternals{
-			types:   StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			types:   StrTypes(ENTITY_VERSION),
 			checkFn: RESOURCEcheckFn,
 			updateFn: func(e *Entity) error {
 				singular := e.GetResourceSingular()
@@ -1433,7 +1413,7 @@ var OrderedSpecProps = []*Attribute{
 		Type: ANY,
 
 		internals: AttrInternals{
-			types:           StrTypes(ENTITY_RESOURCE, ENTITY_VERSION),
+			types:           StrTypes(ENTITY_VERSION),
 			alwaysSerialize: true, // Will always be missing, so need this
 			checkFn:         RESOURCEcheckFn,
 			updateFn: func(e *Entity) error {
