@@ -427,6 +427,18 @@ func (m *Model) DelAttribute(name string) error {
 	return nil
 }
 
+func (m *Model) CreateModels(gPlural, gSingular, rPlural, rSingular string) (*GroupModel, *ResourceModel, error) {
+	gm, err := m.AddGroupModel(gPlural, gSingular)
+	if err != nil {
+		return nil, nil, err
+	}
+	rm, err := gm.AddResourceModelSimple(rPlural, rSingular)
+	if err != nil {
+		return nil, nil, err
+	}
+	return gm, rm, nil
+}
+
 func (m *Model) AddGroupModel(plural string, singular string) (*GroupModel, error) {
 	if plural == "" {
 		return nil, fmt.Errorf("Can't add a GroupModel with an empty plural name")
