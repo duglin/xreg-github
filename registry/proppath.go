@@ -44,11 +44,22 @@ func (pp *PropPath) Top() string {
 	return pp.Parts[0].Text
 }
 
+func (pp *PropPath) Last() *PropPart {
+	if len(pp.Parts) == 0 {
+		return nil
+	}
+	return &(pp.Parts[len(pp.Parts)-1])
+}
+
 func (pp *PropPath) Bottom() string {
 	if len(pp.Parts) == 0 {
 		return ""
 	}
-	return pp.Parts[len(pp.Parts)-1].Text
+	last := pp.Parts[len(pp.Parts)-1]
+	if last.Index >= 0 {
+		return "" // maybe error one day??
+	}
+	return last.Text
 }
 
 func (pp *PropPath) IsIndexed() int {
@@ -403,4 +414,8 @@ func (pp *PropPart) ToInt() int {
 	val, err := strconv.Atoi(pp.Text)
 	PanicIf(err != nil, "Error parsing int %q: %s", pp.Text, err)
 	return val
+}
+
+func (pp *PropPart) IsIndex() bool {
+	return pp.Index >= 0
 }

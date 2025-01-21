@@ -2,7 +2,9 @@ package registry
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -396,6 +398,10 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 	log.VPrintf(3, ">Enter: UpsertMeta(%s,%v)", r.UID, addType)
 	defer log.VPrintf(3, "<Exit: UpsertMeta")
 
+	if err := CheckAttrs(obj); err != nil {
+		return nil, false, err
+	}
+
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
@@ -422,7 +428,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 
 	attrsToKeep := map[string]bool{
 		"#nextversionid": true,
-		"#epoc":          true, // Last epoch so we can restore it when xref is gone
+		"#epoch":         true, // Last epoch so we can restore it when xref is gone
 		"#createdat":     true,
 	}
 	attrsToKeep[r.Singular+"id"] = true
@@ -703,6 +709,10 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 	log.VPrintf(3, ">Enter: UpsertVersion(%s,%v)", id, addType)
 	defer log.VPrintf(3, "<Exit: UpsertVersion")
 
+	if err := CheckAttrs(obj); err != nil {
+		return nil, false, err
+	}
+
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
@@ -796,25 +806,49 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 			return nil, false, err
 		}
 	}
+
 	// Apply properties
 	if obj != nil {
-		// If there's a doc but no "contenttype" value then:
-		// - if existing entity doesn't have one, set it
-		// - if existing entity does have one then only override it
-		//   if we're not doing PATCH (PUT/POST are compelte overrides)
-		if eval, ok := obj["#-contenttype"]; ok && !IsNil(eval) {
-			if _, ok = obj["contenttype"]; !ok {
-				val := v.Get("contenttype")
-				if IsNil(val) || addType != ADD_PATCH {
-					obj["contenttype"] = eval
-				}
-			}
-		}
 
-		// Rename "RESOURCE" attrs, only if hasDoc=true
-		if r.GetHasDocument() {
+		// Do some special processing when the Resource has a Doc
+		if rm.GetHasDocument() == true {
+			// Rename "RESOURCE" attrs, only if hasDoc=true
 			if err = EnsureJustOneRESOURCE(obj, r.Singular); err != nil {
 				return nil, false, err
+			}
+
+			data, ok := obj[r.Singular]
+			// If there's data and it's not already just an array of bytes
+			// then convert it. This is for cases where the data is raw JSON
+			// and so we may need to tweak it
+			if ok && !IsNil(data) && reflect.ValueOf(data).Type().String() != "[]uint8" {
+				// Get the raw bytes of the "rm.Singular" json attribute
+				buf := []byte(nil)
+				switch reflect.ValueOf(data).Kind() {
+				case reflect.Float64, reflect.Map, reflect.Slice, reflect.Bool:
+					buf, err = json.Marshal(data)
+					if err != nil {
+						return nil, false, err
+					}
+				case reflect.Invalid:
+					// I think this only happens when it's "null".
+					// just let 'buf' stay as nil
+				default:
+					str := fmt.Sprintf("%s", data)
+					buf = []byte(str)
+				}
+				obj[rm.Singular] = buf
+
+				// If there's a doc but no "contenttype" value then:
+				// - if existing entity doesn't have one, set it
+				// - if existing entity does have one then only override it
+				//   if we're not doing PATCH (PUT/POST are compelte overrides)
+				if _, ok := obj["contenttype"]; !ok {
+					val := v.Get("contenttype")
+					if IsNil(val) || addType != ADD_PATCH {
+						obj["contenttype"] = "application/json"
+					}
+				}
 			}
 
 			if v, ok := obj[r.Singular+"base64"]; ok {

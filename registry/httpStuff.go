@@ -1553,12 +1553,6 @@ func HTTPPutPost(info *RequestInfo) error {
 	if info.GroupType == "" {
 		// PUT /
 
-		err = ConvertRegistryContents(IncomingObj, info.Registry.Model)
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
-		}
-
 		addType := ADD_UPDATE
 		if method == "PATCH" {
 			addType = ADD_PATCH
@@ -1593,12 +1587,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		for id, obj := range objMap {
-			err = ConvertGroupContents(obj, info.GroupModel)
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return err
-			}
-
 			g, _, err := info.Registry.UpsertGroupWithObject(info.GroupType,
 				id, obj, addType)
 			if err != nil {
@@ -1621,12 +1609,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		addType := ADD_UPSERT
 		if method == "PATCH" {
 			addType = ADD_PATCH
-		}
-
-		err = ConvertGroupContents(IncomingObj, info.GroupModel)
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
 		}
 
 		group, isNew, err := info.Registry.UpsertGroupWithObject(info.GroupType,
@@ -1689,12 +1671,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		}
 
 		for id, obj := range objMap {
-			err = ConvertResourceContents(obj, info.ResourceModel)
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return err
-			}
-
 			r, _, err := group.UpsertResourceWithObject(info.ResourceType,
 				id, "", obj, addType, false)
 			if err != nil {
@@ -1738,12 +1714,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			info.StatusCode = http.StatusBadRequest
 			return fmt.Errorf("The \"%sid\" attribute must be set to %q, "+
 				"not %q", info.ResourceModel.Singular, resourceUID, propsID)
-		}
-
-		err = ConvertResourceContents(IncomingObj, info.ResourceModel)
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
 		}
 
 		if resource != nil {
@@ -1796,12 +1766,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			if reflect.ValueOf(v).Kind() == reflect.String {
 				propsID = NotNilString(&v)
 			}
-		}
-
-		err = ConvertVersionContents(IncomingObj, info.ResourceModel)
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
 		}
 
 		if resource == nil {
@@ -1900,14 +1864,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			return err
 		}
 
-		for _, obj := range objMap {
-			err = ConvertVersionContents(obj, info.ResourceModel)
-			if err != nil {
-				info.StatusCode = http.StatusBadRequest
-				return err
-			}
-		}
-
 		thisVersion := (*Version)(nil)
 
 		if resource == nil {
@@ -2003,12 +1959,6 @@ func HTTPPutPost(info *RequestInfo) error {
 			if reflect.ValueOf(v).Kind() == reflect.String {
 				propsID = NotNilString(&v)
 			}
-		}
-
-		err = ConvertVersionContents(IncomingObj, info.ResourceModel)
-		if err != nil {
-			info.StatusCode = http.StatusBadRequest
-			return err
 		}
 
 		if resource == nil {
@@ -2871,134 +2821,4 @@ func ExtractIncomingObject(info *RequestInfo, body []byte) (Object, error) {
 	}
 
 	return IncomingObj, nil
-}
-
-// Find all Groups/Resources/Versions in 'obj' and make sure their
-// RESOURCE attribute is converted into a byte array
-func ConvertRegistryContents(obj map[string]any, m *Model) error {
-	for _, gm := range m.Groups {
-		val, ok := obj[gm.Plural]
-		if ok && !IsNil(val) {
-			gColl, ok := val.(map[string]any)
-			if !ok {
-				return fmt.Errorf("%q should be a map", gm.Plural)
-			}
-			for _, val := range gColl {
-				g, ok := val.(map[string]any)
-				if !ok {
-					return fmt.Errorf("%q should be a map of %q, not %T",
-						gm.Plural, gm.Singular, val)
-				}
-				// Traverse into each Group
-				if err := ConvertGroupContents(g, gm); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// Find all Resources/Versions in 'obj' and make sure their
-// RESOURCE attribute is converted into a byte array
-func ConvertGroupContents(obj map[string]any, gm *GroupModel) error {
-	for _, rm := range gm.Resources {
-		val, ok := obj[rm.Plural]
-		if ok && !IsNil(val) {
-			rColl, ok := val.(map[string]any)
-			if !ok {
-				return fmt.Errorf("%q should be a map", rm.Plural)
-			}
-			for _, val := range rColl {
-				r, ok := val.(map[string]any)
-				if !ok {
-					return fmt.Errorf("%s should be a map of %q, not %T",
-						rm.Plural, rm.Singular, val)
-				}
-				// Traverse into each Resource
-				if err := ConvertResourceContents(r, rm); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// Convert the RESOURCE attribute from JSON to a byte array, if present.
-// Then do any Versions in the "versions" collection, if there.
-func ConvertResourceContents(obj map[string]any, rm *ResourceModel) error {
-	if rm == nil || rm.GetHasDocument() == false {
-		return nil
-	}
-
-	// Process the local RESOURCE attribute before we look for "versions"
-	if err := ConvertVersionContents(obj, rm); err != nil {
-		return err
-	}
-
-	val, ok := obj["versions"]
-	if ok && !IsNil(val) {
-		vColl, ok := val.(map[string]any)
-		if !ok {
-			return fmt.Errorf("%q should be a map", "versions")
-		}
-		for _, val := range vColl {
-			v, ok := val.(map[string]any)
-			if !ok {
-				return fmt.Errorf("%q should be a map of %q, not %T",
-					"versions", "version", val)
-			}
-			// Traverse into each Version
-			if err := ConvertVersionContents(v, rm); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// Convert the RESOURCE attribute from JSON to a byte array, if present.
-func ConvertVersionContents(obj map[string]any, rm *ResourceModel) error {
-	if rm == nil || rm.GetHasDocument() == false {
-		return nil
-	}
-
-	var err error
-	data, ok := obj[rm.Singular]
-
-	if ok {
-
-		// Special case of: RESOURCE:null
-		if IsNil(data) {
-			obj[rm.Singular] = nil
-			obj["#-contenttype"] = nil
-			return nil
-		}
-
-		// Keep bytes as bytes - possibly already converted (eg was in body)
-		if reflect.ValueOf(data).Type().String() == "[]uint8" {
-			return nil
-		}
-
-		// Get the raw bytes of the "rm.Singular" json attribute
-		buf := []byte(nil)
-		switch reflect.ValueOf(data).Kind() {
-		case reflect.Float64, reflect.Map, reflect.Slice, reflect.Bool:
-			buf, err = json.Marshal(data)
-			if err != nil {
-				return err
-			}
-		case reflect.Invalid:
-			// I think this only happens when it's "null".
-			// just let 'buf' stay as nil
-		default:
-			str := fmt.Sprintf("%s", data)
-			buf = []byte(str)
-		}
-		obj[rm.Singular] = buf
-		obj["#-contenttype"] = "application/json"
-	}
-	return nil
 }

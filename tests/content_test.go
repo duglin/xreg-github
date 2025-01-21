@@ -294,7 +294,7 @@ func CompareContentMeta(t *testing.T, reg *registry.Registry, test *Test) {
 				break
 			}
 
-			xCheckEqual(t, propName, value[0], str)
+			xCheckEqual(t, propName+"(exp:header, got:$details)", value[0], str)
 			break
 		}
 		if !foundIt {

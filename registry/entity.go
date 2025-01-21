@@ -621,11 +621,6 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 		return nil
 	}
 
-	// Must be a private/temporary prop used internally - don't save it
-	if strings.HasPrefix(pp.Top(), "#-") {
-		return nil
-	}
-
 	PanicIf(e.DbSID == "", "DbSID should not be empty")
 	PanicIf(e.Registry == nil, "Registry should not be nil")
 
@@ -1080,11 +1075,8 @@ var OrderedSpecProps = []*Attribute{
 		internals: AttrInternals{
 			types:     "",
 			dontStore: true,
-			getFn: func(e *Entity, info *RequestInfo) any {
-				return "/" + e.Path
-			},
-			checkFn:  nil,
-			updateFn: nil,
+			getFn:     nil,
+			checkFn:   nil,
 		},
 	},
 	{
@@ -1699,8 +1691,11 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 			name = resourceSingular + name[9:]
 		}
 
+		log.VPrintf(4, "Ser prop: %q", name)
+
 		attr, ok := attrs[name]
 		if !ok {
+			log.VPrintf(4, "  skipping %q, no attr", name)
 			delete(daObj, name)
 			continue // not allowed at this eType so skip it
 		}
@@ -1734,6 +1729,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 		}
 
 		if name[0] == '$' || prop.internals.alwaysSerialize {
+			log.VPrintf(4, "  forced serialization of %q", name)
 			if err := fn(e, info, name, nil, attr); err != nil {
 				return err
 			}
@@ -1742,6 +1738,7 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 
 		// Should be a no-op for Resources.
 		if val, ok := daObj[name]; ok {
+			log.VPrintf(4, "  val: %v", val)
 			if !IsNil(val) {
 				cleanup := false
 				var m *Model
@@ -1765,6 +1762,8 @@ func (e *Entity) SerializeProps(info *RequestInfo,
 				}
 			}
 			delete(daObj, name)
+		} else {
+			log.VPrintf(4, "  no value for %q", name)
 		}
 	}
 
@@ -2223,7 +2222,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 
 		// For each attribute (key) in newObj, check its type
 		for _, key = range keys {
-			if key[0] == '#' && path.Len() == 0 {
+			if len(key) > 0 && key[0] == '#' && path.Len() == 0 {
 				// Skip system attributes, but only at top level
 				continue
 			}
@@ -2245,6 +2244,12 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			// and then let normal processing continue
 			if !IsNil(attr.Default) && (!keyPresent || IsNil(val)) {
 				newObj[key] = attr.Default
+			}
+
+			if path.Len() > 0 {
+				if err := IsValidAttributeName(path.Bottom()); err != nil {
+					return err
+				}
 			}
 
 			// Based on the attribute's type check the incoming 'val'.
@@ -2415,6 +2420,13 @@ func (e *Entity) ValidateMap(val any, item *Item, path *PropPath) error {
 
 	for _, k := range valValue.MapKeys() {
 		keyName := k.Interface().(string)
+
+		if path.Len() > 0 {
+			if err := IsValidMapKey(keyName); err != nil {
+				return err
+			}
+		}
+
 		v := valValue.MapIndex(k).Interface()
 		if IsNil(v) {
 			continue
@@ -2726,5 +2738,19 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 		return fmt.Errorf("must match %q target, too long", relation)
 	}
 
+	return nil
+}
+
+func CheckAttrs(obj map[string]any) error {
+	if obj == nil {
+		return nil
+	}
+	for k, _ := range obj {
+		if err := IsValidAttributeName(k); err != nil {
+			// log.Printf("Key: %q", k)
+			// ShowStack()
+			return err
+		}
+	}
 	return nil
 }

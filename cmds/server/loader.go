@@ -267,7 +267,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 
 		ErrFatalf(reg.SetSave("arr1[0]", "arr1-value"))
 		ErrFatalf(reg.SetSave("mapobj.mapkey.inint", 5))
-		ErrFatalf(reg.SetSave("mapobj['cool.key'].inint", 666))
+		ErrFatalf(reg.SetSave("mapobj['cool_key'].inint", 666))
 		ErrFatalf(reg.SetSave("arrmap[1].key1", "arrmapk1-value"))
 	}
 

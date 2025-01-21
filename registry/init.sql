@@ -422,6 +422,7 @@ CREATE TABLE ResourceContents (
     PRIMARY KEY (VersionSID)
 );
 
+# This pulls-in or creates all props in Resources due to default Ver processing
 CREATE VIEW DefaultProps AS
 SELECT
     p.RegistrySID,
@@ -468,8 +469,8 @@ UNION SELECT                    # Add Version.isdefault, which is calculated
   v.RegSID,
   v.eSID,
   'isdefault$DB_IN',
-  'true',
-  'boolean',
+  'true',                       # Compact
+  'boolean',                    # Type
   IF(LEFT(v.eSID,1)='-',false,true)   # Lie if it's not an xref'd prop/ver
 FROM Entities AS v
 JOIN Metas AS m ON (m.ResourceSID=v.ParentSID)
@@ -477,6 +478,15 @@ JOIN EffectiveProps AS p ON (
   p.EntitySID=m.SID AND
   p.PropName='defaultversionid$DB_IN'
   AND p.PropValue=v.UID )
+
+UNION SELECT                   # Add *.xid, which is calculated
+  e.RegSID,
+  e.eSID,
+  'xid$DB_IN',
+  CONCAT('/', e.Path),
+  'string',
+  IF(LEFT(e.eSID,1)='-',false,true)   # A bit of a lie for Compact mode
+FROM Entities AS e
 
 UNION SELECT                   # Add in Version.RESOURCEid, which is calculated
   v.RegSID,
@@ -503,21 +513,21 @@ JOIN Resources AS R ON (R.SID=xR.SourceSID) ;
 
 CREATE VIEW FullTree AS
 SELECT
-    RegSID,
-    Type,
-    Plural,
-    Singular,
-    ParentSID,
-    eSID,
-    UID,
-    Path,
-    PropName,
-    PropValue,
-    PropType,
-    Abstract,
-    Compact
-FROM Entities
-JOIN AllProps ON (AllProps.EntitySID=Entities.eSID)
+    e.RegSID,
+    e.Type,
+    e.Plural,
+    e.Singular,
+    e.ParentSID,
+    e.eSID,
+    e.UID,
+    e.Path,
+    p.PropName,
+    p.PropValue,
+    p.PropType,
+    e.Abstract,
+    p.Compact
+FROM Entities AS e
+JOIN AllProps AS p ON (p.EntitySID=e.eSID)
 ORDER by Path, PropName;
 
 CREATE VIEW Leaves AS

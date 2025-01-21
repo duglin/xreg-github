@@ -83,6 +83,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	// vID is the version ID we want to use for the update/create.
 	// A value of "" means just use the default Version
 
+	if err := CheckAttrs(obj); err != nil {
+		return nil, false, err
+	}
+
 	gModel := g.GetGroupModel()
 	rModel := gModel.Resources[rType]
 	if rModel == nil {

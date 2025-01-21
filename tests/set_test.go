@@ -1,7 +1,10 @@
 package tests
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -35,6 +38,7 @@ func TestSetAttributeNames(t *testing.T) {
 		{"aA", "Invalid attribute name "},
 		{"_A", "Invalid attribute name "},
 		{"_ _", "Invalid attribute name "},
+		{"#abc", "Invalid attribute name "},
 	}
 
 	for _, test := range tests {
@@ -497,4 +501,119 @@ func TestSetLabels(t *testing.T) {
   "dirscount": 1
 }
 `)
+}
+
+// Set bad attr names via HTTP since using internal APIs (e.g. SetSave)
+// won't catch it.
+func TestSetAttributeNamesUser(t *testing.T) {
+	reg := NewRegistry("TestSetAttributeNameUser")
+	defer PassDeleteReg(t, reg)
+
+	gm, rm, err := reg.Model.CreateModels("dirs", "dir", "files", "file")
+	xNoErr(t, err)
+	_, err = reg.Model.AddAttrMap("mymap",
+		registry.NewItemType(registry.STRING))
+	xNoErr(t, err)
+	_, err = reg.Model.AddAttr("*", registry.ANY)
+	xNoErr(t, err)
+	_, err = gm.AddAttr("*", registry.ANY)
+	xNoErr(t, err)
+	_, err = rm.AddAttr("*", registry.ANY)
+	xNoErr(t, err)
+	_, err = rm.AddMetaAttr("*", registry.ANY)
+	xNoErr(t, err)
+	xNoErr(t, reg.Commit())
+
+	base := "http://localhost:8181"
+	for _, test := range []struct {
+		name string
+		msg  string
+	}{
+		{"a", ""},
+		{"", "Invalid attribute name"},
+		{"#a", "Invalid attribute name"},
+		{"$a", "Invalid attribute name"},
+		{"a$a", "Invalid attribute name"},
+		{"a$", "Invalid attribute name"},
+		{"a.", "Invalid attribute name"},
+	} {
+		putFn := func(path string, name string, msg string) {
+			body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"%s":"hi"}`, name)))
+			req, _ := http.NewRequest("PUT", base+path, body)
+			t.Logf("  Path: %q", path)
+
+			client := &http.Client{}
+
+			resBody := []byte{}
+			res, err := client.Do(req)
+			xNoErr(t, err)
+			if res != nil {
+				resBody, _ = io.ReadAll(res.Body)
+			}
+			if msg == "" {
+				if res.StatusCode/100 == 2 {
+					return
+				}
+				t.Fatalf("%q should not have failed: %s", name, string(resBody))
+			}
+			if res.StatusCode == 200 {
+				t.Logf("Body:\n%s", string(resBody))
+				t.Fatalf("%q should have failed, but didn't", name)
+			}
+			if !strings.HasPrefix(string(resBody), msg) {
+				t.Fatalf("%q got wrong err msg: %q", name, string(resBody))
+			}
+		}
+		t.Logf("Name: %q", test.name)
+
+		putFn("/", test.name, test.msg)
+		putFn("/dirs/d1", test.name, test.msg)
+		putFn("/dirs/d1/files/f1$details", test.name, test.msg)
+		putFn("/dirs/d1/files/f1/versions/v1$details", test.name, test.msg)
+		putFn("/dirs/d1/files/f1/meta", test.name, test.msg)
+	}
+
+	xHTTP(t, reg, "PUT", "/", `{
+		"ext": {
+		}
+	}`, 200, `{
+  "specversion": "0.5",
+  "registryid": "TestSetAttributeNameUser",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 4,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+  "ext": {},
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", `{
+		"ext": {
+		  "foo": "bar"
+		}
+	}`, 200, `{
+  "specversion": "0.5",
+  "registryid": "TestSetAttributeNameUser",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 5,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+  "ext": {
+    "foo": "bar"
+  },
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", `{ "mymap": { "@bar": "bar" } }`, 400,
+		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.\-]{0,62}$
+`)
+
 }

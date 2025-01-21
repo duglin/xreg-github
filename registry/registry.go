@@ -413,6 +413,10 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 }
 
 func (reg *Registry) Update(obj Object, addType AddType) error {
+	if err := CheckAttrs(obj); err != nil {
+		return err
+	}
+
 	reg.SetNewObject(obj)
 
 	// Make sure we always have an ID
@@ -499,6 +503,10 @@ func (reg *Registry) UpsertGroup(gType string, id string) (*Group, bool, error) 
 func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, addType AddType) (*Group, bool, error) {
 	log.VPrintf(3, ">Enter UpsertGroupWithObject(%s,%s)", gType, id)
 	defer log.VPrintf(3, "<Exit UpsertGroupWithObject")
+
+	if err := CheckAttrs(obj); err != nil {
+		return nil, false, err
+	}
 
 	gm := reg.Model.Groups[gType]
 	if gm == nil {
