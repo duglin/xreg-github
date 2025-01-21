@@ -2741,6 +2741,16 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 	return nil
 }
 
+// We call this to verify that the top level attribute names are valid.
+// We can't really do this during the Validation funcs because at that point
+// in the process we may have added #xxx type of attribute names, and "#"
+// isn't a valid char. And we need to make sure users don't try to pass in
+// attributes that start with "#" to attack us.
+// Now, one way around this is to move the system props (#xxx) into a separate
+// map (out of Object and NewObject) but then we'd need to duplicate a lot
+// of logic - but it might actually make for a cleaner design to keep
+// system data out of the user data space, so worth considering in the future.
+// I really would prefer to push this down in the stack though.
 func CheckAttrs(obj map[string]any) error {
 	if obj == nil {
 		return nil

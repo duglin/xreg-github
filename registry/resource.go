@@ -821,6 +821,21 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 			// If there's data and it's not already just an array of bytes
 			// then convert it. This is for cases where the data is raw JSON
 			// and so we may need to tweak it
+			// Note: ideally we should probably be doing this closer to where
+			// we process things at the transport layer since by this point
+			// in our processing we really shouldn't know (or care) about the
+			// serialization format. However, this "contenttype" processing
+			// below is kind of annoying and I wasn't in the mood to try to
+			// move it up the stack. It would also require each spot that
+			// got input from the transport to call a func to do this
+			// conversion - not hard, but annoying in it's own way. In fact
+			// at one point I had that, but other issues popped up so I moved
+			// it down here for now. When we try to support more than just
+			// JSON we may want to reconsider this logic.
+			// This commit (https://github.com/duglin/xreg-github/commit/c1945a061fed88f33983738010eb5c4fbdf41596)
+			// removed that logic (and the #-contenttype_ attr). Look for
+			// the ConvertResourceContents func and the hoops I had to just
+			// thru to make sure all cases were handled.
 			if ok && !IsNil(data) && reflect.ValueOf(data).Type().String() != "[]uint8" {
 				// Get the raw bytes of the "rm.Singular" json attribute
 				buf := []byte(nil)
