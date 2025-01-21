@@ -505,8 +505,8 @@ func TestSetLabels(t *testing.T) {
 
 // Set bad attr names via HTTP since using internal APIs (e.g. SetSave)
 // won't catch it.
-func TestSetAttributeNamesUser(t *testing.T) {
-	reg := NewRegistry("TestSetAttributeNameUser")
+func TestSetNameUser(t *testing.T) {
+	reg := NewRegistry("TestSetNameUser")
 	defer PassDeleteReg(t, reg)
 
 	gm, rm, err := reg.Model.CreateModels("dirs", "dir", "files", "file")
@@ -516,12 +516,19 @@ func TestSetAttributeNamesUser(t *testing.T) {
 	xNoErr(t, err)
 	_, err = reg.Model.AddAttr("*", registry.ANY)
 	xNoErr(t, err)
+
 	_, err = gm.AddAttr("*", registry.ANY)
 	xNoErr(t, err)
+	_, err = gm.AddAttrMap("mymap", registry.NewItemType(registry.STRING))
+	xNoErr(t, err)
+
 	_, err = rm.AddAttr("*", registry.ANY)
 	xNoErr(t, err)
 	_, err = rm.AddMetaAttr("*", registry.ANY)
 	xNoErr(t, err)
+	_, err = rm.AddAttrMap("mymap", registry.NewItemType(registry.STRING))
+	xNoErr(t, err)
+
 	xNoErr(t, reg.Commit())
 
 	base := "http://localhost:8181"
@@ -578,7 +585,7 @@ func TestSetAttributeNamesUser(t *testing.T) {
 		}
 	}`, 200, `{
   "specversion": "0.5",
-  "registryid": "TestSetAttributeNameUser",
+  "registryid": "TestSetNameUser",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 4,
@@ -597,7 +604,7 @@ func TestSetAttributeNamesUser(t *testing.T) {
 		}
 	}`, 200, `{
   "specversion": "0.5",
-  "registryid": "TestSetAttributeNameUser",
+  "registryid": "TestSetNameUser",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 5,
@@ -612,8 +619,28 @@ func TestSetAttributeNamesUser(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "PUT", "/", `{ "mymap": { "@bar": "bar" } }`, 400,
+	xHTTP(t, reg, "PUT", "/", `{"mymap":{"@bar":"bar"}}`, 400,
 		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.\-]{0,62}$
 `)
+	// This is ok because "mymap" is under "ext" which is defined as "*"
+	// and that allows ANYTHING as long as it's valid json
+	xHTTP(t, reg, "PUT", "/", `{"ext":{"mymap":{"@bar":"bar"}}}`, 200, `*`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1", `{"mymap":{"@bar":"bar"}}`, 400,
+		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.\-]{0,62}$
+`)
+	// This is ok because "mymap" is under "ext" which is defined as "*"
+	// and that allows ANYTHING as long as it's valid json
+	xHTTP(t, reg, "PUT", "/dirs/d1",
+		`{"ext":{"mymap":{"@bar":"bar"}}}`, 200, `*`)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details",
+		`{"mymap":{"@bar":"bar"}}`, 400,
+		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.\-]{0,62}$
+`)
+	// This is ok because "mymap" is under "ext" which is defined as "*"
+	// and that allows ANYTHING as long as it's valid json
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1",
+		`{"ext":{"mymap":{"@bar":"bar"}}}`, 200, `*`)
 
 }

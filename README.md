@@ -136,8 +136,6 @@ TODOs:
 - make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
   support it. Like pagination or enforcecompatibility
 - add support for shortself
-- add tests for valid attribute names, at all levels, under ANY and #abc
-- add tests for valid map key names, at all levels, under ANY
 - test more around file:"string", file:"" and file:null
 - see if we can create a $RESOURCEid SpecProp@Version&Meta level and then
   use "id" for everything including Versions, but not Meta
