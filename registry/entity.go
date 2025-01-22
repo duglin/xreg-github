@@ -1346,6 +1346,21 @@ var OrderedSpecProps = []*Attribute{
 		},
 	*/
 	{
+		Name: "compatibility",
+		Type: STRING,
+		Enum: []any{"none", "backward", "backward_transitive", "forward",
+			"forward_transitive", "full", "full_transitive"},
+		Strict: PtrBool(false),
+
+		internals: AttrInternals{
+			types:     StrTypes(ENTITY_META),
+			dontStore: false,
+			getFn:     nil,
+			checkFn:   nil,
+			updateFn:  nil,
+		},
+	},
+	{
 		Name: "contenttype",
 		Type: STRING,
 

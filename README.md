@@ -123,7 +123,6 @@ TODOs:
 - remove "readonly" attribute from model Resources, add to Resource
 - allow $meta on hasdoc=false resources
 - Add content-disposition header for hasdoc resources
-- add "compatibility" to resources
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
 - support ETag/If-Match
 - Split the model.verify stuff so it doesn't verify the data unless asked to

@@ -299,6 +299,20 @@ func TestExportRoot(t *testing.T) {
                 "type": "timestamp",
                 "serverrequired": true
               },
+              "compatibility": {
+                "name": "compatibility",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "backward",
+                  "backward_transitive",
+                  "forward",
+                  "forward_transitive",
+                  "full",
+                  "full_transitive"
+                ],
+                "strict": false
+              },
               "defaultversionid": {
                 "name": "defaultversionid",
                 "type": "string",
@@ -803,6 +817,20 @@ func TestExportRoot(t *testing.T) {
                 "name": "modifiedat",
                 "type": "timestamp",
                 "serverrequired": true
+              },
+              "compatibility": {
+                "name": "compatibility",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "backward",
+                  "backward_transitive",
+                  "forward",
+                  "forward_transitive",
+                  "full",
+                  "full_transitive"
+                ],
+                "strict": false
               },
               "defaultversionid": {
                 "name": "defaultversionid",

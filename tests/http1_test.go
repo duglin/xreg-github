@@ -537,6 +537,20 @@ func TestHTTPModel(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "compatibility": {
+              "name": "compatibility",
+              "type": "string",
+              "enum": [
+                "none",
+                "backward",
+                "backward_transitive",
+                "forward",
+                "forward_transitive",
+                "full",
+                "full_transitive"
+              ],
+              "strict": false
+            },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
@@ -822,6 +836,20 @@ func TestHTTPModel(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "compatibility": {
+              "name": "compatibility",
+              "type": "string",
+              "enum": [
+                "none",
+                "backward",
+                "backward_transitive",
+                "forward",
+                "forward_transitive",
+                "full",
+                "full_transitive"
+              ],
+              "strict": false
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -1115,6 +1143,20 @@ func TestHTTPModel(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "compatibility": {
+              "name": "compatibility",
+              "type": "string",
+              "enum": [
+                "none",
+                "backward",
+                "backward_transitive",
+                "forward",
+                "forward_transitive",
+                "full",
+                "full_transitive"
+              ],
+              "strict": false
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -4838,6 +4880,74 @@ func TestHTTPEnum(t *testing.T) {
 	})
 
 	// TODO test other enum types and test in Groups and Resources
+}
+
+func TestHTTPCompatility(t *testing.T) {
+	reg := NewRegistry("TestHTTPCompatibility")
+	defer PassDeleteReg(t, reg)
+
+	_, _, err := reg.Model.CreateModels("dirs", "dir", "files", "file")
+	xNoErr(t, err)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/meta", `{"compatibility":"none"}`,
+		201, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+  "compatibility": "none",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1/meta", `{"compatibility":null}`,
+		200, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "epoch": 2,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1/meta",
+		`{"compatibility":"backward"}`, 200, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "epoch": 3,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+  "compatibility": "backward",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+}
+`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1/meta",
+		`{"compatibility":"mine"}`, 200, `{
+  "fileid": "f1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "epoch": 4,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+  "compatibility": "mine",
+
+  "defaultversionid": "1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+}
+`)
+
 }
 
 func TestHTTPIfValue(t *testing.T) {
