@@ -103,10 +103,10 @@ TODOs:
 - pagination
 - have DB generate the COLLECTIONcount attributes so people can query over
   them and we don't need the code to calculate them (can we due to filters?)
-- add checks for valid obj/map key names in new validation funcs ****
 - support overriding spec defined attributes - like "format"
 - support changing the model - test for invalid changes
 - add tests for immutable attributes
+- test filtering on bool attributes where they search for attr=false
 - support the resource sticky/default attributes
   - remove ?setdefault.. for some apis
   - process ?setdefaultversionid flag before we update things
@@ -126,12 +126,9 @@ TODOs:
 - add "compatibility" to resources
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
 - support ETag/If-Match
-- test creating a resource + lots of versions w/o ?defaultversionid-should fail
-  - PUT ../f1   POST .../f1/versions   POT .../versions
 - Split the model.verify stuff so it doesn't verify the data unless asked to
 - make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
   support it. Like pagination or enforcecompatibility
 - add support for shortself
-- test more around file:"string", file:"" and file:null
 - see if we can create a $RESOURCEid SpecProp for Version&Meta level and then
   use "$SINGULRid" for everything including Versions, but not Meta

@@ -1921,7 +1921,7 @@ func EnsureJustOneRESOURCE(obj map[string]any, singular string) error {
 	}
 	if count > 1 {
 		return fmt.Errorf("Only one of %s can be present at a time",
-			strings.Join(list[:3], ",")) // exclude proxyurl
+			strings.Join(list, ",")) // include proxyurl
 	}
 	return nil
 }

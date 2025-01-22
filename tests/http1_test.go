@@ -3634,7 +3634,7 @@ func TestHTTPVersions(t *testing.T) {
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody: `Only one of file,fileurl,filebase64 can be present at a time
+		ResBody: `Only one of file,fileurl,filebase64,fileproxyurl can be present at a time
 `,
 	})
 
@@ -3651,7 +3651,7 @@ func TestHTTPVersions(t *testing.T) {
 		Code:        400,
 		HeaderMasks: []string{},
 		ResHeaders:  []string{},
-		ResBody: `Only one of file,fileurl,filebase64 can be present at a time
+		ResBody: `Only one of file,fileurl,filebase64,fileproxyurl can be present at a time
 `,
 	})
 
@@ -5963,41 +5963,13 @@ func TestHTTPDefault(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "POST file f1$details?setdefault=1 - no change",
-		URL:         "/dirs/d1/files/f1$details?setdefaultversionid=1",
-		Method:      "POST",
-		ReqHeaders:  []string{},
-		ReqBody:     ``,
-		Code:        200,
-		HeaderMasks: []string{},
-		ResHeaders: []string{
-			"Content-Type: application/json",
-		},
-		ResBody: `{
-  "fileid": "f1",
-  "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$details",
-  "xid": "/dirs/d1/files/f1",
-  "epoch": 4,
-  "isdefault": true,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
-  "versionscount": 3
-}
-`,
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:   "POST file f1?setdefault=1 - set to 2",
+		Name:   "POST file f1?setdefault=2",
 		URL:    "/dirs/d1/files/f1?setdefaultversionid=2",
 		Method: "POST",
 		ReqHeaders: []string{
 			`xRegistry-versionid: bogus`,
 		},
-		ReqBody:     `ignore me`,
+		ReqBody:     `some text`,
 		Code:        201,
 		HeaderMasks: []string{},
 		ResHeaders: []string{
@@ -6012,61 +5984,58 @@ func TestHTTPDefault(t *testing.T) {
 			"Content-Length: 9",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/bogus",
 		},
-		ResBody: `ignore me`,
+		ResBody: `some text`,
 	})
 
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:        "POST file f1?setdefault=1 - set back to 1",
-		URL:         "/dirs/d1/files/f1$details?setdefaultversionid=1",
-		Method:      "POST",
-		ReqHeaders:  []string{},
-		ReqBody:     ``, // must be empty for set to work
-		Code:        200,
-		HeaderMasks: []string{},
-		ResHeaders: []string{
-			"Content-Type: application/json",
-		},
-		ResBody: `{
+	// Make sure defaultversionid was processed
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", "", 200, `{
   "fileid": "f1",
-  "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1$details",
-  "xid": "/dirs/d1/files/f1",
-  "epoch": 4,
-  "isdefault": true,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
+  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "xid": "/dirs/d1/files/f1/meta",
+  "epoch": 6,
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
 
-  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
-  "versionscount": 4
+  "defaultversionid": "2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2",
+  "defaultversionsticky": true
 }
-`,
-	})
+`)
 
 	// errors
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "POST setdefault bad group type",
-		URL:        "/badgroup/d1/files/f1$details?setdefaultversionid=1",
+		URL:        "/badgroup/d1/files/f1$details?setdefaultversionid=3",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-versionid: bogus`},
 		Code:       404,
 		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
-		ResBody:    `Unknown Group type: badgroup` + "\n",
+		ResBody:    "Unknown Group type: badgroup\n",
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST setdefault bad header",
+		URL:        "/dirs/d1/files/f1$details?setdefaultversionid=3",
+		Method:     "POST",
+		ReqHeaders: []string{`xRegistry-versionid: bogus`},
+		Code:       400,
+		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
+		ResBody:    `Including "xRegistry" headers when "$details" is used is invalid` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "POST setdefault bad group",
-		URL:        "/dirs/dx/files/f1$details?setdefaultversionid=1",
+		URL:        "/dirs/dx/files/f11?setdefaultversionid=6",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-versionid: bogus`},
-		Code:       404,
+		Code:       400,
 		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
-		ResBody:    `Group "dx" not found` + "\n",
+		ResBody:    `Version "6" not found` + "\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "POST setdefault bad resource type",
-		URL:        "/dirs/d1/badfiles/f1$details?setdefaultversionid=1",
+		URL:        "/dirs/d1/badfiles/f1$details?setdefaultversionid=3",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-versionid: bogus`},
 		Code:       404,
@@ -6075,23 +6044,22 @@ func TestHTTPDefault(t *testing.T) {
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST setdefault bad resource",
-		URL:        "/dirs/d1/files/xxf1$details?setdefaultversionid=1",
-		Method:     "POST",
-		ReqHeaders: []string{`xRegistry-versionid: bogus`},
-		Code:       404,
-		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
-		ResBody:    `Resource "xxf1" not found` + "\n",
-	})
-
-	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "POST setdefault bad version",
+		Name:       "POST setdefault bad header",
 		URL:        "/dirs/d1/files/f1$details?setdefaultversionid=3",
 		Method:     "POST",
 		ReqHeaders: []string{`xRegistry-versionid: bogus`},
 		Code:       400,
 		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
-		ResBody:    `Version "3" not found` + "\n",
+		ResBody:    `Including "xRegistry" headers when "$details" is used is invalid` + "\n",
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "POST setdefault bad version",
+		URL:        "/dirs/d1/files/f1$details?setdefaultversionid=6",
+		Method:     "POST",
+		Code:       400,
+		ResHeaders: []string{"Content-Type: text/plain; charset=utf-8"},
+		ResBody:    `Version "6" not found` + "\n",
 	})
 
 }

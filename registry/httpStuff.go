@@ -1479,14 +1479,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		body = nil
 	}
 
-	// POST /groups/gID/resources/rID?setdefaultversiond is special in that
-	// it only moves the "default" pointer, nothing else is meant to be done
-	if metaInBody && len(info.Parts) == 4 && method == "POST" && body == nil {
-		if info.HasFlag("setdefaultversionid") {
-			return HTTPSetDefaultVersionID(info)
-		}
-	}
-
 	// Check for some obvious high-level bad states up-front
 	// //////////////////////////////////////////////////////
 	if len(info.Parts) == 0 && method == "POST" {

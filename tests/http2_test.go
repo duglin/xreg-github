@@ -585,7 +585,7 @@ func TestDefaultVersionThis(t *testing.T) {
 
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$details?setdefaultversionid", "", 400, `"setdefaultversionid" must not be empty`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$details?setdefaultversionid=", "", 400, `"setdefaultversionid" must not be empty`+"\n")
-	xHTTP(t, reg, "POST", "/dirs/d1/files/f1$details?setdefaultversionid=request", "", 400, `Can't use 'request' if a version wasn't processed`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/f1/versions?setdefaultversionid=request", "", 400, `Can't use 'request' if a version wasn't processed`+"\n")
 
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?setdefaultversionid", "", 400, `"setdefaultversionid" must not be empty`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/d1/files/f1?setdefaultversionid=", "", 400, `"setdefaultversionid" must not be empty`+"\n")
@@ -625,18 +625,19 @@ func TestDefaultVersionThis(t *testing.T) {
 
 	// Just move sticky ptr
 	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1$details?setdefaultversionid=1",
-		Method: "POST",
-		Code:   200,
+		URL:     "/dirs/d1/files/f1$details",
+		Method:  "PATCH",
+		ReqBody: `{"meta":{"defaultversionid":"1","defaultversionsticky":true}}`,
+		Code:    200,
 		ResBody: `{
   "fileid": "f1",
   "versionid": "1",
   "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
-  "epoch": 1,
+  "epoch": 2,
   "isdefault": true,
   "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",

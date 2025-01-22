@@ -1147,8 +1147,10 @@ func TestXrefDocs(t *testing.T) {
 		`Can't update "versions" if "xref" is set`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/d1/files/fx$details?setdefaultversionid=2",
 		`{}`, 400, `Can't update "versions" if "xref" is set`+"\n")
-	xHTTP(t, reg, "POST", "/dirs/d1/files/fx$details?setdefaultversionid=2",
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx$details?setdefaultversionid=2",
 		``, 400, `Can't update "defaultversionid" if "xref" is set`+"\n")
+	xHTTP(t, reg, "POST", "/dirs/d1/files/fx?setdefaultversionid=2",
+		``, 400, `Can't update "versions" if "xref" is set`+"\n")
 	xHTTP(t, reg, "POST", "/dirs/d1/files/fx/versions", "{}", 400,
 		`Can't update "versions" if "xref" is set`+"\n")
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/versions/1", "hi", 400,
