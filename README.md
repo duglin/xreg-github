@@ -126,10 +126,6 @@ TODOs:
 - add "compatibility" to resources
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
 - support ETag/If-Match
-- update epoch/modifiedat of parent when nested entity is added/removed
-- test to ensure meta epoch changes as versions are added/removed
-- test the timestamps in meta. Should change as versions are added/removed.
-- remove entities from cache upon delete
 - test creating a resource + lots of versions w/o ?defaultversionid-should fail
   - PUT ../f1   POST .../f1/versions   POT .../versions
 - Split the model.verify stuff so it doesn't verify the data unless asked to
@@ -137,5 +133,5 @@ TODOs:
   support it. Like pagination or enforcecompatibility
 - add support for shortself
 - test more around file:"string", file:"" and file:null
-- see if we can create a $RESOURCEid SpecProp@Version&Meta level and then
-  use "id" for everything including Versions, but not Meta
+- see if we can create a $RESOURCEid SpecProp for Version&Meta level and then
+  use "$SINGULRid" for everything including Versions, but not Meta

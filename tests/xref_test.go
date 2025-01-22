@@ -2,8 +2,6 @@ package tests
 
 import (
 	"testing"
-
-	"github.com/duglin/xreg-github/registry"
 )
 
 func TestXrefBasic(t *testing.T) {
@@ -12,35 +10,28 @@ func TestXrefBasic(t *testing.T) {
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, true)
-	d, _ := reg.AddGroup("dirs", "d1")
-	f1, err := d.AddResource("files", "f1", "v1")
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1$details", "{}", 201, `*`)
+	f1, err := reg.FindXIDResource("/dirs/d1/files/f1")
+	xNoErr(t, err)
 
 	rows, err := reg.Query("select * from Versions where ResourceSID=?",
 		f1.DbSID)
 	xNoErr(t, err)
 	xCheckEqual(t, "", len(rows), 1) // Just to be sure Query works ok
 
-	_, err = d.AddResourceWithObject("files", "fx", "", registry.Object{
-		"meta": map[string]any{
-			"xref": f1.Path, // missing leading /
-		},
-	}, false)
-	xCheckErr(t, err, `'xref' (`+f1.Path+`) must be of the form: `+
-		`/GROUPS/gID/RESOURCES/rID`)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
+		`{"xref":"dirs/d1/files/f1"}`, 400, // missing leading /
+		"'xref' (dirs/d1/files/f1) must be of the form: /GROUPS/gID/RESOURCES/rID\n")
 
-	_, err = d.AddResourceWithObject("files", "fx", "", registry.Object{
-		"meta": map[string]any{
-			"xref": "foo/" + f1.Path, // make it bad
-		},
-	}, false)
-	xCheckErr(t, err, `'xref' (foo/`+f1.Path+`) must be of the form: `+
-		`/GROUPS/gID/RESOURCES/rID`)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
+		`{"xref":"foo/dirs/d1/files/f1"}`, 400, // make it bad
+		"'xref' (foo/dirs/d1/files/f1) must be of the form: /GROUPS/gID/RESOURCES/rID\n")
 
-	fx, err := d.AddResourceWithObject("files", "fx", "", registry.Object{
-		"meta": map[string]any{
-			"xref": "/dirs/d1/files/f1",
-		},
-	}, false)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
+		`{"xref":"/dirs/d1/files/f1"}`, 201, `*`)
+
+	fx, err := reg.FindXIDResource("/dirs/d1/files/fx")
 	xNoErr(t, err)
 
 	// Grab #createdat so we can make sure it's used when we remove 'xref'
@@ -85,13 +76,19 @@ func TestXrefBasic(t *testing.T) {
   }
 }
 `)
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$details",
+		`{"description":"testing xref"}`, 200, `*`)
 
-	xNoErr(t, f1.SetSaveDefault("description", "testing xref"))
+	f1, err = reg.FindXIDResource("/dirs/d1/files/f1")
+	xNoErr(t, err)
+
+	fx, err = reg.FindXIDResource("/dirs/d1/files/fx")
+	xNoErr(t, err)
+
 	xCheckEqual(t, "", fx.Get("description"), "testing xref")
 
-	v1, err := f1.FindVersion("v1", false)
-	xNoErr(t, err)
-	xNoErr(t, v1.SetSave("name", "v1 name"))
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1/versions/v1$details",
+		`{"name":"v1 name"}`, 200, `*`)
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files?inline", "", 200, `{
   "f1": {
@@ -99,7 +96,7 @@ func TestXrefBasic(t *testing.T) {
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
-    "epoch": 2,
+    "epoch": 3,
     "name": "v1 name",
     "isdefault": true,
     "description": "testing xref",
@@ -125,7 +122,7 @@ func TestXrefBasic(t *testing.T) {
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
-        "epoch": 2,
+        "epoch": 3,
         "name": "v1 name",
         "isdefault": true,
         "description": "testing xref",
@@ -140,7 +137,7 @@ func TestXrefBasic(t *testing.T) {
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/fx$details",
     "xid": "/dirs/d1/files/fx",
-    "epoch": 2,
+    "epoch": 3,
     "name": "v1 name",
     "isdefault": true,
     "description": "testing xref",
@@ -167,7 +164,7 @@ func TestXrefBasic(t *testing.T) {
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details",
         "xid": "/dirs/d1/files/fx/versions/v1",
-        "epoch": 2,
+        "epoch": 3,
         "name": "v1 name",
         "isdefault": true,
         "description": "testing xref",
@@ -181,21 +178,17 @@ func TestXrefBasic(t *testing.T) {
 `)
 
 	// Now clear xref and make sure a version is created
-	fx, isNew, err := d.UpsertResourceWithObject("files", "fx", "",
-		registry.Object{
-			"meta": map[string]any{
-				"xref": nil,
-			},
-		}, registry.ADD_UPDATE, false)
-	xNoErr(t, err)
-	xCheckEqual(t, "", isNew, false)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
+		`{"xref":null}`, 200, `*`)
 
 	rows, err = reg.Query("select * from Versions where ResourceSID=?",
 		fx.DbSID)
 	xNoErr(t, err)
 	xCheckEqual(t, "", len(rows), 1)
 
-	meta, _ = fx.FindMeta(false)
+	meta, err = reg.FindXIDMeta("/dirs/d1/files/fx/meta")
+	xNoErr(t, err)
+
 	if meta.Get("createdat") != oldCreatedAt {
 		t.Errorf("CreatedAt has wrong value, should be %q, not %q",
 			oldCreatedAt, meta.Get("createdat"))
@@ -208,7 +201,7 @@ func TestXrefBasic(t *testing.T) {
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
-    "epoch": 2,
+    "epoch": 3,
     "name": "v1 name",
     "isdefault": true,
     "description": "testing xref",
@@ -234,7 +227,7 @@ func TestXrefBasic(t *testing.T) {
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
-        "epoch": 2,
+        "epoch": 3,
         "name": "v1 name",
         "isdefault": true,
         "description": "testing xref",
@@ -251,17 +244,17 @@ func TestXrefBasic(t *testing.T) {
     "xid": "/dirs/d1/files/fx",
     "epoch": 1,
     "isdefault": true,
-    "createdat": "2024-01-01T12:00:03Z",
-    "modifiedat": "2024-01-01T12:00:03Z",
+    "createdat": "2024-01-01T12:00:04Z",
+    "modifiedat": "2024-01-01T12:00:04Z",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta",
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
       "xid": "/dirs/d1/files/fx/meta",
-      "epoch": 3,
-      "createdat": "2024-01-01T12:00:01Z",
-      "modifiedat": "2024-01-01T12:00:03Z",
+      "epoch": 4,
+      "createdat": "2024-01-01T12:00:03Z",
+      "modifiedat": "2024-01-01T12:00:04Z",
 
       "defaultversionid": "1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
@@ -275,8 +268,8 @@ func TestXrefBasic(t *testing.T) {
         "xid": "/dirs/d1/files/fx/versions/1",
         "epoch": 1,
         "isdefault": true,
-        "createdat": "2024-01-01T12:00:03Z",
-        "modifiedat": "2024-01-01T12:00:03Z"
+        "createdat": "2024-01-01T12:00:04Z",
+        "modifiedat": "2024-01-01T12:00:04Z"
       }
     },
     "versionscount": 1
@@ -285,14 +278,8 @@ func TestXrefBasic(t *testing.T) {
 `)
 
 	// re-Set xref and make sure the version is deleted
-	fx, isNew, err = d.UpsertResourceWithObject("files", "fx", "",
-		registry.Object{
-			"meta": map[string]any{
-				"xref": "/" + f1.Path,
-			},
-		}, registry.ADD_UPDATE, false)
-	xNoErr(t, err)
-	xCheckEqual(t, "", isNew, false)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
+		`{"xref":"/dirs/d1/files/f1"}`, 200, `*`)
 
 	rows, err = reg.Query("select * from Versions where ResourceSID=?",
 		fx.DbSID)
@@ -305,7 +292,7 @@ func TestXrefBasic(t *testing.T) {
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
-    "epoch": 2,
+    "epoch": 3,
     "name": "v1 name",
     "isdefault": true,
     "description": "testing xref",
@@ -331,7 +318,7 @@ func TestXrefBasic(t *testing.T) {
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
-        "epoch": 2,
+        "epoch": 3,
         "name": "v1 name",
         "isdefault": true,
         "description": "testing xref",
@@ -346,7 +333,7 @@ func TestXrefBasic(t *testing.T) {
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/fx$details",
     "xid": "/dirs/d1/files/fx",
-    "epoch": 2,
+    "epoch": 3,
     "name": "v1 name",
     "isdefault": true,
     "description": "testing xref",
@@ -373,7 +360,7 @@ func TestXrefBasic(t *testing.T) {
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details",
         "xid": "/dirs/d1/files/fx/versions/v1",
-        "epoch": 2,
+        "epoch": 3,
         "name": "v1 name",
         "isdefault": true,
         "description": "testing xref",
@@ -387,16 +374,10 @@ func TestXrefBasic(t *testing.T) {
 `)
 
 	// Now clear xref and set some props at the same time
-	fx, isNew, err = d.UpsertResourceWithObject("files", "fx", "",
-		registry.Object{
-			"meta": map[string]any{
-				"xref": nil,
-			},
-			"name":        "fx name",
-			"description": "very cool",
-		}, registry.ADD_UPDATE, false)
-	xNoErr(t, err)
-	xCheckEqual(t, "", isNew, false)
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx$details",
+		`{"meta":{"xref":null},
+		  "name": "fx name",
+		  "description": "very cool"}`, 200, `*`)
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files?inline", "", 200, `{
   "f1": {
@@ -404,7 +385,7 @@ func TestXrefBasic(t *testing.T) {
     "versionid": "v1",
     "self": "http://localhost:8181/dirs/d1/files/f1$details",
     "xid": "/dirs/d1/files/f1",
-    "epoch": 2,
+    "epoch": 3,
     "name": "v1 name",
     "isdefault": true,
     "description": "testing xref",
@@ -430,7 +411,7 @@ func TestXrefBasic(t *testing.T) {
         "versionid": "v1",
         "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
         "xid": "/dirs/d1/files/f1/versions/v1",
-        "epoch": 2,
+        "epoch": 3,
         "name": "v1 name",
         "isdefault": true,
         "description": "testing xref",
@@ -449,17 +430,17 @@ func TestXrefBasic(t *testing.T) {
     "name": "fx name",
     "isdefault": true,
     "description": "very cool",
-    "createdat": "2024-01-01T12:00:03Z",
-    "modifiedat": "2024-01-01T12:00:03Z",
+    "createdat": "2024-01-01T12:00:04Z",
+    "modifiedat": "2024-01-01T12:00:04Z",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta",
     "meta": {
       "fileid": "fx",
       "self": "http://localhost:8181/dirs/d1/files/fx/meta",
       "xid": "/dirs/d1/files/fx/meta",
-      "epoch": 4,
-      "createdat": "2024-01-01T12:00:01Z",
-      "modifiedat": "2024-01-01T12:00:03Z",
+      "epoch": 5,
+      "createdat": "2024-01-01T12:00:03Z",
+      "modifiedat": "2024-01-01T12:00:04Z",
 
       "defaultversionid": "1",
       "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
@@ -475,8 +456,8 @@ func TestXrefBasic(t *testing.T) {
         "name": "fx name",
         "isdefault": true,
         "description": "very cool",
-        "createdat": "2024-01-01T12:00:03Z",
-        "modifiedat": "2024-01-01T12:00:03Z"
+        "createdat": "2024-01-01T12:00:04Z",
+        "modifiedat": "2024-01-01T12:00:04Z"
       }
     },
     "versionscount": 1

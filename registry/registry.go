@@ -225,7 +225,12 @@ func (reg *Registry) Delete() error {
 	log.VPrintf(3, ">Enter: Reg.Delete(%s)", reg.UID)
 	defer log.VPrintf(3, "<Exit: Reg.Delete")
 
-	return DoOne(reg.tx, `DELETE FROM Registries WHERE SID=?`, reg.DbSID)
+	err := DoOne(reg.tx, `DELETE FROM Registries WHERE SID=?`, reg.DbSID)
+	if err != nil {
+		return err
+	}
+	reg.tx.RemoveFromCache(&reg.Entity)
+	return nil
 }
 
 func FindRegistryBySID(tx *Tx, sid string) (*Registry, error) {
@@ -880,4 +885,75 @@ func (r *Registry) XID2Entity(xid string) (*Entity, error) {
 	}
 
 	return nil, fmt.Errorf("xid %q isn't valid", xid)
+}
+
+func (r *Registry) FindXIDGroup(xid string) (*Group, error) {
+	parts, err := ParseXID(xid)
+	if err != nil {
+		return nil, err
+	}
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("XID %q is missing a \"groupid\"", xid)
+	}
+
+	return r.FindGroup(parts[0], parts[1], false)
+}
+
+func (r *Registry) FindXIDResource(xid string) (*Resource, error) {
+	parts, err := ParseXID(xid)
+	if err != nil {
+		return nil, err
+	}
+	if len(parts) < 4 {
+		return nil, fmt.Errorf("XID %q is missing a \"groupid\"", xid)
+	}
+	g, err := r.FindGroup(parts[0], parts[1], false)
+	if err != nil || g == nil {
+		return nil, err
+	}
+	return g.FindResource(parts[2], parts[3], false)
+}
+
+func (r *Registry) FindXIDVersion(xid string) (*Version, error) {
+	parts, err := ParseXID(xid)
+	if err != nil {
+		return nil, err
+	}
+	if len(parts) < 6 {
+		return nil, fmt.Errorf("XID %q is missing a \"groupid\"", xid)
+	}
+	if parts[4] != "versions" {
+		return nil, fmt.Errorf("XID %q is \"versions\"", xid)
+	}
+	g, err := r.FindGroup(parts[0], parts[1], false)
+	if err != nil || g == nil {
+		return nil, err
+	}
+	resource, err := g.FindResource(parts[2], parts[3], false)
+	if err != nil || resource == nil {
+		return nil, err
+	}
+	return resource.FindVersion(parts[5], false)
+}
+
+func (r *Registry) FindXIDMeta(xid string) (*Meta, error) {
+	parts, err := ParseXID(xid)
+	if err != nil {
+		return nil, err
+	}
+	if len(parts) < 5 {
+		return nil, fmt.Errorf("XID %q is missing a \"groupid\"", xid)
+	}
+	if parts[4] != "meta" {
+		return nil, fmt.Errorf("XID %q is \"meta\"", xid)
+	}
+	g, err := r.FindGroup(parts[0], parts[1], false)
+	if err != nil || g == nil {
+		return nil, err
+	}
+	resource, err := g.FindResource(parts[2], parts[3], false)
+	if err != nil || resource == nil {
+		return nil, err
+	}
+	return resource.FindMeta(false)
 }

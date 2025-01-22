@@ -44,6 +44,7 @@ func (v *Version) JustDelete() error {
 	if err != nil {
 		return fmt.Errorf("Error deleting Version %q: %s", v.UID, err)
 	}
+	v.tx.RemoveFromCache(&v.Entity)
 	return nil
 }
 

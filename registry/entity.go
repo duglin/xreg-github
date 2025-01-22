@@ -106,7 +106,9 @@ func (e *Entity) SetNewObject(newObj map[string]any) {
 	e.NewObject = newObj
 
 	// Enable the next line when we need to debug when NewObject was created
-	// e.NewObjectStack = GetStack()
+	e.NewObjectStack = GetStack()
+
+	// And then use e.ShowStack() to dump it
 
 	/* Sample code to print the stack for where this NewObject was created:
 	log.Printf("Stack for NewObject:")
@@ -114,6 +116,13 @@ func (e *Entity) SetNewObject(newObj map[string]any) {
 		log.Printf("  %s", s)
 	}
 	*/
+}
+
+func (e *Entity) ShowStack() {
+	log.Printf("Stack for NewObject (%s):", e.Path)
+	for _, s := range e.NewObjectStack {
+		log.Printf("  %s", s)
+	}
 }
 
 func (e *Entity) Touch() {

@@ -36,7 +36,12 @@ func (g *Group) Delete() error {
 
 	g.Registry.Touch()
 
-	return DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
+	err := DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
+	if err != nil {
+		return err
+	}
+	g.tx.RemoveFromCache(&g.Entity)
+	return nil
 }
 
 func (g *Group) FindResource(rType string, id string, anyCase bool) (*Resource, error) {
@@ -283,11 +288,6 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	if !IsNil(metaObj) {
 		meta, _, err = r.UpsertMetaWithObject(metaObj, addType, false, false)
 		if err != nil {
-			if isNew {
-				// Needed if doing local func calls to create the Resource
-				// and we don't commit/rollback the tx upon failure
-				r.Delete()
-			}
 			return nil, false, err
 		}
 	}

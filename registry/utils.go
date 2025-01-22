@@ -972,3 +972,37 @@ func MakeShort(buf []byte) string {
 
 	return str
 }
+
+// xid:  /GROUPS/gid/RESOURCES/rid/meta|versions/vid
+func ParseXID(xid string) ([]string, error) {
+	if len(xid) == 0 {
+		return nil, fmt.Errorf("XID can't be an empty string")
+	}
+
+	if xid[0] != '/' {
+		return nil, fmt.Errorf("XID %q must start with /", xid)
+	}
+
+	parts := strings.SplitN(xid[1:], "/", 7) // one extra
+	if len(parts) > 6 {
+		return nil, fmt.Errorf("XID %q is too long", xid)
+	}
+	return parts, nil
+}
+
+// xid:  /GROUPS/RESOURCES[/versions]
+func ParseXIDTemplate(xid string) ([]string, error) {
+	if len(xid) == 0 {
+		return nil, fmt.Errorf("XID can't be an empty string")
+	}
+
+	if xid[0] != '/' {
+		return nil, fmt.Errorf("XID %q must start with /", xid)
+	}
+
+	parts := strings.SplitN(xid[1:], "/", 4) // one extra
+	if len(parts) > 3 {
+		return nil, fmt.Errorf("XID %q is too long", xid)
+	}
+	return parts, nil
+}

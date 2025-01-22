@@ -1029,14 +1029,24 @@ func (r *Resource) Delete() error {
 
 	r.Group.Touch()
 
-	return DoOne(r.tx, `DELETE FROM Resources WHERE SID=?`, r.DbSID)
+	err = DoOne(r.tx, `DELETE FROM Resources WHERE SID=?`, r.DbSID)
+	if err != nil {
+		return err
+	}
+	r.tx.RemoveFromCache(&r.Entity)
+	return nil
 }
 
 func (m *Meta) Delete() error {
 	log.VPrintf(3, ">Enter: Meta.Delete(%s)", m.UID)
 	defer log.VPrintf(3, "<Exit: Meta.Delete")
 
-	return DoOne(m.tx, `DELETE FROM Metas WHERE SID=?`, m.DbSID)
+	err := DoOne(m.tx, `DELETE FROM Metas WHERE SID=?`, m.DbSID)
+	if err != nil {
+		return err
+	}
+	m.tx.RemoveFromCache(&m.Entity)
+	return nil
 }
 
 func (r *Resource) GetVersions() ([]*Version, error) {

@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
-	// "maps"
+	"maps"
 	"os"
 	"reflect"
 	"regexp"
@@ -218,6 +218,17 @@ func (tx *Tx) AddToCache(e *Entity) {
 }
 
 func (tx *Tx) RemoveFromCache(e *Entity) {
+	// If NewObject is missing or its the same a Ob then we're ok.
+	// "same" is ok because it means it was just touched, not really changed
+
+	// TODO turn this off when in prod (the maps.Equals probably isn't too
+	// expensive, but it's not free
+	if e.NewObject != nil && !maps.Equal(e.Object, e.NewObject) {
+		log.Printf("OldObject:\n%s", ToJSON(e.Object))
+		log.Printf("NewObject:\n%s", ToJSON(e.NewObject))
+		e.ShowStack()
+		panic(e.Path + " is dirty")
+	}
 	delete(tx.Cache, e.Registry.UID+"/"+e.Path)
 }
 
