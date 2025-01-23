@@ -1526,19 +1526,38 @@ var OrderedSpecProps = []*Attribute{
 				if IsNil(val) {
 					return nil
 				}
+				valStr := val.(string)
 
-				str := ""
+				result := ""
 
 				if info != nil {
+					// s/meta/versions/
 					abs := e.Abstract[:len(e.Abstract)-4] + "versions"
 					inlineVers := info.ShouldInline(abs)
-					if !info.DoCompact() || !inlineVers {
-						str = info.BaseURL
+					seenDefVid := info.extras["seenDefaultVid"]
+
+					isAbsURL := false
+
+					if !info.DoCompact() {
+						isAbsURL = true
+					}
+
+					if !inlineVers {
+						isAbsURL = true
+					}
+
+					if len(info.Filters) > 0 && seenDefVid != valStr {
+						isAbsURL = true
+					}
+
+					if isAbsURL {
+						result = info.BaseURL
 					}
 				}
 
+				// remove "/meta" so we can add "/versions/vID"
 				rPath := e.Path[:len(e.Path)-5]
-				str += "/" + rPath + "/versions/" + val.(string)
+				result += "/" + rPath + "/versions/" + valStr
 
 				meta := info != nil && (info.ShowDetails ||
 					info.DoCompact() || info.ResourceUID == "")
@@ -1547,9 +1566,10 @@ var OrderedSpecProps = []*Attribute{
 				}
 
 				if meta {
-					str += "$details"
+					result += "$details"
 				}
-				return str
+
+				return result
 			},
 			checkFn:  nil,
 			updateFn: nil,

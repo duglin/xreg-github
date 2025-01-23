@@ -21,6 +21,12 @@ type JsonWriter struct {
 	results *Result // results of DB query
 	Entity  *Entity // Current row in the DB results
 	hasData bool
+
+	// Save the defaultVersionID as we serialize the Versions collection
+	seenDefaultVid string
+
+	// we sometimes need to force an entity to be next, LIFO order
+	cachedEntities [](*Entity)
 }
 
 func NewJsonWriter(info *RequestInfo, results *Result) *JsonWriter {
@@ -63,16 +69,34 @@ func (jw *JsonWriter) Outdent() {
 }
 
 func (jw *JsonWriter) NextEntity() (*Entity, error) {
+	// If we have a cached entity, return it instead
+	var next *Entity
 	var err error
-	jw.Entity, err = readNextEntity(jw.info.tx, jw.results)
-	/*
-		pc, _, line, _ := runtime.Caller(1)
-		log.VPrintf(4, "Caller: %s:%d", path.Base(runtime.FuncForPC(pc).Name()), line)
-		log.VPrintf(4, "  > Next: %v", jw.Entity)
-	*/
+
+	if next = jw.Pop(); next == nil {
+		next, err = readNextEntity(jw.info.tx, jw.results)
+	}
+	jw.Entity = next
 	return jw.Entity, err
 }
 
+func (jw *JsonWriter) Push(e *Entity) {
+	jw.cachedEntities = append([](*Entity){e}, jw.cachedEntities...)
+}
+
+func (jw *JsonWriter) Pop() *Entity {
+	if len(jw.cachedEntities) == 0 {
+		return nil
+	}
+	next := jw.cachedEntities[0]
+	jw.cachedEntities = jw.cachedEntities[1:]
+	return next
+}
+
+// This is called WriteCollectionHeaders because it doesn't just write
+// the collection, it also writes the COLLECTIONSurl and COLLECTIONscount
+// headers/attributes.
+// WriteCollection will do the actual processing of the entities in there.
 func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Entity.Plural
 	myURL := ""
@@ -141,6 +165,10 @@ func (jw *JsonWriter) WriteCollection() (int, error) {
 			jw.Entity.Plural != myPlural {
 			// Stop on a new parent or a new sibling collection
 			break
+		}
+
+		if jw.Entity.Type == ENTITY_VERSION && jw.Entity.Object["isdefault"] == true {
+			jw.seenDefaultVid = jw.Entity.UID
 		}
 
 		jw.Printf("%s\n%s%q: ", extra, jw.indent, jw.Entity.UID)
@@ -231,12 +259,19 @@ func (jw *JsonWriter) WriteEntity() error {
 		extra += "\n" // just because it looks nicer with a blank line
 	}
 
+	if jw.Entity.Type == ENTITY_RESOURCE {
+		jw.seenDefaultVid = "" // just to be safe, clear it for each Resource
+	}
+
 	jw.LoadCollections(myType) // load the list of current collections
 	if _, err := jw.NextEntity(); err != nil {
 		return err
 	}
 
-	// If next entity is 'meta' then skip it.
+	// If we need to delay the serialization of "meta" for later
+	var cachedMeta *Entity
+
+	// If next entity is 'meta' then skip it if we're not inlining it
 	// Note, we're getting lucky that "meta" comes before "versions".
 	// We really should fix this.
 	if jw.Entity != nil && jw.Entity.Type == ENTITY_META {
@@ -244,22 +279,40 @@ func (jw *JsonWriter) WriteEntity() error {
 
 		p, _ := PropPathFromPath(jw.Entity.Abstract)
 		if jw.info.ShouldInline(p.DB()) {
-			jw.Printf("%s\n%s%q: ", extra, jw.indent, "meta")
-			if err := jw.WriteEntity(); err != nil {
-				return err
+			// If in compact mode & there are filters, then we'll
+			// serialize "meta" after "versions" so we know if the
+			// default Version was included or not. If not then the
+			// defaultversionurl needs to be absolute, not relative
+			if jw.info.DoCompact() && len(jw.info.Filters) > 0 {
+				cachedMeta = jw.Entity
+				if _, err = jw.NextEntity(); err != nil {
+					return err
+				}
+			} else {
+				jw.Printf("%s\n%s%q: ", extra, jw.indent, "meta")
+				if err := jw.WriteEntity(); err != nil {
+					return err
+				}
+				extra = ","
+				// We don't need to call "jw.NextEntity()" because the
+				// WriteEntity() call above would have already done it for us
 			}
-			extra = ","
-			// We don't need to call "jw.NextEntity()" because the WriteEntity()
-			// call above would have already done it for us.
 		} else {
-			// Skip "meta" entity
+			// Skip "meta" entity since we're not serialize/inlining it
 			if _, err = jw.NextEntity(); err != nil {
 				return err
 			}
 		}
 	}
 
-	// Loop thru all of this entity's children
+	// Loop thru all of this entity's children.
+	// If we have more Entities to process, and the next one is a child
+	// (based on its Abstract being a superset of this Entity's Abstract)
+	// then it might be a child so Write it.
+	// However, before we do, we need to Write all lower (alphabetically)
+	// empty collections (WritePreCollections).
+	// When done with all children, WritePostCollections will serialize all
+	// empty collections that alphabetically come after the last child
 	for jw.Entity != nil &&
 		(myAbstract == "" ||
 			strings.HasPrefix(jw.Entity.Abstract, myAbstract+string(DB_IN))) {
@@ -271,6 +324,25 @@ func (jw *JsonWriter) WriteEntity() error {
 		}
 	}
 	extra = jw.WritePostCollections(hasXref, extra, myType)
+
+	// After all of the collections, which should include "versions",
+	// check to see if we need to serialize a cached "meta" sub-object.
+	// If so, make sure to pass along the defaultVersionID (via info.extras)
+	// so that the getFn for defaultversionurl has access to it.
+	if cachedMeta != nil {
+		jw.Push(jw.Entity)
+		jw.Entity = cachedMeta
+		jw.info.extras["seenDefaultVid"] = jw.seenDefaultVid
+
+		jw.Printf("%s\n%s%q: ", extra, jw.indent, "meta")
+		if err := jw.WriteEntity(); err != nil {
+			return err
+		}
+		extra = ","
+
+		delete(jw.info.extras, "seenDefaultVid")
+		jw.seenDefaultVid = ""
+	}
 
 	// And finally done with this Entity
 	jw.Outdent()

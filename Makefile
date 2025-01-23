@@ -213,4 +213,6 @@ clean:
 	@go clean -cache -testcache
 	@-! which k3d > /dev/null || k3d cluster delete xreg > /dev/null 2>&1
 	@-docker rm -f mysql mysql-client > /dev/null 2>&1
+	@# do "sleep" so that "docker system prune" won't delete the mysql image
+	@-docker run -d -ti --rm mysql sleep 5 > /dev/null 2>&1
 	@-docker system prune -f -a --volumes > /dev/null

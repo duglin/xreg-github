@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestExportRoot(t *testing.T) {
-	reg := NewRegistry("TestExportRoot")
+func TestExportBasic(t *testing.T) {
+	reg := NewRegistry("TestExportBasic")
 	defer PassDeleteReg(t, reg)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
@@ -28,7 +28,7 @@ func TestExportRoot(t *testing.T) {
 
 	xCheckEqual(t, "", fullBody, `{
   "specversion": "0.5",
-  "registryid": "TestExportRoot",
+  "registryid": "TestExportBasic",
   "self": "/",
   "xid": "/",
   "epoch": 2,
@@ -427,7 +427,7 @@ func TestExportRoot(t *testing.T) {
 
 	xCheckEqual(t, "", fullBody, `{
   "specversion": "0.5",
-  "registryid": "TestExportRoot",
+  "registryid": "TestExportBasic",
   "self": "/",
   "xid": "/",
   "epoch": 2,
@@ -525,7 +525,7 @@ func TestExportRoot(t *testing.T) {
 
 	xCheckEqual(t, "", fullBody, `{
   "specversion": "0.5",
-  "registryid": "TestExportRoot",
+  "registryid": "TestExportBasic",
   "self": "/",
   "xid": "/",
   "epoch": 2,
@@ -576,7 +576,7 @@ func TestExportRoot(t *testing.T) {
 
 	xCheckEqual(t, "", fullBody, `{
   "specversion": "0.5",
-  "registryid": "TestExportRoot",
+  "registryid": "TestExportBasic",
   "self": "/",
   "xid": "/",
   "epoch": 2,
@@ -1223,15 +1223,102 @@ func TestExportRoot(t *testing.T) {
 		"'compact' flag not allowed on xref'd Versions\n")
 
 	// Just some filtering too for fun
+
+	// Make sure that meta.defaultversionurl changes between absolute and
+	// relative based on whether the defaultversion appears in "versions"
+
+	// Notice "meta" now appears after "versions" and
+	// defaultversionurl is absolute
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline&"+
+		"filter=versions.versionid=v1", "", 200, `{
+  "fileid": "f1",
+  "self": "/dirs/d1/files/f1$details",
+  "xid": "/dirs/d1/files/f1",
+
+  "metaurl": "/dirs/d1/files/f1/meta",
+  "versionsurl": "/dirs/d1/files/f1/versions",
+  "versions": {
+    "v1": {
+      "fileid": "f1",
+      "versionid": "v1",
+      "self": "/dirs/d1/files/f1/versions/v1$details",
+      "xid": "/dirs/d1/files/f1/versions/v1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:01Z",
+      "modifiedat": "2025-01-01T12:00:01Z",
+      "contenttype": "application/json",
+      "file": {
+        "hello": "world"
+      }
+    }
+  },
+  "versionscount": 1,
+  "meta": {
+    "fileid": "f1",
+    "self": "/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 2,
+    "createdat": "2025-01-01T12:00:01Z",
+    "modifiedat": "2025-01-01T12:00:02Z",
+
+    "defaultversionid": "v2",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
+  }
+}
+`)
+
+	// defaultversionurl is relative this time
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline&"+
+		"filter=versions.versionid=v2", "", 200, `{
+  "fileid": "f1",
+  "self": "/dirs/d1/files/f1$details",
+  "xid": "/dirs/d1/files/f1",
+
+  "metaurl": "/dirs/d1/files/f1/meta",
+  "versionsurl": "/dirs/d1/files/f1/versions",
+  "versions": {
+    "v2": {
+      "fileid": "f1",
+      "versionid": "v2",
+      "self": "/dirs/d1/files/f1/versions/v2$details",
+      "xid": "/dirs/d1/files/f1/versions/v2",
+      "epoch": 1,
+      "isdefault": true,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+      "contenttype": "application/json",
+      "file": {
+        "hello": "world"
+      }
+    }
+  },
+  "versionscount": 1,
+  "meta": {
+    "fileid": "f1",
+    "self": "/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 2,
+    "createdat": "2025-01-01T12:00:01Z",
+    "modifiedat": "2025-01-01T12:00:02Z",
+
+    "defaultversionid": "v2",
+    "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+  }
+}
+`)
+
+	// check full output + filtering
 	code, fullBody = xGET(t, "export?filter=dirs.files.versions.versionid=v2&inline=*")
 	xCheckEqual(t, "", code, 200)
 	code, manualBody = xGET(t, "?compact&inline=*&filter=dirs.files.versions.versionid=v2")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
+	// Notice that "meta" moved down to after the Versions collection
+
 	xCheckEqual(t, "", fullBody, `{
   "specversion": "0.5",
-  "registryid": "TestExportRoot",
+  "registryid": "TestExportBasic",
   "self": "/",
   "xid": "/",
   "epoch": 2,
@@ -1256,17 +1343,6 @@ func TestExportRoot(t *testing.T) {
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
-          "meta": {
-            "fileid": "f1",
-            "self": "/dirs/d1/files/f1/meta",
-            "xid": "/dirs/d1/files/f1/meta",
-            "epoch": 2,
-            "createdat": "2025-01-01T12:00:02Z",
-            "modifiedat": "2025-01-01T12:00:04Z",
-
-            "defaultversionid": "v2",
-            "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
-          },
           "versionsurl": "/dirs/d1/files/f1/versions",
           "versions": {
             "v2": {
@@ -1284,7 +1360,18 @@ func TestExportRoot(t *testing.T) {
               }
             }
           },
-          "versionscount": 1
+          "versionscount": 1,
+          "meta": {
+            "fileid": "f1",
+            "self": "/dirs/d1/files/f1/meta",
+            "xid": "/dirs/d1/files/f1/meta",
+            "epoch": 2,
+            "createdat": "2025-01-01T12:00:02Z",
+            "modifiedat": "2025-01-01T12:00:04Z",
+
+            "defaultversionid": "v2",
+            "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+          }
         },
         "fx": {
           "fileid": "fx",
@@ -1322,7 +1409,7 @@ func TestExportRoot(t *testing.T) {
 
 	xCheckEqual(t, "", fullBody, `{
   "specversion": "0.5",
-  "registryid": "TestExportRoot",
+  "registryid": "TestExportBasic",
   "self": "/",
   "xid": "/",
   "epoch": 2,
@@ -1368,7 +1455,7 @@ func TestExportRoot(t *testing.T) {
 	xHTTP(t, reg, "GET", "?compact", ``, 200,
 		`{
   "specversion": "0.5",
-  "registryid": "TestExportRoot",
+  "registryid": "TestExportBasic",
   "self": "/",
   "xid": "/",
   "epoch": 2,
