@@ -307,8 +307,15 @@ func RegHTMLify(r *http.Request, buf []byte) []byte {
 				"onclick='toggleExp(this)'>"+HTML_EXP+"</span>", count)
 
 			if numSpaces == 0 {
+				// OLD - if we want toggle at the root too
 				// Use the special first column for it
-				btn = exp
+				// btn = exp
+				// end OLD
+
+				// Don't show toggle at root.
+				// To ensure count starts at 1 for the real first toggle
+				// just decrement it here
+				count--
 			} else {
 				// Replace the last space with the toggle.
 				// Add a nearly-hidden space so when people copy the text it
