@@ -99,16 +99,22 @@ func (jw *JsonWriter) Pop() *Entity {
 // WriteCollection will do the actual processing of the entities in there.
 func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Entity.Plural
-	myURL := ""
+	baseURL := ""
 
 	inlineCollection := jw.info.ShouldInline(jw.Entity.Abstract)
 	if jw.info.DoCompact() && inlineCollection {
-		myURL = "/" + path.Dir(jw.Entity.Path)
+		// remove GET's base path
+		path := path.Dir(jw.Entity.Path)
+		path = path[len(jw.info.Root):]
+		if strings.HasPrefix(path, "/") {
+			path = path[1:]
+		}
+		baseURL = "/" + path
 	} else {
-		myURL = jw.info.BaseURL + "/" + path.Dir(jw.Entity.Path)
+		baseURL = jw.info.BaseURL + "/" + path.Dir(jw.Entity.Path)
 	}
 
-	jw.Printf("%s\n%s\"%surl\": %q,\n", extra, jw.indent, myPlural, myURL)
+	jw.Printf("%s\n%s\"%surl\": %q,\n", extra, jw.indent, myPlural, baseURL)
 	extra = ""
 
 	saveWriter := jw.info.HTTPWriter
@@ -494,12 +500,20 @@ func (jw *JsonWriter) WriteEmptyCollection(hasXref bool, extra string, eType int
 
 	inlineCollection := jw.info.ShouldInline(p)
 	baseURL := ""
+	path := jw.collPaths[eType]
+
 	if !jw.info.DoCompact() || !inlineCollection {
 		baseURL = jw.info.BaseURL
+	} else {
+		// remove GET's base path
+		path = path[len(jw.info.Root):]
+		if strings.HasPrefix(path, "/") {
+			path = path[1:]
+		}
 	}
 
 	jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
-		collName, baseURL, jw.collPaths[eType], collName)
+		collName, baseURL, path, collName)
 
 	if inlineCollection {
 		jw.Printf("%s\"%s\": {},\n", jw.indent, collName)

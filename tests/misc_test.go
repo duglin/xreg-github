@@ -38,7 +38,7 @@ func TestDBRows(t *testing.T) {
   "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
 
   "defaultversionid": "v1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details"
 }
 `)
 

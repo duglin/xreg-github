@@ -1015,20 +1015,31 @@ var OrderedSpecProps = []*Attribute{
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
 				path := e.Path
+				isAbs := false
 
-				if info != nil && !info.DoCompact() {
-					base = info.BaseURL
+				if info != nil {
+					if info.DoCompact() {
+						// remove GET's base path
+						path = path[len(info.Root):]
+						if strings.HasPrefix(path, "/") {
+							path = path[1:]
+						}
+					} else {
+						isAbs = true
+						base = info.BaseURL
+					}
 				}
 
 				if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
-					meta := info != nil && (info.ShowDetails ||
-						info.DoCompact() ||
+					details := info != nil && (info.ShowDetails ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
-					if e.GetResourceModel().GetHasDocument() == false {
-						meta = false
+
+					if (info != nil && info.DoCompact() && !isAbs) ||
+						e.GetResourceModel().GetHasDocument() == false {
+						details = false
 					}
 
-					if meta {
+					if details {
 						path += "$details"
 					}
 				}
@@ -1054,11 +1065,13 @@ var OrderedSpecProps = []*Attribute{
 					if info != nil {
 						base = info.BaseURL
 					}
+
 					if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 						meta := info != nil && (info.ShowDetails ||
 						info.DoCompact() ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
-					if e.GetResourceModel().GetHasDocument() == false {
+
+						if e.GetResourceModel().GetHasDocument() == false {
 							meta = false
 						}
 
@@ -1459,15 +1472,29 @@ var OrderedSpecProps = []*Attribute{
 			dontStore: false,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
+				path := e.Path
+
 				if info != nil {
 					inlineMeta := info.ShouldInline(e.Abstract +
 						string(DB_IN) + "meta")
+
 					if !info.DoCompact() || !inlineMeta {
 						base = info.BaseURL
 					}
+
+					if info.DoCompact() && inlineMeta {
+						// remove GET's base path
+						path = path[len(info.Root):]
+						if strings.HasPrefix(path, "/") {
+							path = path[1:]
+						}
+					}
+				}
+				if path != "" {
+					path = "/" + path
 				}
 
-				return base + "/" + e.Path + "/meta"
+				return base + path + "/meta"
 			},
 			checkFn:  nil,
 			updateFn: nil,
@@ -1528,7 +1555,10 @@ var OrderedSpecProps = []*Attribute{
 				}
 				valStr := val.(string)
 
+				// place "meta" with "versions/VID"
+				path := e.Path[:len(e.Path)-4] + "versions/" + valStr
 				result := ""
+				isAbsURL := false
 
 				if info != nil {
 					// s/meta/versions/
@@ -1536,7 +1566,9 @@ var OrderedSpecProps = []*Attribute{
 					inlineVers := info.ShouldInline(abs)
 					seenDefVid := info.extras["seenDefaultVid"]
 
-					isAbsURL := false
+					if len(info.Parts) == 5 { // pointing directly to /meta
+						isAbsURL = true
+					}
 
 					if !info.DoCompact() {
 						isAbsURL = true
@@ -1552,20 +1584,27 @@ var OrderedSpecProps = []*Attribute{
 
 					if isAbsURL {
 						result = info.BaseURL
+					} else {
+						if info.DoCompact() {
+							// remove GET's base path
+							path = path[len(info.Root):]
+							if strings.HasPrefix(path, "/") {
+								path = path[1:]
+							}
+						}
 					}
 				}
 
 				// remove "/meta" so we can add "/versions/vID"
-				rPath := e.Path[:len(e.Path)-5]
-				result += "/" + rPath + "/versions/" + valStr
+				result += "/" + path
 
-				meta := info != nil && (info.ShowDetails ||
-					info.DoCompact() || info.ResourceUID == "")
-				if e.GetResourceModel().GetHasDocument() == false {
-					meta = false
+				details := e.GetResourceModel().GetHasDocument()
+
+				if details && !isAbsURL {
+					details = false
 				}
 
-				if meta {
+				if details {
 					result += "$details"
 				}
 

@@ -4466,7 +4466,7 @@ func TestHTTPmeta(t *testing.T) {
 		`$details isn't allowed on "/dirs/dir1/files$details"
 `)
 	xHTTP(t, reg, "PUT", "/dirs/dir1/files/$details", `{}`, 400,
-		`Resource id in URL can't be blank
+		`"fileid" can't be an empty string
 `)
 	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions$details", `{}`, 400,
 		`$details isn't allowed on "/dirs/dir1/files/f1/versions$details"
@@ -5847,7 +5847,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
 }
 `)
 
@@ -5891,7 +5891,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
 }
 `)
 
@@ -5934,7 +5934,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
   "defaultversionsticky": true
 }
 `)
@@ -5979,7 +5979,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
   "defaultversionsticky": true
 }
 `)
@@ -6077,7 +6077,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v3",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$details"
 }
 `)
 
@@ -6125,7 +6125,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
   "defaultversionsticky": true
 }
 `)
@@ -6174,7 +6174,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v5",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$details",
   "defaultversionsticky": true
 }
 `)
@@ -6218,7 +6218,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
   "defaultversionsticky": true
 }
 `)
@@ -6262,7 +6262,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
   "defaultversionsticky": true
 }
 `)
@@ -6306,7 +6306,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
   "defaultversionsticky": true
 }
 `)
@@ -6350,7 +6350,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
   "defaultversionsticky": true
 }
 `)

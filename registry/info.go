@@ -17,7 +17,7 @@ type RequestInfo struct {
 	OriginalResponse http.ResponseWriter `json:"-"`
 	RootPath         string              // rootPath or "" for registry itself
 	Parts            []string
-	Root             string
+	Root             string // path into the Registry of the request
 	Abstract         string
 	GroupType        string
 	GroupUID         string
@@ -443,25 +443,20 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// /GROUPs/gID/RESOURCEs/rID
-	info.ResourceUID = info.Parts[3]
-	info.Root += "/" + info.Parts[3]
+	info.ResourceUID, info.ShowDetails =
+		strings.CutSuffix(info.Parts[3], "$details")
+
+	info.Root += "/" + info.ResourceUID
 
 	// GROUPs/gID/RESOURCEs/rID
 	if len(info.Parts) == 4 {
-		info.ResourceUID, info.ShowDetails =
-			strings.CutSuffix(info.ResourceUID, "$details")
-
-		if info.ResourceUID == "" {
-			return fmt.Errorf("Resource id in URL can't be blank")
-		}
-
 		info.Parts[3] = info.ResourceUID
 		info.What = "Entity"
 		return nil
 	}
 
 	// GROUPs/gID/RESOURCEs/rID/???
-	if strings.HasSuffix(info.ResourceUID, "$details") {
+	if info.ShowDetails {
 		return fmt.Errorf("$details isn't allowed on %q",
 			"/"+strings.Join(info.Parts[:4], "/"))
 	}
@@ -504,13 +499,12 @@ func (info *RequestInfo) ParseRequestURL() error {
 	}
 
 	// GROUPs/gID/RESOURCEs/rID/versions/vID
-	info.VersionUID = info.Parts[5]
-	info.Root += "/" + info.Parts[5]
+	info.VersionUID, info.ShowDetails =
+		strings.CutSuffix(info.Parts[5], "$details")
+
+	info.Root += "/" + info.VersionUID
 
 	if len(info.Parts) == 6 {
-		info.VersionUID, info.ShowDetails =
-			strings.CutSuffix(info.VersionUID, "$details")
-
 		if info.VersionUID == "" {
 			return fmt.Errorf("Version id in URL can't be blank")
 		}

@@ -145,7 +145,7 @@ func TestResourceContents(t *testing.T) {
 	xHTTP(t, reg, "GET", "dirs/d1/files/f1$details?compact&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -165,7 +165,7 @@ func TestResourceContents(t *testing.T) {
   "modifiedat": "2025-01-01T12:00:02Z",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
   "defaultversionsticky": true
 }
 `)
@@ -174,7 +174,7 @@ func TestResourceContents(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$details?compact&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",

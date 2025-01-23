@@ -1129,7 +1129,7 @@ func TestXrefDocs(t *testing.T) {
   "modifiedat": "2025-01-01T12:00:01Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
 }
 `)
 
@@ -1197,7 +1197,7 @@ func TestXrefDocs(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
 		`{"xref":"/dirs/d1/files/f2"}`, 201, `{
   "fileid": "fx",
-  "self": "/dirs/d1/files/fx/meta",
+  "self": "/",
   "xid": "/dirs/d1/files/fx/meta",
   "xref": "/dirs/d1/files/f2"
 }
@@ -1231,7 +1231,7 @@ func TestXrefDocs(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
 		`{"xref":"/dirs/d1/files/f3"}`, 200, `{
   "fileid": "fx",
-  "self": "/dirs/d1/files/fx/meta",
+  "self": "/",
   "xid": "/dirs/d1/files/fx/meta",
   "xref": "/dirs/d1/files/f3"
 }

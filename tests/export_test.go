@@ -350,7 +350,7 @@ func TestExportBasic(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
@@ -363,14 +363,14 @@ func TestExportBasic(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:04Z",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+            "defaultversionurl": "/dirs/d1/files/f1/versions/v2"
           },
           "versionsurl": "/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "/dirs/d1/files/f1/versions/v1$details",
+              "self": "/dirs/d1/files/f1/versions/v1",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "createdat": "2025-01-01T12:00:02Z",
@@ -383,7 +383,7 @@ func TestExportBasic(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "/dirs/d1/files/f1/versions/v2$details",
+              "self": "/dirs/d1/files/f1/versions/v2",
               "xid": "/dirs/d1/files/f1/versions/v2",
               "epoch": 1,
               "isdefault": true,
@@ -399,7 +399,7 @@ func TestExportBasic(t *testing.T) {
         },
         "fx": {
           "fileid": "fx",
-          "self": "/dirs/d1/files/fx$details",
+          "self": "/dirs/d1/files/fx",
           "xid": "/dirs/d1/files/fx",
 
           "metaurl": "/dirs/d1/files/fx/meta",
@@ -448,7 +448,7 @@ func TestExportBasic(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
@@ -461,14 +461,14 @@ func TestExportBasic(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:04Z",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+            "defaultversionurl": "/dirs/d1/files/f1/versions/v2"
           },
           "versionsurl": "/dirs/d1/files/f1/versions",
           "versions": {
             "v1": {
               "fileid": "f1",
               "versionid": "v1",
-              "self": "/dirs/d1/files/f1/versions/v1$details",
+              "self": "/dirs/d1/files/f1/versions/v1",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
               "createdat": "2025-01-01T12:00:02Z",
@@ -481,7 +481,7 @@ func TestExportBasic(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "/dirs/d1/files/f1/versions/v2$details",
+              "self": "/dirs/d1/files/f1/versions/v2",
               "xid": "/dirs/d1/files/f1/versions/v2",
               "epoch": 1,
               "isdefault": true,
@@ -497,7 +497,7 @@ func TestExportBasic(t *testing.T) {
         },
         "fx": {
           "fileid": "fx",
-          "self": "/dirs/d1/files/fx$details",
+          "self": "/dirs/d1/files/fx",
           "xid": "/dirs/d1/files/fx",
 
           "metaurl": "/dirs/d1/files/fx/meta",
@@ -864,37 +864,37 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs?compact&inline=*", ``, 200, `{
   "d1": {
     "dirid": "d1",
-    "self": "/dirs/d1",
+    "self": "/d1",
     "xid": "/dirs/d1",
     "epoch": 2,
     "createdat": "2025-01-01T12:00:02Z",
     "modifiedat": "2025-01-01T12:00:03Z",
 
-    "filesurl": "/dirs/d1/files",
+    "filesurl": "/d1/files",
     "files": {
       "f1": {
         "fileid": "f1",
-        "self": "/dirs/d1/files/f1$details",
+        "self": "/d1/files/f1",
         "xid": "/dirs/d1/files/f1",
 
-        "metaurl": "/dirs/d1/files/f1/meta",
+        "metaurl": "/d1/files/f1/meta",
         "meta": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1/meta",
+          "self": "/d1/files/f1/meta",
           "xid": "/dirs/d1/files/f1/meta",
           "epoch": 2,
           "createdat": "2025-01-01T12:00:02Z",
           "modifiedat": "2025-01-01T12:00:04Z",
 
           "defaultversionid": "v2",
-          "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+          "defaultversionurl": "/d1/files/f1/versions/v2"
         },
-        "versionsurl": "/dirs/d1/files/f1/versions",
+        "versionsurl": "/d1/files/f1/versions",
         "versions": {
           "v1": {
             "fileid": "f1",
             "versionid": "v1",
-            "self": "/dirs/d1/files/f1/versions/v1$details",
+            "self": "/d1/files/f1/versions/v1",
             "xid": "/dirs/d1/files/f1/versions/v1",
             "epoch": 1,
             "createdat": "2025-01-01T12:00:02Z",
@@ -907,7 +907,7 @@ func TestExportBasic(t *testing.T) {
           "v2": {
             "fileid": "f1",
             "versionid": "v2",
-            "self": "/dirs/d1/files/f1/versions/v2$details",
+            "self": "/d1/files/f1/versions/v2",
             "xid": "/dirs/d1/files/f1/versions/v2",
             "epoch": 1,
             "isdefault": true,
@@ -923,13 +923,13 @@ func TestExportBasic(t *testing.T) {
       },
       "fx": {
         "fileid": "fx",
-        "self": "/dirs/d1/files/fx$details",
+        "self": "/d1/files/fx",
         "xid": "/dirs/d1/files/fx",
 
-        "metaurl": "/dirs/d1/files/fx/meta",
+        "metaurl": "/d1/files/fx/meta",
         "meta": {
           "fileid": "fx",
-          "self": "/dirs/d1/files/fx/meta",
+          "self": "/d1/files/fx/meta",
           "xid": "/dirs/d1/files/fx/meta",
           "xref": "/dirs/d1/files/f1"
         }
@@ -942,37 +942,37 @@ func TestExportBasic(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1?compact&inline=*", ``, 200, `{
   "dirid": "d1",
-  "self": "/dirs/d1",
+  "self": "/",
   "xid": "/dirs/d1",
   "epoch": 2,
   "createdat": "2025-01-01T12:00:02Z",
   "modifiedat": "2025-01-01T12:00:03Z",
 
-  "filesurl": "/dirs/d1/files",
+  "filesurl": "/files",
   "files": {
     "f1": {
       "fileid": "f1",
-      "self": "/dirs/d1/files/f1$details",
+      "self": "/files/f1",
       "xid": "/dirs/d1/files/f1",
 
-      "metaurl": "/dirs/d1/files/f1/meta",
+      "metaurl": "/files/f1/meta",
       "meta": {
         "fileid": "f1",
-        "self": "/dirs/d1/files/f1/meta",
+        "self": "/files/f1/meta",
         "xid": "/dirs/d1/files/f1/meta",
         "epoch": 2,
         "createdat": "2025-01-01T12:00:02Z",
         "modifiedat": "2025-01-01T12:00:04Z",
 
         "defaultversionid": "v2",
-        "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+        "defaultversionurl": "/files/f1/versions/v2"
       },
-      "versionsurl": "/dirs/d1/files/f1/versions",
+      "versionsurl": "/files/f1/versions",
       "versions": {
         "v1": {
           "fileid": "f1",
           "versionid": "v1",
-          "self": "/dirs/d1/files/f1/versions/v1$details",
+          "self": "/files/f1/versions/v1",
           "xid": "/dirs/d1/files/f1/versions/v1",
           "epoch": 1,
           "createdat": "2025-01-01T12:00:02Z",
@@ -985,7 +985,7 @@ func TestExportBasic(t *testing.T) {
         "v2": {
           "fileid": "f1",
           "versionid": "v2",
-          "self": "/dirs/d1/files/f1/versions/v2$details",
+          "self": "/files/f1/versions/v2",
           "xid": "/dirs/d1/files/f1/versions/v2",
           "epoch": 1,
           "isdefault": true,
@@ -1001,13 +1001,13 @@ func TestExportBasic(t *testing.T) {
     },
     "fx": {
       "fileid": "fx",
-      "self": "/dirs/d1/files/fx$details",
+      "self": "/files/fx",
       "xid": "/dirs/d1/files/fx",
 
-      "metaurl": "/dirs/d1/files/fx/meta",
+      "metaurl": "/files/fx/meta",
       "meta": {
         "fileid": "fx",
-        "self": "/dirs/d1/files/fx/meta",
+        "self": "/files/fx/meta",
         "xid": "/dirs/d1/files/fx/meta",
         "xref": "/dirs/d1/files/f1"
       }
@@ -1020,27 +1020,27 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=*", ``, 200, `{
   "f1": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1$details",
+    "self": "/f1",
     "xid": "/dirs/d1/files/f1",
 
-    "metaurl": "/dirs/d1/files/f1/meta",
+    "metaurl": "/f1/meta",
     "meta": {
       "fileid": "f1",
-      "self": "/dirs/d1/files/f1/meta",
+      "self": "/f1/meta",
       "xid": "/dirs/d1/files/f1/meta",
       "epoch": 2,
       "createdat": "2025-01-01T12:00:02Z",
       "modifiedat": "2025-01-01T12:00:04Z",
 
       "defaultversionid": "v2",
-      "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+      "defaultversionurl": "/f1/versions/v2"
     },
-    "versionsurl": "/dirs/d1/files/f1/versions",
+    "versionsurl": "/f1/versions",
     "versions": {
       "v1": {
         "fileid": "f1",
         "versionid": "v1",
-        "self": "/dirs/d1/files/f1/versions/v1$details",
+        "self": "/f1/versions/v1",
         "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 1,
         "createdat": "2025-01-01T12:00:02Z",
@@ -1053,7 +1053,7 @@ func TestExportBasic(t *testing.T) {
       "v2": {
         "fileid": "f1",
         "versionid": "v2",
-        "self": "/dirs/d1/files/f1/versions/v2$details",
+        "self": "/f1/versions/v2",
         "xid": "/dirs/d1/files/f1/versions/v2",
         "epoch": 1,
         "isdefault": true,
@@ -1069,13 +1069,13 @@ func TestExportBasic(t *testing.T) {
   },
   "fx": {
     "fileid": "fx",
-    "self": "/dirs/d1/files/fx$details",
+    "self": "/fx",
     "xid": "/dirs/d1/files/fx",
 
-    "metaurl": "/dirs/d1/files/fx/meta",
+    "metaurl": "/fx/meta",
     "meta": {
       "fileid": "fx",
-      "self": "/dirs/d1/files/fx/meta",
+      "self": "/fx/meta",
       "xid": "/dirs/d1/files/fx/meta",
       "xref": "/dirs/d1/files/f1"
     }
@@ -1085,27 +1085,27 @@ func TestExportBasic(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline=*", ``, 200, `{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1",
 
-  "metaurl": "/dirs/d1/files/f1/meta",
+  "metaurl": "/meta",
   "meta": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1/meta",
+    "self": "/meta",
     "xid": "/dirs/d1/files/f1/meta",
     "epoch": 2,
     "createdat": "2025-01-01T12:00:02Z",
     "modifiedat": "2025-01-01T12:00:04Z",
 
     "defaultversionid": "v2",
-    "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+    "defaultversionurl": "/versions/v2"
   },
-  "versionsurl": "/dirs/d1/files/f1/versions",
+  "versionsurl": "/versions",
   "versions": {
     "v1": {
       "fileid": "f1",
       "versionid": "v1",
-      "self": "/dirs/d1/files/f1/versions/v1$details",
+      "self": "/versions/v1",
       "xid": "/dirs/d1/files/f1/versions/v1",
       "epoch": 1,
       "createdat": "2025-01-01T12:00:02Z",
@@ -1118,7 +1118,7 @@ func TestExportBasic(t *testing.T) {
     "v2": {
       "fileid": "f1",
       "versionid": "v2",
-      "self": "/dirs/d1/files/f1/versions/v2$details",
+      "self": "/versions/v2",
       "xid": "/dirs/d1/files/f1/versions/v2",
       "epoch": 1,
       "isdefault": true,
@@ -1136,26 +1136,26 @@ func TestExportBasic(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact&inline=*", ``, 200, `{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1/meta",
+  "self": "/",
   "xid": "/dirs/d1/files/f1/meta",
   "epoch": 2,
   "createdat": "2025-01-01T12:00:02Z",
   "modifiedat": "2025-01-01T12:00:04Z",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
 }
 `)
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact&inline=*", ``, 200, `{
   "fileid": "fx",
-  "self": "/dirs/d1/files/fx$details",
+  "self": "/",
   "xid": "/dirs/d1/files/fx",
 
-  "metaurl": "/dirs/d1/files/fx/meta",
+  "metaurl": "/meta",
   "meta": {
     "fileid": "fx",
-    "self": "/dirs/d1/files/fx/meta",
+    "self": "/meta",
     "xid": "/dirs/d1/files/fx/meta",
     "xref": "/dirs/d1/files/f1"
   }
@@ -1164,7 +1164,7 @@ func TestExportBasic(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?compact&inline=*", ``, 200, `{
   "fileid": "fx",
-  "self": "/dirs/d1/files/fx/meta",
+  "self": "/",
   "xid": "/dirs/d1/files/fx/meta",
   "xref": "/dirs/d1/files/f1"
 }
@@ -1174,7 +1174,7 @@ func TestExportBasic(t *testing.T) {
   "v1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "/dirs/d1/files/f1/versions/v1$details",
+    "self": "/v1",
     "xid": "/dirs/d1/files/f1/versions/v1",
     "epoch": 1,
     "createdat": "2025-01-01T12:00:02Z",
@@ -1187,7 +1187,7 @@ func TestExportBasic(t *testing.T) {
   "v2": {
     "fileid": "f1",
     "versionid": "v2",
-    "self": "/dirs/d1/files/f1/versions/v2$details",
+    "self": "/v2",
     "xid": "/dirs/d1/files/f1/versions/v2",
     "epoch": 1,
     "isdefault": true,
@@ -1204,7 +1204,7 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?compact&inline=*", ``, 200, `{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "/dirs/d1/files/f1/versions/v1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1/versions/v1",
   "epoch": 1,
   "createdat": "2025-01-01T12:00:02Z",
@@ -1232,16 +1232,16 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline&"+
 		"filter=versions.versionid=v1", "", 200, `{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1",
 
-  "metaurl": "/dirs/d1/files/f1/meta",
-  "versionsurl": "/dirs/d1/files/f1/versions",
+  "metaurl": "/meta",
+  "versionsurl": "/versions",
   "versions": {
     "v1": {
       "fileid": "f1",
       "versionid": "v1",
-      "self": "/dirs/d1/files/f1/versions/v1$details",
+      "self": "/versions/v1",
       "xid": "/dirs/d1/files/f1/versions/v1",
       "epoch": 1,
       "createdat": "2025-01-01T12:00:01Z",
@@ -1255,7 +1255,7 @@ func TestExportBasic(t *testing.T) {
   "versionscount": 1,
   "meta": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1/meta",
+    "self": "/meta",
     "xid": "/dirs/d1/files/f1/meta",
     "epoch": 2,
     "createdat": "2025-01-01T12:00:01Z",
@@ -1271,16 +1271,16 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline&"+
 		"filter=versions.versionid=v2", "", 200, `{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1",
 
-  "metaurl": "/dirs/d1/files/f1/meta",
-  "versionsurl": "/dirs/d1/files/f1/versions",
+  "metaurl": "/meta",
+  "versionsurl": "/versions",
   "versions": {
     "v2": {
       "fileid": "f1",
       "versionid": "v2",
-      "self": "/dirs/d1/files/f1/versions/v2$details",
+      "self": "/versions/v2",
       "xid": "/dirs/d1/files/f1/versions/v2",
       "epoch": 1,
       "isdefault": true,
@@ -1295,14 +1295,14 @@ func TestExportBasic(t *testing.T) {
   "versionscount": 1,
   "meta": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1/meta",
+    "self": "/meta",
     "xid": "/dirs/d1/files/f1/meta",
     "epoch": 2,
     "createdat": "2025-01-01T12:00:01Z",
     "modifiedat": "2025-01-01T12:00:02Z",
 
     "defaultversionid": "v2",
-    "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+    "defaultversionurl": "/versions/v2"
   }
 }
 `)
@@ -1339,7 +1339,7 @@ func TestExportBasic(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
@@ -1348,7 +1348,7 @@ func TestExportBasic(t *testing.T) {
             "v2": {
               "fileid": "f1",
               "versionid": "v2",
-              "self": "/dirs/d1/files/f1/versions/v2$details",
+              "self": "/dirs/d1/files/f1/versions/v2",
               "xid": "/dirs/d1/files/f1/versions/v2",
               "epoch": 1,
               "isdefault": true,
@@ -1370,12 +1370,12 @@ func TestExportBasic(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:04Z",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "/dirs/d1/files/f1/versions/v2$details"
+            "defaultversionurl": "/dirs/d1/files/f1/versions/v2"
           }
         },
         "fx": {
           "fileid": "fx",
-          "self": "/dirs/d1/files/fx$details",
+          "self": "/dirs/d1/files/fx",
           "xid": "/dirs/d1/files/fx",
 
           "metaurl": "/dirs/d1/files/fx/meta",
@@ -1430,7 +1430,7 @@ func TestExportBasic(t *testing.T) {
       "files": {
         "fx": {
           "fileid": "fx",
-          "self": "/dirs/d1/files/fx$details",
+          "self": "/dirs/d1/files/fx",
           "xid": "/dirs/d1/files/fx",
 
           "metaurl": "/dirs/d1/files/fx/meta",
@@ -1471,7 +1471,7 @@ func TestExportBasic(t *testing.T) {
 		`{
   "d1": {
     "dirid": "d1",
-    "self": "/dirs/d1",
+    "self": "/d1",
     "xid": "/dirs/d1",
     "epoch": 2,
     "createdat": "YYYY-MM-DDTHH:MM:01Z",
@@ -1486,7 +1486,7 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1?compact", ``, 200,
 		`{
   "dirid": "d1",
-  "self": "/dirs/d1",
+  "self": "/",
   "xid": "/dirs/d1",
   "epoch": 2,
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
@@ -1501,7 +1501,7 @@ func TestExportBasic(t *testing.T) {
 		`{
   "f1": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1$details",
+    "self": "/f1",
     "xid": "/dirs/d1/files/f1",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -1510,7 +1510,7 @@ func TestExportBasic(t *testing.T) {
   },
   "fx": {
     "fileid": "fx",
-    "self": "/dirs/d1/files/fx$details",
+    "self": "/fx",
     "xid": "/dirs/d1/files/fx",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta"
@@ -1521,7 +1521,7 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact", ``, 200,
 		`{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -1533,7 +1533,7 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact", ``, 200,
 		`{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1/meta",
+  "self": "/",
   "xid": "/dirs/d1/files/f1/meta",
   "epoch": 2,
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
@@ -1549,7 +1549,7 @@ func TestExportBasic(t *testing.T) {
   "v1": {
     "fileid": "f1",
     "versionid": "v1",
-    "self": "/dirs/d1/files/f1/versions/v1$details",
+    "self": "/v1",
     "xid": "/dirs/d1/files/f1/versions/v1",
     "epoch": 1,
     "createdat": "YYYY-MM-DDTHH:MM:01Z",
@@ -1559,7 +1559,7 @@ func TestExportBasic(t *testing.T) {
   "v2": {
     "fileid": "f1",
     "versionid": "v2",
-    "self": "/dirs/d1/files/f1/versions/v2$details",
+    "self": "/v2",
     "xid": "/dirs/d1/files/f1/versions/v2",
     "epoch": 1,
     "isdefault": true,
@@ -1574,7 +1574,7 @@ func TestExportBasic(t *testing.T) {
 		`{
   "fileid": "f1",
   "versionid": "v1",
-  "self": "/dirs/d1/files/f1/versions/v1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1/versions/v1",
   "epoch": 1,
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
@@ -1586,7 +1586,7 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact", ``, 200,
 		`{
   "fileid": "fx",
-  "self": "/dirs/d1/files/fx$details",
+  "self": "/",
   "xid": "/dirs/d1/files/fx",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta"
@@ -1596,7 +1596,7 @@ func TestExportBasic(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?compact", ``, 200,
 		`{
   "fileid": "fx",
-  "self": "/dirs/d1/files/fx/meta",
+  "self": "/",
   "xid": "/dirs/d1/files/fx/meta",
   "xref": "/dirs/d1/files/f1"
 }
@@ -1709,13 +1709,13 @@ func TestExportURLs(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs?compact&inline=files", "", 200, `{
   "d1": {
     "dirid": "d1",
-    "self": "/dirs/d1",
+    "self": "/d1",
     "xid": "/dirs/d1",
     "epoch": 1,
     "createdat": "2025-01-01T12:00:02Z",
     "modifiedat": "2025-01-01T12:00:02Z",
 
-    "filesurl": "/dirs/d1/files",
+    "filesurl": "/d1/files",
     "files": {},
     "filescount": 0,
     "schemasurl": "http://localhost:8181/dirs/d1/schemas",
@@ -1757,7 +1757,7 @@ func TestExportURLs(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs?compact", "", 200, `{
   "d1": {
     "dirid": "d1",
-    "self": "/dirs/d1",
+    "self": "/d1",
     "xid": "/dirs/d1",
     "epoch": 1,
     "createdat": "2025-01-01T12:00:02Z",
@@ -1796,7 +1796,7 @@ func TestExportURLs(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -1836,7 +1836,7 @@ func TestExportURLs(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
@@ -1887,7 +1887,7 @@ func TestExportURLs(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -1896,7 +1896,7 @@ func TestExportURLs(t *testing.T) {
             "1": {
               "fileid": "f1",
               "versionid": "1",
-              "self": "/dirs/d1/files/f1/versions/1$details",
+              "self": "/dirs/d1/files/f1/versions/1",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -1939,7 +1939,7 @@ func TestExportURLs(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
@@ -1952,14 +1952,14 @@ func TestExportURLs(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:03Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "/dirs/d1/files/f1/versions/1$details"
+            "defaultversionurl": "/dirs/d1/files/f1/versions/1"
           },
           "versionsurl": "/dirs/d1/files/f1/versions",
           "versions": {
             "1": {
               "fileid": "f1",
               "versionid": "1",
-              "self": "/dirs/d1/files/f1/versions/1$details",
+              "self": "/dirs/d1/files/f1/versions/1",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -1982,27 +1982,27 @@ func TestExportURLs(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=versions,meta", "", 200, `{
   "f1": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1$details",
+    "self": "/f1",
     "xid": "/dirs/d1/files/f1",
 
-    "metaurl": "/dirs/d1/files/f1/meta",
+    "metaurl": "/f1/meta",
     "meta": {
       "fileid": "f1",
-      "self": "/dirs/d1/files/f1/meta",
+      "self": "/f1/meta",
       "xid": "/dirs/d1/files/f1/meta",
       "epoch": 1,
       "createdat": "2025-01-01T12:00:03Z",
       "modifiedat": "2025-01-01T12:00:03Z",
 
       "defaultversionid": "1",
-      "defaultversionurl": "/dirs/d1/files/f1/versions/1$details"
+      "defaultversionurl": "/f1/versions/1"
     },
-    "versionsurl": "/dirs/d1/files/f1/versions",
+    "versionsurl": "/f1/versions",
     "versions": {
       "1": {
         "fileid": "f1",
         "versionid": "1",
-        "self": "/dirs/d1/files/f1/versions/1$details",
+        "self": "/f1/versions/1",
         "xid": "/dirs/d1/files/f1/versions/1",
         "epoch": 1,
         "isdefault": true,
@@ -2018,13 +2018,13 @@ func TestExportURLs(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=meta", "", 200, `{
   "f1": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1$details",
+    "self": "/f1",
     "xid": "/dirs/d1/files/f1",
 
-    "metaurl": "/dirs/d1/files/f1/meta",
+    "metaurl": "/f1/meta",
     "meta": {
       "fileid": "f1",
-      "self": "/dirs/d1/files/f1/meta",
+      "self": "/f1/meta",
       "xid": "/dirs/d1/files/f1/meta",
       "epoch": 1,
       "createdat": "2025-01-01T12:00:03Z",
@@ -2042,16 +2042,16 @@ func TestExportURLs(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=versions", "", 200, `{
   "f1": {
     "fileid": "f1",
-    "self": "/dirs/d1/files/f1$details",
+    "self": "/f1",
     "xid": "/dirs/d1/files/f1",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "versionsurl": "/dirs/d1/files/f1/versions",
+    "versionsurl": "/f1/versions",
     "versions": {
       "1": {
         "fileid": "f1",
         "versionid": "1",
-        "self": "/dirs/d1/files/f1/versions/1$details",
+        "self": "/f1/versions/1",
         "xid": "/dirs/d1/files/f1/versions/1",
         "epoch": 1,
         "isdefault": true,
@@ -2087,7 +2087,7 @@ func TestExportURLs(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
@@ -2138,7 +2138,7 @@ func TestExportURLs(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -2147,7 +2147,7 @@ func TestExportURLs(t *testing.T) {
             "1": {
               "fileid": "f1",
               "versionid": "1",
-              "self": "/dirs/d1/files/f1/versions/1$details",
+              "self": "/dirs/d1/files/f1/versions/1",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -2169,7 +2169,7 @@ func TestExportURLs(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact", "", 200, `{
   "fileid": "f1",
-  "self": "/dirs/d1/files/f1/meta",
+  "self": "/",
   "xid": "/dirs/d1/files/f1/meta",
   "epoch": 1,
   "createdat": "2025-01-01T12:00:03Z",
@@ -2184,7 +2184,7 @@ func TestExportURLs(t *testing.T) {
   "1": {
     "fileid": "f1",
     "versionid": "1",
-    "self": "/dirs/d1/files/f1/versions/1$details",
+    "self": "/1",
     "xid": "/dirs/d1/files/f1/versions/1",
     "epoch": 1,
     "isdefault": true,
@@ -2197,7 +2197,7 @@ func TestExportURLs(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/1?compact", "", 200, `{
   "fileid": "f1",
   "versionid": "1",
-  "self": "/dirs/d1/files/f1/versions/1$details",
+  "self": "/",
   "xid": "/dirs/d1/files/f1/versions/1",
   "epoch": 1,
   "isdefault": true,
@@ -2211,13 +2211,13 @@ func TestExportURLs(t *testing.T) {
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact&inline=*", "", 200, `{
   "fileid": "fx",
-  "self": "/dirs/d1/files/fx$details",
+  "self": "/",
   "xid": "/dirs/d1/files/fx",
 
-  "metaurl": "/dirs/d1/files/fx/meta",
+  "metaurl": "/meta",
   "meta": {
     "fileid": "fx",
-    "self": "/dirs/d1/files/fx/meta",
+    "self": "/meta",
     "xid": "/dirs/d1/files/fx/meta",
     "xref": "/dirs/d1/files/f1"
   }
@@ -2249,7 +2249,7 @@ func TestExportURLs(t *testing.T) {
       "files": {
         "f1": {
           "fileid": "f1",
-          "self": "/dirs/d1/files/f1$details",
+          "self": "/dirs/d1/files/f1",
           "xid": "/dirs/d1/files/f1",
 
           "metaurl": "/dirs/d1/files/f1/meta",
@@ -2262,14 +2262,14 @@ func TestExportURLs(t *testing.T) {
             "modifiedat": "2025-01-01T12:00:04Z",
 
             "defaultversionid": "1",
-            "defaultversionurl": "/dirs/d1/files/f1/versions/1$details"
+            "defaultversionurl": "/dirs/d1/files/f1/versions/1"
           },
           "versionsurl": "/dirs/d1/files/f1/versions",
           "versions": {
             "1": {
               "fileid": "f1",
               "versionid": "1",
-              "self": "/dirs/d1/files/f1/versions/1$details",
+              "self": "/dirs/d1/files/f1/versions/1",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 1,
               "isdefault": true,
@@ -2281,7 +2281,7 @@ func TestExportURLs(t *testing.T) {
         },
         "fx": {
           "fileid": "fx",
-          "self": "/dirs/d1/files/fx$details",
+          "self": "/dirs/d1/files/fx",
           "xid": "/dirs/d1/files/fx",
 
           "metaurl": "/dirs/d1/files/fx/meta",
@@ -2300,6 +2300,85 @@ func TestExportURLs(t *testing.T) {
     }
   },
   "dirscount": 1
+}
+`)
+
+}
+
+func TestExportNoDoc(t *testing.T) {
+	reg := NewRegistry("TestExportBasic")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, false)
+
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1?compact", "", 201, `{
+  "fileid": "f1",
+  "versionid": "v1",
+  "self": "/",
+  "xid": "/dirs/d1/files/f1/versions/v1",
+  "epoch": 1,
+  "isdefault": true,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z"
+}
+`)
+
+	// Make sure there's no $details
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?compact&inline=meta", "", 200, `{
+  "fileid": "f1",
+  "self": "/",
+  "xid": "/dirs/d1/files/f1",
+
+  "metaurl": "/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 1,
+    "createdat": "2025-01-23T23:07:14.527627972Z",
+    "modifiedat": "2025-01-23T23:07:14.527627972Z",
+
+    "defaultversionid": "v1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
+  },
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 1
+}
+`)
+
+	// No $default
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?compact&inline", "", 200, `{
+  "fileid": "f1",
+  "self": "/",
+  "xid": "/dirs/d1/files/f1",
+
+  "metaurl": "/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 1,
+    "createdat": "2025-01-23T23:08:08.330305606Z",
+    "modifiedat": "2025-01-23T23:08:08.330305606Z",
+
+    "defaultversionid": "v1",
+    "defaultversionurl": "/versions/v1"
+  },
+  "versionsurl": "/versions",
+  "versions": {
+    "v1": {
+      "fileid": "f1",
+      "versionid": "v1",
+      "self": "/versions/v1",
+      "xid": "/dirs/d1/files/f1/versions/v1",
+      "epoch": 3,
+      "isdefault": true,
+      "createdat": "2025-01-23T23:08:08.330305606Z",
+      "modifiedat": "2025-01-23T23:08:08.390182537Z"
+    }
+  },
+  "versionscount": 1
 }
 `)
 

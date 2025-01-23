@@ -4900,7 +4900,7 @@ func TestHTTPCompatility(t *testing.T) {
   "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
 }
 `)
 
@@ -4914,7 +4914,7 @@ func TestHTTPCompatility(t *testing.T) {
   "modifiedat": "2025-01-01T12:00:02Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
 }
 `)
 
@@ -4929,7 +4929,7 @@ func TestHTTPCompatility(t *testing.T) {
   "compatibility": "backward",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
 }
 `)
 
@@ -4944,7 +4944,7 @@ func TestHTTPCompatility(t *testing.T) {
   "compatibility": "mine",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
 }
 `)
 
@@ -6107,7 +6107,7 @@ func TestHTTPDefault(t *testing.T) {
   "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
 
   "defaultversionid": "2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2",
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$details",
   "defaultversionsticky": true
 }
 `)
@@ -6534,7 +6534,7 @@ func TestHTTPDelete(t *testing.T) {
   "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
 
   "defaultversionid": "v3.1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/v3.1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/v3.1$details"
 }
 `)
 
@@ -6548,7 +6548,7 @@ func TestHTTPDelete(t *testing.T) {
   "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
 
   "defaultversionid": "v2.1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/v2.1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/v2.1$details"
 }
 `)
 
