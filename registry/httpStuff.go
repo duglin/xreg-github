@@ -756,9 +756,10 @@ func (pw *PageWriter) Done() {
     padding: 5px ;
     flex: 1 ;
     overflow: auto ;
+    white-space: pre ;
     font-family: courier ;
     font-size: 14px ;
-    white-space: pre ;
+	line-height: 16px ; // easier to read this way
   }
 
   .expandAll {
