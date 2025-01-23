@@ -131,3 +131,5 @@ TODOs:
 - add support for shortself
 - see if we can create a $RESOURCEid SpecProp for Version&Meta level and then
   use "$SINGULRid" for everything including Versions, but not Meta
+- make ?compact NOT make defaultversionurl a relative URL if default Verson
+  isn't serialized due to a filter excluding it

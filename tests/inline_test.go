@@ -1240,3 +1240,258 @@ func TestInlineWildcards(t *testing.T) {
 		"Invalid 'inline' value: capabilities.bad*\n")
 
 }
+
+func TestInlineEmpty(t *testing.T) {
+	reg := NewRegistry("TestInlineEmpty")
+	defer PassDeleteReg(t, reg)
+
+	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
+	gm.AddResourceModel("files", "file", 0, true, true, true)
+
+	xHTTP(t, reg, "GET", "/?inline", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {},
+  "dirscount": 0
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {},
+  "dirscount": 0
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs.files", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {},
+  "dirscount": 0
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs.files.versions", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {},
+  "dirscount": 0
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs.files.versions,dirs.files.meta", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {},
+  "dirscount": 0
+}
+`)
+
+	reg.AddGroup("dirs", "d1")
+
+	xHTTP(t, reg, "GET", "/?inline", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {},
+      "filescount": 0
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "filescount": 0
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs.files", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {},
+      "filescount": 0
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs.files.versions", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {},
+      "filescount": 0
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "/?inline=dirs.files.versions,dirs.files.meta", "", 200, `{
+  "specversion": "0.5",
+  "registryid": "TestInlineEmpty",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:01Z",
+  "modifiedat": "2025-01-01T12:00:01Z",
+
+  "dirsurl": "http://localhost:8181/dirs",
+  "dirs": {
+    "d1": {
+      "dirid": "d1",
+      "self": "http://localhost:8181/dirs/d1",
+      "xid": "/dirs/d1",
+      "epoch": 1,
+      "createdat": "2025-01-01T12:00:02Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "filesurl": "http://localhost:8181/dirs/d1/files",
+      "files": {},
+      "filescount": 0
+    }
+  },
+  "dirscount": 1
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs?inline=files.versions,files.meta", "", 200, `{
+  "d1": {
+    "dirid": "d1",
+    "self": "http://localhost:8181/dirs/d1",
+    "xid": "/dirs/d1",
+    "epoch": 1,
+    "createdat": "2025-01-01T12:00:02Z",
+    "modifiedat": "2025-01-01T12:00:02Z",
+
+    "filesurl": "http://localhost:8181/dirs/d1/files",
+    "files": {},
+    "filescount": 0
+  }
+}
+`)
+
+	xHTTP(t, reg, "GET", "/dirs/d1?inline=files.versions,files.meta", "", 200, `{
+  "dirid": "d1",
+  "self": "http://localhost:8181/dirs/d1",
+  "xid": "/dirs/d1",
+  "epoch": 1,
+  "createdat": "2025-01-01T12:00:02Z",
+  "modifiedat": "2025-01-01T12:00:02Z",
+
+  "filesurl": "http://localhost:8181/dirs/d1/files",
+  "files": {},
+  "filescount": 0
+}
+`)
+
+}

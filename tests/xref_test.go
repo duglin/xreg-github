@@ -1197,7 +1197,7 @@ func TestXrefDocs(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
 		`{"xref":"/dirs/d1/files/f2"}`, 201, `{
   "fileid": "fx",
-  "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "self": "/dirs/d1/files/fx/meta",
   "xid": "/dirs/d1/files/fx/meta",
   "xref": "/dirs/d1/files/f2"
 }
@@ -1231,7 +1231,7 @@ func TestXrefDocs(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
 		`{"xref":"/dirs/d1/files/f3"}`, 200, `{
   "fileid": "fx",
-  "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+  "self": "/dirs/d1/files/fx/meta",
   "xid": "/dirs/d1/files/fx/meta",
   "xref": "/dirs/d1/files/f3"
 }

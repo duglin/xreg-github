@@ -75,7 +75,14 @@ func (jw *JsonWriter) NextEntity() (*Entity, error) {
 
 func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	myPlural := jw.Entity.Plural
-	myURL := fmt.Sprintf("%s/%s", jw.info.BaseURL, path.Dir(jw.Entity.Path))
+	myURL := ""
+
+	inlineCollection := jw.info.ShouldInline(jw.Entity.Abstract)
+	if jw.info.DoCompact() && inlineCollection {
+		myURL = "/" + path.Dir(jw.Entity.Path)
+	} else {
+		myURL = jw.info.BaseURL + "/" + path.Dir(jw.Entity.Path)
+	}
 
 	jw.Printf("%s\n%s\"%surl\": %q,\n", extra, jw.indent, myPlural, myURL)
 	extra = ""
@@ -85,7 +92,7 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 
 	// TODO optimize this to avoid the ioutil.Discard and just count the
 	// children from the result set instead
-	if !jw.info.ShouldInline(jw.Entity.Abstract) {
+	if !inlineCollection {
 		jw.info.HTTPWriter = DefaultDiscardWriter
 	}
 
@@ -413,10 +420,16 @@ func (jw *JsonWriter) WriteEmptyCollection(hasXref bool, extra string, eType int
 
 	p := Path2Abstract(jw.collPaths[eType] + collName)
 
-	jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
-		collName, jw.info.BaseURL, jw.collPaths[eType], collName)
+	inlineCollection := jw.info.ShouldInline(p)
+	baseURL := ""
+	if !jw.info.DoCompact() || !inlineCollection {
+		baseURL = jw.info.BaseURL
+	}
 
-	if jw.info.ShouldInline(p) {
+	jw.Printf("%s\n%s\"%surl\": \"%s/%s%s\",\n", extra, jw.indent,
+		collName, baseURL, jw.collPaths[eType], collName)
+
+	if inlineCollection {
 		jw.Printf("%s\"%s\": {},\n", jw.indent, collName)
 	}
 
@@ -433,13 +446,13 @@ func Path2Abstract(path string) string {
 	for i, part := range parts {
 		if i%2 == 0 {
 			if res != "" {
-				res += IN_STR
+				res += string(DB_IN)
 			}
 			res += part
 		}
 	}
 	if addSlash {
-		res += IN_STR
+		res += string(DB_IN)
 	}
 	return res
 }

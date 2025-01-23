@@ -157,7 +157,8 @@ func (info *RequestInfo) ShouldInline(entityPath string) bool {
 
 	for _, inline := range info.Inlines {
 		iPP := inline.PP
-		log.VPrintf(4, "Inline cmp: %q in %q", entityPath, inline.Path)
+		log.VPrintf(4, "Inline cmp: %q in %q",
+			ePP.DB(), inline.PP.DB())
 
 		// * doesn't include "model"... because they're special, they need to
 		// be explicit if they want to include those
@@ -174,7 +175,8 @@ func (info *RequestInfo) ShouldInline(entityPath string) bool {
 			(inline.NonWild != nil && ePP.HasPrefix(inline.NonWild)) {
 			// (iPP.Len() > 1 && iPP.Bottom() == "*" && ePP.HasPrefix(iPP.RemoveLast())) {
 
-			log.VPrintf(4, "Inline match: %q in %q", entityPath, inline.Path)
+			log.VPrintf(4, "   match: %q in %q",
+				ePP.DB(), inline.PP.DB())
 			return true
 		}
 	}
@@ -543,4 +545,8 @@ func (info *RequestInfo) HasFlag(name string) bool {
 	}
 	_, ok := info.Flags[name]
 	return ok
+}
+
+func (info *RequestInfo) DoCompact() bool {
+	return info.HasFlag("compact") || info.RootPath == "export"
 }

@@ -362,7 +362,7 @@ func (pw *PageWriter) Done() {
 
 	if pw.Info.RootPath == "" {
 		checked := ""
-		if pw.Info.HasFlag("compact") {
+		if pw.Info.DoCompact() {
 			checked = " checked"
 		}
 		options += "    <div class=compact>\n" +
@@ -1300,7 +1300,7 @@ func HTTPGet(info *RequestInfo) error {
 	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
 		(info.ResourceModel.GetHasDocument() == false || info.ShowDetails ||
-			info.HasFlag("compact") ||
+			info.DoCompact() ||
 			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
 	// Return the Resource's document
@@ -1335,10 +1335,8 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 		info.AddInline("model")
 	}
 
-	doCompact := info.HasFlag("compact") || info.RootPath == "export"
-
 	query, args, err := GenerateQuery(info.Registry, what, paths, filters,
-		doCompact)
+		info.DoCompact())
 	results, err := Query(info.tx, query, args...)
 	defer results.Close()
 
@@ -1363,7 +1361,7 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 			// Special case, if the URL is ../rID/versions/vID?compact then
 			// check to see if Resource has xref set, if so then the error
 			// is 400, not 404
-			if info.VersionUID != "" && info.HasFlag("compact") {
+			if info.VersionUID != "" && info.DoCompact() {
 				path := strings.Join(info.Parts[:len(info.Parts)-2], "/")
 				path += "/meta"
 				entity, err := RawEntityFromPath(info.tx, info.Registry.DbSID,
@@ -1405,7 +1403,7 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 
 	// GROUPS/gID/RESOURCES/rID/versions
 	// Another special case .../rID/versions?compact when rID has xref
-	if jw.Entity == nil && info.HasFlag("compact") && len(info.Parts) == 5 && info.Parts[4] == "versions" {
+	if jw.Entity == nil && info.DoCompact() && len(info.Parts) == 5 && info.Parts[4] == "versions" {
 		// Should be our case since "versions" can never be empty except
 		// when xref is set. If this is not longer true then we'll need to
 		// check this Resource's xref to see if it's set.

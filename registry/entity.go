@@ -1016,13 +1016,13 @@ var OrderedSpecProps = []*Attribute{
 				base := ""
 				path := e.Path
 
-				if info != nil {
+				if info != nil && !info.DoCompact() {
 					base = info.BaseURL
 				}
 
 				if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 					meta := info != nil && (info.ShowDetails ||
-						info.HasFlag("compact") ||
+						info.DoCompact() ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 					if e.GetResourceModel().GetHasDocument() == false {
 						meta = false
@@ -1056,7 +1056,7 @@ var OrderedSpecProps = []*Attribute{
 					}
 					if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 						meta := info != nil && (info.ShowDetails ||
-						info.HasFlag("compact") ||
+						info.DoCompact() ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 					if e.GetResourceModel().GetHasDocument() == false {
 							meta = false
@@ -1460,8 +1460,13 @@ var OrderedSpecProps = []*Attribute{
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
 				if info != nil {
-					base = info.BaseURL
+					inlineMeta := info.ShouldInline(e.Abstract +
+						string(DB_IN) + "meta")
+					if !info.DoCompact() || !inlineMeta {
+						base = info.BaseURL
+					}
 				}
+
 				return base + "/" + e.Path + "/meta"
 			},
 			checkFn:  nil,
@@ -1521,26 +1526,30 @@ var OrderedSpecProps = []*Attribute{
 				if IsNil(val) {
 					return nil
 				}
-				base := ""
+
+				str := ""
+
 				if info != nil {
-					base = info.BaseURL
+					abs := e.Abstract[:len(e.Abstract)-4] + "versions"
+					inlineVers := info.ShouldInline(abs)
+					if !info.DoCompact() || !inlineVers {
+						str = info.BaseURL
+					}
 				}
 
-				parts := strings.Split(e.Path, "/")
-				rPath := strings.Join(parts[:len(parts)-1], "/")
-
-				tmp := base + "/" + rPath + "/versions/" + val.(string)
+				rPath := e.Path[:len(e.Path)-5]
+				str += "/" + rPath + "/versions/" + val.(string)
 
 				meta := info != nil && (info.ShowDetails ||
-					info.HasFlag("compact") || info.ResourceUID == "")
+					info.DoCompact() || info.ResourceUID == "")
 				if e.GetResourceModel().GetHasDocument() == false {
 					meta = false
 				}
 
 				if meta {
-					tmp += "$details"
+					str += "$details"
 				}
-				return tmp
+				return str
 			},
 			checkFn:  nil,
 			updateFn: nil,
