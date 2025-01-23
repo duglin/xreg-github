@@ -583,7 +583,7 @@ func (pw *PageWriter) Done() {
   }
   #left {
     padding: 0 0 25 0 ;
-    background-color: #e3e3e3 ; // gainsboro ; // lightsteelblue;
+    background-color: snow ; // #e3e3e3 ; // gainsboro ; // lightsteelblue;
     white-space: nowrap ;
     overflow-y: auto ;
     min-width: fit-content ;
@@ -615,7 +615,7 @@ func (pw *PageWriter) Done() {
     display: flex ;
     align-items: baseline ;
     padding: 5 10 5 5 ;
-    background: white ;
+    background: lightgray ; // white
   }
 
   #options {
@@ -762,6 +762,7 @@ func (pw *PageWriter) Done() {
   }
 
   .expandAll {
+    cursor: pointer ;
     display: inline-flex ;
     position: fixed ;
     top: 30 ;
@@ -769,7 +770,7 @@ func (pw *PageWriter) Done() {
   }
 
   .expandBtn {
-    cursor: default ;
+    cursor: pointer ;
     display: inline-block ;
     width: 2ch ;
     text-align: center ;
@@ -792,7 +793,7 @@ func (pw *PageWriter) Done() {
   }
 
   .exp {
-    cursor: default ;
+    cursor: pointer ;
     width: 1ch ;
     display: inline-block ;
     user-select: none ;
