@@ -249,7 +249,8 @@ func HTMLify(r *http.Request, buf []byte) []byte {
 	return re.ReplaceAll(buf, []byte(repl))
 }
 
-func RegHTMLify(r *http.Request, buf []byte) []byte {
+// HTML, # of expands
+func RegHTMLify(r *http.Request, buf []byte) ([]byte, int) {
 	str := fmt.Sprintf(`"(https?://[^?"\n]*)(\??)([^"\n]*)"`)
 	re := regexp.MustCompile(str)
 	repl := fmt.Sprintf(`"<a href='$1?ui&$3'>$1$2$3</a>"`)
@@ -334,15 +335,15 @@ func RegHTMLify(r *http.Request, buf []byte) []byte {
 		res.WriteString(line)
 		if incDepth {
 			// write the "..." and then the <span> for the toggle text
-			res.WriteString(fmt.Sprintf("<span style='display:none' "+
-				"id='s%ddots'>...</span>", count))
+			res.WriteString(fmt.Sprintf("<span style='display:none;cursor:pointer' "+
+				"id='s%ddots' onclick='toggleExp(s%d)'>...</span>", count, count))
 			res.WriteString(fmt.Sprintf("<span id='s%dblock'>", count))
 		}
 
 		res.WriteString("\n")
 	}
 
-	return res.Bytes()
+	return res.Bytes(), count
 }
 
 func AnyToUInt(val any) (int, error) {
