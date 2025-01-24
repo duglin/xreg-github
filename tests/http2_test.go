@@ -544,6 +544,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-versionscount: 1",
 			"Location: http://localhost:8181/dirs/d1/files/f1",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 		},
 	})
 
@@ -562,6 +563,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"Content-Disposition:f1",
 		},
 	})
 
@@ -580,6 +582,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 		},
 	})
 
@@ -604,6 +607,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/3",
+			"Content-Disposition:f1",
 		},
 	})
 
@@ -620,6 +624,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/4",
+			"Content-Disposition:f1",
 		},
 	})
 
@@ -761,6 +766,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 		},
 		ResBody: `hello`,
 	})
@@ -828,6 +834,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:7",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"Content-Type:application/json",
 		},
 		ResBody: "\"hel\nlo",
@@ -898,6 +905,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:13",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 		},
 		ResBody: `{"foo":"bar"}`,
 	})
@@ -968,6 +976,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:16",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 		},
 		ResBody: `["hello",null,5]`,
 	})
@@ -1040,6 +1049,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 		},
 		ResBody: `123`,
 	})
@@ -1406,6 +1416,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:0",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f11/versions/1",
+			"Content-Disposition:f11",
 		},
 		ResBody: ``,
 	})
@@ -1456,6 +1467,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:13",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f12/versions/1",
+			"Content-Disposition:f12",
 		},
 		ResBody: `{"foo":"bar"}`,
 	})
@@ -1506,6 +1518,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f13/versions/1",
+			"Content-Disposition:f13",
 		},
 		ResBody: `123`,
 	})
@@ -1556,6 +1569,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:7",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f14/versions/1",
+			"Content-Disposition:f14",
 		},
 		ResBody: `[123,0]`,
 	})
@@ -1606,6 +1620,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:4",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f15/versions/1",
+			"Content-Disposition:f15",
 		},
 		ResBody: `true`,
 	})
@@ -1656,6 +1671,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:application/json",
 			"Content-Length:6",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f16/versions/1",
+			"Content-Disposition:f16",
 		},
 		ResBody: "he\tllo",
 	})
@@ -1707,6 +1723,7 @@ func TestHTTPContent(t *testing.T) {
 			"Content-Type:foo/bar",
 			"Content-Length:6",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f17/versions/1",
+			"Content-Disposition:f17",
 		},
 		ResBody: "he\tllo",
 	})
@@ -1774,6 +1791,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:6",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"Content-Disposition:f18",
 		},
 		ResBody: "he\tllo",
 	})
@@ -1840,6 +1858,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"Content-Disposition:f18",
 		},
 		ResBody: "foo",
 	})
@@ -1906,6 +1925,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"Content-Disposition:f18",
 			"Content-Type:application/json",
 		},
 		ResBody: "foo",
@@ -1975,6 +1995,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"Content-Disposition:f18",
 			"Content-Type:foo/bar",
 		},
 		ResBody: "bar",
@@ -2043,6 +2064,7 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f18/versions/1",
+			"Content-Disposition:f18",
 		},
 		ResBody: "bar",
 	})
@@ -2660,6 +2682,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f4/versions/1",
+			"Content-Disposition:f4",
 			"Content-Type:application/json",
 		},
 		ResBody: `hello`,
@@ -2717,6 +2740,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f6/versions/1",
+			"Content-Disposition:f6",
 		},
 		ResBody: `hello`,
 	})
@@ -2742,6 +2766,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f61/versions/1",
+			"Content-Disposition:f61",
 		},
 		ResBody: `hello`,
 	})
@@ -2767,6 +2792,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f62/versions/1",
+			"Content-Disposition:f62",
 		},
 		ResBody: `hello`,
 	})
@@ -2792,6 +2818,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f63/versions/1",
+			"Content-Disposition:f63",
 		},
 		ResBody: `hello`,
 	})
@@ -2818,6 +2845,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:5",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f7/versions/v1",
+			"Content-Disposition:f7",
 		},
 		ResBody: `hello`,
 	})
@@ -3266,6 +3294,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:2",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/3",
+			"Content-Disposition:f13",
 		},
 		ResBody: `v3`,
 	})
@@ -3288,6 +3317,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:2",
 			"Content-Location:http://localhost:8181/dirs/dir1/files/f13/versions/4",
+			"Content-Disposition:f13",
 		},
 		ResBody: `v4`,
 	})
@@ -4822,6 +4852,7 @@ func TestHTTPURLs(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:11",
 			"Content-Location:http://localhost:8181/dirs/d2/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"Content-Type:application/json",
 		},
 		ResBody: `hello world`,
@@ -4852,6 +4883,7 @@ func TestHTTPURLs(t *testing.T) {
 			"xRegistry-versionscount:1",
 			"Content-Length:33",
 			"Content-Location:http://localhost:8181/dirs/d2/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"Content-Type:application/json",
 		},
 		ResBody: `Everybody wants to rule the world`,
@@ -4893,6 +4925,7 @@ func TestHTTPURLs(t *testing.T) {
 			"xRegistry-createdat:2024-01-01T12:00:00Z",
 			"xRegistry-modifiedat:2024-01-01T12:00:00Z",
 			"Content-Location:http://localhost:8181/dirs/d2/files/f1/versions/2",
+			"Content-Disposition:f1",
 			"Content-Type:text/plain; charset=utf-8",
 		},
 		ResBody: `this is a new version`,
@@ -7566,6 +7599,7 @@ func TestHTTPDefVer(t *testing.T) {
 			"xRegistry-versionscount: 1",
 			"Content-Length: 7",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/v1",
+			"Content-Disposition:f1",
 			"Content-Type: text/plain; charset=utf-8",
 			"Location: http://localhost:8181/dirs/d1/files/f1",
 		},

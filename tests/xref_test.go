@@ -1136,6 +1136,34 @@ func TestXrefDocs(t *testing.T) {
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1", "", 200, `hello world`)
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx", "", 200, `hello world`)
 
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "check xref header",
+		URL:        "/dirs/d1/files/fx",
+		Method:     "GET",
+		ReqHeaders: []string{},
+		ReqBody:    "",
+
+		Code: 200,
+		ResHeaders: []string{
+			"Content-Type:text/plain; charset=utf-8",
+			"xRegistry-fileid: fx",
+			"xRegistry-versionid: 1",
+			"xRegistry-self: http://localhost:8181/dirs/d1/files/fx",
+			"xRegistry-xid: /dirs/d1/files/fx",
+			"xRegistry-epoch: 1",
+			"xRegistry-isdefault: true",
+			"xRegistry-createdat: 2024-01-01T12:00:01Z",
+			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
+			"xRegistry-metaurl: http://localhost:8181/dirs/d1/files/fx/meta",
+			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/fx/versions",
+			"xRegistry-versionscount: 1",
+			"Content-Location: http://localhost:8181/dirs/d1/files/fx/versions/1",
+			"Content-Disposition: fx",
+			"Content-Length: 11",
+		},
+		ResBody: `hello world`,
+	})
+
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/1", "", 200, `hello world`)
 	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/1", "", 200, `hello world`)
 

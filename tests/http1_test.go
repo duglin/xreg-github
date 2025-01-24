@@ -2379,6 +2379,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionscount: 1",
 			"Location: http://localhost:8181/dirs/dir1/files/f1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Content-Disposition: f1",
 			"Content-Length: 11",
 		},
 		ResBody: `My cool doc`,
@@ -2407,6 +2408,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Content-Disposition: f1",
 			"Content-Length: 17",
 		},
 		ResBody: `My cool doc - new`,
@@ -2433,6 +2435,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Content-Disposition: f1",
 			"Content-Length: 21",
 		},
 		ResBody: `My cool doc - new one`,
@@ -2461,6 +2464,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f1/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f1/versions/1",
+			"Content-Disposition: f1",
 			"Content-Length: 20",
 		},
 		ResBody: `My cool doc - new x2`,
@@ -2516,6 +2520,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionscount: 1",
 			"Location: http://localhost:8181/dirs/dir1/files/f3",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 			"Content-Length: 11",
 		},
 		ResBody: `My cool doc`,
@@ -2548,6 +2553,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 			"Content-Length: 16",
 		},
 		ResBody: `My cool doc - v2`,
@@ -2580,6 +2586,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionscount: 1",
 			"Location: http://localhost:8181/dirs/dir1/files/f4",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f4/versions/1",
+			"Content-Disposition: f4",
 		},
 		ResBody: "",
 	})
@@ -2614,6 +2621,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionscount: 1",
 			"Location: http://example.com",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "",
 	})
@@ -2660,6 +2668,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "",
 	})
@@ -2690,6 +2699,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "another body",
 	})
@@ -2721,6 +2731,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "another body",
 	})
@@ -2753,6 +2764,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "another body",
 	})
@@ -2783,6 +2795,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "another body",
 	})
@@ -2812,6 +2825,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "another body",
 	})
@@ -2849,6 +2863,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: "another body",
 	})
@@ -2888,6 +2903,7 @@ func TestHTTPResourcesHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/dir1/files/f3/versions",
 			"xRegistry-versionscount: 1",
 			"Content-Location: http://localhost:8181/dirs/dir1/files/f3/versions/1",
+			"Content-Disposition: f3",
 		},
 		ResBody: string(body),
 	})
@@ -3208,6 +3224,7 @@ func TestHTTPResourcesContentHeaders(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f1-proxy/versions",
 			"xRegistry-versionscount: 3",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1-proxy/versions/v3",
+			"Content-Disposition: f1-proxy",
 		},
 		ResBody: "hello-Proxy",
 	})
@@ -3429,6 +3446,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1-proxy/versions/1",
+			"Content-Disposition: f1-proxy",
 			"Content-Length: 15",
 			"Content-Type: application/json",
 		},
@@ -3765,6 +3783,7 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{
 			"Location:http://localhost:8181/dirs/d1/files/f2/versions/v1",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f2/versions/v1",
+			"Content-Disposition: f2",
 			"xRegistry-fileid:f2",
 			"xRegistry-versionid:v1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v1",
@@ -3790,6 +3809,7 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{
 			"Location:http://localhost:8181/dirs/d1/files/f2/versions/v2",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f2/versions/v2",
+			"Content-Disposition: f2",
 			"xRegistry-fileid:f2",
 			"xRegistry-versionid:v2",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v2",
@@ -3816,6 +3836,7 @@ func TestHTTPVersions(t *testing.T) {
 		ResHeaders: []string{
 			"Location:http://localhost:8181/dirs/d1/files/f2/versions/v3",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f2/versions/v3",
+			"Content-Disposition: f2",
 			"xRegistry-fileid:f2",
 			"xRegistry-versionid:v3",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f2/versions/v3",
@@ -4161,6 +4182,7 @@ func TestHTTPVersions(t *testing.T) {
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/ff1-proxy/versions",
 			"xRegistry-versionscount: 3",
 			"Content-Location: http://localhost:8181/dirs/d1/files/ff1-proxy/versions/v3",
+			"Content-Disposition: ff1-proxy",
 		},
 		ResBody: "hello-Proxy",
 	})
@@ -4271,6 +4293,7 @@ func TestHTTPVersions(t *testing.T) {
 			"Content-Length:16",
 			"Content-Type:my/format",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/v1",
+			"Content-Disposition:f5",
 			"xRegistry-fileid:f5",
 			"xRegistry-versionid:v1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/v1",
@@ -4299,6 +4322,7 @@ func TestHTTPVersions(t *testing.T) {
 			"Content-Length:16",
 			"Content-Type:my/format2",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"Content-Disposition:f5",
 			"xRegistry-fileid:f5",
 			"xRegistry-versionid:1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5/versions/1",
@@ -4350,6 +4374,7 @@ func TestHTTPVersions(t *testing.T) {
 			"Content-Length:16",
 			"Content-Type:my/format2",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f5/versions/1",
+			"Content-Disposition:f5",
 			"xRegistry-fileid:f5",
 			"xRegistry-versionid: 1",
 			"xRegistry-self:http://localhost:8181/dirs/d1/files/f5",
@@ -5742,6 +5767,7 @@ func TestHTTPNonStrings(t *testing.T) {
 			"xRegistry-versionscount: 1",
 			"Content-Type:text/plain; charset=utf-8",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"Content-Length:5",
 			"Location:http://localhost:8181/dirs/d1/files/f1",
 		},
@@ -5839,6 +5865,7 @@ func TestHTTPDefault(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"Location: http://localhost:8181/dirs/d1/files/f1",
 			"xRegistry-fileid: f1",
 			"xRegistry-versionid: 1",
@@ -5865,6 +5892,7 @@ func TestHTTPDefault(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"Content-Disposition:f1",
 			"Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
 			"xRegistry-fileid: f1",
 			"xRegistry-versionid: 2",
@@ -5888,6 +5916,7 @@ func TestHTTPDefault(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"xRegistry-fileid: f1",
 			"xRegistry-versionid: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
@@ -5910,6 +5939,7 @@ func TestHTTPDefault(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"xRegistry-fileid: f1",
 			"xRegistry-versionid: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
@@ -5959,6 +5989,7 @@ func TestHTTPDefault(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/1",
+			"Content-Disposition:f1",
 			"xRegistry-fileid: f1",
 			"xRegistry-versionid: 1",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/1",
@@ -5980,6 +6011,7 @@ func TestHTTPDefault(t *testing.T) {
 		HeaderMasks: []string{},
 		ResHeaders: []string{
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
+			"Content-Disposition:f1",
 			"xRegistry-fileid: f1",
 			"xRegistry-versionid: 2",
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
@@ -6067,6 +6099,7 @@ func TestHTTPDefault(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length: 7",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/newone",
+			"Content-Disposition:f1",
 			"Location: http://localhost:8181/dirs/d1/files/f1/versions/newone",
 		},
 		ResBody: `pick me`,
@@ -6093,6 +6126,7 @@ func TestHTTPDefault(t *testing.T) {
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length: 9",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/bogus",
+			"Content-Disposition:f1",
 		},
 		ResBody: `some text`,
 	})
@@ -7196,6 +7230,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 			"Content-Length: 0",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f2/versions/1",
+			"Content-Disposition:f2",
 			"Location: http://localhost:8181/dirs/d1/files/f2",
 		},
 	})

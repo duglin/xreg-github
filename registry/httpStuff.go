@@ -1229,6 +1229,7 @@ FROM FullTree WHERE RegSID=? AND `
 			info.BaseURL+"/"+entity.Path+"/versions")
 	}
 	info.AddHeader("Content-Location", info.BaseURL+"/"+version.Path)
+	info.AddHeader("Content-Disposition", info.ResourceUID)
 
 	url := ""
 	singular := info.ResourceModel.Singular
