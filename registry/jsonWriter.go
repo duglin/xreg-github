@@ -285,11 +285,14 @@ func (jw *JsonWriter) WriteEntity() error {
 
 		p, _ := PropPathFromPath(jw.Entity.Abstract)
 		if jw.info.ShouldInline(p.DB()) {
-			// If in compact mode & there are filters, then we'll
-			// serialize "meta" after "versions" so we know if the
+			verAbs := jw.Entity.Abstract[:len(jw.Entity.Abstract)-4] + "versions"
+			versProp, _ := PropPathFromPath(verAbs)
+
+			// If in compact mode & there are filters & "versions" is inlined,
+			// then we'll serialize "meta" after "versions" so we know if the
 			// default Version was included or not. If not then the
 			// defaultversionurl needs to be absolute, not relative
-			if jw.info.DoCompact() && len(jw.info.Filters) > 0 {
+			if jw.info.DoCompact() && len(jw.info.Filters) > 0 && jw.info.ShouldInline(versProp.DB()) {
 				cachedMeta = jw.Entity
 				if _, err = jw.NextEntity(); err != nil {
 					return err

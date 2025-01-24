@@ -1449,6 +1449,47 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
+	// Make sure that we only move "meta" after "versions" if we actually
+	// inline "versions", even if there are filters
+	xHTTP(t, reg, "GET",
+		"/dirs/d1/files?compact&inline=meta&filter=versions.versionid=v2",
+		"", 200, `{
+  "f1": {
+    "fileid": "f1",
+    "self": "/f1",
+    "xid": "/dirs/d1/files/f1",
+
+    "metaurl": "/f1/meta",
+    "meta": {
+      "fileid": "f1",
+      "self": "/f1/meta",
+      "xid": "/dirs/d1/files/f1/meta",
+      "epoch": 2,
+      "createdat": "2025-01-01T12:00:01Z",
+      "modifiedat": "2025-01-01T12:00:02Z",
+
+      "defaultversionid": "v2",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
+    },
+    "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+    "versionscount": 1
+  },
+  "fx": {
+    "fileid": "fx",
+    "self": "/fx",
+    "xid": "/dirs/d1/files/fx",
+
+    "metaurl": "/fx/meta",
+    "meta": {
+      "fileid": "fx",
+      "self": "/fx/meta",
+      "xid": "/dirs/d1/files/fx/meta",
+      "xref": "/dirs/d1/files/f1"
+    }
+  }
+}
+`)
+
 	// Make sure that ?compact doesn't turn on ?inline by mistake.
 	// At one point ?export (?compact) implied ?inline=*
 
