@@ -362,11 +362,11 @@ func (pw *PageWriter) Done() {
 
 	if pw.Info.RootPath == "" {
 		checked := ""
-		if pw.Info.DoCompact() {
+		if pw.Info.DoDocView() {
 			checked = " checked"
 		}
-		options += "    <div class=compact>\n" +
-			"      <input id=compact type='checkbox'" + checked + "/>compact\n" +
+		options += "    <div class=docview>\n" +
+			"      <input id=docview type='checkbox'" + checked + "/>doc view\n" +
 			"    </div>\n"
 
 		if options != "" { // Wrapper if any
@@ -722,7 +722,7 @@ toggleExp(null, false);
   select:active { background: #c4c4c4 ; color : black ; }
   select:focus { background: darkgray ; color : black ; }
 
-  .compact {
+  .docview {
     margin-top: 5px ;
     font-size: 13px ;
     font-family: courier ;
@@ -735,7 +735,7 @@ toggleExp(null, false);
   }
 
   .inlinehilight {
-    background-color : #d0d0d0 ;
+    background-color : #eaeaea ;
   }
 
   .minicheckdiv {
@@ -889,8 +889,8 @@ function apply() {
   if (detailsSwitch) loc += "$details"
   loc += "?ui"
 
-  ex = document.getElementById("compact")
-  if (ex != null && ex.checked) loc += "&compact"
+  ex = document.getElementById("docview")
+  if (ex != null && ex.checked) loc += "&doc"
 
   var filters = document.getElementById("filters").value
   var lines = filters.split("\n")
@@ -1314,7 +1314,7 @@ func HTTPGet(info *RequestInfo) error {
 	// response body or not (meaning, the hasDoc doc)
 	metaInBody := (info.ResourceModel == nil) ||
 		(info.ResourceModel.GetHasDocument() == false || info.ShowDetails ||
-			info.DoCompact() ||
+			info.DoDocView() ||
 			(len(info.Parts) == 5 && info.Parts[4] == "meta"))
 
 	// Return the Resource's document
@@ -1350,7 +1350,7 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 	}
 
 	query, args, err := GenerateQuery(info.Registry, what, paths, filters,
-		info.DoCompact())
+		info.DoDocView())
 	results, err := Query(info.tx, query, args...)
 	defer results.Close()
 
@@ -1372,10 +1372,10 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 	// Collections will need to print the {}, so don't error for them
 	if what != "Coll" {
 		if jw.Entity == nil {
-			// Special case, if the URL is ../rID/versions/vID?compact then
+			// Special case, if the URL is ../rID/versions/vID?doc then
 			// check to see if Resource has xref set, if so then the error
 			// is 400, not 404
-			if info.VersionUID != "" && info.DoCompact() {
+			if info.VersionUID != "" && info.DoDocView() {
 				path := strings.Join(info.Parts[:len(info.Parts)-2], "/")
 				path += "/meta"
 				entity, err := RawEntityFromPath(info.tx, info.Registry.DbSID,
@@ -1389,7 +1389,7 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 				// best response in those cases, so skip the 400
 				if entity != nil && !IsNil(entity.Object["xref"]) {
 					info.StatusCode = http.StatusBadRequest
-					return fmt.Errorf("'compact' flag not allowed on xref'd Versions")
+					return fmt.Errorf("'doc' flag not allowed on xref'd Versions")
 				}
 			}
 
@@ -1416,14 +1416,14 @@ func SerializeQuery(info *RequestInfo, paths []string, what string,
 	}
 
 	// GROUPS/gID/RESOURCES/rID/versions
-	// Another special case .../rID/versions?compact when rID has xref
-	if jw.Entity == nil && info.DoCompact() && len(info.Parts) == 5 && info.Parts[4] == "versions" {
+	// Another special case .../rID/versions?doc when rID has xref
+	if jw.Entity == nil && info.DoDocView() && len(info.Parts) == 5 && info.Parts[4] == "versions" {
 		// Should be our case since "versions" can never be empty except
 		// when xref is set. If this is not longer true then we'll need to
 		// check this Resource's xref to see if it's set.
 		// Can copy the RawEntityFromPath... stuff above
 		info.StatusCode = http.StatusBadRequest
-		return fmt.Errorf("'compact' flag not allowed on xref'd Versions")
+		return fmt.Errorf("'doc' flag not allowed on xref'd Versions")
 	}
 
 	info.AddHeader("Content-Type", "application/json")

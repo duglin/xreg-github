@@ -142,7 +142,7 @@ func TestResourceContents(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "dirs/d1/files/f1$details?compact&inline=file",
+	xHTTP(t, reg, "GET", "dirs/d1/files/f1$details?doc&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
   "self": "/",
@@ -171,7 +171,7 @@ func TestResourceContents(t *testing.T) {
 `)
 
 	// v2 = file
-	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$details?compact&inline=file",
+	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$details?doc&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
   "self": "/",

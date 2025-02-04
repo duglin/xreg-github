@@ -648,7 +648,7 @@ func (reg *Registry) UpsertGroupWithObject(gType string, id string, obj Object, 
 	return g, isNew, nil
 }
 
-func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*FilterExpr, compact bool) (string, []interface{}, error) {
+func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*FilterExpr, docView bool) (string, []interface{}, error) {
 	query := ""
 	args := []any{}
 
@@ -656,13 +656,13 @@ func GenerateQuery(reg *Registry, what string, paths []string, filters [][]*Filt
 	query = `
 SELECT
   RegSID,Type,Plural,Singular,eSID,UID,PropName,PropValue,PropType,Path,Abstract
-FROM FullTree WHERE RegSID=?` // and Compact=true
+FROM FullTree WHERE RegSID=?` // and DocView=true
 
-	// Exclude generated attributes/entityes if 'compact' is turned on.
-	// Meaning, only grab Props that have 'Compact' set to 'true'. These
+	// Exclude generated attributes/entityes if 'doc view' is turned on.
+	// Meaning, only grab Props that have 'DocView' set to 'true'. These
 	// should be (mainly) just the ones we set explicitly.
-	if compact {
-		query += ` AND Compact=true`
+	if docView {
+		query += ` AND DocView=true`
 	}
 
 	// Remove entities that are higher than the GET PATH specified

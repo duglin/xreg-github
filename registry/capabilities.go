@@ -20,7 +20,7 @@ type Capabilities struct {
 }
 
 var AllowableFlags = ArrayToLower([]string{
-	"epoch", "compact", "filter", "inline",
+	"doc", "epoch", "filter", "inline",
 	"nodefaultversionid", "nodefaultversionsticky",
 	"noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
 

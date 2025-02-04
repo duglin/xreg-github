@@ -541,6 +541,6 @@ func (info *RequestInfo) HasFlag(name string) bool {
 	return ok
 }
 
-func (info *RequestInfo) DoCompact() bool {
-	return info.HasFlag("compact") || info.RootPath == "export"
+func (info *RequestInfo) DoDocView() bool {
+	return info.HasFlag("doc") || info.RootPath == "export"
 }

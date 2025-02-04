@@ -1192,10 +1192,10 @@ func TestXrefDocs(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/versions/2$details", "{}", 400,
 		`Can't update "versions" if "xref" is set`+"\n")
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fy$details?compact&inline",
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fy$details?doc&inline",
 		`{"meta":{"xref":"/dirs/d1/files/f1"},"versions":{}}`, 400,
 		`Can't update "versions" if "xref" is set`+"\n")
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fy$details?compact&inline",
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/fy$details?doc&inline",
 		`{"meta":{"xref":"/dirs/d1/files/f1"},"versions":{"2":{},"3":{}}}`, 400,
 		`Can't update "versions" if "xref" is set`+"\n")
 
@@ -1222,7 +1222,7 @@ func TestXrefDocs(t *testing.T) {
 	// Now test stuff that use fileurl and fileproxy
 
 	// fileurl
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?doc",
 		`{"xref":"/dirs/d1/files/f2"}`, 201, `{
   "fileid": "fx",
   "self": "/",
@@ -1256,7 +1256,7 @@ func TestXrefDocs(t *testing.T) {
 `)
 
 	// fileProxyURL
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?compact",
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/fx/meta?doc",
 		`{"xref":"/dirs/d1/files/f3"}`, 200, `{
   "fileid": "fx",
   "self": "/",

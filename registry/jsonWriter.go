@@ -102,7 +102,7 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 	baseURL := ""
 
 	inlineCollection := jw.info.ShouldInline(jw.Entity.Abstract)
-	if jw.info.DoCompact() && inlineCollection {
+	if jw.info.DoDocView() && inlineCollection {
 		// remove GET's base path
 		path := path.Dir(jw.Entity.Path)
 		path = path[len(jw.info.Root):]
@@ -288,11 +288,11 @@ func (jw *JsonWriter) WriteEntity() error {
 			verAbs := jw.Entity.Abstract[:len(jw.Entity.Abstract)-4] + "versions"
 			versProp, _ := PropPathFromPath(verAbs)
 
-			// If in compact mode & there are filters & "versions" is inlined,
+			// If in doc view & there are filters & "versions" is inlined,
 			// then we'll serialize "meta" after "versions" so we know if the
 			// default Version was included or not. If not then the
 			// defaultversionurl needs to be absolute, not relative
-			if jw.info.DoCompact() && len(jw.info.Filters) > 0 && jw.info.ShouldInline(versProp.DB()) {
+			if jw.info.DoDocView() && len(jw.info.Filters) > 0 && jw.info.ShouldInline(versProp.DB()) {
 				cachedMeta = jw.Entity
 				if _, err = jw.NextEntity(); err != nil {
 					return err
@@ -367,7 +367,7 @@ func SerializeResourceContents(jw *JsonWriter, e *Entity, info *RequestInfo, ext
 	singular := rm.Singular
 
 	// If the RESOURCE* props aren't there then just exit.
-	// This will happen when "export/compact" is enabled because the
+	// This will happen when "export/docView" is enabled because the
 	// props won't show up in the Resorce but will on the default version
 	// TODO really should do this check in entity.SerializeProps
 	if IsNil(jw.Entity.Object["#contentid"]) &&
@@ -505,7 +505,7 @@ func (jw *JsonWriter) WriteEmptyCollection(hasXref bool, extra string, eType int
 	baseURL := ""
 	path := jw.collPaths[eType]
 
-	if !jw.info.DoCompact() || !inlineCollection {
+	if !jw.info.DoDocView() || !inlineCollection {
 		baseURL = jw.info.BaseURL
 	} else {
 		// remove GET's base path

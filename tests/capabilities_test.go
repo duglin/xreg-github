@@ -16,7 +16,7 @@ func TestCapabilitySimple(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [
-    "compact",
+    "doc",
     "epoch",
     "filter",
     "inline",
@@ -56,7 +56,7 @@ func TestCapabilitySimple(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [
-      "compact",
+      "doc",
       "epoch",
       "filter",
       "inline",
@@ -254,7 +254,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [
-    "compact",
+    "doc",
     "epoch",
     "filter",
     "inline",
@@ -382,7 +382,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/capabilities", `{
   "enforcecompatibility": false,
   "flags": [
-    "compact", "epoch", "filter", "inline", "nodefaultversionid",
+    "doc", "epoch", "filter", "inline", "nodefaultversionid",
     "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
 	"setdefaultversionid", "specversion"
   ],
@@ -395,7 +395,7 @@ func TestCapabilityPath(t *testing.T) {
 		`{
   "enforcecompatibility": false,
   "flags": [
-    "compact",
+    "doc",
     "epoch",
     "filter",
     "inline",
@@ -426,7 +426,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [
-    "compact",
+    "doc",
     "epoch",
     "filter",
     "inline",
@@ -641,7 +641,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/?inline=capabilities", `{ "capabilities": {
   "enforcecompatibility": false,
   "flags": [
-    "compact", "epoch", "filter", "inline", "nodefaultversionid",
+    "doc", "epoch", "filter", "inline", "nodefaultversionid",
     "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
 	"setdefaultversionid", "specversion"
   ],
@@ -665,7 +665,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [
-    "compact",
+    "doc",
     "epoch",
     "filter",
     "inline",
@@ -766,7 +766,7 @@ func TestCapabilityAttr(t *testing.T) {
 
 }
 
-// "compact", "epoch", "filter", "inline",
+// "doc", "epoch", "filter", "inline",
 // "nodefaultversionid", "nodefaultversionsticky",
 // "noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
 
@@ -813,8 +813,8 @@ func TestCapabilityFlagsOff(t *testing.T) {
 }
 `)
 
-	// Test ?compact
-	xHTTP(t, reg, "GET", "/dirs/d1/files?compact", `{}`, 200, `{
+	// Test ?doc
+	xHTTP(t, reg, "GET", "/dirs/d1/files?doc", `{}`, 200, `{
   "f1": {
     "fileid": "f1",
     "versionid": "1",

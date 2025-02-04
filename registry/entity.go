@@ -710,7 +710,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 
 		err = DoOneTwo(e.tx, `
             REPLACE INTO Props(
-              RegistrySID, EntitySID, PropName, PropValue, PropType, Compact)
+              RegistrySID, EntitySID, PropName, PropValue, PropType, DocView)
             VALUES( ?,?,?,?,?, true )`,
 			e.Registry.DbSID, e.DbSID, name, dbVal, propType)
 	}
@@ -1018,7 +1018,7 @@ var OrderedSpecProps = []*Attribute{
 				isAbs := false
 
 				if info != nil {
-					if info.DoCompact() {
+					if info.DoDocView() {
 						// remove GET's base path
 						path = path[len(info.Root):]
 						if strings.HasPrefix(path, "/") {
@@ -1034,7 +1034,7 @@ var OrderedSpecProps = []*Attribute{
 					details := info != nil && (info.ShowDetails ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 
-					if (info != nil && info.DoCompact() && !isAbs) ||
+					if (info != nil && info.DoDocView() && !isAbs) ||
 						e.GetResourceModel().GetHasDocument() == false {
 						details = false
 					}
@@ -1068,7 +1068,7 @@ var OrderedSpecProps = []*Attribute{
 
 					if e.Type == ENTITY_RESOURCE || e.Type == ENTITY_VERSION {
 						meta := info != nil && (info.ShowDetails ||
-						info.DoCompact() ||
+						info.DoDocView() ||
 						info.ResourceUID == "" || len(info.Parts) == 5)
 
 						if e.GetResourceModel().GetHasDocument() == false {
@@ -1478,11 +1478,11 @@ var OrderedSpecProps = []*Attribute{
 					inlineMeta := info.ShouldInline(e.Abstract +
 						string(DB_IN) + "meta")
 
-					if !info.DoCompact() || !inlineMeta {
+					if !info.DoDocView() || !inlineMeta {
 						base = info.BaseURL
 					}
 
-					if info.DoCompact() && inlineMeta {
+					if info.DoDocView() && inlineMeta {
 						// remove GET's base path
 						path = path[len(info.Root):]
 						if strings.HasPrefix(path, "/") {
@@ -1570,7 +1570,7 @@ var OrderedSpecProps = []*Attribute{
 						isAbsURL = true
 					}
 
-					if !info.DoCompact() {
+					if !info.DoDocView() {
 						isAbsURL = true
 					}
 
@@ -1585,7 +1585,7 @@ var OrderedSpecProps = []*Attribute{
 					if isAbsURL {
 						result = info.BaseURL
 					} else {
-						if info.DoCompact() {
+						if info.DoDocView() {
 							// remove GET's base path
 							path = path[len(info.Root):]
 							if strings.HasPrefix(path, "/") {

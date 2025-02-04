@@ -22,7 +22,7 @@ func TestExportBasic(t *testing.T) {
 	code, fullBody := xGET(t, "export")
 	xCheckEqual(t, "", code, 200)
 
-	code, manualBody := xGET(t, "?compact&inline=*,capabilities,model")
+	code, manualBody := xGET(t, "?doc&inline=*,capabilities,model")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -38,7 +38,7 @@ func TestExportBasic(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [
-      "compact",
+      "doc",
       "epoch",
       "filter",
       "inline",
@@ -421,7 +421,7 @@ func TestExportBasic(t *testing.T) {
 	// Play with ?export vanilla
 	code, fullBody = xGET(t, "export?inline=*")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?compact&inline=*")
+	code, manualBody = xGET(t, "?doc&inline=*")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -516,10 +516,10 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	// Play with ?compact inline just capabilities
+	// Play with ?doc inline just capabilities
 	code, fullBody = xGET(t, "export?inline=capabilities")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?compact&inline=capabilities")
+	code, manualBody = xGET(t, "?doc&inline=capabilities")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -535,7 +535,7 @@ func TestExportBasic(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [
-      "compact",
+      "doc",
       "epoch",
       "filter",
       "inline",
@@ -567,10 +567,10 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	// Play with ?compact inline just model
+	// Play with ?doc inline just model
 	code, fullBody = xGET(t, "export?inline=model")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?compact&inline=model")
+	code, manualBody = xGET(t, "?doc&inline=model")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -860,8 +860,8 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	// Play with ?compact not at root
-	xHTTP(t, reg, "GET", "/dirs?compact&inline=*", ``, 200, `{
+	// Play with ?doc not at root
+	xHTTP(t, reg, "GET", "/dirs?doc&inline=*", ``, 200, `{
   "d1": {
     "dirid": "d1",
     "self": "/d1",
@@ -940,7 +940,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1?doc&inline=*", ``, 200, `{
   "dirid": "d1",
   "self": "/",
   "xid": "/dirs/d1",
@@ -1017,7 +1017,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files?doc&inline=*", ``, 200, `{
   "f1": {
     "fileid": "f1",
     "self": "/f1",
@@ -1083,7 +1083,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?doc&inline=*", ``, 200, `{
   "fileid": "f1",
   "self": "/",
   "xid": "/dirs/d1/files/f1",
@@ -1134,7 +1134,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?doc&inline=*", ``, 200, `{
   "fileid": "f1",
   "self": "/",
   "xid": "/dirs/d1/files/f1/meta",
@@ -1147,7 +1147,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?doc&inline=*", ``, 200, `{
   "fileid": "fx",
   "self": "/",
   "xid": "/dirs/d1/files/fx",
@@ -1162,7 +1162,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?doc&inline=*", ``, 200, `{
   "fileid": "fx",
   "self": "/",
   "xid": "/dirs/d1/files/fx/meta",
@@ -1170,7 +1170,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?doc&inline=*", ``, 200, `{
   "v1": {
     "fileid": "f1",
     "versionid": "v1",
@@ -1201,7 +1201,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?compact&inline=*", ``, 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?doc&inline=*", ``, 200, `{
   "fileid": "f1",
   "versionid": "v1",
   "self": "/",
@@ -1216,11 +1216,11 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions?compact", ``, 400,
-		"'compact' flag not allowed on xref'd Versions\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions?doc", ``, 400,
+		"'doc' flag not allowed on xref'd Versions\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/v1?compact", ``, 400,
-		"'compact' flag not allowed on xref'd Versions\n")
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/v1?doc", ``, 400,
+		"'doc' flag not allowed on xref'd Versions\n")
 
 	// Just some filtering too for fun
 
@@ -1229,7 +1229,7 @@ func TestExportBasic(t *testing.T) {
 
 	// Notice "meta" now appears after "versions" and
 	// defaultversionurl is absolute
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline&"+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?doc&inline&"+
 		"filter=versions.versionid=v1", "", 200, `{
   "fileid": "f1",
   "self": "/",
@@ -1268,7 +1268,7 @@ func TestExportBasic(t *testing.T) {
 `)
 
 	// defaultversionurl is relative this time
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact&inline&"+
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?doc&inline&"+
 		"filter=versions.versionid=v2", "", 200, `{
   "fileid": "f1",
   "self": "/",
@@ -1310,7 +1310,7 @@ func TestExportBasic(t *testing.T) {
 	// check full output + filtering
 	code, fullBody = xGET(t, "export?filter=dirs.files.versions.versionid=v2&inline=*")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?compact&inline=*&filter=dirs.files.versions.versionid=v2")
+	code, manualBody = xGET(t, "?doc&inline=*&filter=dirs.files.versions.versionid=v2")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -1396,14 +1396,14 @@ func TestExportBasic(t *testing.T) {
 
 	code, fullBody = xGET(t, "export?filter=dirs.files.versions.versionid=vx&inline=*")
 	xCheckEqual(t, "", code, 404)
-	code, manualBody = xGET(t, "?compact&inline=*&filter=dirs.files.versions.versionid=vx")
+	code, manualBody = xGET(t, "?doc&inline=*&filter=dirs.files.versions.versionid=vx")
 	xCheckEqual(t, "", code, 404)
 	xCheckEqual(t, "", fullBody, manualBody)
 	xCheckEqual(t, "", fullBody, "Not found\n")
 
 	code, fullBody = xGET(t, "export?filter=dirs.files.versions.versionid=v2,dirs.files.fileid=fx&inline=*")
 	xCheckEqual(t, "", code, 200)
-	code, manualBody = xGET(t, "?compact&inline=*&filter=dirs.files.versions.versionid=v2,dirs.files.fileid=fx")
+	code, manualBody = xGET(t, "?doc&inline=*&filter=dirs.files.versions.versionid=v2,dirs.files.fileid=fx")
 	xCheckEqual(t, "", code, 200)
 	xCheckEqual(t, "", fullBody, manualBody)
 
@@ -1452,7 +1452,7 @@ func TestExportBasic(t *testing.T) {
 	// Make sure that we only move "meta" after "versions" if we actually
 	// inline "versions", even if there are filters
 	xHTTP(t, reg, "GET",
-		"/dirs/d1/files?compact&inline=meta&filter=versions.versionid=v2",
+		"/dirs/d1/files?doc&inline=meta&filter=versions.versionid=v2",
 		"", 200, `{
   "f1": {
     "fileid": "f1",
@@ -1490,10 +1490,10 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	// Make sure that ?compact doesn't turn on ?inline by mistake.
-	// At one point ?export (?compact) implied ?inline=*
+	// Make sure that ?doc doesn't turn on ?inline by mistake.
+	// At one point ?export (?doc) implied ?inline=*
 
-	xHTTP(t, reg, "GET", "?compact", ``, 200,
+	xHTTP(t, reg, "GET", "?doc", ``, 200,
 		`{
   "specversion": "0.5",
   "registryid": "TestExportBasic",
@@ -1508,7 +1508,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs?doc", ``, 200,
 		`{
   "d1": {
     "dirid": "d1",
@@ -1524,7 +1524,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1?doc", ``, 200,
 		`{
   "dirid": "d1",
   "self": "/",
@@ -1538,7 +1538,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files?doc", ``, 200,
 		`{
   "f1": {
     "fileid": "f1",
@@ -1559,7 +1559,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1?doc", ``, 200,
 		`{
   "fileid": "f1",
   "self": "/",
@@ -1571,7 +1571,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?doc", ``, 200,
 		`{
   "fileid": "f1",
   "self": "/",
@@ -1585,7 +1585,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?doc", ``, 200,
 		`{
   "v1": {
     "fileid": "f1",
@@ -1611,7 +1611,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1?doc", ``, 200,
 		`{
   "fileid": "f1",
   "versionid": "v1",
@@ -1624,7 +1624,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?doc", ``, 200,
 		`{
   "fileid": "fx",
   "self": "/",
@@ -1634,7 +1634,7 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?compact", ``, 200,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/meta?doc", ``, 200,
 		`{
   "fileid": "fx",
   "self": "/",
@@ -1643,37 +1643,37 @@ func TestExportBasic(t *testing.T) {
 }
 `)
 
-	// Test some error cases. Make sure ?compact doesn't change our
+	// Test some error cases. Make sure ?doc doesn't change our
 	// error checking logic
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1/foo?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/v1/foo?doc", ``, 404,
 		"URL is too long\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/v1/foo?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx/versions/v1/foo?doc", ``, 404,
 		"URL is too long\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/vx?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/vx?doc", ``, 404,
 		"Not found\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fz/versions?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fz/versions?doc", ``, 404,
 		"Not found\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fz?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fz?doc", ``, 404,
 		"Not found\n")
 
-	xHTTP(t, reg, "GET", "/dirs/dx/files?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/dx/files?doc", ``, 404,
 		"Not found\n")
 
-	xHTTP(t, reg, "GET", "/dirs/d1/filesx?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/d1/filesx?doc", ``, 404,
 		"Unknown Resource type: filesx\n")
 
-	xHTTP(t, reg, "GET", "/dirs/dx?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/dx?doc", ``, 404,
 		"Not found\n")
 
-	xHTTP(t, reg, "GET", "/dirsx?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirsx?doc", ``, 404,
 		"Unknown Group type: dirsx\n")
 
-	xHTTP(t, reg, "GET", "/dirs/dx/files/fz/versions/vx?compact", ``, 404,
+	xHTTP(t, reg, "GET", "/dirs/dx/files/fz/versions/vx?doc", ``, 404,
 		"Not found\n")
 
 }
@@ -1687,7 +1687,7 @@ func TestExportURLs(t *testing.T) {
 	_, err = gm.AddResourceModelSimple("schemas", "schema")
 	xNoErr(t, err)
 
-	xHTTP(t, reg, "GET", "/?compact", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -1701,7 +1701,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -1718,7 +1718,7 @@ func TestExportURLs(t *testing.T) {
 
 	xHTTP(t, reg, "PUT", "/dirs/d1", "", 201, `*`)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -1747,7 +1747,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs?compact&inline=files", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs?doc&inline=files", "", 200, `{
   "d1": {
     "dirid": "d1",
     "self": "/d1",
@@ -1765,7 +1765,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs.files", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs.files", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -1795,7 +1795,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs?compact", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs?doc", "", 200, `{
   "d1": {
     "dirid": "d1",
     "self": "/d1",
@@ -1814,7 +1814,7 @@ func TestExportURLs(t *testing.T) {
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1", "", 201, `*`)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs.files", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs.files", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -1854,7 +1854,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs.files.meta", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs.files.meta", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -1905,7 +1905,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs.files.versions", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs.files.versions", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -1957,7 +1957,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs.files.versions,dirs.files.meta", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs.files.versions,dirs.files.meta", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -2020,7 +2020,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=versions,meta", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files?doc&inline=versions,meta", "", 200, `{
   "f1": {
     "fileid": "f1",
     "self": "/f1",
@@ -2056,7 +2056,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=meta", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files?doc&inline=meta", "", 200, `{
   "f1": {
     "fileid": "f1",
     "self": "/f1",
@@ -2080,7 +2080,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files?compact&inline=versions", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files?doc&inline=versions", "", 200, `{
   "f1": {
     "fileid": "f1",
     "self": "/f1",
@@ -2105,7 +2105,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs.files.meta", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs.files.meta", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -2156,7 +2156,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/?compact&inline=dirs.files.versions", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=dirs.files.versions", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -2208,7 +2208,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?compact", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta?doc", "", 200, `{
   "fileid": "f1",
   "self": "/",
   "xid": "/dirs/d1/files/f1/meta",
@@ -2221,7 +2221,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?compact", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions?doc", "", 200, `{
   "1": {
     "fileid": "f1",
     "versionid": "1",
@@ -2235,7 +2235,7 @@ func TestExportURLs(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/1?compact", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/versions/1?doc", "", 200, `{
   "fileid": "f1",
   "versionid": "1",
   "self": "/",
@@ -2250,7 +2250,7 @@ func TestExportURLs(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
 		`{"xref":"/dirs/d1/files/f1"}`, 201, `*`)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?compact&inline=*", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files/fx?doc&inline=*", "", 200, `{
   "fileid": "fx",
   "self": "/",
   "xid": "/dirs/d1/files/fx",
@@ -2267,7 +2267,7 @@ func TestExportURLs(t *testing.T) {
 
 	// One file GET of everything
 
-	xHTTP(t, reg, "GET", "/?compact&inline=*", "", 200, `{
+	xHTTP(t, reg, "GET", "/?doc&inline=*", "", 200, `{
   "specversion": "0.5",
   "registryid": "TestExportURLs",
   "self": "/",
@@ -2353,7 +2353,7 @@ func TestExportNoDoc(t *testing.T) {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	gm.AddResourceModel("files", "file", 0, true, true, false)
 
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1?compact", "", 201, `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1/versions/v1?doc", "", 201, `{
   "fileid": "f1",
   "versionid": "v1",
   "self": "/",
@@ -2366,7 +2366,7 @@ func TestExportNoDoc(t *testing.T) {
 `)
 
 	// Make sure there's no $details
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?compact&inline=meta", "", 200, `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?doc&inline=meta", "", 200, `{
   "fileid": "f1",
   "self": "/",
   "xid": "/dirs/d1/files/f1",
@@ -2389,7 +2389,7 @@ func TestExportNoDoc(t *testing.T) {
 `)
 
 	// No $default
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?compact&inline", "", 200, `{
+	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1?doc&inline", "", 200, `{
   "fileid": "f1",
   "self": "/",
   "xid": "/dirs/d1/files/f1",
