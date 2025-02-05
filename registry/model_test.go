@@ -121,60 +121,60 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"type - integer", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: INTEGER}}}, ``},
 
-		{"err - type - relation - missing target", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION}}},
-			`"model.x" must have a "target" value since "type" is "relation"`},
+		{"err - type - xid - missing target", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID}}},
+			`"model.x" must have a "target" value since "type" is "xid"`},
 
-		{"err - type - relation - extra target", Model{
+		{"err - type - xid - extra target", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: STRING, Target: "/"}}},
-			`"model.x" must not have a "target" value since "type" is not "relation"`},
-		{"err - type - relation - leading chars", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+			`"model.x" must not have a "target" value since "type" is not "xid"`},
+		{"err - type - xid - leading chars", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "xx/"}}},
 			`"model.x" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`},
-		{"err - type - relation - extra / at end", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"err - type - xid - extra / at end", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/xx/"}}},
 			`"model.x" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`},
-		{"err - type - relation - spaces", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"err - type - xid - spaces", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/  xx"}}},
 			`"model.x" has an unknown Group type: "  xx"`},
-		{"err - type - relation - bad group", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"err - type - xid - bad group", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/badg"}},
 			Groups: groups},
 			`"model.x" has an unknown Group type: "badg"`,
 		},
-		{"err - type - relation - bad resource", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"err - type - xid - bad resource", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/dirs/badr"}},
 			Groups: groups},
 			`"model.x" has an unknown Resource type: "badr"`,
 		},
-		{"type - relation - group", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"type - xid - group", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/dirs"}}, Groups: groups}, ``,
 		},
-		{"type - relation - res", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"type - xid - res", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/dirs/files"}}, Groups: groups}, ``,
 		},
-		{"type - relation - versions", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"type - xid - versions", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/dirs/files/versions"}}, Groups: groups}, ``,
 		},
-		{"type - relation - both", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"type - xid - both", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/dirs/files[/versions]"}}, Groups: groups}, ``,
 		},
 
-		{"type - relation - reg - ''", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+		{"type - xid - reg - ''", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: ""}}, Groups: groups},
-			`"model.x" must have a "target" value since "type" is "relation"`},
-		{"type - relation - reg - /", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: RELATION,
+			`"model.x" must have a "target" value since "type" is "xid"`},
+		{"type - xid - reg - /", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/"}}, Groups: groups},
 			`"model.x" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`,
 		},

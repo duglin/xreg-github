@@ -376,8 +376,8 @@ func (m *Model) AddAttrArray(name string, item *Item) (*Attribute, error) {
 	return m.AddAttribute(&Attribute{Name: name, Type: ARRAY, Item: item})
 }
 
-func (m *Model) AddAttrRelation(name string, tgt string) (*Attribute, error) {
-	return m.AddAttribute(&Attribute{Name: name, Type: RELATION, Target: tgt})
+func (m *Model) AddAttrXID(name string, tgt string) (*Attribute, error) {
+	return m.AddAttribute(&Attribute{Name: name, Type: XID, Target: tgt})
 }
 
 func (m *Model) AddAttribute(attr *Attribute) (*Attribute, error) {
@@ -1409,15 +1409,15 @@ func KindIsScalar(k reflect.Kind) bool {
 
 func IsScalar(daType string) bool {
 	return daType == BOOLEAN || daType == DECIMAL || daType == INTEGER ||
-		daType == RELATION ||
 		daType == STRING || daType == TIMESTAMP || daType == UINTEGER ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
-		daType == URL
+		daType == URL ||
+		daType == XID
 }
 
 // Is some string variant
 func IsString(daType string) bool {
-	return daType == STRING || daType == TIMESTAMP || daType == RELATION ||
+	return daType == STRING || daType == TIMESTAMP || daType == XID ||
 		daType == URI || daType == URI_REFERENCE || daType == URI_TEMPLATE ||
 		daType == URL
 }
@@ -2217,10 +2217,10 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 				attr.Type)
 		}
 
-		if attr.Type == RELATION {
+		if attr.Type == XID {
 			if attr.Target == "" {
 				return fmt.Errorf("%q must have a \"target\" value "+
-					"since \"type\" is \"relation\"", path.UI())
+					"since \"type\" is \"xid\"", path.UI())
 			}
 			target := strings.TrimSpace(attr.Target)
 			parts := targetRE.FindStringSubmatch(target)
@@ -2244,9 +2244,9 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			}
 		}
 
-		if attr.Target != "" && attr.Type != RELATION {
+		if attr.Target != "" && attr.Type != XID {
 			return fmt.Errorf("%q must not have a \"target\" value "+
-				"since \"type\" is not \"relation\"", path.UI())
+				"since \"type\" is not \"xid\"", path.UI())
 		}
 
 		// Is it ok for strict=true and enum=[] ? Require no value???
@@ -2416,7 +2416,7 @@ var DefinedTypes = map[string]bool{
 	ARRAY:     true,
 	MAP:       true,
 	OBJECT:    true,
-	RELATION:  true,
+	XID:       true,
 	STRING:    true,
 	TIMESTAMP: true,
 	URI:       true, URI_REFERENCE: true, URI_TEMPLATE: true, URL: true}

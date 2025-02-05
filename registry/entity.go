@@ -2611,13 +2611,13 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 		if i < 0 {
 			return fmt.Errorf("Attribute %q must be a uinteger", path.UI())
 		}
-	case RELATION:
+	case XID:
 		if valKind != reflect.String {
-			return fmt.Errorf("Attribute %q must be a relation", path.UI())
+			return fmt.Errorf("Attribute %q must be an xid", path.UI())
 		}
 		str := val.(string)
 
-		err := e.MatchRelation(str, attr.Target)
+		err := e.MatchXID(str, attr.Target)
 		if err != nil {
 			return fmt.Errorf("Attribute %q %s", path.UI(), err.Error())
 		}
@@ -2726,9 +2726,9 @@ func PrepUpdateEntity(e *Entity) error {
 }
 
 // If no match then return an error saying why
-func (e *Entity) MatchRelation(str string, relation string) error {
+func (e *Entity) MatchXID(str string, xid string) error {
 	// 0=all  1=GROUPS  2=RESOURCES  3=versions|""  4=[/versions]|""
-	targetParts := targetRE.FindStringSubmatch(relation)
+	targetParts := targetRE.FindStringSubmatch(xid)
 
 	if len(str) == 0 {
 		return fmt.Errorf("must be an xid, not empty")
@@ -2743,14 +2743,14 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 	if len(strParts[0]) > 0 {
 		return fmt.Errorf("must be an xid, and start with /")
 	}
-	if relation == "/" {
+	if xid == "/" {
 		if str != "/" {
-			return fmt.Errorf("must match %q target", relation)
+			return fmt.Errorf("must match %q target", xid)
 		}
 		return nil
 	}
 	if targetParts[1] != strParts[1] { // works for "" too
-		return fmt.Errorf("must match %q target", relation)
+		return fmt.Errorf("must match %q target", xid)
 	}
 
 	gm := e.Registry.Model.Groups[targetParts[1]]
@@ -2759,10 +2759,10 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 	}
 	if len(strParts) < 3 || len(strParts[2]) == 0 {
 		return fmt.Errorf("must match %q target, missing \"%sid\"",
-			relation, gm.Singular)
+			xid, gm.Singular)
 	}
 	if err := IsValidID(strParts[2]); err != nil {
-		return fmt.Errorf("must match %q target: %s", relation, err)
+		return fmt.Errorf("must match %q target: %s", xid, err)
 	}
 
 	if targetParts[2] == "" { // /GROUPS
@@ -2770,18 +2770,18 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 			return nil
 		}
 		return fmt.Errorf("must match %q target, extra stuff after %q",
-			relation, strParts[2])
+			xid, strParts[2])
 	}
 
 	// targetParts has RESOURCES
 	if len(strParts) < 4 { //    /GROUPS/gID/RESOURCES
 		return fmt.Errorf("must match %q target, missing %q",
-			relation, targetParts[2])
+			xid, targetParts[2])
 	}
 
 	if targetParts[2] != strParts[3] {
 		return fmt.Errorf("must match %q target, missing %q",
-			relation, targetParts[2])
+			xid, targetParts[2])
 	}
 
 	rm := gm.Resources[targetParts[2]]
@@ -2791,10 +2791,10 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 
 	if len(strParts) < 5 || len(strParts[4]) == 0 {
 		return fmt.Errorf("must match %q target, missing \"%sid\"",
-			relation, rm.Singular)
+			xid, rm.Singular)
 	}
 	if err := IsValidID(strParts[4]); err != nil {
-		return fmt.Errorf("must match %q target: %s", relation, err)
+		return fmt.Errorf("must match %q target: %s", xid, err)
 	}
 
 	if targetParts[3] == "" && targetParts[4] == "" {
@@ -2802,7 +2802,7 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 			return nil
 		}
 		return fmt.Errorf("must match %q target, extra stuff after %q",
-			relation, strParts[4])
+			xid, strParts[4])
 
 	}
 
@@ -2814,20 +2814,18 @@ func (e *Entity) MatchRelation(str string, relation string) error {
 	}
 
 	if len(strParts) < 6 || strParts[5] != "versions" {
-		return fmt.Errorf("must match %q target, missing \"versions\"",
-			relation)
+		return fmt.Errorf("must match %q target, missing \"versions\"", xid)
 	}
 
 	if len(strParts) < 7 || len(strParts[6]) == 0 {
-		return fmt.Errorf("must match %q target, missing a \"versionid\"",
-			relation)
+		return fmt.Errorf("must match %q target, missing a \"versionid\"", xid)
 	}
 	if err := IsValidID(strParts[6]); err != nil {
-		return fmt.Errorf("must match %q target: %s", relation, err)
+		return fmt.Errorf("must match %q target: %s", xid, err)
 	}
 
 	if len(strParts) > 7 {
-		return fmt.Errorf("must match %q target, too long", relation)
+		return fmt.Errorf("must match %q target, too long", xid)
 	}
 
 	return nil
