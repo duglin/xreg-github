@@ -87,7 +87,7 @@ func TestExportBasic(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -145,7 +145,7 @@ func TestExportBasic(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -213,7 +213,7 @@ func TestExportBasic(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -276,7 +276,7 @@ func TestExportBasic(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -606,7 +606,7 @@ func TestExportBasic(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -664,7 +664,7 @@ func TestExportBasic(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -732,7 +732,7 @@ func TestExportBasic(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -795,7 +795,7 @@ func TestExportBasic(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },

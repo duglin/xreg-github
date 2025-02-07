@@ -121,9 +121,11 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"type - integer", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: INTEGER}}}, ``},
 
+		/* no longer required
 		{"err - type - xid - missing target", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: XID}}},
 			`"model.x" must have a "target" value since "type" is "xid"`},
+		*/
 
 		{"err - type - xid - extra target", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: STRING, Target: "/"}}},
@@ -169,10 +171,12 @@ func TestModelVerifyRegAttr(t *testing.T) {
 				Target: "/dirs/files[/versions]"}}, Groups: groups}, ``,
 		},
 
+		/* no longer required
 		{"type - xid - reg - ''", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: ""}}, Groups: groups},
 			`"model.x" must have a "target" value since "type" is "xid"`},
+		*/
 		{"type - xid - reg - /", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: XID,
 				Target: "/"}}, Groups: groups},

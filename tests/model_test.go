@@ -34,7 +34,7 @@ func TestNoModel(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -108,7 +108,7 @@ func TestNoModel(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -184,7 +184,7 @@ func TestGroupModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -242,7 +242,7 @@ func TestGroupModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -309,7 +309,7 @@ func TestGroupModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -367,7 +367,7 @@ func TestGroupModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -434,7 +434,7 @@ func TestGroupModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -492,7 +492,7 @@ func TestGroupModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -616,7 +616,7 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -674,7 +674,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -742,7 +742,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -805,7 +805,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -880,7 +880,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -948,7 +948,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1011,7 +1011,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1096,7 +1096,7 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -1154,7 +1154,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -1222,7 +1222,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1285,7 +1285,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1360,7 +1360,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -1427,7 +1427,7 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -1485,7 +1485,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -1553,7 +1553,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1616,7 +1616,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1691,7 +1691,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -1759,7 +1759,7 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -1817,7 +1817,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -1885,7 +1885,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1948,7 +1948,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -2032,7 +2032,7 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -2090,7 +2090,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -2158,7 +2158,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -2221,7 +2221,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -2331,7 +2331,7 @@ func TestResourceModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -2393,7 +2393,7 @@ func TestResourceModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -2461,7 +2461,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -2524,7 +2524,7 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -2638,7 +2638,7 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -2700,7 +2700,7 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -2768,7 +2768,7 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -2831,7 +2831,7 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -2977,7 +2977,7 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -3035,7 +3035,7 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -3103,7 +3103,7 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -3166,7 +3166,7 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -3286,7 +3286,7 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -3344,7 +3344,7 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -3443,7 +3443,7 @@ func TestResourceModelCreate(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -3501,7 +3501,7 @@ func TestResourceModelCreate(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -3596,7 +3596,7 @@ func TestMultModelCreate(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -3654,7 +3654,7 @@ func TestMultModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -3722,7 +3722,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -3785,7 +3785,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -3868,7 +3868,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -3931,7 +3931,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -4006,7 +4006,7 @@ func TestMultModelCreate(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -4074,7 +4074,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -4137,7 +4137,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -4220,7 +4220,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -4283,7 +4283,7 @@ func TestMultModelCreate(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -4419,7 +4419,7 @@ func TestMultModel2Create(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -4477,7 +4477,7 @@ func TestMultModel2Create(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -4545,7 +4545,7 @@ func TestMultModel2Create(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -4608,7 +4608,7 @@ func TestMultModel2Create(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -4683,7 +4683,7 @@ func TestMultModel2Create(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -4751,7 +4751,7 @@ func TestMultModel2Create(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -4814,7 +4814,7 @@ func TestMultModel2Create(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -5121,7 +5121,7 @@ func TestModelLabels(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -5182,7 +5182,7 @@ func TestModelLabels(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -5253,7 +5253,7 @@ func TestModelLabels(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -5316,7 +5316,7 @@ func TestModelLabels(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -5410,7 +5410,7 @@ func TestModelLabels(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -5468,7 +5468,7 @@ func TestModelLabels(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -5536,7 +5536,7 @@ func TestModelLabels(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -5599,7 +5599,7 @@ func TestModelLabels(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -5708,7 +5708,7 @@ func TestModelLabels(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -5769,7 +5769,7 @@ func TestModelLabels(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -5840,7 +5840,7 @@ func TestModelLabels(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -5903,7 +5903,7 @@ func TestModelLabels(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -6174,7 +6174,7 @@ func TestUseSpecAttrs(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -6330,7 +6330,7 @@ func TestUseSpecAttrs(t *testing.T) {
           },
           "xid": {
             "name": "xid",
-            "type": "url",
+            "type": "xid",
             "readonly": true,
             "serverrequired": true
           },
@@ -6504,7 +6504,7 @@ func TestUseSpecAttrs(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },
@@ -6685,7 +6685,7 @@ func TestUseSpecAttrs(t *testing.T) {
               },
               "xid": {
                 "name": "xid",
-                "type": "url",
+                "type": "xid",
                 "readonly": true,
                 "serverrequired": true
               },

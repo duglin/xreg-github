@@ -320,7 +320,7 @@ func TestHTTPModelSchema(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -385,7 +385,7 @@ func TestHTTPModelSchema(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },

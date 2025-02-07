@@ -1091,7 +1091,7 @@ var OrderedSpecProps = []*Attribute{
 	*/
 	{
 		Name:           "xid",
-		Type:           URL,
+		Type:           XID,
 		ReadOnly:       true,
 		ServerRequired: true,
 
@@ -2620,9 +2620,11 @@ func (e *Entity) ValidateScalar(val any, attr *Attribute, path *PropPath) error 
 		}
 		str := val.(string)
 
-		err := e.MatchXID(str, attr.Target)
-		if err != nil {
-			return fmt.Errorf("Attribute %q %s", path.UI(), err.Error())
+		if attr.Target != "" {
+			err := e.MatchXID(str, attr.Target)
+			if err != nil {
+				return fmt.Errorf("Attribute %q %s", path.UI(), err.Error())
+			}
 		}
 	case STRING:
 		if valKind != reflect.String {

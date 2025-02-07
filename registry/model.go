@@ -2218,28 +2218,32 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 		}
 
 		if attr.Type == XID {
+			/* no longer required
 			if attr.Target == "" {
 				return fmt.Errorf("%q must have a \"target\" value "+
 					"since \"type\" is \"xid\"", path.UI())
 			}
-			target := strings.TrimSpace(attr.Target)
-			parts := targetRE.FindStringSubmatch(target)
-			// 0=all  1=GROUPS  2=RESOURCES  3=versions|""  4=[/versions]|""
-			if len(parts) == 0 || parts[0] == "" {
-				return fmt.Errorf("%q \"target\" must be of the form: "+
-					"/GROUPS[/RESOURCES[/versions | \\[/versions\\] ]]",
-					path.UI())
-			}
+			*/
+			if attr.Target != "" {
+				target := strings.TrimSpace(attr.Target)
+				parts := targetRE.FindStringSubmatch(target)
+				// 0=all  1=GROUPS  2=RESOURCES  3=versions|""  4=[/versions]|""
+				if len(parts) == 0 || parts[0] == "" {
+					return fmt.Errorf("%q \"target\" must be of the form: "+
+						"/GROUPS[/RESOURCES[/versions | \\[/versions\\] ]]",
+						path.UI())
+				}
 
-			gm := ld.Model.FindGroupModel(parts[1])
-			if gm == nil {
-				return fmt.Errorf("%q has an unknown Group type: %q",
-					path.UI(), parts[1])
-			}
-			if parts[2] != "" {
-				if rm := gm.Resources[parts[2]]; rm == nil {
-					return fmt.Errorf("%q has an unknown Resource type: %q",
-						path.UI(), parts[2])
+				gm := ld.Model.FindGroupModel(parts[1])
+				if gm == nil {
+					return fmt.Errorf("%q has an unknown Group type: %q",
+						path.UI(), parts[1])
+				}
+				if parts[2] != "" {
+					if rm := gm.Resources[parts[2]]; rm == nil {
+						return fmt.Errorf("%q has an unknown Resource type: %q",
+							path.UI(), parts[2])
+					}
 				}
 			}
 		}

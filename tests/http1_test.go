@@ -84,7 +84,7 @@ func TestHTTPModel(t *testing.T) {
       },
       "xid": {
         "name": "xid",
-        "type": "url",
+        "type": "xid",
         "readonly": true,
         "serverrequired": true
       },
@@ -161,7 +161,7 @@ func TestHTTPModel(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -237,7 +237,7 @@ func TestHTTPModel(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -325,7 +325,7 @@ func TestHTTPModel(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -383,7 +383,7 @@ func TestHTTPModel(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -451,7 +451,7 @@ func TestHTTPModel(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -514,7 +514,7 @@ func TestHTTPModel(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -625,7 +625,7 @@ func TestHTTPModel(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -683,7 +683,7 @@ func TestHTTPModel(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -751,7 +751,7 @@ func TestHTTPModel(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -814,7 +814,7 @@ func TestHTTPModel(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -928,7 +928,7 @@ func TestHTTPModel(t *testing.T) {
     },
     "xid": {
       "name": "xid",
-      "type": "url",
+      "type": "xid",
       "readonly": true,
       "serverrequired": true
     },
@@ -990,7 +990,7 @@ func TestHTTPModel(t *testing.T) {
         },
         "xid": {
           "name": "xid",
-          "type": "url",
+          "type": "xid",
           "readonly": true,
           "serverrequired": true
         },
@@ -1058,7 +1058,7 @@ func TestHTTPModel(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1121,7 +1121,7 @@ func TestHTTPModel(t *testing.T) {
             },
             "xid": {
               "name": "xid",
-              "type": "url",
+              "type": "xid",
               "readonly": true,
               "serverrequired": true
             },
@@ -1667,7 +1667,7 @@ func TestHTTPRegistry(t *testing.T) {
 }`,
 		Code:       400,
 		ResHeaders: []string{"Content-Type:text/plain; charset=utf-8"},
-		ResBody: `Attribute "xid" must be a url
+		ResBody: `Attribute "xid" must be an xid
 `,
 	})
 

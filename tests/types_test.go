@@ -82,8 +82,10 @@ func TestBasicTypes(t *testing.T) {
 	rm.AddAttr("filestring1", registry.STRING)
 	rm.AddAttr("filestring2", registry.STRING)
 
+	/* no longer required
 	_, err = reg.Model.AddAttrXID("regptr_group", "")
 	xCheckErr(t, err, `"model.regptr_group" must have a "target" value since "type" is "xid"`)
+	*/
 	_, err = reg.Model.AddAttrXID("regptr_group", "qwe")
 	xCheckErr(t, err, `"model.regptr_group" "target" must be of the form: /GROUPS[/RESOURCES[/versions | \[/versions\] ]]`)
 	_, err = reg.Model.AddAttrXID("regptr_group", "qwe/")
