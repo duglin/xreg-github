@@ -38,6 +38,8 @@ const URL = "url"
 const IN_CHAR = '.'
 const IN_STR = string(IN_CHAR)
 
+const DOCVIEW_BASE = "#"
+
 // Entity "add" options
 type AddType int
 

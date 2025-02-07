@@ -1024,6 +1024,7 @@ var OrderedSpecProps = []*Attribute{
 						if strings.HasPrefix(path, "/") {
 							path = path[1:]
 						}
+						base = DOCVIEW_BASE
 					} else {
 						isAbs = true
 						base = info.BaseURL
@@ -1480,9 +1481,9 @@ var OrderedSpecProps = []*Attribute{
 
 					if !info.DoDocView() || !inlineMeta {
 						base = info.BaseURL
-					}
+					} else {
+						base = DOCVIEW_BASE
 
-					if info.DoDocView() && inlineMeta {
 						// remove GET's base path
 						path = path[len(info.Root):]
 						if strings.HasPrefix(path, "/") {
@@ -1586,6 +1587,8 @@ var OrderedSpecProps = []*Attribute{
 						result = info.BaseURL
 					} else {
 						if info.DoDocView() {
+							result = DOCVIEW_BASE
+
 							// remove GET's base path
 							path = path[len(info.Root):]
 							if strings.HasPrefix(path, "/") {

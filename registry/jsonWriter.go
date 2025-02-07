@@ -109,7 +109,7 @@ func (jw *JsonWriter) WriteCollectionHeader(extra string) (string, error) {
 		if strings.HasPrefix(path, "/") {
 			path = path[1:]
 		}
-		baseURL = "/" + path
+		baseURL = "#/" + path
 	} else {
 		baseURL = jw.info.BaseURL + "/" + path.Dir(jw.Entity.Path)
 	}
@@ -508,6 +508,8 @@ func (jw *JsonWriter) WriteEmptyCollection(hasXref bool, extra string, eType int
 	if !jw.info.DoDocView() || !inlineCollection {
 		baseURL = jw.info.BaseURL
 	} else {
+		baseURL = DOCVIEW_BASE
+
 		// remove GET's base path
 		path = path[len(jw.info.Root):]
 		if strings.HasPrefix(path, "/") {

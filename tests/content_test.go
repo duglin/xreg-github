@@ -145,7 +145,7 @@ func TestResourceContents(t *testing.T) {
 	xHTTP(t, reg, "GET", "dirs/d1/files/f1$details?doc&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
-  "self": "/",
+  "self": "#/",
   "xid": "/dirs/d1/files/f1",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
@@ -174,7 +174,7 @@ func TestResourceContents(t *testing.T) {
 	xHTTP(t, reg, "PATCH", "dirs/d1/files/f1$details?doc&inline=file",
 		`{"contenttype":null, "description":"hi"}`, 200, `{
   "fileid": "f1",
-  "self": "/",
+  "self": "#/",
   "xid": "/dirs/d1/files/f1",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
