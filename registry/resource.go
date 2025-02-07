@@ -395,7 +395,7 @@ func (r *Resource) SetDefault(newDefault *Version) error {
 // we're removing the 'xref' attr. Other cases, the http layer would have
 // already create the Resource and default version for us.
 func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersion bool, processVersionInfo bool) (*Meta, bool, error) {
-	log.VPrintf(3, ">Enter: UpsertMeta(%s,%v)", r.UID, addType)
+	log.VPrintf(3, ">Enter: UpsertMeta(%s,%v,%v,%v)", r.UID, addType, createVersion, processVersionInfo)
 	defer log.VPrintf(3, "<Exit: UpsertMeta")
 
 	if err := CheckAttrs(obj); err != nil {
@@ -445,7 +445,26 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 	meta.SetNewObject(obj)
 	meta.Entity.EnsureNewObject()
 
+	// Get new values for easy reference
+	newStickyAny, newStickyok := meta.NewObject["defaultversionsticky"]
+	newVerIDAny, newVerIDok := meta.NewObject["defaultversionid"]
+
 	if meta.NewObject != nil && addType == ADD_PATCH {
+		// Do some spec checks and tweaks
+		if newVerIDok && !newStickyok {
+			// Just defaultversionid is present
+			if !IsNil(newVerIDAny) {
+				// defaultversionid=vID
+				meta.NewObject["defaultversionsticky"] = true
+			} else {
+				// defaultversionid = null
+				meta.NewObject["defaultversionsticky"] = false
+			}
+		}
+		if !newVerIDok && newStickyok && IsNil(newStickyAny) {
+			meta.NewObject["defaultversionid"] = nil
+		}
+
 		// Patching, so copy missing existing attributes.
 		xr, ok := meta.NewObject["xref"]
 		xrefSet := (ok && !IsNil(xr) && xr != "")
@@ -576,10 +595,16 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 					return nil, false, err
 				}
 				if len(vs) == 0 {
-					_, _, err = r.UpsertVersionWithObject("", nil, ADD_ADD)
+					// UpsertVersion might twiddle defVer, so save/reset it.
+					// TODO I don't like this. I'd prefer if we add a flag
+					// to the call to UpsertV to tell it NOT to muck with the
+					// defaultversion stuff
+					defVer := meta.Get("defaultversionid")
+					_, _, err := r.UpsertVersionWithObject("", nil, ADD_ADD)
 					if err != nil {
 						return nil, false, err
 					}
+					meta.JustSet("defaultversionid", defVer)
 				}
 			}
 
@@ -664,23 +689,40 @@ func (r *Resource) ProcessVersionInfo() error {
 	m, err := r.FindMeta(false)
 	Must(err)
 
-	// Process "defaultversion" attributes. Order of processing:
-	// - defaultversionsticky, if there
-	// - defaultversionid, if defaultversionsticky is set
+	// Process "defaultversion" attributes
 
 	stickyAny := m.Get("defaultversionsticky")
 	if !IsNil(stickyAny) && stickyAny != true && stickyAny != false {
-		return fmt.Errorf("'defaultversionsticky' must be a " +
+		return fmt.Errorf("Attribute \"defaultversionsticky\" must be a " +
 			"boolean or null")
 	}
 	sticky := (stickyAny == true)
-	defaultVersionID := m.GetAsString("defaultversionid")
 
-	if !sticky || IsNil(defaultVersionID) || defaultVersionID == "" {
+	defaultVersionID := ""
+	verIDAny := m.Get("defaultversionid")
+	if verIDAny == nil {
 		v, err := r.GetNewest()
 		Must(err)
 		if v != nil {
 			defaultVersionID = v.UID
+		}
+	} else {
+		if tmp := reflect.ValueOf(verIDAny).Kind(); tmp != reflect.String {
+			return fmt.Errorf("Attribute \"defaultversionid\" must be a string")
+		}
+		defaultVersionID, _ = verIDAny.(string)
+		if defaultVersionID == "" {
+			return fmt.Errorf("Attribute \"defaultversionid\" must not be " +
+				"an empty string")
+		}
+
+		if !sticky {
+			v, err := r.GetNewest()
+			Must(err)
+			if v != nil && v.UID != defaultVersionID {
+				return fmt.Errorf("Attribute \"defaultversionid\" must be %q "+
+					"since \"defaultversionsticky\" is \"false\"", v.UID)
+			}
 		}
 	}
 
@@ -689,7 +731,7 @@ func (r *Resource) ProcessVersionInfo() error {
 		// creating a new Resource but no versions are there yet
 		v, err := r.FindVersion(defaultVersionID, false)
 		Must(err)
-		if defaultVersionID != "" && IsNil(v) {
+		if IsNil(v) {
 			return fmt.Errorf("Version %q not found", defaultVersionID)
 		}
 
@@ -918,6 +960,12 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		if err = r.EnsureLatest(); err != nil {
 			return nil, false, err
 		}
+	}
+
+	// If we created a new Version then make sure the Resource's (meta's) epoch
+	// and TS are updated
+	if isNew {
+		r.Touch()
 	}
 
 	if err = meta.ValidateAndSave(); err != nil {

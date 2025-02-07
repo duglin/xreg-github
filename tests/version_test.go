@@ -290,7 +290,7 @@ func TestDefaultVersion(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 2,
+    "epoch": 3,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -321,7 +321,7 @@ func TestDefaultVersion(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 3,
+    "epoch": 4,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:03Z",
 
@@ -353,7 +353,7 @@ func TestDefaultVersion(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 4,
+    "epoch": 5,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:01Z",
 
@@ -384,7 +384,7 @@ func TestDefaultVersion(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 5,
+    "epoch": 6,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:03Z",
 
@@ -417,7 +417,7 @@ func TestDefaultVersion(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 6,
+    "epoch": 7,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -448,7 +448,7 @@ func TestDefaultVersion(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 7,
+    "epoch": 8,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:03Z",
 
@@ -477,7 +477,7 @@ func TestDefaultVersion(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 8,
+    "epoch": 9,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:03Z",
 

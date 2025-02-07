@@ -130,3 +130,10 @@ TODOs:
 - add support for shortself
 - see if we can create a $RESOURCEid SpecProp for Version&Meta level and then
   use "$SINGULRid" for everything including Versions, but not Meta
+- test that we can't set defaultversionsticky when setdefaultversionsticky=false
+- add more tests around defaultversionid/sticky to cover all the variants.
+  - and include xref twiddling
+  - verify TestHTTPDelete epoch values are correct
+  - verify TestHTTPNestedResources epoch values are correct
+  - verify TestMetaCombos epoch values are correct
+  - stuff in TestXrefRevert

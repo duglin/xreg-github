@@ -1025,57 +1025,14 @@ func TestMetaCombos(t *testing.T) {
 `,
 	})
 
-	// Update/PUT - stick it via 'defverid' - should do nothing, not sticky,
+	// Update/PUT - update it via 'defverid' - should err since not sticky
 	// except bump epoch
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:     "/dirs/d1/files/f1/meta",
 		Method:  "PUT",
 		ReqBody: `{"defaultversionid":"v1.0"}`,
-		Code:    200,
-		ResBody: `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 7,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
-}
-`,
-	})
-
-	// meta's epoch changed but the defver didn't
-	xCheckHTTP(t, reg, &HTTPTest{
-		URL:    "/dirs/d1/files/f1?inline=meta",
-		Method: "GET",
-		Code:   200,
-		ResBody: `{
-  "fileid": "f1",
-  "versionid": "1",
-  "self": "http://localhost:8181/dirs/d1/files/f1",
-  "xid": "/dirs/d1/files/f1",
-  "epoch": 1,
-  "isdefault": true,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
-
-  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "meta": {
-    "fileid": "f1",
-    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-    "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 7,
-    "createdat": "2024-01-01T12:00:03Z",
-    "modifiedat": "2024-01-01T12:00:02Z",
-
-    "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
-  },
-  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
-  "versionscount": 3
-}
+		Code:    400,
+		ResBody: `Attribute "defaultversionid" must be "1" since "defaultversionsticky" is "false"
 `,
 	})
 
@@ -1089,7 +1046,7 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 8,
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -1120,7 +1077,7 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 8,
+    "epoch": 7,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -1134,18 +1091,32 @@ func TestMetaCombos(t *testing.T) {
 `,
 	})
 
-	// Update/PUT - change defverid - no mention of sticky, so unstick it.
+	// Update/PUT - change defverid/unstick - error
+	// Include extension
+	xCheckHTTP(t, reg, &HTTPTest{
+		URL:    "/dirs/d1/files/f1/meta",
+		Method: "PUT",
+		ReqBody: `{
+		  "defaultversionid":"v2.0",
+		  "defaultversionsticky":null,
+		  "foo":"bar"}`,
+		Code: 400,
+		ResBody: `Attribute "defaultversionid" must be "1" since "defaultversionsticky" is "false"
+`,
+	})
+
+	// Update/PUT - unstick
 	// Include extension
 	xCheckHTTP(t, reg, &HTTPTest{
 		URL:     "/dirs/d1/files/f1/meta",
 		Method:  "PUT",
-		ReqBody: `{"defaultversionid":"v2.0", "foo":"bar"}`,
+		ReqBody: `{ "defaultversionsticky":null, "foo":"bar" }`,
 		Code:    200,
 		ResBody: `{
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 9,
+  "epoch": 8,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
@@ -1176,7 +1147,7 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 9,
+    "epoch": 8,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
     "foo": "bar",
@@ -1201,7 +1172,7 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 10,
+  "epoch": 9,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
@@ -1233,7 +1204,7 @@ func TestMetaCombos(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 10,
+    "epoch": 9,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
     "foo": "bar",
@@ -1259,7 +1230,7 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 11,
+  "epoch": 10,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
@@ -1281,7 +1252,7 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 12,
+  "epoch": 11,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "foo": "bar",
@@ -1302,7 +1273,7 @@ func TestMetaCombos(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 13,
+  "epoch": 12,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -1318,7 +1289,7 @@ func TestMetaCombos(t *testing.T) {
 		Method:  "PUT",
 		ReqBody: `{"epoch": 1}`,
 		Code:    400,
-		ResBody: `Attribute "epoch"(1) doesn't match existing value (13)
+		ResBody: `Attribute "epoch"(1) doesn't match existing value (12)
 `,
 	})
 
@@ -1328,7 +1299,7 @@ func TestMetaCombos(t *testing.T) {
 		Method:  "PUT",
 		ReqBody: `{"meta":{"epoch": 1}}`,
 		Code:    400,
-		ResBody: `Attribute "epoch"(1) doesn't match existing value (13)
+		ResBody: `Attribute "epoch"(1) doesn't match existing value (12)
 `,
 	})
 

@@ -5829,6 +5829,23 @@ func TestHTTPNestedResources(t *testing.T) {
 		ReqBody: `{
           "description": "f1.1",
 		  "meta": {
+		    "defaultversionsticky": "hi"
+		  }
+        }`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Attribute "defaultversionsticky" must be a boolean
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT /rID + sticky not bool and wrong vid",
+		URL:        "/dirs/d1/files/f1$details",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "description": "f1.1",
+		  "meta": {
 		    "defaultversionsticky": "hi",
 		    "defaultversionid": "v2"
 		  }
@@ -5851,6 +5868,24 @@ func TestHTTPNestedResources(t *testing.T) {
 		    "defaultversionid": "v3"
 		  }
         }`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Attribute "defaultversionid" must be "1" since "defaultversionsticky" is "false"
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT /rID + sticky null",
+		URL:        "/dirs/d1/files/f1$details",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "description": "f1.2",
+		  "meta": {
+		    "defaultversionsticky": null,
+		    "defaultversionid": "1"
+		  }
+        }`,
 		Code:       200,
 		ResHeaders: []string{},
 		ResBody: `{
@@ -5871,11 +5906,73 @@ func TestHTTPNestedResources(t *testing.T) {
 `,
 	})
 
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT /rID + sticky null",
+		URL:        "/dirs/d1/files/f1$details",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "description": "f1.2",
+		  "meta": {
+		    "defaultversionsticky": null
+		  }
+        }`,
+		Code:       200,
+		ResHeaders: []string{},
+		ResBody: `{
+  "fileid": "f1",
+  "versionid": "1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
+  "xid": "/dirs/d1/files/f1",
+  "epoch": 3,
+  "isdefault": true,
+  "description": "f1.2",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 1
+}
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT /rID + sticky null",
+		URL:        "/dirs/d1/files/f1$details",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "description": "f1.2",
+		  "meta": {
+		    "defaultversionsticky": false
+		  }
+        }`,
+		Code:       200,
+		ResHeaders: []string{},
+		ResBody: `{
+  "fileid": "f1",
+  "versionid": "1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
+  "xid": "/dirs/d1/files/f1",
+  "epoch": 4,
+  "isdefault": true,
+  "description": "f1.2",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 1
+}
+`,
+	})
+
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 2,
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
@@ -5895,6 +5992,23 @@ func TestHTTPNestedResources(t *testing.T) {
 		    "defaultversionid": "v3"
 		  }
         }`,
+		Code:       400,
+		ResHeaders: []string{},
+		ResBody: `Attribute "defaultversionid" must be "1" since "defaultversionsticky" is "false"
+`,
+	})
+
+	xCheckHTTP(t, reg, &HTTPTest{
+		Name:       "PUT /rID + just sticky",
+		URL:        "/dirs/d1/files/f1$details",
+		Method:     "PUT",
+		ReqHeaders: []string{},
+		ReqBody: `{
+          "description": "f1.3",
+		  "meta": {
+		    "defaultversionsticky": true
+		  }
+        }`,
 		Code:       200,
 		ResHeaders: []string{},
 		ResBody: `{
@@ -5902,7 +6016,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "versionid": "1",
   "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
-  "epoch": 3,
+  "epoch": 5,
   "isdefault": true,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:01Z",
@@ -5919,18 +6033,19 @@ func TestHTTPNestedResources(t *testing.T) {
   "fileid": "f1",
   "self": "http://localhost:8181/dirs/d1/files/f1/meta",
   "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 3,
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+  "defaultversionsticky": true
 }
 `)
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + sticky",
-		URL:        "/dirs/d1/files/f1$details",
+		URL:        "/dirs/d1/files/f1$details?inline=meta",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5945,36 +6060,35 @@ func TestHTTPNestedResources(t *testing.T) {
   "versionid": "1",
   "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
-  "epoch": 4,
+  "epoch": 6,
   "isdefault": true,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 6,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 1
 }
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 4,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
-  "defaultversionsticky": true
-}
-`)
-
+	// Epoch is bumped
 	xCheckHTTP(t, reg, &HTTPTest{
-		Name:       "PATCH /rID + new version, sticky",
-		URL:        "/dirs/d1/files/f1$details",
+		Name:       "PATCH /rID + new version",
+		URL:        "/dirs/d1/files/f1$details?inline=meta",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -5989,33 +6103,30 @@ func TestHTTPNestedResources(t *testing.T) {
   "versionid": "1",
   "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
-  "epoch": 5,
+  "epoch": 7,
   "isdefault": true,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 7,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+    "defaultversionid": "1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 2
 }
 `,
 	})
-
-	// Adding a version doesn't bump epoch, yet
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 4,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
-  "defaultversionsticky": true
-}
-`)
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline", ``, 200,
 		`{
@@ -6023,7 +6134,7 @@ func TestHTTPNestedResources(t *testing.T) {
   "versionid": "1",
   "self": "http://localhost:8181/dirs/d1/files/f1$details",
   "xid": "/dirs/d1/files/f1",
-  "epoch": 5,
+  "epoch": 7,
   "isdefault": true,
   "description": "f1.3",
   "createdat": "2024-01-01T12:00:00Z",
@@ -6034,9 +6145,9 @@ func TestHTTPNestedResources(t *testing.T) {
     "fileid": "f1",
     "self": "http://localhost:8181/dirs/d1/files/f1/meta",
     "xid": "/dirs/d1/files/f1/meta",
-    "epoch": 4,
+    "epoch": 7,
     "createdat": "2024-01-01T12:00:00Z",
-    "modifiedat": "2024-01-01T12:00:02Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
@@ -6049,7 +6160,7 @@ func TestHTTPNestedResources(t *testing.T) {
       "versionid": "1",
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
       "xid": "/dirs/d1/files/f1/versions/1",
-      "epoch": 5,
+      "epoch": 7,
       "isdefault": true,
       "description": "f1.3",
       "createdat": "2024-01-01T12:00:00Z",
@@ -6071,7 +6182,7 @@ func TestHTTPNestedResources(t *testing.T) {
 
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + new version, non-sticky",
-		URL:        "/dirs/d1/files/f1$details",
+		URL:        "/dirs/d1/files/f1$details?inline=meta",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6095,28 +6206,26 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:01Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 8,
+    "createdat": "2024-01-01T12:00:02Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "v3",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$details"
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 3
 }
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 5,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "v3",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$details"
-}
-`)
-
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + sticky old ver, add newV",
-		URL:        "/dirs/d1/files/f1$details",
+		URL:        "/dirs/d1/files/f1$details?inline=meta",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6139,33 +6248,31 @@ func TestHTTPNestedResources(t *testing.T) {
   "epoch": 2,
   "isdefault": true,
   "description": "f2.4",
-  "createdat": "2024-01-01T12:00:00Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 9,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "v2",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 4
 }
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 6,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
-  "defaultversionsticky": true
-}
-`)
-
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PUT /rID + defaultversionid=newV",
-		URL:        "/dirs/d1/files/f1$details",
+		URL:        "/dirs/d1/files/f1$details?inline=meta",
 		Method:     "PUT",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6192,29 +6299,27 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:00Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 10,
+    "createdat": "2024-01-01T12:00:01Z",
+    "modifiedat": "2024-01-01T12:00:00Z",
+
+    "defaultversionid": "v5",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 5
 }
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 7,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "v5",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$details",
-  "defaultversionsticky": true
-}
-`)
-
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + defaultversionid=oldV",
-		URL:        "/dirs/d1/files/f1$details",
+		URL:        "/dirs/d1/files/f1$details?inline=meta",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6232,33 +6337,31 @@ func TestHTTPNestedResources(t *testing.T) {
   "epoch": 3,
   "isdefault": true,
   "description": "f2.4",
-  "createdat": "2024-01-01T12:00:00Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 11,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "v2",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 5
 }
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 8,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
-  "defaultversionsticky": true
-}
-`)
-
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + sticky-nochange",
-		URL:        "/dirs/d1/files/f1$details",
+		URL:        "/dirs/d1/files/f1$details?inline=meta",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6276,33 +6379,31 @@ func TestHTTPNestedResources(t *testing.T) {
   "epoch": 4,
   "isdefault": true,
   "description": "f2.4",
-  "createdat": "2024-01-01T12:00:00Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 12,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "v2",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 5
 }
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 9,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
-  "defaultversionsticky": true
-}
-`)
-
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + nodefaultversionsticky",
-		URL:        "/dirs/d1/files/f1$details?nodefaultversionsticky",
+		URL:        "/dirs/d1/files/f1$details?nodefaultversionsticky&inline=meta",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6320,33 +6421,31 @@ func TestHTTPNestedResources(t *testing.T) {
   "epoch": 5,
   "isdefault": true,
   "description": "f2.4",
-  "createdat": "2024-01-01T12:00:00Z",
-  "modifiedat": "2024-01-01T12:00:01Z",
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 13,
+    "createdat": "2024-01-01T12:00:03Z",
+    "modifiedat": "2024-01-01T12:00:02Z",
+
+    "defaultversionid": "v2",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 5
 }
 `,
 	})
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 10,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
-  "defaultversionsticky": true
-}
-`)
-
 	xCheckHTTP(t, reg, &HTTPTest{
 		Name:       "PATCH /rID + nodefaultversionid",
-		URL:        "/dirs/d1/files/f1$details?nodefaultversionid",
+		URL:        "/dirs/d1/files/f1$details?nodefaultversionid&inline=meta",
 		Method:     "PATCH",
 		ReqHeaders: []string{},
 		ReqBody: `{
@@ -6368,25 +6467,23 @@ func TestHTTPNestedResources(t *testing.T) {
   "modifiedat": "2024-01-01T12:00:01Z",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 14,
+    "createdat": "2024-01-01T12:00:02Z",
+    "modifiedat": "2024-01-01T12:00:01Z",
+
+    "defaultversionid": "v2",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+    "defaultversionsticky": true
+  },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 5
 }
 `,
 	})
-
-	xHTTP(t, reg, "GET", "/dirs/d1/files/f1/meta", ``, 200, `{
-  "fileid": "f1",
-  "self": "http://localhost:8181/dirs/d1/files/f1/meta",
-  "xid": "/dirs/d1/files/f1/meta",
-  "epoch": 11,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:02Z",
-
-  "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
-  "defaultversionsticky": true
-}
-`)
 
 }
 

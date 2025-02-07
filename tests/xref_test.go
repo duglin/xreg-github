@@ -1025,30 +1025,19 @@ func TestXrefRevert(t *testing.T) {
 }
 `)
 
-	// defaultversionid is ignored because we're not sticky
+	// defaultversionid is bad because we're not sticky
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
 		`{"xref":null,
-          "defaultversionid": "bb"}`, 200, `{
-  "fileid": "fx",
-  "self": "http://localhost:8181/dirs/d1/files/fx/meta",
-  "xid": "/dirs/d1/files/fx/meta",
-  "epoch": 8,
-  "createdat": "2025-01-09T23:31:06.391225888Z",
-  "modifiedat": "2025-01-09T23:31:07.033435714Z",
-
-  "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1"
-}
+          "defaultversionid": "bb"}`, 400,
+		`Attribute "defaultversionid" must be "1" since "defaultversionsticky" is "false"
 `)
 
-	// reset again
-	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
-		`{"xref":"/dirs/d1/files/f1"}`, 200, `*`)
-
+	// defaultversionid is bad
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
 		`{"xref":null,
           "defaultversionid": "bb",
-		  "defaultversionsticky": true}`, 400, `Version "bb" not found
+		  "defaultversionsticky": true }`, 400,
+		`Version "bb" not found
 `)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/fx/meta",
@@ -1057,7 +1046,7 @@ func TestXrefRevert(t *testing.T) {
   "fileid": "fx",
   "self": "http://localhost:8181/dirs/d1/files/fx/meta",
   "xid": "/dirs/d1/files/fx/meta",
-  "epoch": 9,
+  "epoch": 8,
   "createdat": "2025-01-09T23:16:04.619269627Z",
   "modifiedat": "2025-01-09T23:16:05.273949318Z",
 
