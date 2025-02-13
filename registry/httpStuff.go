@@ -353,11 +353,27 @@ func (pw *PageWriter) Done() {
 
 	for _, r := range rootList {
 		name := r.name
-		if pw.Info.RootPath == r.u {
+		if pw.Info.RootPath == r.u && !pw.Info.HasFlag("offered") {
 			name = "<b>" + name + "</b>"
 		}
-		roots += fmt.Sprintf("  <li><a href=\"%s?ui\">%s</a></li>\n",
+
+		roots += fmt.Sprintf("  <li><a href=\"%s?ui\">%s</a>",
 			pw.Info.BaseURL+"/"+r.u, name)
+
+		if r.u == "capabilities" {
+			roots += "&nbsp;&nbsp;("
+			if pw.Info.HasFlag("offered") {
+				roots += "<b>"
+			}
+			roots += fmt.Sprintf("<a href=\"%s?ui&offered\">offered</a>",
+				pw.Info.BaseURL+"/"+r.u)
+			if pw.Info.HasFlag("offered") {
+				roots += "</b>"
+			}
+			roots += ")"
+		}
+
+		roots += "</li>\n"
 	}
 
 	if pw.Info.RootPath == "" {
