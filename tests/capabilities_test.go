@@ -24,6 +24,7 @@ func TestCapabilitySimple(t *testing.T) {
     "nodefaultversionsticky",
     "noepoch",
     "noreadonly",
+    "offered",
     "schema",
     "setdefaultversionid",
     "specversion"
@@ -64,6 +65,7 @@ func TestCapabilitySimple(t *testing.T) {
       "nodefaultversionsticky",
       "noepoch",
       "noreadonly",
+      "offered",
       "schema",
       "setdefaultversionid",
       "specversion"
@@ -262,6 +264,7 @@ func TestCapabilityPath(t *testing.T) {
     "nodefaultversionsticky",
     "noepoch",
     "noreadonly",
+    "offered",
     "schema",
     "setdefaultversionid",
     "specversion"
@@ -383,7 +386,7 @@ func TestCapabilityPath(t *testing.T) {
   "enforcecompatibility": false,
   "flags": [
     "doc", "epoch", "filter", "inline", "nodefaultversionid",
-    "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
+    "nodefaultversionsticky", "noepoch", "noreadonly", "offered", "schema",
 	"setdefaultversionid", "specversion"
   ],
   "mutable": [ "capabilities", "entities", "model" ],
@@ -403,6 +406,7 @@ func TestCapabilityPath(t *testing.T) {
     "nodefaultversionsticky",
     "noepoch",
     "noreadonly",
+    "offered",
     "schema",
     "setdefaultversionid",
     "specversion"
@@ -434,6 +438,7 @@ func TestCapabilityPath(t *testing.T) {
     "nodefaultversionsticky",
     "noepoch",
     "noreadonly",
+    "offered",
     "schema",
     "setdefaultversionid",
     "specversion"
@@ -507,38 +512,32 @@ func TestCapabilityPath(t *testing.T) {
 
 	// Test some bools
 	xHTTP(t, reg, "PUT", "/capabilities", `{
-    "enforcecompatibility": true,
-	"pagination": true,
-	"shortself": true
+    "enforcecompatibility": false,
+	"pagination": false,
+	"shortself": false
 }`, 200, `{
-  "enforcecompatibility": true,
+  "enforcecompatibility": false,
   "flags": [],
   "mutable": [],
-  "pagination": true,
+  "pagination": false,
   "schemas": [
     "xregistry-json/0.5"
   ],
-  "shortself": true,
+  "shortself": false,
   "specversions": [
     "0.5"
   ]
 }
 `)
 
-	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
-  "enforcecompatibility": true,
-  "flags": [],
-  "mutable": [],
-  "pagination": true,
-  "schemas": [
-    "xregistry-json/0.5"
-  ],
-  "shortself": true,
-  "specversions": [
-    "0.5"
-  ]
-}
-`)
+	xHTTP(t, reg, "PUT", "/capabilities", `{"enforcecompatibility":true}`, 400,
+		`"enforcecapabilities" must be "false"`+"\n")
+
+	xHTTP(t, reg, "PUT", "/capabilities", `{"pagination":true}`, 400,
+		`"pagination" must be "false"`+"\n")
+
+	xHTTP(t, reg, "PUT", "/capabilities", `{"shortself":true}`, 400,
+		`"shortself" must be "false"`+"\n")
 
 	// Setting some arrays to [] are an error because we can't do what they
 	// asked - which is different from "null"/absent - which means "default"
@@ -642,7 +641,7 @@ func TestCapabilityAttr(t *testing.T) {
   "enforcecompatibility": false,
   "flags": [
     "doc", "epoch", "filter", "inline", "nodefaultversionid",
-    "nodefaultversionsticky", "noepoch", "noreadonly", "schema",
+    "nodefaultversionsticky", "noepoch", "noreadonly", "offered", "schema",
 	"setdefaultversionid", "specversion"
   ],
   "mutable": [ "capabilities", "entities", "model" ],
@@ -673,6 +672,7 @@ func TestCapabilityAttr(t *testing.T) {
     "nodefaultversionsticky",
     "noepoch",
     "noreadonly",
+    "offered",
     "schema",
     "setdefaultversionid",
     "specversion"
@@ -696,12 +696,12 @@ func TestCapabilityAttr(t *testing.T) {
 	// Setting to minimal
 	// inline still enabled
 	xHTTP(t, reg, "PUT", "/?inline=capabilities", `{ "capabilities": {
-  "enforcecompatibility": true,
+  "enforcecompatibility": false,
   "flags": [],
   "mutable": [],
-  "pagination": true,
+  "pagination": false,
   "schemas": ["xregistry-json"],
-  "shortself": true,
+  "shortself": false,
   "specversions": ["0.5"]
 }}`, 200,
 		`{
@@ -714,14 +714,14 @@ func TestCapabilityAttr(t *testing.T) {
   "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
 
   "capabilities": {
-    "enforcecompatibility": true,
+    "enforcecompatibility": false,
     "flags": [],
     "mutable": [],
-    "pagination": true,
+    "pagination": false,
     "schemas": [
       "xregistry-json/0.5"
     ],
-    "shortself": true,
+    "shortself": false,
     "specversions": [
       "0.5"
     ]
@@ -730,14 +730,14 @@ func TestCapabilityAttr(t *testing.T) {
 `)
 
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
-  "enforcecompatibility": true,
+  "enforcecompatibility": false,
   "flags": [],
   "mutable": [],
-  "pagination": true,
+  "pagination": false,
   "schemas": [
     "xregistry-json/0.5"
   ],
-  "shortself": true,
+  "shortself": false,
   "specversions": [
     "0.5"
   ]
@@ -768,7 +768,8 @@ func TestCapabilityAttr(t *testing.T) {
 
 // "doc", "epoch", "filter", "inline",
 // "nodefaultversionid", "nodefaultversionsticky",
-// "noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
+// "noepoch", "noreadonly", "offered", "schema", "setdefaultversionid",
+// "specversion"})
 
 func TestCapabilityFlagsOff(t *testing.T) {
 	reg := NewRegistry("TestCapabilityFlags")
@@ -879,4 +880,47 @@ func TestCapabilityFlagsOff(t *testing.T) {
 	xHTTP(t, reg, "GET", "/model?specversion=foo", ``, 200, `*`)
 
 	// TODO nodefaultversionid, nodefaultversionsticky, noepoch, noreadonly
+}
+
+func TestCapabilityOffered(t *testing.T) {
+	reg := NewRegistry("TestCapabilityOffered")
+	defer PassDeleteReg(t, reg)
+
+	xHTTP(t, reg, "GET", "/capabilities?offered", ``, 200, `{
+  "enforcecompatibility": [
+    false
+  ],
+  "flags": [
+    "doc",
+    "epoch",
+    "filter",
+    "inline",
+    "nodefaultversionid",
+    "nodefaultversionsticky",
+    "noepoch",
+    "noreadonly",
+    "offered",
+    "schema",
+    "setdefaultversionid",
+    "specversion"
+  ],
+  "mutable": [
+    "capabilities",
+    "entities",
+    "model"
+  ],
+  "pagination": [
+    false
+  ],
+  "schemas": [
+    "xregistry-json/0.5"
+  ],
+  "shortself": [
+    false
+  ],
+  "specversions": [
+    "0.5"
+  ]
+}
+`)
 }

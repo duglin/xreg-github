@@ -371,7 +371,7 @@ func (pw *PageWriter) Done() {
 
 		if options != "" { // Wrapper if any
 			options = "<b>Options:</b>\n\n" + options +
-				"\n    <hr style=\"width: 100%%\">\n"
+				"\n    <hr style=\"width: 95%%\">\n"
 		}
 	}
 
@@ -632,7 +632,7 @@ toggleExp(null, false);
   #options {
     display: flex ;
     flex-direction: column ;
-    padding: 5 5 5 5 ;
+    padding: 5 0 5 5 ;
   }
 
   #xRegLogo {
@@ -684,12 +684,14 @@ toggleExp(null, false);
   fieldset {
     border-width: 1 0 1 1 ;
     border-color: black ;
-    padding: 0 0 4 4 ;
+    padding: 0 4 4 4 ;
+    background-color: #f2eeee ;
+    margin: 0 0 0 2 ;
   }
 
   #applyBtn {
     font-weight: bold ;
-    margin: 5 5 0 5 ;
+    margin: 5 0 0 0 ;
   }
 
   #applyBtn:hover { background: #c4c4c4 ; color : black ; }
@@ -698,7 +700,8 @@ toggleExp(null, false);
 
   textarea {
     margin-bottom: 10px ;
-    min-width: 100%% ;
+    min-width: 99%% ;
+    max-width: 95%% ;
   }
   #filters {
     display: block ;
@@ -770,7 +773,7 @@ toggleExp(null, false);
     white-space: pre ;
     font-family: courier ;
     font-size: 14px ;
-	line-height: 16px ; // easier to read this way
+    line-height: 16px ; // easier to read this way
   }
 
   .expandAll {
@@ -1031,15 +1034,24 @@ func HTTPGETCapabilities(info *RequestInfo) error {
 		return fmt.Errorf("Not found")
 	}
 
-	cap := info.Registry.Capabilities
-	capStr := info.Registry.GetAsString("#capabilities")
-	if capStr != "" {
-		var err error
-		cap, err = ParseCapabilitiesJSON([]byte(capStr))
-		Must(err)
+	buf := []byte(nil)
+	var err error
+
+	if info.HasFlag("offered") {
+		offered := GetOffered()
+		buf, err = json.MarshalIndent(offered, "", "  ")
+	} else {
+		cap := info.Registry.Capabilities
+		capStr := info.Registry.GetAsString("#capabilities")
+		if capStr != "" {
+			var err error
+			cap, err = ParseCapabilitiesJSON([]byte(capStr))
+			Must(err)
+		}
+
+		buf, err = json.MarshalIndent(cap, "", "  ")
 	}
 
-	buf, err := json.MarshalIndent(cap, "", "  ")
 	if err != nil {
 		return err
 	}

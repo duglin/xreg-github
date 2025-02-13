@@ -137,3 +137,5 @@ TODOs:
   - verify TestHTTPNestedResources epoch values are correct
   - verify TestMetaCombos epoch values are correct
   - stuff in TestXrefRevert
+- support PATCH on capabilities /cap and "cap" attr
+- bump registry.epoch when capabilities change

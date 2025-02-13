@@ -19,10 +19,21 @@ type Capabilities struct {
 	SpecVersions         []string `json:"specversions"`
 }
 
+type Offered struct {
+	EnforceCompatibility []bool   `json:"enforcecompatibility"`
+	Flags                []string `json:"flags"`
+	Mutable              []string `json:"mutable"`
+	Pagination           []bool   `json:"pagination"`
+	Schemas              []string `json:"schemas"`
+	ShortSelf            []bool   `json:"shortself"`
+	SpecVersions         []string `json:"specversions"`
+}
+
 var AllowableFlags = ArrayToLower([]string{
 	"doc", "epoch", "filter", "inline",
 	"nodefaultversionid", "nodefaultversionsticky",
-	"noepoch", "noreadonly", "schema", "setdefaultversionid", "specversion"})
+	"noepoch", "noreadonly", "offered",
+	"schema", "setdefaultversionid", "specversion"})
 
 var AllowableMutable = ArrayToLower([]string{
 	"capabilities", "entities", "model"})
@@ -48,6 +59,20 @@ func init() {
 	sort.Strings(AllowableSpecVersions)
 
 	Must(DefaultCapabilities.Validate())
+}
+
+func GetOffered() *Offered {
+	offered := &Offered{
+		EnforceCompatibility: []bool{false},
+		Flags:                AllowableFlags,
+		Mutable:              AllowableMutable,
+		Pagination:           []bool{false},
+		Schemas:              AllowableSchemas,
+		ShortSelf:            []bool{false},
+		SpecVersions:         AllowableSpecVersions,
+	}
+
+	return offered
 }
 
 func ArrayToLower(arr []string) []string {
@@ -116,6 +141,10 @@ func (c *Capabilities) Validate() error {
 		c.SpecVersions = []string{SPECVERSION}
 	}
 
+	if c.EnforceCompatibility != false {
+		return fmt.Errorf(`"enforcecapabilities" must be "false"`)
+	}
+
 	c.Flags, err = CleanArray(c.Flags, AllowableFlags, "flags")
 	if err != nil {
 		return err
@@ -124,6 +153,10 @@ func (c *Capabilities) Validate() error {
 	c.Mutable, err = CleanArray(c.Mutable, AllowableMutable, "mutable")
 	if err != nil {
 		return err
+	}
+
+	if c.Pagination != false {
+		return fmt.Errorf(`"pagination" must be "false"`)
 	}
 
 	c.Schemas, err = CleanArray(c.Schemas, AllowableSchemas, "schemas")
@@ -140,6 +173,11 @@ func (c *Capabilities) Validate() error {
 	if !ArrayContainsAnyCase(c.Schemas, XREGSCHEMA+"/"+SPECVERSION) {
 		return fmt.Errorf(`"schemas" must contain %q`, XREGSCHEMA+"/"+SPECVERSION)
 	}
+
+	if c.ShortSelf != false {
+		return fmt.Errorf(`"shortself" must be "false"`)
+	}
+
 	if !ArrayContainsAnyCase(c.SpecVersions, SPECVERSION) {
 		return fmt.Errorf(`"specversions" must contain %q`, SPECVERSION)
 	}

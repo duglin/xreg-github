@@ -46,6 +46,7 @@ func TestExportBasic(t *testing.T) {
       "nodefaultversionsticky",
       "noepoch",
       "noreadonly",
+      "offered",
       "schema",
       "setdefaultversionid",
       "specversion"
@@ -543,6 +544,7 @@ func TestExportBasic(t *testing.T) {
       "nodefaultversionsticky",
       "noepoch",
       "noreadonly",
+      "offered",
       "schema",
       "setdefaultversionid",
       "specversion"
