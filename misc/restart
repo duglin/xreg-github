@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# $1 = env var with the SSH private key
+# $2 = login@host to ssh to
+# This ssh key MUST be defined to run exactly one command in
+# ".ssh/authorized_keys"
+# For example:
+#   command="bin/restartxreg" ssh-rsa AAAAB...(rest of public key)...
+
+set -ex
+trap 'rm -f .key' EXIT
+
+if [[ ! -v "$1" ]]; then
+  echo "Set \$$1 first to a public key"
+  exit 1
+fi
+
+set +x
+printf "%s\n" "${!1}" > .key
+set -x
+chmod 0600 .key
+ssh -o StrictHostKeyChecking=no -i .key $2
+rm -f .key

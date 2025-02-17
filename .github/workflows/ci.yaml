@@ -24,3 +24,7 @@ jobs:
       - name: build, test, push
         run: make mysql test push
 
+      - env:
+          SOAPHUB_SSH_KEY: ${{ secrets.SOAPHUB_SSH_KEY }}
+        run: misc/restart SOAPHUB_SSH_KEY ubuntu@soaphub.org
+
