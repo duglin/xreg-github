@@ -408,7 +408,7 @@ func (pw *PageWriter) Done() {
 				next := MustPropPathFromDB(FE.Path).UI()
 				next, _ = strings.CutPrefix(next, prefix)
 				subF += next
-				if FE.HasEqual {
+				if FE.Operator == FILTER_EQUAL {
 					subF += "=" + FE.Value
 				}
 			}

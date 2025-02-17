@@ -8,12 +8,6 @@ import (
 	// log "github.com/duglin/dlog"
 )
 
-const UX_IN = '.'
-
-// If DB_IN changes then DefaultProps in init.sql needs to change too
-const DB_IN = ','
-const DB_INDEX = '#'
-
 type PropPath struct {
 	Parts []PropPart
 }
@@ -140,6 +134,7 @@ func (pp *PropPath) DB() string {
 	return res.String()
 }
 
+// Same as DB() but w/o the trailing ","
 func (pp *PropPath) Abstract() string {
 	if pp == nil {
 		return ""

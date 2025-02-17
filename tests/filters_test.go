@@ -6,8 +6,8 @@ import (
 	"github.com/duglin/xreg-github/registry"
 )
 
-func TestBasicFilters(t *testing.T) {
-	reg := NewRegistry("TestBasicFilters")
+func TestFiltersBasic(t *testing.T) {
+	reg := NewRegistry("TestFiltersBasic")
 	defer PassDeleteReg(t, reg)
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
@@ -39,7 +39,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "registryid": "TestBasicFilters",
+  "registryid": "TestFiltersBasic",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 1,
@@ -81,7 +81,7 @@ func TestBasicFilters(t *testing.T) {
 		},
 		{ // Test some filtering at the root of the GET
 			Name: "Get/filter root - match ",
-			URL:  "?inline&oneline&filter=registryid=TestBasicFilters",
+			URL:  "?inline&oneline&filter=registryid=TestFiltersBasic",
 			// Return entire tree
 			Exp: `{"dirs":{"d1":{"files":{"f1":{"meta":{},"versions":{"v1":{},"v2":{}}}}},"d2":{"files":{"f2":{"meta":{},"versions":{"v1":{},"v1.1":{}}}}}}}`,
 		},
@@ -181,7 +181,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?filter=labels.reg1=1ger",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "registryid": "TestBasicFilters",
+  "registryid": "TestFiltersBasic",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 1,
@@ -201,7 +201,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?filter=dirs.files.labels.file1=1elif",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "registryid": "TestBasicFilters",
+  "registryid": "TestFiltersBasic",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 1,
@@ -221,7 +221,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?inline&filter=dirs.files.labels.file1=1elif",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "registryid": "TestBasicFilters",
+  "registryid": "TestFiltersBasic",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 1,
@@ -323,7 +323,7 @@ func TestBasicFilters(t *testing.T) {
 			URL:  "?inline&filter=dirs.files.labels.file1",
 			Exp: `{
   "specversion": "` + registry.SPECVERSION + `",
-  "registryid": "TestBasicFilters",
+  "registryid": "TestFiltersBasic",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 1,
@@ -413,8 +413,8 @@ func TestBasicFilters(t *testing.T) {
 	}
 }
 
-func TestANDORFilters(t *testing.T) {
-	reg := NewRegistry("TestANDORFilters")
+func TestFiltersANDOR(t *testing.T) {
+	reg := NewRegistry("TestFiltersANDOR")
 	defer PassDeleteReg(t, reg)
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
@@ -530,8 +530,8 @@ func TestANDORFilters(t *testing.T) {
 	}
 }
 
-func TestWildcards(t *testing.T) {
-	reg := NewRegistry("TestWildcards")
+func TestFiltersWildcards(t *testing.T) {
+	reg := NewRegistry("TestFiltersWildcards")
 	defer PassDeleteReg(t, reg)
 
 	gm, err := reg.Model.AddGroupModel("dirs", "dir")
@@ -676,6 +676,229 @@ func TestWildcards(t *testing.T) {
 			Name: "fail - 6",
 			URL:  "?oneline&inline&filter=dirs.files.description=*",
 			Exp:  `Not found`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Logf("Test name: %s", test.Name)
+		xCheckGet(t, reg, test.URL, test.Exp)
+	}
+}
+
+func TestFiltersOps(t *testing.T) {
+	reg := NewRegistry("TestFiltersOps")
+	defer PassDeleteReg(t, reg)
+
+	gm, err := reg.Model.AddGroupModel("dirs", "dir")
+	_, err = gm.AddResourceModel("files", "file", 0, true, true, false) // nodoc
+	xNoErr(t, err)
+
+	d, _ := reg.AddGroup("dirs", "d1")
+	f, _ := d.AddResource("files", "f1", "v1")
+	f.SetSaveDefault("name", "bob")
+
+	f, _ = d.AddResource("files", "f2", "v1")
+	f.SetSaveDefault("name", "")
+
+	d.AddResource("files", "f3", "v1") // no "name"
+
+	PRE := "?oneline&inline=dirs.files&filter="
+	tests := []struct {
+		Name string
+		URL  string
+		Exp  string
+	}{
+		{
+			Name: "name=bob",
+			URL:  PRE + "dirs.files.name=bob",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{}}}}}`,
+		},
+		{
+			Name: "name!=bob",
+			URL:  PRE + "dirs.files.name!=bob",
+			Exp:  `{"dirs":{"d1":{"files":{"f2":{},"f3":{}}}}}`,
+		},
+		{
+			Name: "name=null",
+			URL:  PRE + "dirs.files.name=null",
+			Exp:  `{"dirs":{"d1":{"files":{"f3":{}}}}}`,
+		},
+		{
+			Name: "name!=null",
+			URL:  PRE + "dirs.files.name!=null",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{},"f2":{}}}}}`,
+		},
+		{
+			Name: "name (present)",
+			URL:  PRE + "dirs.files.name",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{},"f2":{}}}}}`,
+		},
+		{
+			Name: "name!=bob && name (present)",
+			URL:  PRE + "dirs.files.name!=bob,dirs.files.name",
+			Exp:  `{"dirs":{"d1":{"files":{"f2":{}}}}}`,
+		},
+		{
+			Name: "name!=bob || name (present)",
+			URL:  PRE + "dirs.files.name!=bob&filter=dirs.files.name",
+			Exp:  `{"dirs":{"d1":{"files":{"f1":{},"f2":{},"f3":{}}}}}`,
+		},
+
+		// Non-root
+		{
+			Name: "non-root name=bob",
+			URL:  "/dirs/d1/files?oneline&filter=name=bob",
+			Exp:  `{"f1":{}}`,
+		},
+		{
+			Name: "non-root name!=bob",
+			URL:  "/dirs/d1/files?oneline&filter=name!=bob",
+			Exp:  `{"f2":{},"f3":{}}`,
+		},
+		{
+			Name: "non-root name=null",
+			URL:  "/dirs/d1/files?oneline&filter=name=null",
+			Exp:  `{"f3":{}}`,
+		},
+		{
+			Name: "non-root name!=null",
+			URL:  "/dirs/d1/files?oneline&filter=name!=null",
+			Exp:  `{"f1":{},"f2":{}}`,
+		},
+		{
+			Name: "non-root name (present)",
+			URL:  "/dirs/d1/files?oneline&filter=name",
+			Exp:  `{"f1":{},"f2":{}}`,
+		},
+		{
+			Name: "non-root name!=bob && name (present)",
+			URL:  "/dirs/d1/files?oneline&filter=name!=bob,name",
+			Exp:  `{"f2":{}}`,
+		},
+		{
+			Name: "non-root name!=bob || name (present)",
+			URL:  "/dirs/d1/files?oneline&filter=name!=bob&filter=name",
+			Exp:  `{"f1":{},"f2":{},"f3":{}}`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Logf("Test name: %s", test.Name)
+		xCheckGet(t, reg, test.URL, test.Exp)
+	}
+}
+
+func TestFiltersObjs(t *testing.T) {
+	reg := NewRegistry("TestFiltersObjs")
+	defer PassDeleteReg(t, reg)
+
+	attr, _ := reg.Model.AddAttrObj("regobj1")
+
+	attr, _ = reg.Model.AddAttrObj("regobj2")
+	attr.AddAttr("bool", registry.BOOLEAN)
+
+	attr, _ = reg.Model.AddAttrObj("regobj3")
+	attr.AddAttr("bool", registry.BOOLEAN)
+
+	reg.SetSave("regobj2", map[string]any{})
+	reg.SetSave("regobj3", map[string]any{"bool": true})
+
+	tests := []struct {
+		Name string
+		URL  string
+		Exp  string
+	}{
+		{
+			Name: "regobj1 present - not found",
+			URL:  "?oneline&inline&filter=regobj1",
+			Exp:  `Not found`,
+		},
+		{
+			Name: "regobj1 present - not found",
+			URL:  "?oneline&inline&filter=regobj1!=null",
+			Exp:  `Not found`,
+		},
+		{
+			Name: "regobj1 not present",
+			URL:  "?oneline&inline&filter=regobj1=null",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+
+		{
+			Name: "regobj2 present - found",
+			URL:  "?oneline&inline&filter=regobj2",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj2 present - found",
+			URL:  "?oneline&inline&filter=regobj2!=null",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj2 not present",
+			URL:  "?oneline&inline&filter=regobj2=null",
+			Exp:  `Not found`,
+		},
+		{
+			Name: "regobj2.bool not present",
+			URL:  "?oneline&inline&filter=regobj2.bool=null",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj2.bool present",
+			URL:  "?oneline&inline&filter=regobj2.bool",
+			Exp:  `Not found`,
+		},
+		{
+			Name: "regobj2.bool!=true",
+			URL:  "?oneline&inline&filter=regobj2.bool!=true",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj2.bool != null present",
+			URL:  "?oneline&inline&filter=regobj2.bool!=null",
+			Exp:  `Not found`,
+		},
+		{
+			Name: "regobj1.bool != null present",
+			URL:  "?oneline&inline&filter=regobj1.bool!=null",
+			Exp:  `Not found`,
+		},
+		{
+			Name: "regobj1.bool == null true",
+			URL:  "?oneline&inline&filter=regobj1.bool=null",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+
+		{
+			Name: "regobj3.bool == null false",
+			URL:  "?oneline&inline&filter=regobj3.bool=null",
+			Exp:  `Not found`,
+		},
+		{
+			Name: "regobj3.bool != null true",
+			URL:  "?oneline&inline&filter=regobj3.bool!=null",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj3.bool present true",
+			URL:  "?oneline&inline&filter=regobj3.bool",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj3.bool=true",
+			URL:  "?oneline&inline&filter=regobj3.bool=true",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj3.bool!=false",
+			URL:  "?oneline&inline&filter=regobj3.bool!=false",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
+		},
+		{
+			Name: "regobj3.bool!=null",
+			URL:  "?oneline&inline&filter=regobj3.bool!=null",
+			Exp:  `{"regobj2":{},"regobj3":{}}`,
 		},
 	}
 

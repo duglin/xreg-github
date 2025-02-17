@@ -700,7 +700,7 @@ eSID IN ( -- eSID from query
 			firstOr = false
 			query += `
       -- start of one Filter AND grouping (expr1 AND expr2).
-	  -- Find all SIDs for the leaves for entities (SIDs) of interest.
+      -- Find all SIDs for the leaves for entities (SIDs) of interest.
       SELECT list.eSID FROM (
         SELECT count(*) as cnt,e2.eSID,e2.Path FROM Entities AS e1
         RIGHT JOIN (
@@ -714,31 +714,75 @@ eSID IN ( -- eSID from query
           UNION ALL`
 				}
 				firstAnd = false
-				check := ""
-				args = append(args, reg.DbSID, filter.Path)
-				if filter.HasEqual {
+
+				if filter.Operator == FILTER_PRESENT { // ?filter=xxx
+					// BINARY means case-sensitive for that operand
+					check := "(BINARY Abstract=? AND PropName=? AND "
+
+					args = append(args, reg.DbSID, filter.Abstract,
+						filter.PropName)
+					check += "PropValue IS NOT NULL)"
+					query += `
+          SELECT eSID,Type,Path FROM FullTree WHERE RegSID=? AND ` + check
+
+				} else if filter.Operator == FILTER_ABSENT { // ?filter=xxx=null
+					// Look for non-existing prop
+					args = append(args, reg.DbSID, filter.Abstract,
+						filter.PropName)
+
+					// BINARY means case-sensitive for that operand
+					query += `
+          -- Entities that don't have the specified prop
+          SELECT e.eSID,e.Type,e.Path FROM Entities AS e
+          WHERE e.RegSID=? AND e.Abstract=? AND
+            NOT EXISTS (SELECT 1 FROM FullTree WHERE
+              RegSID=e.RegSID AND eSID=e.eSID AND (BINARY PropName=?))`
+
+				} else if filter.Operator == FILTER_EQUAL { // ?filter=xxx=zzz
+					// BINARY means case-sensitive for that operand
+					check := "(BINARY Abstract=? AND PropName=? AND "
+
+					args = append(args, reg.DbSID, filter.Abstract,
+						filter.PropName)
 					value, wildcard := WildcardIt(filter.Value)
 					args = append(args, value)
 					if !wildcard {
-						check = "PropValue=?"
+						check += "PropValue=?"
 					} else {
 						args = append(args, value)
-						check = "((PropType<>'string' AND PropValue=?) OR " +
-							"(PropType='string' AND PropValue LIKE ?))"
+						check += "((PropType<>'string' AND PropValue=?) " +
+							" OR (PropType='string' AND PropValue LIKE ?))"
 					}
-				} else {
-					check = "PropValue IS NOT NULL"
-				}
-				// BINARY means case-sensitive for that operand
-				query += `
+					check += ")"
+					query += `
           SELECT eSID,Type,Path FROM FullTree
-          WHERE
-            RegSID=? AND
-            (BINARY CONCAT(IF(Abstract<>'',` +
-					`CONCAT(Abstract,'` + string(DB_IN) + `'),''),
-               PropName)=?
-               AND
-               ` + check + `)`
+            WHERE RegSID=? AND ` + check
+
+				} else if filter.Operator == FILTER_NOT_EQUAL { // ?filter=x!=z
+					args = append(args, reg.DbSID, filter.Abstract,
+						filter.PropName)
+					// BINARY means case-sensitive for that operand
+					query += `
+          -- Entities that don't have the specified prop
+          SELECT e.eSID,e.Type,e.Path FROM Entities AS e
+          WHERE e.RegSID=? AND e.Abstract=? AND
+            NOT EXISTS (SELECT 1 FROM FullTree WHERE
+              RegSID=e.RegSID AND eSID=e.eSID AND (BINARY PropName=? AND `
+
+					value, wildcard := WildcardIt(filter.Value)
+					args = append(args, value)
+					if !wildcard {
+						query += "PropValue=?"
+					} else {
+						args = append(args, value)
+						query += "((PropType<>'string' AND PropValue=?) " +
+							" OR (PropType='string' AND PropValue LIKE ?))"
+					}
+					query += "))"
+
+				} else {
+					PanicIf(true, "Bad filter.op: %#v", filter)
+				}
 			} // end of AndFilter
 			query += `
           -- end of expr1
@@ -754,7 +798,7 @@ eSID IN ( -- eSID from query
               -- Non-meta objects, just compare the Path
               result.Type<>` + StrTypes(ENTITY_META) + ` AND
               ( e2.Path=result.Path OR
-			    e2.Path LIKE CONCAT(IF(result.Path<>'',CONCAT(result.Path,'/'),''),'%')
+                e2.Path LIKE CONCAT(IF(result.Path<>'',CONCAT(result.Path,'/'),''),'%')
               )
             )
             OR
@@ -780,16 +824,16 @@ eSID IN ( -- eSID from query
 
     -- This is the recusive part of the query.
     -- Find all of the parents (and 'meta' sub-objects) of the found
-	-- entities, up to root of Reg.
+    -- entities, up to root of Reg.
     UNION DISTINCT SELECT
       e.eSID,e.Type,e.ParentSID,e.Path
     FROM Entities AS e
     INNER JOIN cte ON
       (
-	    -- Find its parent
+        -- Find its parent
         e.eSID=cte.ParentSID
         OR
-		-- If this is a Resource, grab its 'meta' sub-object
+        -- If this is a Resource, grab its 'meta' sub-object
         ( cte.Type=` + StrTypes(ENTITY_RESOURCE) + ` AND
           e.Type=` + StrTypes(ENTITY_META) + ` AND
           e.ParentSID=cte.eSID

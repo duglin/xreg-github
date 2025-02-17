@@ -38,6 +38,12 @@ const URL = "url"
 const IN_CHAR = '.'
 const IN_STR = string(IN_CHAR)
 
+const UX_IN = '.'
+
+// If DB_IN changes then DefaultProps in init.sql needs to change too
+const DB_IN = ','
+const DB_INDEX = '#'
+
 const DOCVIEW_BASE = "#"
 
 // Entity "add" options
@@ -58,6 +64,13 @@ const (
 	ENTITY_META
 	ENTITY_VERSION
 	ENTITY_MODEL
+)
+
+const (
+	FILTER_PRESENT = iota + 1
+	FILTER_ABSENT
+	FILTER_EQUAL
+	FILTER_NOT_EQUAL
 )
 
 const HTML_EXP = "&#9662;" // Expanded json symbol for HTML output

@@ -192,9 +192,14 @@ func (ri *RequestInfo) AddHeader(name, value string) {
 }
 
 type FilterExpr struct {
+	// User provided
 	Path     string // endpoints.id  TODO store a PropPath?
 	Value    string // myEndpoint
-	HasEqual bool
+	Operator int    // FILTER_PRESENT, ...
+
+	// helpers
+	Abstract string
+	PropName string
 }
 
 func ParseRequest(tx *Tx, w http.ResponseWriter, r *http.Request) (*RequestInfo, error) {
@@ -293,7 +298,27 @@ func (info *RequestInfo) ParseFilters() error {
 			if expr == "" {
 				continue
 			}
-			path, value, found := strings.Cut(expr, "=")
+
+			filterOp := FILTER_PRESENT
+
+			path, value, found := strings.Cut(expr, "!=")
+			if found {
+				// Note that "xxx!=null" is the same as "xxx"
+				if value != "null" {
+					filterOp = FILTER_NOT_EQUAL
+				}
+			} else {
+				path, value, found = strings.Cut(expr, "=")
+				if found {
+					if value == "null" {
+						filterOp = FILTER_ABSENT
+					} else {
+						filterOp = FILTER_EQUAL
+					}
+				}
+				// No "=" or "!=" means FILTER_PRESENT
+			}
+
 			pp, err := PropPathFromUI(path)
 			if err != nil {
 				return err
@@ -314,18 +339,12 @@ func (info *RequestInfo) ParseFilters() error {
 				path = absPP.DB()
 			}
 
-			exact := false
-			if found {
-				if exact = strings.HasPrefix(value, "="); exact {
-					value = value[1:]
-				}
-			}
-
 			filter := &FilterExpr{
 				Path:     path,
 				Value:    value,
-				HasEqual: found,
+				Operator: filterOp,
 			}
+			filter.Abstract, filter.PropName = SplitProp(info.Registry, path)
 
 			if AndFilters == nil {
 				AndFilters = []*FilterExpr{}
@@ -341,6 +360,33 @@ func (info *RequestInfo) ParseFilters() error {
 		}
 	}
 	return nil
+}
+
+// path.DB() -> abstract.Abstract() + propName.DB()
+func SplitProp(reg *Registry, path string) (string, string) {
+	pp := MustPropPathFromDB(path)
+
+	abs := &PropPath{}
+
+	if pp.Top() != "" {
+		if gm := reg.Model.FindGroupModel(pp.Top()); gm != nil {
+			abs = abs.Append(pp.First())
+			pp = pp.Next()
+
+			if rm := gm.Resources[pp.Top()]; rm != nil {
+				abs = abs.Append(pp.First())
+				pp = pp.Next()
+
+				next := pp.Top()
+				if next == "meta" || next == "versions" {
+					abs = abs.Append(pp.First())
+					pp = pp.Next()
+				}
+			}
+		}
+	}
+
+	return abs.Abstract(), pp.DB()
 }
 
 func (info *RequestInfo) ParseRequestURL() error {
