@@ -308,6 +308,10 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 	ErrFatalf(r.SetSave("file", `{"hello":"world"}`))
 	ErrFatalf(r.SetSave("contenttype", `application/json`))
 
+	r, err = g.AddResource("files", "fr", "v1")
+	ErrFatalf(err)
+	ErrFatalf(r.SetSaveMeta("readonly", true))
+
 	_, err = g.AddResource("datas", "d1", "v1")
 
 	_, err = g.AddResourceWithObject("files", "fx", "",
