@@ -39,6 +39,12 @@ func (v *Version) Delete() error {
 func (v *Version) JustDelete() error {
 	v.Resource.Touch()
 
+	meta, _ := v.Resource.FindMeta(false)
+	if meta.Get("readonly") == true {
+		return fmt.Errorf("Delete operations on read-only " +
+			"resources are not allowed")
+	}
+
 	// Zero is ok if it's already been deleted
 	err := DoZeroOne(v.tx, `DELETE FROM Versions WHERE SID=?`, v.DbSID)
 	if err != nil {
@@ -62,7 +68,7 @@ func (v *Version) DeleteSetNextVersion(nextVersionID string) error {
 
 	// delete it!
 	if err := v.JustDelete(); err != nil {
-		return fmt.Errorf("Error deleting Version %q: %s", v.UID, err)
+		return err
 	}
 
 	// If it was already gone we'll continue and process the nextVersionID...

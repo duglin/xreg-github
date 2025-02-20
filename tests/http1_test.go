@@ -537,6 +537,10 @@ func TestHTTPModel(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -836,6 +840,10 @@ func TestHTTPModel(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -1143,6 +1151,10 @@ func TestHTTPModel(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",

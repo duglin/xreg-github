@@ -405,6 +405,11 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
+	if meta.Get("readonly") == true {
+		return nil, false, fmt.Errorf("Write operations on read-only " +
+			"resources are not allowed")
+	}
+
 	if obj != nil {
 		if val, ok := obj[r.Singular+"id"]; ok {
 			if val != r.UID {
@@ -758,6 +763,11 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
+	if meta.Get("readonly") == true {
+		return nil, false, fmt.Errorf("Write operations on read-only " +
+			"resources are not allowed")
+	}
+
 	if r.IsXref() {
 		return nil, false,
 			fmt.Errorf(`Can't update "versions" if "xref" is set`)
@@ -1070,6 +1080,11 @@ func (r *Resource) Delete() error {
 
 	meta, err := r.FindMeta(false)
 	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
+
+	if meta.Get("readonly") == true {
+		return fmt.Errorf("Delete operations on read-only " +
+			"resources are not allowed")
+	}
 
 	if err = meta.Delete(); err != nil {
 		return err

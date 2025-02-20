@@ -1557,18 +1557,6 @@ func HTTPPutPost(info *RequestInfo) error {
 		return fmt.Errorf("PATCH is not allowed on Resource documents")
 	}
 
-	// PUT/POST /GROUPs/gID/RESOURCEs... + ReadOnly Resource
-	if info.ResourceModel != nil && info.ResourceModel.ReadOnly &&
-		(method == "PUT" || method == "POST") {
-		// Note that we only block it for end-user interactions, like via
-		// HTTP. If people try to change it via the internal APIs, then
-		// we don't stop it yet. Not sure if we should. TODO
-
-		info.StatusCode = http.StatusMethodNotAllowed
-		return fmt.Errorf("Write operations to read-only resources are not " +
-			"allowed")
-	}
-
 	// Ok, now start to deal with the incoming request
 	//////////////////////////////////////////////////
 
@@ -1951,6 +1939,14 @@ func HTTPPutPost(info *RequestInfo) error {
 			if resource.IsXref() {
 				return fmt.Errorf(`Can't update "versions" if "xref" is set`)
 			}
+
+			meta, err := resource.FindMeta(false)
+			PanicIf(err != nil, "No meta %q: %s", resource.UID, err)
+
+			if meta.Get("readonly") == true {
+				return fmt.Errorf("Write operations on read-only " +
+					"resources are not allowed")
+			}
 		}
 
 		// Process the remaining versions
@@ -2289,8 +2285,7 @@ func HTTPDelete(info *RequestInfo) error {
 			}
 		}
 		if err = group.Delete(); err != nil {
-			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf(`Error deleting Group %q: %s`, info.GroupUID, err)
+			return err
 		}
 
 		info.StatusCode = http.StatusNoContent
@@ -2335,12 +2330,10 @@ func HTTPDelete(info *RequestInfo) error {
 					resource.UID, e, epochInt)
 			}
 		}
-		err = resource.Delete()
 
+		err = resource.Delete()
 		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf(`Error deleting Resource %q: %s`,
-				info.ResourceUID, err)
+			return err
 		}
 
 		info.StatusCode = http.StatusNoContent
@@ -2383,9 +2376,7 @@ func HTTPDelete(info *RequestInfo) error {
 		}
 		nextDefault := info.GetFlag("setdefaultversionid")
 		err = version.DeleteSetNextVersion(nextDefault)
-
 		if err != nil {
-			info.StatusCode = http.StatusBadRequest
 			return err
 		}
 
@@ -2480,8 +2471,7 @@ func HTTPDeleteGroups(info *RequestInfo) error {
 
 		err = group.Delete()
 		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf(`Error deleting %q: %s`, id, err)
+			return err
 		}
 	}
 
@@ -2580,8 +2570,7 @@ func HTTPDeleteResources(info *RequestInfo) error {
 
 		err = resource.Delete()
 		if err != nil {
-			info.StatusCode = http.StatusInternalServerError
-			return fmt.Errorf(`Error deleting %q: %s`, id, err)
+			return err
 		}
 	}
 
@@ -2664,7 +2653,6 @@ func HTTPDeleteVersions(info *RequestInfo) error {
 
 		err = version.DeleteSetNextVersion(nextDefault)
 		if err != nil {
-			info.StatusCode = http.StatusBadRequest
 			return err
 		}
 	}

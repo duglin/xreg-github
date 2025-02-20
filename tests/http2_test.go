@@ -451,7 +451,6 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 		SetVersionId:     registry.PtrBool(true),
 		SetDefaultSticky: registry.PtrBool(true),
 		HasDocument:      registry.PtrBool(true),
-		ReadOnly:         true,
 	})
 	xNoErr(t, err)
 
@@ -476,7 +475,9 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 	xNoErr(t, err)
 	xCheck(t, f1 != nil, "f1 should not be nil")
 
-	xHTTP(t, reg, "GET", "/dirs/dir1/files", "", 200, `{
+	xNoErr(t, f1.SetCommitMeta("readonly", true))
+
+	xHTTP(t, reg, "GET", "/dirs/dir1/files?inline=meta", "", 200, `{
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
@@ -488,6 +489,18 @@ func TestHTTPReadOnlyResource(t *testing.T) {
     "modifiedat": "2024-01-01T12:00:01Z",
 
     "metaurl": "http://localhost:8181/dirs/dir1/files/f1/meta",
+    "meta": {
+      "fileid": "f1",
+      "self": "http://localhost:8181/dirs/dir1/files/f1/meta",
+      "xid": "/dirs/dir1/files/f1/meta",
+      "epoch": 1,
+      "createdat": "2024-01-01T12:00:01Z",
+      "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": true,
+
+      "defaultversionid": "v1",
+      "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details"
+    },
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions",
     "versionscount": 1
   }
@@ -506,16 +519,41 @@ func TestHTTPReadOnlyResource(t *testing.T) {
 }
 `)
 
-	xHTTP(t, reg, "POST", "/dirs/dir1/files", "", 405,
-		"Write operations to read-only resources are not allowed\n")
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1", "", 405,
-		"Write operations to read-only resources are not allowed\n")
-	xHTTP(t, reg, "POST", "/dirs/dir1/files/f1", "", 405,
-		"Write operations to read-only resources are not allowed\n")
-	xHTTP(t, reg, "POST", "/dirs/dir1/files/f1/versions", "", 405,
-		"Write operations to read-only resources are not allowed\n")
-	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1", "", 405,
-		"Write operations to read-only resources are not allowed\n")
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1", "", 400,
+		"PATCH is not allowed on Resource documents\n")
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1$details", "", 400,
+		"Write operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1", "", 400,
+		"Write operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f1", "", 400,
+		"Write operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "POST", "/dirs/dir1/files/f1/versions", "", 400,
+		"Write operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1", "", 400,
+		"PATCH is not allowed on Resource documents\n")
+	xHTTP(t, reg, "PATCH", "/dirs/dir1/files/f1/versions/v1$details", "", 400,
+		"Write operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "PUT", "/dirs/dir1/files/f1/versions/v1", "", 400,
+		"Write operations on read-only resources are not allowed\n")
+
+	xHTTP(t, reg, "PUT", "/",
+		`{"dirs":{"dir1":{"files":{"f1":{}}}}}`, 400,
+		"Write operations on read-only resources are not allowed\n")
+
+	xHTTP(t, reg, "PATCH", "/",
+		`{"dirs":{"dir1":{"files":{"f1":{}}}}}`, 400,
+		"Write operations on read-only resources are not allowed\n")
+
+	xHTTP(t, reg, "DELETE", "/dirs/dir1", ``, 400,
+		"Delete operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "DELETE", "/dirs/dir1/files", ``, 400,
+		"Delete operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "DELETE", "/dirs/dir1/files/f1", "", 400,
+		"Delete operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "DELETE", "/dirs/dir1/files/f1/versions", "", 400,
+		"Delete operations on read-only resources are not allowed\n")
+	xHTTP(t, reg, "DELETE", "/dirs/dir1/files/f1/versions/v1", "", 400,
+		"Delete operations on read-only resources are not allowed\n")
 }
 
 func TestDefaultVersionThis(t *testing.T) {

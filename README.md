@@ -119,14 +119,10 @@ TODOs:
 - create an UpdateDefaultVersion func in resource.go to move it from http logic
 - support ximport
 - support validating that xref points to the same resource def
-- support readonly - remove resource.readonly
-- remove "readonly" attribute from model Resources, add to Resource
 - allow $meta on hasdoc=false resources
 - fix init.sql, it's too slow due to latest xref stuff in commit 9c583e7
 - support ETag/If-Match
 - Split the model.verify stuff so it doesn't verify the data unless asked to
-- make sure that setting capabilities.BOOL-attrs to 'true' fails if we don't
-  support it. Like pagination or enforcecompatibility
 - add support for shortself
 - see if we can create a $RESOURCEid SpecProp for Version&Meta level and then
   use "$SINGULRid" for everything including Versions, but not Meta
@@ -139,3 +135,5 @@ TODOs:
   - stuff in TestXrefRevert
 - support PATCH on capabilities /cap and "cap" attr
 - bump registry.epoch when capabilities change
+- make meta.readonly a non-readonly attribute if the client is an admin
+  - by making it mutable and changings it's meta-model

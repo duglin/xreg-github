@@ -300,6 +300,10 @@ func TestExportBasic(t *testing.T) {
                 "type": "timestamp",
                 "serverrequired": true
               },
+              "readonly": {
+                "name": "readonly",
+                "type": "boolean"
+              },
               "compatibility": {
                 "name": "compatibility",
                 "type": "string",
@@ -819,6 +823,10 @@ func TestExportBasic(t *testing.T) {
                 "name": "modifiedat",
                 "type": "timestamp",
                 "serverrequired": true
+              },
+              "readonly": {
+                "name": "readonly",
+                "type": "boolean"
               },
               "compatibility": {
                 "name": "compatibility",

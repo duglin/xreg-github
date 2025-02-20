@@ -34,9 +34,27 @@ func (g *Group) Delete() error {
 	log.VPrintf(3, ">Enter: Group.Delete(%s)", g.UID)
 	defer log.VPrintf(3, "<Exit: Group.Delete")
 
+	// Make sure we don't have any readonly Resources
+	results, err := Query(g.tx, `
+	    SELECT EXISTS(SELECT 1 FROM FullTree
+		WHERE RegSID=? AND Type=`+StrTypes(ENTITY_META)+` AND
+		  Path LIKE '`+g.Path+`/%' AND
+		  PropName='readonly`+string(DB_IN)+`' AND
+		  PropValue='true')`,
+		g.Registry.DbSID)
+	defer results.Close()
+	if err != nil {
+		return err
+	}
+	row := results.NextRow()
+	if NotNilInt(row[0]) != 0 {
+		return fmt.Errorf("Delete operations on read-only " +
+			"resources are not allowed")
+	}
+
 	g.Registry.Touch()
 
-	err := DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
+	err = DoOne(g.tx, `DELETE FROM "Groups" WHERE SID=?`, g.DbSID)
 	if err != nil {
 		return err
 	}
@@ -343,6 +361,12 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 	} else {
 		meta, err = r.FindMeta(false)
 		PanicIf(err != nil, "No meta %q: %s", r.UID, err)
+	}
+
+	// Kind of late in the process but oh well
+	if meta.Get("readonly") == true {
+		return nil, false, fmt.Errorf("Write operations on read-only " +
+			"resources are not allowed")
 	}
 
 	if !IsNil(meta.Get("xref")) {

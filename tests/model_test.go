@@ -828,6 +828,10 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -1033,6 +1037,10 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -1308,6 +1316,10 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -1638,6 +1650,10 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -1971,6 +1987,10 @@ func TestResourceModelCreate(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -2243,6 +2263,10 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -2546,6 +2570,10 @@ func TestResourceModelCreate(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -2853,6 +2881,10 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "modifiedat",
                 "type": "timestamp",
                 "serverrequired": true
+              },
+              "readonly": {
+                "name": "readonly",
+                "type": "boolean"
               },
               "compatibility": {
                 "name": "compatibility",
@@ -3188,6 +3220,10 @@ func TestResourceModelCreate(t *testing.T) {
                 "name": "modifiedat",
                 "type": "timestamp",
                 "serverrequired": true
+              },
+              "readonly": {
+                "name": "readonly",
+                "type": "boolean"
               },
               "compatibility": {
                 "name": "compatibility",
@@ -3808,6 +3844,10 @@ func TestMultModelCreate(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -3953,6 +3993,10 @@ func TestMultModelCreate(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -4160,6 +4204,10 @@ func TestMultModelCreate(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -4305,6 +4353,10 @@ func TestMultModelCreate(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -4631,6 +4683,10 @@ func TestMultModel2Create(t *testing.T) {
                 "type": "timestamp",
                 "serverrequired": true
               },
+              "readonly": {
+                "name": "readonly",
+                "type": "boolean"
+              },
               "compatibility": {
                 "name": "compatibility",
                 "type": "string",
@@ -4836,6 +4892,10 @@ func TestMultModel2Create(t *testing.T) {
                 "name": "modifiedat",
                 "type": "timestamp",
                 "serverrequired": true
+              },
+              "readonly": {
+                "name": "readonly",
+                "type": "boolean"
               },
               "compatibility": {
                 "name": "compatibility",
@@ -5339,6 +5399,10 @@ func TestModelLabels(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -5621,6 +5685,10 @@ func TestModelLabels(t *testing.T) {
               "name": "modifiedat",
               "type": "timestamp",
               "serverrequired": true
+            },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
             },
             "compatibility": {
               "name": "compatibility",
@@ -5926,6 +5994,10 @@ func TestModelLabels(t *testing.T) {
               "type": "timestamp",
               "serverrequired": true
             },
+            "readonly": {
+              "name": "readonly",
+              "type": "boolean"
+            },
             "compatibility": {
               "name": "compatibility",
               "type": "string",
@@ -6126,23 +6198,24 @@ func TestUseSpecAttrs(t *testing.T) {
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
   "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
   "obj": {
-    "capabilities": 20,
-    "compatibility": 14,
-    "contenttype": 15,
+    "capabilities": 21,
+    "compatibility": 15,
+    "contenttype": 16,
     "createdat": 12,
-    "defaultversionid": 17,
-    "defaultversionsticky": 19,
-    "defaultversionurl": 18,
+    "defaultversionid": 18,
+    "defaultversionsticky": 20,
+    "defaultversionurl": 19,
     "description": 9,
     "documentation": 10,
     "epoch": "6-epoch",
     "id": 1,
     "isdefault": 8,
     "labels": 11,
-    "metaurl": 16,
-    "model": 21,
+    "metaurl": 17,
+    "model": 22,
     "modifiedat": 13,
     "name": 7,
+    "readonly": 14,
     "registryid": 1,
     "self": 3,
     "specversion": 0,
@@ -6282,6 +6355,10 @@ func TestUseSpecAttrs(t *testing.T) {
           },
           "name": {
             "name": "name",
+            "type": "integer"
+          },
+          "readonly": {
+            "name": "readonly",
             "type": "integer"
           },
           "registryid": {
@@ -6446,6 +6523,10 @@ func TestUseSpecAttrs(t *testing.T) {
               },
               "name": {
                 "name": "name",
+                "type": "integer"
+              },
+              "readonly": {
+                "name": "readonly",
                 "type": "integer"
               },
               "registryid": {
@@ -6643,6 +6724,10 @@ func TestUseSpecAttrs(t *testing.T) {
                     "name": "name",
                     "type": "integer"
                   },
+                  "readonly": {
+                    "name": "readonly",
+                    "type": "integer"
+                  },
                   "registryid": {
                     "name": "registryid",
                     "type": "integer"
@@ -6707,6 +6792,10 @@ func TestUseSpecAttrs(t *testing.T) {
                 "name": "modifiedat",
                 "type": "timestamp",
                 "serverrequired": true
+              },
+              "readonly": {
+                "name": "readonly",
+                "type": "boolean"
               },
               "compatibility": {
                 "name": "compatibility",
@@ -6830,6 +6919,10 @@ func TestUseSpecAttrs(t *testing.T) {
                     "name": "name",
                     "type": "integer"
                   },
+                  "readonly": {
+                    "name": "readonly",
+                    "type": "integer"
+                  },
                   "registryid": {
                     "name": "registryid",
                     "type": "integer"
@@ -6873,13 +6966,13 @@ func TestUseSpecAttrs(t *testing.T) {
       "createdat": "YYYY-MM-DDTHH:MM:02Z",
       "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
       "obj": {
-        "capabilities": 20,
-        "compatibility": 14,
-        "contenttype": 15,
+        "capabilities": 21,
+        "compatibility": 15,
+        "contenttype": 16,
         "createdat": 12,
-        "defaultversionid": 17,
-        "defaultversionsticky": 19,
-        "defaultversionurl": 18,
+        "defaultversionid": 18,
+        "defaultversionsticky": 20,
+        "defaultversionurl": 19,
         "description": 9,
         "dirid": 1,
         "documentation": 10,
@@ -6888,10 +6981,11 @@ func TestUseSpecAttrs(t *testing.T) {
         "id": 1,
         "isdefault": 8,
         "labels": 11,
-        "metaurl": 16,
-        "model": 21,
+        "metaurl": 17,
+        "model": 22,
         "modifiedat": 13,
         "name": 7,
+        "readonly": 14,
         "registryid": 1,
         "self": 3,
         "specversion": 0,
@@ -6912,13 +7006,13 @@ func TestUseSpecAttrs(t *testing.T) {
           "createdat": "YYYY-MM-DDTHH:MM:02Z",
           "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
           "obj": {
-            "capabilities": 20,
-            "compatibility": 14,
-            "contenttype": 15,
+            "capabilities": 21,
+            "compatibility": 15,
+            "contenttype": 16,
             "createdat": 12,
-            "defaultversionid": 17,
-            "defaultversionsticky": 19,
-            "defaultversionurl": 18,
+            "defaultversionid": 18,
+            "defaultversionsticky": 20,
+            "defaultversionurl": 19,
             "description": 9,
             "dirid": 1,
             "documentation": 10,
@@ -6930,10 +7024,11 @@ func TestUseSpecAttrs(t *testing.T) {
             "id": 1,
             "isdefault": 8,
             "labels": 11,
-            "metaurl": 16,
-            "model": 21,
+            "metaurl": 17,
+            "model": 22,
             "modifiedat": 13,
             "name": 7,
+            "readonly": 14,
             "registryid": 1,
             "self": 3,
             "specversion": 0,
@@ -6951,13 +7046,13 @@ func TestUseSpecAttrs(t *testing.T) {
             "createdat": "YYYY-MM-DDTHH:MM:02Z",
             "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
             "obj": {
-              "capabilities": 20,
-              "compatibility": 14,
-              "contenttype": 15,
+              "capabilities": 21,
+              "compatibility": 15,
+              "contenttype": 16,
               "createdat": 12,
-              "defaultversionid": 17,
-              "defaultversionsticky": 19,
-              "defaultversionurl": 18,
+              "defaultversionid": 18,
+              "defaultversionsticky": 20,
+              "defaultversionurl": 19,
               "description": 9,
               "dirid": 1,
               "documentation": 10,
@@ -6969,10 +7064,11 @@ func TestUseSpecAttrs(t *testing.T) {
               "id": 1,
               "isdefault": 8,
               "labels": 11,
-              "metaurl": 16,
-              "model": 21,
+              "metaurl": 17,
+              "model": 22,
               "modifiedat": 13,
               "name": 7,
+              "readonly": 14,
               "registryid": 1,
               "self": 3,
               "specversion": 0,
@@ -6996,13 +7092,13 @@ func TestUseSpecAttrs(t *testing.T) {
               "createdat": "YYYY-MM-DDTHH:MM:02Z",
               "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
               "obj": {
-                "capabilities": 20,
-                "compatibility": 14,
-                "contenttype": 15,
+                "capabilities": 21,
+                "compatibility": 15,
+                "contenttype": 16,
                 "createdat": 12,
-                "defaultversionid": 17,
-                "defaultversionsticky": 19,
-                "defaultversionurl": 18,
+                "defaultversionid": 18,
+                "defaultversionsticky": 20,
+                "defaultversionurl": 19,
                 "description": 9,
                 "dirid": 1,
                 "documentation": 10,
@@ -7014,10 +7110,11 @@ func TestUseSpecAttrs(t *testing.T) {
                 "id": 1,
                 "isdefault": 8,
                 "labels": 11,
-                "metaurl": 16,
-                "model": 21,
+                "metaurl": 17,
+                "model": 22,
                 "modifiedat": 13,
                 "name": 7,
+                "readonly": 14,
                 "registryid": 1,
                 "self": 3,
                 "specversion": 0,

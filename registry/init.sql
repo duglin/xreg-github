@@ -77,7 +77,6 @@ CREATE TABLE ModelEntities (        # Group or Resource (no parent=Group)
     SetVersionId      BOOL,
     SetDefaultSticky  BOOL,
     HasDocument       BOOL,
-    ReadOnly          BOOL,
     TypeMap           JSON,
     Labels            JSON,
     MetaAttributes    JSON,
