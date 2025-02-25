@@ -157,6 +157,7 @@ func TestFiltersBasic(t *testing.T) {
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
   "xid": "/dirs/d1/files/f1/versions/v1",
   "epoch": 1,
+  "isdefault": false,
   "createdat": "2024-12-01T12:00:00Z",
   "modifiedat": "2024-12-01T12:00:00Z"
 }
@@ -264,9 +265,12 @@ func TestFiltersBasic(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-12-01T12:00:02Z",
             "modifiedat": "2024-12-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1.1",
-            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
@@ -276,6 +280,7 @@ func TestFiltersBasic(t *testing.T) {
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$details",
               "xid": "/dirs/d2/files/f2/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2024-12-01T12:00:02Z",
               "modifiedat": "2024-12-01T12:00:02Z"
             },
@@ -366,9 +371,12 @@ func TestFiltersBasic(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1.1",
-            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
@@ -378,6 +386,7 @@ func TestFiltersBasic(t *testing.T) {
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$details",
               "xid": "/dirs/d2/files/f2/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },

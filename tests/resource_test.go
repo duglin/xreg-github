@@ -167,7 +167,7 @@ func TestResourceMaxVersions(t *testing.T) {
 		Singular:    "file",
 		MaxVersions: -1,
 	})
-	xCheckErr(t, err, `'maxversions'(-1) must be >= 0`)
+	xCheckErr(t, err, `"maxversions"(-1) must be >= 0`)
 
 	rm, err := gm.AddResourceModelFull(&registry.ResourceModel{
 		Plural:      "files",

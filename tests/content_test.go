@@ -163,6 +163,8 @@ func TestResourceContents(t *testing.T) {
   "epoch": 5,
   "createdat": "2025-01-01T12:00:01Z",
   "modifiedat": "2025-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "v2",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",

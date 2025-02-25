@@ -664,7 +664,7 @@ func (e *Entity) SetDBProperty(pp *PropPath, val any) error {
 	// appear in the DB at all. If this is too broad then just do it for
 	// "defaultversionsticky" in resources.go as we're copying attributes.
 	if !IsNil(specProp) && val == false && GoToOurType(val) == BOOLEAN {
-		val = nil
+		// val = nil
 	}
 
 	if IsNil(val) {
@@ -1204,9 +1204,11 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "isdefault",
-		Type:     BOOLEAN,
-		ReadOnly: true,
+		Name:           "isdefault",
+		Type:           BOOLEAN,
+		ReadOnly:       true,
+		ServerRequired: true,
+		Default:        false,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_VERSION),
@@ -1346,8 +1348,10 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name: "readonly",
-		Type: BOOLEAN,
+		Name:           "readonly",
+		Type:           BOOLEAN,
+		ServerRequired: true,
+		Default:        false,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -1362,7 +1366,9 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 		Enum: []any{"none", "backward", "backward_transitive", "forward",
 			"forward_transitive", "full", "full_transitive"},
-		Strict: PtrBool(false),
+		Strict:         PtrBool(false),
+		ServerRequired: true,
+		Default:        "none",
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -1616,9 +1622,11 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:     "defaultversionsticky",
-		Type:     BOOLEAN,
-		ReadOnly: true,
+		Name:           "defaultversionsticky",
+		Type:           BOOLEAN,
+		ReadOnly:       true,
+		ServerRequired: true,
+		Default:        false,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -2336,7 +2344,15 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			// A Default value is defined but there's no value, so set it
 			// and then let normal processing continue
 			if !IsNil(attr.Default) && (!keyPresent || IsNil(val)) {
-				newObj[key] = attr.Default
+				// When meta.xref is set we skip any attributes with default
+				// values. However, if this ever changes where some do need
+				// to be set, add a flag to the OrderedSpecProps stuff
+				// so we don't need to special case each one
+				if e.Type != ENTITY_META || e.GetAsString("xref") == "" {
+					val = attr.Default
+					newObj[key] = val
+					keyPresent = true
+				}
 			}
 
 			if path.Len() > 0 {

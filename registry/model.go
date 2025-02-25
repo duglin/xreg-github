@@ -1042,13 +1042,30 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 	if rm.Singular == "" {
 		return nil, fmt.Errorf("Can't add a group with an empty sigular name")
 	}
-	if rm.MaxVersions < 0 {
-		return nil, fmt.Errorf("'maxversions'(%d) must be >= 0", rm.MaxVersions)
+
+	rm.GroupModel = gm
+
+	cap := DefaultCapabilities
+	reg := rm.GroupModel.Model.Registry
+	if reg != nil && reg.Capabilities != nil {
+		cap = reg.Capabilities
 	}
+
+	if !cap.MaxVersionsEnabled(rm.MaxVersions) {
+		if cap.MaxVersions == 0 {
+			return nil, fmt.Errorf(`"maxversions"(%d) must be >= 0`,
+				rm.MaxVersions)
+		} else {
+			return nil, fmt.Errorf("'maxversions'(%d) must be between 1 and %d",
+				rm.MaxVersions, cap.MaxVersions)
+		}
+	}
+
 	if rm.MaxVersions == 1 && rm.GetSetDefaultSticky() != false {
 		return nil, fmt.Errorf("'setdefaultversionsticky' must be 'false' since " +
 			"'maxversions' is '1'")
 	}
+
 	if err := IsValidModelName(rm.Plural); err != nil {
 		return nil, err
 	}
@@ -1795,6 +1812,21 @@ func (rm *ResourceModel) Verify(rmName string) error {
 
 	if err := attrs.Verify(ld); err != nil {
 		return err
+	}
+
+	cap := DefaultCapabilities
+	reg := rm.GroupModel.Model.Registry
+	if reg != nil && reg.Capabilities != nil {
+		cap = reg.Capabilities
+	}
+
+	if !cap.MaxVersionsEnabled(rm.MaxVersions) {
+		if cap.MaxVersions == 0 {
+			return fmt.Errorf(`"maxversions"(%d) must be >= 0`, rm.MaxVersions)
+		} else {
+			return fmt.Errorf("'maxversions'(%d) must be between 1 and %d",
+				rm.MaxVersions, cap.MaxVersions)
+		}
 	}
 
 	// TODO: verify the Resources data are model compliant

@@ -404,6 +404,7 @@ func (reg *Registry) LoadModelFromFile(file string) error {
 
 	// TODO: Do we need to call model.SetPointers?
 
+	model.Registry = reg
 	if err := model.Verify(); err != nil {
 		return fmt.Errorf("Processing %q: %s", file, err)
 	}

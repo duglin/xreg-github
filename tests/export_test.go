@@ -51,6 +51,7 @@ func TestExportBasic(t *testing.T) {
       "setdefaultversionid",
       "specversion"
     ],
+    "maxversions": 0,
     "mutable": [
       "capabilities",
       "entities",
@@ -63,7 +64,8 @@ func TestExportBasic(t *testing.T) {
     "shortself": false,
     "specversions": [
       "0.5"
-    ]
+    ],
+    "sticky": true
   },
   "model": {
     "attributes": {
@@ -230,7 +232,9 @@ func TestExportBasic(t *testing.T) {
               "isdefault": {
                 "name": "isdefault",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "description": {
                 "name": "description",
@@ -302,7 +306,9 @@ func TestExportBasic(t *testing.T) {
               },
               "readonly": {
                 "name": "readonly",
-                "type": "boolean"
+                "type": "boolean",
+                "serverrequired": true,
+                "default": false
               },
               "compatibility": {
                 "name": "compatibility",
@@ -316,7 +322,9 @@ func TestExportBasic(t *testing.T) {
                   "full",
                   "full_transitive"
                 ],
-                "strict": false
+                "strict": false,
+                "serverrequired": true,
+                "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
@@ -332,7 +340,9 @@ func TestExportBasic(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               }
             }
           }
@@ -366,9 +376,12 @@ func TestExportBasic(t *testing.T) {
             "epoch": 2,
             "createdat": "2025-01-01T12:00:02Z",
             "modifiedat": "2025-01-01T12:00:04Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "#/dirs/d1/files/f1/versions/v2"
+            "defaultversionurl": "#/dirs/d1/files/f1/versions/v2",
+            "defaultversionsticky": false
           },
           "versionsurl": "#/dirs/d1/files/f1/versions",
           "versions": {
@@ -378,6 +391,7 @@ func TestExportBasic(t *testing.T) {
               "self": "#/dirs/d1/files/f1/versions/v1",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2025-01-01T12:00:02Z",
               "modifiedat": "2025-01-01T12:00:02Z",
               "contenttype": "application/json",
@@ -464,9 +478,12 @@ func TestExportBasic(t *testing.T) {
             "epoch": 2,
             "createdat": "2025-01-01T12:00:02Z",
             "modifiedat": "2025-01-01T12:00:04Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "#/dirs/d1/files/f1/versions/v2"
+            "defaultversionurl": "#/dirs/d1/files/f1/versions/v2",
+            "defaultversionsticky": false
           },
           "versionsurl": "#/dirs/d1/files/f1/versions",
           "versions": {
@@ -476,6 +493,7 @@ func TestExportBasic(t *testing.T) {
               "self": "#/dirs/d1/files/f1/versions/v1",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2025-01-01T12:00:02Z",
               "modifiedat": "2025-01-01T12:00:02Z",
               "contenttype": "application/json",
@@ -553,6 +571,7 @@ func TestExportBasic(t *testing.T) {
       "setdefaultversionid",
       "specversion"
     ],
+    "maxversions": 0,
     "mutable": [
       "capabilities",
       "entities",
@@ -565,7 +584,8 @@ func TestExportBasic(t *testing.T) {
     "shortself": false,
     "specversions": [
       "0.5"
-    ]
+    ],
+    "sticky": true
   },
 
   "dirsurl": "http://localhost:8181/dirs",
@@ -754,7 +774,9 @@ func TestExportBasic(t *testing.T) {
               "isdefault": {
                 "name": "isdefault",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "description": {
                 "name": "description",
@@ -826,7 +848,9 @@ func TestExportBasic(t *testing.T) {
               },
               "readonly": {
                 "name": "readonly",
-                "type": "boolean"
+                "type": "boolean",
+                "serverrequired": true,
+                "default": false
               },
               "compatibility": {
                 "name": "compatibility",
@@ -840,7 +864,9 @@ func TestExportBasic(t *testing.T) {
                   "full",
                   "full_transitive"
                 ],
-                "strict": false
+                "strict": false,
+                "serverrequired": true,
+                "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
@@ -856,7 +882,9 @@ func TestExportBasic(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               }
             }
           }
@@ -895,9 +923,12 @@ func TestExportBasic(t *testing.T) {
           "epoch": 2,
           "createdat": "2025-01-01T12:00:02Z",
           "modifiedat": "2025-01-01T12:00:04Z",
+          "readonly": false,
+          "compatibility": "none",
 
           "defaultversionid": "v2",
-          "defaultversionurl": "#/d1/files/f1/versions/v2"
+          "defaultversionurl": "#/d1/files/f1/versions/v2",
+          "defaultversionsticky": false
         },
         "versionsurl": "#/d1/files/f1/versions",
         "versions": {
@@ -907,6 +938,7 @@ func TestExportBasic(t *testing.T) {
             "self": "#/d1/files/f1/versions/v1",
             "xid": "/dirs/d1/files/f1/versions/v1",
             "epoch": 1,
+            "isdefault": false,
             "createdat": "2025-01-01T12:00:02Z",
             "modifiedat": "2025-01-01T12:00:02Z",
             "contenttype": "application/json",
@@ -973,9 +1005,12 @@ func TestExportBasic(t *testing.T) {
         "epoch": 2,
         "createdat": "2025-01-01T12:00:02Z",
         "modifiedat": "2025-01-01T12:00:04Z",
+        "readonly": false,
+        "compatibility": "none",
 
         "defaultversionid": "v2",
-        "defaultversionurl": "#/files/f1/versions/v2"
+        "defaultversionurl": "#/files/f1/versions/v2",
+        "defaultversionsticky": false
       },
       "versionsurl": "#/files/f1/versions",
       "versions": {
@@ -985,6 +1020,7 @@ func TestExportBasic(t *testing.T) {
           "self": "#/files/f1/versions/v1",
           "xid": "/dirs/d1/files/f1/versions/v1",
           "epoch": 1,
+          "isdefault": false,
           "createdat": "2025-01-01T12:00:02Z",
           "modifiedat": "2025-01-01T12:00:02Z",
           "contenttype": "application/json",
@@ -1041,9 +1077,12 @@ func TestExportBasic(t *testing.T) {
       "epoch": 2,
       "createdat": "2025-01-01T12:00:02Z",
       "modifiedat": "2025-01-01T12:00:04Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v2",
-      "defaultversionurl": "#/f1/versions/v2"
+      "defaultversionurl": "#/f1/versions/v2",
+      "defaultversionsticky": false
     },
     "versionsurl": "#/f1/versions",
     "versions": {
@@ -1053,6 +1092,7 @@ func TestExportBasic(t *testing.T) {
         "self": "#/f1/versions/v1",
         "xid": "/dirs/d1/files/f1/versions/v1",
         "epoch": 1,
+        "isdefault": false,
         "createdat": "2025-01-01T12:00:02Z",
         "modifiedat": "2025-01-01T12:00:02Z",
         "contenttype": "application/json",
@@ -1106,9 +1146,12 @@ func TestExportBasic(t *testing.T) {
     "epoch": 2,
     "createdat": "2025-01-01T12:00:02Z",
     "modifiedat": "2025-01-01T12:00:04Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
-    "defaultversionurl": "#/versions/v2"
+    "defaultversionurl": "#/versions/v2",
+    "defaultversionsticky": false
   },
   "versionsurl": "#/versions",
   "versions": {
@@ -1118,6 +1161,7 @@ func TestExportBasic(t *testing.T) {
       "self": "#/versions/v1",
       "xid": "/dirs/d1/files/f1/versions/v1",
       "epoch": 1,
+      "isdefault": false,
       "createdat": "2025-01-01T12:00:02Z",
       "modifiedat": "2025-01-01T12:00:02Z",
       "contenttype": "application/json",
@@ -1151,9 +1195,12 @@ func TestExportBasic(t *testing.T) {
   "epoch": 2,
   "createdat": "2025-01-01T12:00:02Z",
   "modifiedat": "2025-01-01T12:00:04Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+  "defaultversionsticky": false
 }
 `)
 
@@ -1187,6 +1234,7 @@ func TestExportBasic(t *testing.T) {
     "self": "#/v1",
     "xid": "/dirs/d1/files/f1/versions/v1",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2025-01-01T12:00:02Z",
     "modifiedat": "2025-01-01T12:00:02Z",
     "contenttype": "application/json",
@@ -1217,6 +1265,7 @@ func TestExportBasic(t *testing.T) {
   "self": "#/",
   "xid": "/dirs/d1/files/f1/versions/v1",
   "epoch": 1,
+  "isdefault": false,
   "createdat": "2025-01-01T12:00:02Z",
   "modifiedat": "2025-01-01T12:00:02Z",
   "contenttype": "application/json",
@@ -1254,6 +1303,7 @@ func TestExportBasic(t *testing.T) {
       "self": "#/versions/v1",
       "xid": "/dirs/d1/files/f1/versions/v1",
       "epoch": 1,
+      "isdefault": false,
       "createdat": "2025-01-01T12:00:01Z",
       "modifiedat": "2025-01-01T12:00:01Z",
       "contenttype": "application/json",
@@ -1270,9 +1320,12 @@ func TestExportBasic(t *testing.T) {
     "epoch": 2,
     "createdat": "2025-01-01T12:00:01Z",
     "modifiedat": "2025-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+    "defaultversionsticky": false
   }
 }
 `)
@@ -1310,9 +1363,12 @@ func TestExportBasic(t *testing.T) {
     "epoch": 2,
     "createdat": "2025-01-01T12:00:01Z",
     "modifiedat": "2025-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
-    "defaultversionurl": "#/versions/v2"
+    "defaultversionurl": "#/versions/v2",
+    "defaultversionsticky": false
   }
 }
 `)
@@ -1378,9 +1434,12 @@ func TestExportBasic(t *testing.T) {
             "epoch": 2,
             "createdat": "2025-01-01T12:00:02Z",
             "modifiedat": "2025-01-01T12:00:04Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "#/dirs/d1/files/f1/versions/v2"
+            "defaultversionurl": "#/dirs/d1/files/f1/versions/v2",
+            "defaultversionsticky": false
           }
         },
         "fx": {
@@ -1477,9 +1536,12 @@ func TestExportBasic(t *testing.T) {
       "epoch": 2,
       "createdat": "2025-01-01T12:00:01Z",
       "modifiedat": "2025-01-01T12:00:02Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v2",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versionscount": 1
@@ -1589,9 +1651,12 @@ func TestExportBasic(t *testing.T) {
   "epoch": 2,
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
   "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "v2",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+  "defaultversionsticky": false
 }
 `)
 
@@ -1603,6 +1668,7 @@ func TestExportBasic(t *testing.T) {
     "self": "#/v1",
     "xid": "/dirs/d1/files/f1/versions/v1",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "YYYY-MM-DDTHH:MM:01Z",
     "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
     "contenttype": "application/json"
@@ -1628,6 +1694,7 @@ func TestExportBasic(t *testing.T) {
   "self": "#/",
   "xid": "/dirs/d1/files/f1/versions/v1",
   "epoch": 1,
+  "isdefault": false,
   "createdat": "YYYY-MM-DDTHH:MM:01Z",
   "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
   "contenttype": "application/json"
@@ -1898,9 +1965,12 @@ func TestExportURLs(t *testing.T) {
             "epoch": 1,
             "createdat": "2025-01-01T12:00:03Z",
             "modifiedat": "2025-01-01T12:00:03Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versionscount": 1
@@ -2001,9 +2071,12 @@ func TestExportURLs(t *testing.T) {
             "epoch": 1,
             "createdat": "2025-01-01T12:00:03Z",
             "modifiedat": "2025-01-01T12:00:03Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "#/dirs/d1/files/f1/versions/1"
+            "defaultversionurl": "#/dirs/d1/files/f1/versions/1",
+            "defaultversionsticky": false
           },
           "versionsurl": "#/dirs/d1/files/f1/versions",
           "versions": {
@@ -2044,9 +2117,12 @@ func TestExportURLs(t *testing.T) {
       "epoch": 1,
       "createdat": "2025-01-01T12:00:03Z",
       "modifiedat": "2025-01-01T12:00:03Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "1",
-      "defaultversionurl": "#/f1/versions/1"
+      "defaultversionurl": "#/f1/versions/1",
+      "defaultversionsticky": false
     },
     "versionsurl": "#/f1/versions",
     "versions": {
@@ -2080,9 +2156,12 @@ func TestExportURLs(t *testing.T) {
       "epoch": 1,
       "createdat": "2025-01-01T12:00:03Z",
       "modifiedat": "2025-01-01T12:00:03Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versionscount": 1
@@ -2149,9 +2228,12 @@ func TestExportURLs(t *testing.T) {
             "epoch": 1,
             "createdat": "2025-01-01T12:00:03Z",
             "modifiedat": "2025-01-01T12:00:03Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versionscount": 1
@@ -2225,9 +2307,12 @@ func TestExportURLs(t *testing.T) {
   "epoch": 1,
   "createdat": "2025-01-01T12:00:03Z",
   "modifiedat": "2025-01-01T12:00:03Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+  "defaultversionsticky": false
 }
 `)
 
@@ -2311,9 +2396,12 @@ func TestExportURLs(t *testing.T) {
             "epoch": 1,
             "createdat": "2025-01-01T12:00:04Z",
             "modifiedat": "2025-01-01T12:00:04Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "#/dirs/d1/files/f1/versions/1"
+            "defaultversionurl": "#/dirs/d1/files/f1/versions/1",
+            "defaultversionsticky": false
           },
           "versionsurl": "#/dirs/d1/files/f1/versions",
           "versions": {
@@ -2389,9 +2477,12 @@ func TestExportNoDoc(t *testing.T) {
     "epoch": 1,
     "createdat": "2025-01-23T23:07:14.527627972Z",
     "modifiedat": "2025-01-23T23:07:14.527627972Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 1
@@ -2412,9 +2503,12 @@ func TestExportNoDoc(t *testing.T) {
     "epoch": 1,
     "createdat": "2025-01-23T23:08:08.330305606Z",
     "modifiedat": "2025-01-23T23:08:08.330305606Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v1",
-    "defaultversionurl": "#/versions/v1"
+    "defaultversionurl": "#/versions/v1",
+    "defaultversionsticky": false
   },
   "versionsurl": "#/versions",
   "versions": {

@@ -12,21 +12,38 @@ import (
 type Capabilities struct {
 	EnforceCompatibility bool     `json:"enforcecompatibility"`
 	Flags                []string `json:"flags"`
+	MaxVersions          int      `json:"maxversions"`
 	Mutable              []string `json:"mutable"`
 	Pagination           bool     `json:"pagination"`
 	Schemas              []string `json:"schemas"`
 	ShortSelf            bool     `json:"shortself"`
 	SpecVersions         []string `json:"specversions"`
+	Sticky               *bool    `json:"sticky"`
+}
+
+type OfferedCapability struct {
+	Type          string       `json:"type,omitempty"`
+	Item          *OfferedItem `json:"item,omitempty"`
+	Enum          []any        `json:"enum,omitempty"`
+	Min           any          `json:"min,omitempty"`
+	Max           any          `json:"max,omitempty"`
+	Documentation string       `json:"documentation,omitempty"`
+}
+
+type OfferedItem struct {
+	Type string `json:"type,omitempty"`
 }
 
 type Offered struct {
-	EnforceCompatibility []bool   `json:"enforcecompatibility"`
-	Flags                []string `json:"flags"`
-	Mutable              []string `json:"mutable"`
-	Pagination           []bool   `json:"pagination"`
-	Schemas              []string `json:"schemas"`
-	ShortSelf            []bool   `json:"shortself"`
-	SpecVersions         []string `json:"specversions"`
+	EnforceCompatibility OfferedCapability `json:"enforcecompatibility,omitempty"`
+	Flags                OfferedCapability `json:"flags,omitempty"`
+	MaxVersions          OfferedCapability `json:"maxversions,omitempty"`
+	Mutable              OfferedCapability `json:"mutable,omitempty"`
+	Pagination           OfferedCapability `json:"pagination,omitempty"`
+	Schemas              OfferedCapability `json:"schemas,omitempty"`
+	ShortSelf            OfferedCapability `json:"shortself,omitempty"`
+	SpecVersions         OfferedCapability `json:"specversions,omitempty"`
+	Sticky               OfferedCapability `json:"sticky,omitempty"`
 }
 
 var AllowableFlags = ArrayToLower([]string{
@@ -45,11 +62,13 @@ var AllowableSpecVersions = ArrayToLower([]string{"0.5"})
 var DefaultCapabilities = &Capabilities{
 	EnforceCompatibility: false,
 	Flags:                AllowableFlags,
+	MaxVersions:          0,
 	Mutable:              AllowableMutable,
 	Pagination:           false,
 	Schemas:              AllowableSchemas,
 	ShortSelf:            false,
 	SpecVersions:         AllowableSpecVersions,
+	Sticky:               PtrBool(true),
 }
 
 func init() {
@@ -61,15 +80,56 @@ func init() {
 	Must(DefaultCapabilities.Validate())
 }
 
+func String2AnySlice(strs []string) []any {
+	res := make([]any, len(strs))
+
+	for i, v := range strs {
+		res[i] = v
+	}
+
+	return res
+}
+
 func GetOffered() *Offered {
 	offered := &Offered{
-		EnforceCompatibility: []bool{false},
-		Flags:                AllowableFlags,
-		Mutable:              AllowableMutable,
-		Pagination:           []bool{false},
-		Schemas:              AllowableSchemas,
-		ShortSelf:            []bool{false},
-		SpecVersions:         AllowableSpecVersions,
+		EnforceCompatibility: OfferedCapability{
+			Type: "boolean",
+			Enum: []any{false},
+		},
+		Flags: OfferedCapability{
+			Type: "array",
+			Item: &OfferedItem{
+				Type: "string",
+			},
+			Enum: String2AnySlice(AllowableFlags),
+		},
+		MaxVersions: OfferedCapability{
+			Type: "uinteger",
+		},
+		Mutable: OfferedCapability{
+			Type: "string",
+			Enum: String2AnySlice(AllowableMutable),
+		},
+		Pagination: OfferedCapability{
+			Type: "boolean",
+			Enum: []any{false},
+		},
+		Schemas: OfferedCapability{
+			Type: "string",
+			Enum: String2AnySlice(AllowableSchemas),
+		},
+		ShortSelf: OfferedCapability{
+			Type: "boolean",
+			Enum: []any{false},
+		},
+		SpecVersions: OfferedCapability{
+			Type: "string",
+			Enum: String2AnySlice(AllowableSpecVersions),
+		},
+		Sticky: OfferedCapability{
+			Type: "boolean",
+			Enum: []any{false, true},
+		},
 	}
 
 	return offered
@@ -150,6 +210,10 @@ func (c *Capabilities) Validate() error {
 		return err
 	}
 
+	if c.MaxVersions < 0 {
+		return fmt.Errorf(`"maxversions" must be an unsigned integer`)
+	}
+
 	c.Mutable, err = CleanArray(c.Mutable, AllowableMutable, "mutable")
 	if err != nil {
 		return err
@@ -182,6 +246,10 @@ func (c *Capabilities) Validate() error {
 		return fmt.Errorf(`"specversions" must contain %q`, SPECVERSION)
 	}
 
+	if c.Sticky == nil {
+		c.Sticky = DefaultCapabilities.Sticky
+	}
+
 	return nil
 }
 
@@ -207,6 +275,10 @@ func (c *Capabilities) FlagEnabled(str string) bool {
 	return ArrayContainsAnyCase(c.Flags, str)
 }
 
+func (c *Capabilities) MaxVersionsEnabled(ver int) bool {
+	return ver >= 0 && (c.MaxVersions == 0 || (ver > 0 && ver <= c.MaxVersions))
+}
+
 func (c *Capabilities) MutableEnabled(str string) bool {
 	return ArrayContainsAnyCase(c.Mutable, str)
 }
@@ -225,4 +297,8 @@ func (c *Capabilities) ShortSelfEnabled(str string) bool {
 
 func (c *Capabilities) SpecVersionEnabled(str string) bool {
 	return ArrayContainsAnyCase(c.SpecVersions, str)
+}
+
+func (c *Capabilities) StickyEnabled() bool {
+	return c.Sticky != nil && (*c.Sticky) == true
 }

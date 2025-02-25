@@ -101,9 +101,12 @@ func TestInlineBasic(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -113,6 +116,7 @@ func TestInlineBasic(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
               "xid": "/dirs/d1/files/f1/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
@@ -160,9 +164,12 @@ func TestInlineBasic(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1.1",
-            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d2/files/f2/versions/v1.1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d2/files/f2/versions",
           "versions": {
@@ -172,6 +179,7 @@ func TestInlineBasic(t *testing.T) {
               "self": "http://localhost:8181/dirs/d2/files/f2/versions/v1$details",
               "xid": "/dirs/d2/files/f2/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
@@ -223,9 +231,12 @@ func TestInlineBasic(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs2/d2/files/f2/versions",
           "versions": {
@@ -656,7 +667,10 @@ func TestInlineResource(t *testing.T) {
 			`"xid"`,
 			`"isdefault"`,
 			`"metaurl"`,
+			`"readonly"`,
+			`"compatibility"`,
 			`"defaultversionurl"`,
+			`"defaultversionsticky"`,
 			`"createdat"`,
 			`"modifiedat"`,
 			`"versionsurl"`,
@@ -733,9 +747,12 @@ func TestInlineWildcards(t *testing.T) {
             "epoch": 1,
             "createdat": "2025-01-01T12:00:02Z",
             "modifiedat": "2025-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -808,9 +825,12 @@ func TestInlineWildcards(t *testing.T) {
             "epoch": 1,
             "createdat": "2025-01-01T12:00:02Z",
             "modifiedat": "2025-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -883,9 +903,12 @@ func TestInlineWildcards(t *testing.T) {
             "epoch": 1,
             "createdat": "2025-01-01T12:00:02Z",
             "modifiedat": "2025-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -1058,9 +1081,12 @@ func TestInlineWildcards(t *testing.T) {
           "epoch": 1,
           "createdat": "2025-01-01T12:00:02Z",
           "modifiedat": "2025-01-01T12:00:02Z",
+          "readonly": false,
+          "compatibility": "none",
 
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+          "defaultversionsticky": false
         },
         "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
         "versions": {
@@ -1167,9 +1193,12 @@ func TestInlineWildcards(t *testing.T) {
         "epoch": 1,
         "createdat": "2025-01-01T12:00:02Z",
         "modifiedat": "2025-01-01T12:00:02Z",
+        "readonly": false,
+        "compatibility": "none",
 
         "defaultversionid": "v1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+        "defaultversionsticky": false
       },
       "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
       "versions": {

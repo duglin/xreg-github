@@ -129,9 +129,12 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
         "epoch": 1,
         "createdat": "2024-01-01T12:00:01Z",
         "modifiedat": "2024-01-01T12:00:01Z",
+        "readonly": false,
+        "compatibility": "none",
 
         "defaultversionid": "1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$details"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/bars/b1/versions/1$details",
+        "defaultversionsticky": false
       },
       "versionsurl": "http://localhost:8181/dirs/d1/bars/b1/versions",
       "versions": {
@@ -171,9 +174,12 @@ func TestHTTPHasDocumentFalse(t *testing.T) {
         "epoch": 1,
         "createdat": "2024-01-01T12:00:02Z",
         "modifiedat": "2024-01-01T12:00:02Z",
+        "readonly": false,
+        "compatibility": "none",
 
         "defaultversionid": "1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/ff1/versions/1",
+        "defaultversionsticky": false
       },
       "versionsurl": "http://localhost:8181/dirs/d1/files/ff1/versions",
       "versions": {
@@ -497,9 +503,11 @@ func TestHTTPReadOnlyResource(t *testing.T) {
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
       "readonly": true,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/dir1/files/f1/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/dir1/files/f1/versions",
     "versionscount": 1
@@ -597,6 +605,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/2",
 			"xRegistry-xid: /dirs/d1/files/f1/versions/2",
 			"xRegistry-epoch: 1",
+			"xRegistry-isdefault: false",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Location: http://localhost:8181/dirs/d1/files/f1/versions/2",
@@ -659,6 +668,7 @@ func TestDefaultVersionThis(t *testing.T) {
 			"xRegistry-self: http://localhost:8181/dirs/d1/files/f1/versions/4",
 			"xRegistry-xid: /dirs/d1/files/f1/versions/4",
 			"xRegistry-epoch: 1",
+			"xRegistry-isdefault: false",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Location: http://localhost:8181/dirs/d1/files/f1/versions/4",
@@ -2368,6 +2378,7 @@ func TestHTTPContent2(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/fv/versions/v1$details",
     "xid": "/dirs/d1/files/fv/versions/v1",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   },
@@ -2377,6 +2388,7 @@ func TestHTTPContent2(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/fv/versions/v2$details",
     "xid": "/dirs/d1/files/fv/versions/v2",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   },
@@ -2397,6 +2409,7 @@ func TestHTTPContent2(t *testing.T) {
     "self": "http://localhost:8181/dirs/d1/files/fv/versions/v4$details",
     "xid": "/dirs/d1/files/fv/versions/v4",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   }
@@ -2773,7 +2786,6 @@ func TestHTTPResourcesBulk(t *testing.T) {
 			"xRegistry-epoch:1",
 			"xRegistry-isdefault:true",
 			"xRegistry-description:my f6",
-			"xRegistry-isdefault: true",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
 			"Content-Length:5",
@@ -3062,6 +3074,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v1$details",
     "xid": "/dirs/dir1/files/f99/versions/v1",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2025-01-04T13:31:22.013338763Z",
     "modifiedat": "2025-01-04T13:31:22.013338763Z"
   },
@@ -3071,6 +3084,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/f99/versions/v2$details",
     "xid": "/dirs/dir1/files/f99/versions/v2",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2025-01-04T13:31:22.013338763Z",
     "modifiedat": "2025-01-04T13:31:22.013338763Z"
   },
@@ -3161,6 +3175,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/f11/versions/v2$details",
     "xid": "/dirs/dir1/files/f11/versions/v2",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   }
@@ -3188,6 +3203,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v1$details",
     "xid": "/dirs/dir1/files/f12/versions/v1",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   },
@@ -3237,6 +3253,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v2$details",
     "xid": "/dirs/dir1/files/f12/versions/v2",
     "epoch": 2,
+    "isdefault": false,
     "description": "my v2",
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z"
@@ -3247,6 +3264,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v3$details",
     "xid": "/dirs/dir1/files/f12/versions/v3",
     "epoch": 1,
+    "isdefault": false,
     "description": "my v3",
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:02Z"
@@ -3275,6 +3293,7 @@ func TestHTTPResourcesBulk(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/f12/versions/v4$details",
     "xid": "/dirs/dir1/files/f12/versions/v4",
     "epoch": 1,
+    "isdefault": false,
     "description": "my v4",
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
@@ -4448,6 +4467,7 @@ func TestHTTPResourceCollections(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/ff1/versions/v1",
     "xid": "/dirs/dir1/files/ff1/versions/v1",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   },
@@ -4475,6 +4495,7 @@ func TestHTTPResourceCollections(t *testing.T) {
     "self": "http://localhost:8181/dirs/dir1/files/ff8/versions/v1",
     "xid": "/dirs/dir1/files/ff8/versions/v1",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z"
   },
@@ -5092,6 +5113,7 @@ func TestHTTPURLs(t *testing.T) {
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/1$details",
     "xid": "/dirs/d2/files/f1/versions/1",
     "epoch": 2,
+    "isdefault": false,
     "description": "new f1",
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:01Z",
@@ -5103,6 +5125,7 @@ func TestHTTPURLs(t *testing.T) {
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/2$details",
     "xid": "/dirs/d2/files/f1/versions/2",
     "epoch": 3,
+    "isdefault": false,
     "description": "update 2",
     "labels": {
       "l1": "v1"
@@ -5165,6 +5188,7 @@ func TestHTTPURLs(t *testing.T) {
     "self": "http://localhost:8181/dirs/d2/files/f1/versions/v4$details",
     "xid": "/dirs/d2/files/f1/versions/v4",
     "epoch": 1,
+    "isdefault": false,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z"
   },
@@ -5493,9 +5517,12 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -5604,9 +5631,12 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:04Z",
             "modifiedat": "2024-01-01T12:00:04Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -5724,6 +5754,8 @@ func TestHTTPNestedRegistry(t *testing.T) {
             "epoch": 2,
             "createdat": "2024-01-01T12:00:04Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "2",
             "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/2$details",
@@ -5737,6 +5769,7 @@ func TestHTTPNestedRegistry(t *testing.T) {
               "self": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
               "xid": "/dirs/d1/files/f1/versions/1",
               "epoch": 3,
+              "isdefault": false,
               "description": "f1-1.1",
               "createdat": "2024-01-01T12:00:04Z",
               "modifiedat": "2024-01-01T12:00:02Z"
@@ -5819,9 +5852,12 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 1,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:00Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versions": {
@@ -6013,9 +6049,12 @@ func TestHTTPNestedResources(t *testing.T) {
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
+  "defaultversionsticky": false
 }
 `)
 
@@ -6074,6 +6113,8 @@ func TestHTTPNestedResources(t *testing.T) {
   "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
@@ -6112,6 +6153,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 6,
     "createdat": "YYYY-MM-DDTHH:MM:01Z",
     "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
@@ -6155,6 +6198,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 7,
     "createdat": "YYYY-MM-DDTHH:MM:01Z",
     "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
@@ -6186,6 +6231,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 7,
     "createdat": "2024-01-01T12:00:00Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1$details",
@@ -6210,6 +6257,7 @@ func TestHTTPNestedResources(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
       "xid": "/dirs/d1/files/f1/versions/v2",
       "epoch": 1,
+      "isdefault": false,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     }
@@ -6251,9 +6299,12 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 8,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v3",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$details"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v3$details",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 3
@@ -6297,6 +6348,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 9,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
@@ -6344,6 +6397,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 10,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:00Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v5",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v5$details",
@@ -6386,6 +6441,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 11,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
@@ -6428,6 +6485,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 12,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
@@ -6470,6 +6529,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 13,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
@@ -6512,6 +6573,8 @@ func TestHTTPNestedResources(t *testing.T) {
     "epoch": 14,
     "createdat": "2024-01-01T12:00:02Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2$details",
@@ -6833,9 +6896,12 @@ func TestHTTPRecursiveData(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -6876,9 +6942,12 @@ func TestHTTPRecursiveData(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
           "versions": {
@@ -6917,9 +6986,12 @@ func TestHTTPRecursiveData(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f3/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f3/versions",
           "versions": {
@@ -6960,9 +7032,12 @@ func TestHTTPRecursiveData(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f4/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f4/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f4/versions",
           "versions": {
@@ -7002,9 +7077,12 @@ func TestHTTPRecursiveData(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f5/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f5/versions",
           "versions": {
@@ -7108,9 +7186,12 @@ func TestHTTPRecursiveData(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {
@@ -7151,9 +7232,12 @@ func TestHTTPRecursiveData(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
           "versions": {
@@ -7247,9 +7331,12 @@ func TestHTTPRecursiveData(t *testing.T) {
           "epoch": 1,
           "createdat": "2024-01-01T12:00:01Z",
           "modifiedat": "2024-01-01T12:00:01Z",
+          "readonly": false,
+          "compatibility": "none",
 
           "defaultversionid": "v1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+          "defaultversionsticky": false
         },
         "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
         "versions": {
@@ -7290,9 +7377,12 @@ func TestHTTPRecursiveData(t *testing.T) {
           "epoch": 1,
           "createdat": "2024-01-01T12:00:01Z",
           "modifiedat": "2024-01-01T12:00:01Z",
+          "readonly": false,
+          "compatibility": "none",
 
           "defaultversionid": "1",
-          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
+          "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
+          "defaultversionsticky": false
         },
         "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
         "versions": {
@@ -7379,9 +7469,12 @@ func TestHTTPRecursiveData(t *testing.T) {
         "epoch": 1,
         "createdat": "2024-01-01T12:00:01Z",
         "modifiedat": "2024-01-01T12:00:01Z",
+        "readonly": false,
+        "compatibility": "none",
 
         "defaultversionid": "v1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+        "defaultversionsticky": false
       },
       "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
       "versions": {
@@ -7422,9 +7515,12 @@ func TestHTTPRecursiveData(t *testing.T) {
         "epoch": 1,
         "createdat": "2024-01-01T12:00:01Z",
         "modifiedat": "2024-01-01T12:00:01Z",
+        "readonly": false,
+        "compatibility": "none",
 
         "defaultversionid": "1",
-        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
+        "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
+        "defaultversionsticky": false
       },
       "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
       "versions": {
@@ -7520,9 +7616,12 @@ func TestHTTPRecursiveData(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
@@ -7563,9 +7662,12 @@ func TestHTTPRecursiveData(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
     "versions": {
@@ -7636,9 +7738,12 @@ func TestHTTPRecursiveData(t *testing.T) {
     "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versions": {

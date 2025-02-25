@@ -758,7 +758,9 @@ func TestResourceModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -830,7 +832,9 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -844,7 +848,9 @@ func TestResourceModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -860,7 +866,9 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -968,7 +976,9 @@ func TestResourceModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -1040,7 +1050,9 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -1054,7 +1066,9 @@ func TestResourceModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -1070,7 +1084,9 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -1246,7 +1262,9 @@ func TestResourceModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -1318,7 +1336,9 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -1332,7 +1352,9 @@ func TestResourceModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -1348,7 +1370,9 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -1581,7 +1605,9 @@ func TestResourceModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -1653,7 +1679,9 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -1667,7 +1695,9 @@ func TestResourceModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -1683,7 +1713,9 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -1917,7 +1949,9 @@ func TestResourceModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -1989,7 +2023,9 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -2003,7 +2039,9 @@ func TestResourceModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -2019,7 +2057,9 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -2194,7 +2234,9 @@ func TestResourceModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -2266,7 +2308,9 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -2280,7 +2324,9 @@ func TestResourceModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -2296,7 +2342,9 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -2501,7 +2549,9 @@ func TestResourceModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -2573,7 +2623,9 @@ func TestResourceModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -2587,7 +2639,9 @@ func TestResourceModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -2603,7 +2657,9 @@ func TestResourceModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -2812,7 +2868,9 @@ func TestResourceModelCreate(t *testing.T) {
               "isdefault": {
                 "name": "isdefault",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "description": {
                 "name": "description",
@@ -2884,7 +2942,9 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "readonly": {
                 "name": "readonly",
-                "type": "boolean"
+                "type": "boolean",
+                "serverrequired": true,
+                "default": false
               },
               "compatibility": {
                 "name": "compatibility",
@@ -2898,7 +2958,9 @@ func TestResourceModelCreate(t *testing.T) {
                   "full",
                   "full_transitive"
                 ],
-                "strict": false
+                "strict": false,
+                "serverrequired": true,
+                "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
@@ -2914,7 +2976,9 @@ func TestResourceModelCreate(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               }
             }
           }
@@ -3151,7 +3215,9 @@ func TestResourceModelCreate(t *testing.T) {
               "isdefault": {
                 "name": "isdefault",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "description": {
                 "name": "description",
@@ -3223,7 +3289,9 @@ func TestResourceModelCreate(t *testing.T) {
               },
               "readonly": {
                 "name": "readonly",
-                "type": "boolean"
+                "type": "boolean",
+                "serverrequired": true,
+                "default": false
               },
               "compatibility": {
                 "name": "compatibility",
@@ -3237,7 +3305,9 @@ func TestResourceModelCreate(t *testing.T) {
                   "full",
                   "full_transitive"
                 ],
-                "strict": false
+                "strict": false,
+                "serverrequired": true,
+                "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
@@ -3253,7 +3323,9 @@ func TestResourceModelCreate(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               }
             }
           }
@@ -3774,7 +3846,9 @@ func TestMultModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -3846,7 +3920,9 @@ func TestMultModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -3860,7 +3936,9 @@ func TestMultModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -3876,7 +3954,9 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         },
@@ -3924,7 +4004,9 @@ func TestMultModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -3996,7 +4078,9 @@ func TestMultModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -4010,7 +4094,9 @@ func TestMultModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -4026,7 +4112,9 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -4134,7 +4222,9 @@ func TestMultModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -4206,7 +4296,9 @@ func TestMultModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -4220,7 +4312,9 @@ func TestMultModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -4236,7 +4330,9 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         },
@@ -4284,7 +4380,9 @@ func TestMultModelCreate(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -4356,7 +4454,9 @@ func TestMultModelCreate(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -4370,7 +4470,9 @@ func TestMultModelCreate(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -4386,7 +4488,9 @@ func TestMultModelCreate(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -4613,7 +4717,9 @@ func TestMultModel2Create(t *testing.T) {
               "isdefault": {
                 "name": "isdefault",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "description": {
                 "name": "description",
@@ -4685,7 +4791,9 @@ func TestMultModel2Create(t *testing.T) {
               },
               "readonly": {
                 "name": "readonly",
-                "type": "boolean"
+                "type": "boolean",
+                "serverrequired": true,
+                "default": false
               },
               "compatibility": {
                 "name": "compatibility",
@@ -4699,7 +4807,9 @@ func TestMultModel2Create(t *testing.T) {
                   "full",
                   "full_transitive"
                 ],
-                "strict": false
+                "strict": false,
+                "serverrequired": true,
+                "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
@@ -4715,7 +4825,9 @@ func TestMultModel2Create(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               }
             }
           }
@@ -4823,7 +4935,9 @@ func TestMultModel2Create(t *testing.T) {
               "isdefault": {
                 "name": "isdefault",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "description": {
                 "name": "description",
@@ -4895,7 +5009,9 @@ func TestMultModel2Create(t *testing.T) {
               },
               "readonly": {
                 "name": "readonly",
-                "type": "boolean"
+                "type": "boolean",
+                "serverrequired": true,
+                "default": false
               },
               "compatibility": {
                 "name": "compatibility",
@@ -4909,7 +5025,9 @@ func TestMultModel2Create(t *testing.T) {
                   "full",
                   "full_transitive"
                 ],
-                "strict": false
+                "strict": false,
+                "serverrequired": true,
+                "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
@@ -4925,7 +5043,9 @@ func TestMultModel2Create(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               }
             }
           }
@@ -4964,9 +5084,12 @@ func TestMultModel2Create(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v2",
-            "defaultversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2$details"
+            "defaultversionurl": "http://localhost:8181/dirs1/d1/files/f1/versions/v2$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs1/d1/files/f1/versions",
           "versions": {
@@ -4976,6 +5099,7 @@ func TestMultModel2Create(t *testing.T) {
               "self": "http://localhost:8181/dirs1/d1/files/f1/versions/v1$details",
               "xid": "/dirs1/d1/files/f1/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
@@ -5023,9 +5147,12 @@ func TestMultModel2Create(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1.1",
-            "defaultversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1$details"
+            "defaultversionurl": "http://localhost:8181/dirs1/d2/files/f2/versions/v1.1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs1/d2/files/f2/versions",
           "versions": {
@@ -5035,6 +5162,7 @@ func TestMultModel2Create(t *testing.T) {
               "self": "http://localhost:8181/dirs1/d2/files/f2/versions/v1$details",
               "xid": "/dirs1/d2/files/f2/versions/v1",
               "epoch": 1,
+              "isdefault": false,
               "createdat": "2024-01-01T12:00:02Z",
               "modifiedat": "2024-01-01T12:00:02Z"
             },
@@ -5086,9 +5214,12 @@ func TestMultModel2Create(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs2/d2/files/f2/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs2/d2/files/f2/versions",
           "versions": {
@@ -5329,7 +5460,9 @@ func TestModelLabels(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -5401,7 +5534,9 @@ func TestModelLabels(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -5415,7 +5550,9 @@ func TestModelLabels(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -5431,7 +5568,9 @@ func TestModelLabels(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -5616,7 +5755,9 @@ func TestModelLabels(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -5688,7 +5829,9 @@ func TestModelLabels(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -5702,7 +5845,9 @@ func TestModelLabels(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -5718,7 +5863,9 @@ func TestModelLabels(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -5924,7 +6071,9 @@ func TestModelLabels(t *testing.T) {
             "isdefault": {
               "name": "isdefault",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             },
             "description": {
               "name": "description",
@@ -5996,7 +6145,9 @@ func TestModelLabels(t *testing.T) {
             },
             "readonly": {
               "name": "readonly",
-              "type": "boolean"
+              "type": "boolean",
+              "serverrequired": true,
+              "default": false
             },
             "compatibility": {
               "name": "compatibility",
@@ -6010,7 +6161,9 @@ func TestModelLabels(t *testing.T) {
                 "full",
                 "full_transitive"
               ],
-              "strict": false
+              "strict": false,
+              "serverrequired": true,
+              "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
@@ -6026,7 +6179,9 @@ func TestModelLabels(t *testing.T) {
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
-              "readonly": true
+              "readonly": true,
+              "serverrequired": true,
+              "default": false
             }
           }
         }
@@ -6601,7 +6756,9 @@ func TestUseSpecAttrs(t *testing.T) {
               "isdefault": {
                 "name": "isdefault",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "description": {
                 "name": "description",
@@ -6795,7 +6952,9 @@ func TestUseSpecAttrs(t *testing.T) {
               },
               "readonly": {
                 "name": "readonly",
-                "type": "boolean"
+                "type": "boolean",
+                "serverrequired": true,
+                "default": false
               },
               "compatibility": {
                 "name": "compatibility",
@@ -6809,7 +6968,9 @@ func TestUseSpecAttrs(t *testing.T) {
                   "full",
                   "full_transitive"
                 ],
-                "strict": false
+                "strict": false,
+                "serverrequired": true,
+                "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
@@ -6825,7 +6986,9 @@ func TestUseSpecAttrs(t *testing.T) {
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
-                "readonly": true
+                "readonly": true,
+                "serverrequired": true,
+                "default": false
               },
               "obj": {
                 "name": "obj",
@@ -7045,6 +7208,8 @@ func TestUseSpecAttrs(t *testing.T) {
             "epoch": 1,
             "createdat": "YYYY-MM-DDTHH:MM:02Z",
             "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+            "readonly": false,
+            "compatibility": "none",
             "obj": {
               "capabilities": 21,
               "compatibility": 15,
@@ -7078,7 +7243,8 @@ func TestUseSpecAttrs(t *testing.T) {
             },
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {

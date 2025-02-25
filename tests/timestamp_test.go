@@ -117,9 +117,12 @@ func TestTimestampRegistry(t *testing.T) {
             "epoch": 1,
             "createdat": "2024-01-01T12:00:02Z",
             "modifiedat": "2024-01-01T12:00:02Z",
+            "readonly": false,
+            "compatibility": "none",
 
             "defaultversionid": "v1",
-            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+            "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+            "defaultversionsticky": false
           },
           "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
           "versions": {

@@ -29,6 +29,7 @@ func TestCapabilitySimple(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -41,7 +42,8 @@ func TestCapabilitySimple(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -70,6 +72,7 @@ func TestCapabilitySimple(t *testing.T) {
       "setdefaultversionid",
       "specversion"
     ],
+    "maxversions": 0,
     "mutable": [
       "capabilities",
       "entities",
@@ -82,7 +85,8 @@ func TestCapabilitySimple(t *testing.T) {
     "shortself": false,
     "specversions": [
       "0.5"
-    ]
+    ],
+    "sticky": true
   }
 }
 `)
@@ -98,6 +102,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -106,7 +111,8 @@ func TestCapabilitySimple(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }`,
 		},
 		{
@@ -115,6 +121,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -127,7 +134,8 @@ func TestCapabilitySimple(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }`,
 		},
 		{
@@ -136,6 +144,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -148,7 +157,8 @@ func TestCapabilitySimple(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }`,
 		},
 		{
@@ -157,6 +167,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -169,7 +180,8 @@ func TestCapabilitySimple(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }`,
 		},
 		{
@@ -178,6 +190,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -186,7 +199,8 @@ func TestCapabilitySimple(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }`,
 		},
 		{
@@ -269,6 +283,7 @@ func TestCapabilityPath(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -281,7 +296,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -302,6 +318,7 @@ func TestCapabilityPath(t *testing.T) {
 		`{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -310,7 +327,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -329,6 +347,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -337,7 +356,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -345,6 +365,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/capabilities", `{
   "enforcecompatibility": null,
   "flags": null,
+  "maxversions": null,
   "mutable": null,
   "pagination": null,
   "schemas": null,
@@ -354,6 +375,7 @@ func TestCapabilityPath(t *testing.T) {
 		`{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -362,13 +384,15 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -377,7 +401,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -389,11 +414,13 @@ func TestCapabilityPath(t *testing.T) {
     "nodefaultversionsticky", "noepoch", "noreadonly", "offered", "schema",
 	"setdefaultversionid", "specversion"
   ],
+  "maxversions": 0,
   "mutable": [ "capabilities", "entities", "model" ],
   "pagination": false,
   "schemas": [ "xregistry-json/0.5" ],
   "shortself": false,
-  "specversions": [ "0.5" ]
+  "specversions": [ "0.5" ],
+  "sticky": true
 }`, 200,
 		`{
   "enforcecompatibility": false,
@@ -411,6 +438,7 @@ func TestCapabilityPath(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -423,7 +451,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -443,6 +472,7 @@ func TestCapabilityPath(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -455,7 +485,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -465,6 +496,7 @@ func TestCapabilityPath(t *testing.T) {
 		`{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -473,13 +505,15 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -488,7 +522,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -498,6 +533,7 @@ func TestCapabilityPath(t *testing.T) {
 }`, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -506,7 +542,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -514,10 +551,12 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/capabilities", `{
     "enforcecompatibility": false,
 	"pagination": false,
-	"shortself": false
+	"shortself": false,
+    "sticky": false
 }`, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -526,7 +565,8 @@ func TestCapabilityPath(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": false
 }
 `)
 
@@ -585,6 +625,7 @@ func TestCapabilityAttr(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [],
+    "maxversions": 0,
     "mutable": [],
     "pagination": false,
     "schemas": [
@@ -593,7 +634,8 @@ func TestCapabilityAttr(t *testing.T) {
     "shortself": false,
     "specversions": [
       "0.5"
-    ]
+    ],
+    "sticky": true
   }
 }
 `)
@@ -603,11 +645,13 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/?inline=capabilities", `{ "capabilities": {
   "enforcecompatibility": null,
   "flags": null,
+  "maxversions": null,
   "mutable": null,
   "pagination": null,
   "schemas": null,
   "shortself": null,
-  "specversions": null
+  "specversions": null,
+  "sticky": null
 }}`, 200,
 		`{
   "specversion": "0.5",
@@ -623,6 +667,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -631,7 +676,8 @@ func TestCapabilityAttr(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -644,11 +690,13 @@ func TestCapabilityAttr(t *testing.T) {
     "nodefaultversionsticky", "noepoch", "noreadonly", "offered", "schema",
 	"setdefaultversionid", "specversion"
   ],
+  "maxversions": 0,
   "mutable": [ "capabilities", "entities", "model" ],
   "pagination": false,
   "schemas": [ "xregistry-json/0.5" ],
   "shortself": false,
-  "specversions": [ "0.5" ]
+  "specversions": [ "0.5" ],
+  "sticky": false
 }}`, 200,
 		`{
   "specversion": "0.5",
@@ -677,6 +725,7 @@ func TestCapabilityAttr(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -689,7 +738,8 @@ func TestCapabilityAttr(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": false
 }
 `)
 
@@ -698,11 +748,13 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/?inline=capabilities", `{ "capabilities": {
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": ["xregistry-json"],
   "shortself": false,
-  "specversions": ["0.5"]
+  "specversions": ["0.5"],
+  "sticky": true
 }}`, 200,
 		`{
   "specversion": "0.5",
@@ -716,6 +768,7 @@ func TestCapabilityAttr(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [],
+    "maxversions": 0,
     "mutable": [],
     "pagination": false,
     "schemas": [
@@ -724,7 +777,8 @@ func TestCapabilityAttr(t *testing.T) {
     "shortself": false,
     "specversions": [
       "0.5"
-    ]
+    ],
+    "sticky": true
   }
 }
 `)
@@ -732,6 +786,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -740,7 +795,8 @@ func TestCapabilityAttr(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -781,6 +837,7 @@ func TestCapabilityFlagsOff(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/capabilities", `{"mutable":["*"]}`, 200, `{
   "enforcecompatibility": false,
   "flags": [],
+  "maxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -793,7 +850,8 @@ func TestCapabilityFlagsOff(t *testing.T) {
   "shortself": false,
   "specversions": [
     "0.5"
-  ]
+  ],
+  "sticky": true
 }
 `)
 
@@ -887,40 +945,74 @@ func TestCapabilityOffered(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	xHTTP(t, reg, "GET", "/capabilities?offered", ``, 200, `{
-  "enforcecompatibility": [
-    false
-  ],
-  "flags": [
-    "doc",
-    "epoch",
-    "filter",
-    "inline",
-    "nodefaultversionid",
-    "nodefaultversionsticky",
-    "noepoch",
-    "noreadonly",
-    "offered",
-    "schema",
-    "setdefaultversionid",
-    "specversion"
-  ],
-  "mutable": [
-    "capabilities",
-    "entities",
-    "model"
-  ],
-  "pagination": [
-    false
-  ],
-  "schemas": [
-    "xregistry-json/0.5"
-  ],
-  "shortself": [
-    false
-  ],
-  "specversions": [
-    "0.5"
-  ]
+  "enforcecompatibility": {
+    "type": "boolean",
+    "enum": [
+      false
+    ]
+  },
+  "flags": {
+    "type": "array",
+    "item": {
+      "type": "string"
+    },
+    "enum": [
+      "doc",
+      "epoch",
+      "filter",
+      "inline",
+      "nodefaultversionid",
+      "nodefaultversionsticky",
+      "noepoch",
+      "noreadonly",
+      "offered",
+      "schema",
+      "setdefaultversionid",
+      "specversion"
+    ]
+  },
+  "maxversions": {
+    "type": "uinteger"
+  },
+  "mutable": {
+    "type": "string",
+    "enum": [
+      "capabilities",
+      "entities",
+      "model"
+    ]
+  },
+  "pagination": {
+    "type": "boolean",
+    "enum": [
+      false
+    ]
+  },
+  "schemas": {
+    "type": "string",
+    "enum": [
+      "xregistry-json/0.5"
+    ]
+  },
+  "shortself": {
+    "type": "boolean",
+    "enum": [
+      false
+    ]
+  },
+  "specversions": {
+    "type": "string",
+    "enum": [
+      "0.5"
+    ]
+  },
+  "sticky": {
+    "type": "boolean",
+    "enum": [
+      false,
+      true
+    ]
+  }
 }
 `)
 }

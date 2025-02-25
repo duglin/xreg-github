@@ -111,9 +111,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
@@ -153,9 +156,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
@@ -216,9 +222,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
@@ -255,9 +264,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 4,
       "createdat": "2024-01-01T12:00:03Z",
       "modifiedat": "2024-01-01T12:00:04Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
@@ -307,9 +319,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
@@ -349,9 +364,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
@@ -400,9 +418,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 1,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versions": {
@@ -441,9 +462,12 @@ func TestXrefBasic(t *testing.T) {
       "epoch": 5,
       "createdat": "2024-01-01T12:00:03Z",
       "modifiedat": "2024-01-01T12:00:04Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versions": {
@@ -567,9 +591,12 @@ func TestXrefRevert(t *testing.T) {
       "epoch": 1,
       "createdat": "YYYY-MM-DDTHH:MM:01Z",
       "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "1",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f0/versions/1"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f0/versions/1",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f0/versions",
     "versionscount": 1
@@ -594,9 +621,12 @@ func TestXrefRevert(t *testing.T) {
       "epoch": 1,
       "createdat": "YYYY-MM-DDTHH:MM:02Z",
       "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+      "readonly": false,
+      "compatibility": "none",
 
       "defaultversionid": "v9",
-      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9"
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9",
+      "defaultversionsticky": false
     },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versionscount": 1
@@ -635,9 +665,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 2,
     "createdat": "2025-01-01T12:00:01Z",
     "modifiedat": "2025-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -673,9 +706,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 1,
     "createdat": "2025-01-01T12:00:00Z",
     "modifiedat": "2025-01-01T12:00:00Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v9",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -703,9 +739,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 3,
     "createdat": "2025-01-01T12:00:01Z",
     "modifiedat": "2025-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -739,9 +778,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 1,
     "createdat": "2025-01-01T12:00:00Z",
     "modifiedat": "2025-01-01T12:00:00Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v9",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -772,9 +814,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 4,
     "createdat": "2025-01-01T12:00:00Z",
     "modifiedat": "2025-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -809,9 +854,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 1,
     "createdat": "2025-01-01T12:00:00Z",
     "modifiedat": "2025-01-01T12:00:00Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v9",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -841,9 +889,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 5,
     "createdat": "YYYY-MM-DDTHH:MM:02Z",
     "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "z1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/z1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/z1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 2
@@ -878,9 +929,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 1,
     "createdat": "2025-01-01T12:00:00Z",
     "modifiedat": "2025-01-01T12:00:00Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v9",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -916,6 +970,8 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 6,
     "createdat": "2025-01-01T12:00:01Z",
     "modifiedat": "2025-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "b3",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/b3",
@@ -954,9 +1010,12 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 1,
     "createdat": "2025-01-01T12:00:00Z",
     "modifiedat": "2025-01-01T12:00:00Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v9",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
   "versionscount": 1
@@ -994,6 +1053,8 @@ func TestXrefRevert(t *testing.T) {
     "epoch": 7,
     "createdat": "2025-01-01T12:00:01Z",
     "modifiedat": "2025-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "b3",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/b3",
@@ -1019,9 +1080,12 @@ func TestXrefRevert(t *testing.T) {
   "epoch": 1,
   "createdat": "2025-01-01T12:00:00Z",
   "modifiedat": "2025-01-01T12:00:00Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "v9",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v9",
+  "defaultversionsticky": false
 }
 `)
 
@@ -1049,6 +1113,8 @@ func TestXrefRevert(t *testing.T) {
   "epoch": 8,
   "createdat": "2025-01-09T23:16:04.619269627Z",
   "modifiedat": "2025-01-09T23:16:05.273949318Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1",
@@ -1116,9 +1182,12 @@ func TestXrefDocs(t *testing.T) {
   "epoch": 1,
   "createdat": "2025-01-01T12:00:01Z",
   "modifiedat": "2025-01-01T12:00:01Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/1$details",
+  "defaultversionsticky": false
 }
 `)
 

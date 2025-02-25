@@ -29,9 +29,12 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -54,9 +57,12 @@ func TestMetaSimple(t *testing.T) {
     "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versions": {
@@ -126,9 +132,12 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f12/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f12/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -152,10 +161,13 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -179,10 +191,13 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 1,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -202,9 +217,12 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -227,9 +245,12 @@ func TestMetaSimple(t *testing.T) {
     "epoch": 2,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f2/versions/1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
   "versions": {
@@ -263,10 +284,13 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -287,9 +311,12 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 2,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -310,10 +337,13 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -334,10 +364,13 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "zzz",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -358,10 +391,13 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "aaa",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -399,9 +435,12 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -419,9 +458,12 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f21/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -439,10 +481,13 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "zz1",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -460,9 +505,12 @@ func TestMetaSimple(t *testing.T) {
   "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -531,9 +579,12 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 1,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v1.0",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versions": {
@@ -623,9 +674,12 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 2,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2.0",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versions": {
@@ -635,6 +689,7 @@ func TestMetaCombos(t *testing.T) {
       "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0",
       "xid": "/dirs/d1/files/f1/versions/v1.0",
       "epoch": 1,
+      "isdefault": false,
       "createdat": "2024-01-01T12:00:01Z",
       "modifiedat": "2024-01-01T12:00:01Z"
     },
@@ -698,9 +753,12 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 2,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2.0",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 2
@@ -754,9 +812,12 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 2,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:01Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2.0",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 2
@@ -810,6 +871,8 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 3,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -844,6 +907,8 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 3,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -878,6 +943,8 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "v2.0",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -909,6 +976,8 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 4,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:04Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -932,6 +1001,7 @@ func TestMetaCombos(t *testing.T) {
   "self": "http://localhost:8181/dirs/d1/files/f1/versions/1",
   "xid": "/dirs/d1/files/f1/versions/1",
   "epoch": 1,
+  "isdefault": false,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z"
 }
@@ -961,6 +1031,8 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 5,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:04Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v2.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v2.0",
@@ -985,9 +1057,12 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -1015,9 +1090,12 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 6,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 3
@@ -1049,6 +1127,8 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 7,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "v1.0",
   "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0",
@@ -1080,6 +1160,8 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 7,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
 
     "defaultversionid": "v1.0",
     "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1.0",
@@ -1119,10 +1201,13 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 8,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -1150,10 +1235,13 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 8,
     "createdat": "2024-01-01T12:00:03Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
     "foo": "bar",
 
     "defaultversionid": "1",
-    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+    "defaultversionsticky": false
   },
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
   "versionscount": 3
@@ -1175,6 +1263,8 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 9,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "v1.0",
@@ -1207,6 +1297,8 @@ func TestMetaCombos(t *testing.T) {
     "epoch": 9,
     "createdat": "2024-01-01T12:00:01Z",
     "modifiedat": "2024-01-01T12:00:02Z",
+    "readonly": false,
+    "compatibility": "none",
     "foo": "bar",
 
     "defaultversionid": "v1.0",
@@ -1233,10 +1325,13 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 10,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})
@@ -1255,6 +1350,8 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 11,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
   "foo": "bar",
 
   "defaultversionid": "1",
@@ -1276,9 +1373,12 @@ func TestMetaCombos(t *testing.T) {
   "epoch": 12,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
+  "readonly": false,
+  "compatibility": "none",
 
   "defaultversionid": "1",
-  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1"
+  "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/1",
+  "defaultversionsticky": false
 }
 `,
 	})

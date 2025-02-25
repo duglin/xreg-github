@@ -137,3 +137,7 @@ TODOs:
 - bump registry.epoch when capabilities change
 - make meta.readonly a non-readonly attribute if the client is an admin
   - by making it mutable and changings it's meta-model
+- test cap.maxversions & creating resource type that violate it
+- test cap.sticky & creating resource type that violate it
+- verify that attrs with default values require "serverrequired" to be true
+- test default values - incuding within objects

@@ -468,15 +468,18 @@ UNION SELECT                    # Add Version.isdefault, which is calculated
   v.RegSID,
   v.eSID,
   'isdefault$DB_IN',
-  'true',                       # DocView
+  IF( EXISTS(
+        SELECT 1 FROM EffectiveProps AS p
+        WHERE p.EntitySID=m.SID AND
+              p.PropName='defaultversionid$DB_IN' AND
+              p.PropValue=v.UID
+      ),
+      'true',
+      'false'),
   'boolean',                    # Type
-  IF(LEFT(v.eSID,1)='-',false,true)   # Lie if it's not an xref'd prop/ver
+  IF(LEFT(v.eSID,1)='-',false,true)  # DocView,Lie if it's not xref'd prop/ver
 FROM Entities AS v
 JOIN Metas AS m ON (m.ResourceSID=v.ParentSID)
-JOIN EffectiveProps AS p ON (
-  p.EntitySID=m.SID AND
-  p.PropName='defaultversionid$DB_IN'
-  AND p.PropValue=v.UID )
 
 UNION SELECT                   # Add *.xid, which is calculated
   e.RegSID,
