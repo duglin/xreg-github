@@ -252,41 +252,27 @@ func TestRegistryDefaultFields(t *testing.T) {
 	xNoErr(t, err)
 
 	// Commit before we call Set below otherwise the Tx will be rolled back
-	reg.SaveAllAndCommit()
+	reg.Refresh()
+	reg.Touch() // Force a validation which will set all defaults
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
-  "specversion": "`+registry.SPECVERSION+`",
-  "registryid": "TestRegistryDefaultFields",
-  "self": "http://localhost:8181/",
-  "xid": "/",
-  "epoch": 1,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z"
-}
-`)
-
-	// Notice the default value is not there, this might need a spec change.
-	// I think this is referring to "defstring" ??
-	// DUG TODO ^^
-	xHTTP(t, reg, "GET", "/", "", 200, `{
-  "specversion": "`+registry.SPECVERSION+`",
-  "registryid": "TestRegistryDefaultFields",
-  "self": "http://localhost:8181/",
-  "xid": "/",
-  "epoch": 1,
-  "createdat": "2024-01-01T12:00:01Z",
-  "modifiedat": "2024-01-01T12:00:01Z"
-}
-`)
-
-	// Notice now "defstring" appears
-	// DUG TODO ^^ and previous one
-	xHTTP(t, reg, "PUT", "/", "", 200, `{
   "specversion": "`+registry.SPECVERSION+`",
   "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "xid": "/",
   "epoch": 2,
+  "createdat": "2024-01-01T12:00:01Z",
+  "modifiedat": "2024-01-01T12:00:02Z",
+  "defstring": "hello"
+}
+`)
+
+	xHTTP(t, reg, "PUT", "/", "", 200, `{
+  "specversion": "`+registry.SPECVERSION+`",
+  "registryid": "TestRegistryDefaultFields",
+  "self": "http://localhost:8181/",
+  "xid": "/",
+  "epoch": 3,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello"
@@ -301,7 +287,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "xid": "/",
-  "epoch": 3,
+  "epoch": 4,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "updated hello",
@@ -320,7 +306,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "xid": "/",
-  "epoch": 4,
+  "epoch": 5,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello",
@@ -336,7 +322,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "xid": "/",
-  "epoch": 5,
+  "epoch": 6,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello"
@@ -350,7 +336,7 @@ func TestRegistryDefaultFields(t *testing.T) {
   "registryid": "TestRegistryDefaultFields",
   "self": "http://localhost:8181/",
   "xid": "/",
-  "epoch": 6,
+  "epoch": 7,
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
   "defstring": "hello"
