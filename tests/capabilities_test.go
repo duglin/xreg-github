@@ -29,7 +29,7 @@ func TestCapabilitySimple(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -72,7 +72,7 @@ func TestCapabilitySimple(t *testing.T) {
       "setdefaultversionid",
       "specversion"
     ],
-    "maxversions": 0,
+    "maxmaxversions": 0,
     "mutable": [
       "capabilities",
       "entities",
@@ -102,7 +102,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -121,7 +121,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -144,7 +144,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -167,7 +167,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -190,7 +190,7 @@ func TestCapabilitySimple(t *testing.T) {
 			Exp: `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -283,7 +283,7 @@ func TestCapabilityPath(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -318,7 +318,7 @@ func TestCapabilityPath(t *testing.T) {
 		`{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -347,7 +347,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -365,7 +365,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/capabilities", `{
   "enforcecompatibility": null,
   "flags": null,
-  "maxversions": null,
+  "maxmaxversions": null,
   "mutable": null,
   "pagination": null,
   "schemas": null,
@@ -375,7 +375,7 @@ func TestCapabilityPath(t *testing.T) {
 		`{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -392,7 +392,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -414,7 +414,7 @@ func TestCapabilityPath(t *testing.T) {
     "nodefaultversionsticky", "noepoch", "noreadonly", "offered", "schema",
 	"setdefaultversionid", "specversion"
   ],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [ "capabilities", "entities", "model" ],
   "pagination": false,
   "schemas": [ "xregistry-json/0.5" ],
@@ -438,7 +438,7 @@ func TestCapabilityPath(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -472,7 +472,7 @@ func TestCapabilityPath(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -496,7 +496,7 @@ func TestCapabilityPath(t *testing.T) {
 		`{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -513,7 +513,7 @@ func TestCapabilityPath(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -533,7 +533,7 @@ func TestCapabilityPath(t *testing.T) {
 }`, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -556,7 +556,7 @@ func TestCapabilityPath(t *testing.T) {
 }`, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -625,7 +625,7 @@ func TestCapabilityAttr(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [],
-    "maxversions": 0,
+    "maxmaxversions": 0,
     "mutable": [],
     "pagination": false,
     "schemas": [
@@ -645,7 +645,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/?inline=capabilities", `{ "capabilities": {
   "enforcecompatibility": null,
   "flags": null,
-  "maxversions": null,
+  "maxmaxversions": null,
   "mutable": null,
   "pagination": null,
   "schemas": null,
@@ -667,7 +667,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -690,7 +690,7 @@ func TestCapabilityAttr(t *testing.T) {
     "nodefaultversionsticky", "noepoch", "noreadonly", "offered", "schema",
 	"setdefaultversionid", "specversion"
   ],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [ "capabilities", "entities", "model" ],
   "pagination": false,
   "schemas": [ "xregistry-json/0.5" ],
@@ -725,7 +725,7 @@ func TestCapabilityAttr(t *testing.T) {
     "setdefaultversionid",
     "specversion"
   ],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -748,7 +748,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/?inline=capabilities", `{ "capabilities": {
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": ["xregistry-json"],
@@ -768,7 +768,7 @@ func TestCapabilityAttr(t *testing.T) {
   "capabilities": {
     "enforcecompatibility": false,
     "flags": [],
-    "maxversions": 0,
+    "maxmaxversions": 0,
     "mutable": [],
     "pagination": false,
     "schemas": [
@@ -786,7 +786,7 @@ func TestCapabilityAttr(t *testing.T) {
 	xHTTP(t, reg, "GET", "/capabilities", ``, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [],
   "pagination": false,
   "schemas": [
@@ -837,7 +837,7 @@ func TestCapabilityFlagsOff(t *testing.T) {
 	xHTTP(t, reg, "PUT", "/capabilities", `{"mutable":["*"]}`, 200, `{
   "enforcecompatibility": false,
   "flags": [],
-  "maxversions": 0,
+  "maxmaxversions": 0,
   "mutable": [
     "capabilities",
     "entities",
@@ -971,7 +971,7 @@ func TestCapabilityOffered(t *testing.T) {
       "specversion"
     ]
   },
-  "maxversions": {
+  "maxmaxversions": {
     "type": "uinteger"
   },
   "mutable": {

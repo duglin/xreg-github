@@ -1051,13 +1051,13 @@ func (gm *GroupModel) AddResourceModelFull(rm *ResourceModel) (*ResourceModel, e
 		cap = reg.Capabilities
 	}
 
-	if !cap.MaxVersionsEnabled(rm.MaxVersions) {
-		if cap.MaxVersions == 0 {
+	if !cap.MaxMaxVersionsEnabled(rm.MaxVersions) {
+		if cap.MaxMaxVersions == 0 {
 			return nil, fmt.Errorf(`"maxversions"(%d) must be >= 0`,
 				rm.MaxVersions)
 		} else {
 			return nil, fmt.Errorf("'maxversions'(%d) must be between 1 and %d",
-				rm.MaxVersions, cap.MaxVersions)
+				rm.MaxVersions, cap.MaxMaxVersions)
 		}
 	}
 
@@ -1820,12 +1820,12 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		cap = reg.Capabilities
 	}
 
-	if !cap.MaxVersionsEnabled(rm.MaxVersions) {
-		if cap.MaxVersions == 0 {
+	if !cap.MaxMaxVersionsEnabled(rm.MaxVersions) {
+		if cap.MaxMaxVersions == 0 {
 			return fmt.Errorf(`"maxversions"(%d) must be >= 0`, rm.MaxVersions)
 		} else {
 			return fmt.Errorf("'maxversions'(%d) must be between 1 and %d",
-				rm.MaxVersions, cap.MaxVersions)
+				rm.MaxVersions, cap.MaxMaxVersions)
 		}
 	}
 
