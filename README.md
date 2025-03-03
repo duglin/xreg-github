@@ -141,3 +141,4 @@ TODOs:
 - test cap.sticky & creating resource type that violate it
 - verify that attrs with default values require "serverrequired" to be true
 - test default values - incuding within objects
+- add tests for immutable attributes - in particular extensions
