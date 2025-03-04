@@ -68,30 +68,30 @@ func TestHTTPModel(t *testing.T) {
         "type": "string",
         "readonly": true,
         "immutable": true,
-        "serverrequired": true
+        "required": true
       },
       "registryid": {
         "name": "registryid",
         "type": "string",
         "immutable": true,
-        "serverrequired": true
+        "required": true
       },
       "self": {
         "name": "self",
         "type": "url",
         "readonly": true,
-        "serverrequired": true
+        "required": true
       },
       "xid": {
         "name": "xid",
         "type": "xid",
         "readonly": true,
-        "serverrequired": true
+        "required": true
       },
       "epoch": {
         "name": "epoch",
         "type": "uinteger",
-        "serverrequired": true
+        "required": true
       },
       "name": {
         "name": "name",
@@ -115,12 +115,12 @@ func TestHTTPModel(t *testing.T) {
       "createdat": {
         "name": "createdat",
         "type": "timestamp",
-        "serverrequired": true
+        "required": true
       },
       "modifiedat": {
         "name": "modifiedat",
         "type": "timestamp",
-        "serverrequired": true
+        "required": true
       }
     }
   }
@@ -145,30 +145,30 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true,
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "registryid": {
       "name": "registryid",
       "type": "string",
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "self": {
       "name": "self",
       "type": "url",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "xid": {
       "name": "xid",
       "type": "xid",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
-      "serverrequired": true
+      "required": true
     },
     "name": {
       "name": "name",
@@ -192,12 +192,12 @@ func TestHTTPModel(t *testing.T) {
     "createdat": {
       "name": "createdat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     },
     "modifiedat": {
       "name": "modifiedat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     }
   }
 }
@@ -221,30 +221,30 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true,
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "registryid": {
       "name": "registryid",
       "type": "string",
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "self": {
       "name": "self",
       "type": "url",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "xid": {
       "name": "xid",
       "type": "xid",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
-      "serverrequired": true
+      "required": true
     },
     "name": {
       "name": "name",
@@ -268,12 +268,12 @@ func TestHTTPModel(t *testing.T) {
     "createdat": {
       "name": "createdat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     },
     "modifiedat": {
       "name": "modifiedat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     }
   }
 }
@@ -309,30 +309,30 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true,
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "registryid": {
       "name": "registryid",
       "type": "string",
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "self": {
       "name": "self",
       "type": "url",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "xid": {
       "name": "xid",
       "type": "xid",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
-      "serverrequired": true
+      "required": true
     },
     "name": {
       "name": "name",
@@ -356,12 +356,12 @@ func TestHTTPModel(t *testing.T) {
     "createdat": {
       "name": "createdat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     },
     "modifiedat": {
       "name": "modifiedat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     }
   },
   "groups": {
@@ -373,24 +373,24 @@ func TestHTTPModel(t *testing.T) {
           "name": "dirid",
           "type": "string",
           "immutable": true,
-          "serverrequired": true
+          "required": true
         },
         "self": {
           "name": "self",
           "type": "url",
           "readonly": true,
-          "serverrequired": true
+          "required": true
         },
         "xid": {
           "name": "xid",
           "type": "xid",
           "readonly": true,
-          "serverrequired": true
+          "required": true
         },
         "epoch": {
           "name": "epoch",
           "type": "uinteger",
-          "serverrequired": true
+          "required": true
         },
         "name": {
           "name": "name",
@@ -414,12 +414,12 @@ func TestHTTPModel(t *testing.T) {
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
-          "serverrequired": true
+          "required": true
         },
         "modifiedat": {
           "name": "modifiedat",
           "type": "timestamp",
-          "serverrequired": true
+          "required": true
         }
       },
       "resources": {
@@ -435,30 +435,30 @@ func TestHTTPModel(t *testing.T) {
               "name": "fileid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "versionid": {
               "name": "versionid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "self": {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xid": {
               "name": "xid",
               "type": "xid",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
-              "serverrequired": true
+              "required": true
             },
             "name": {
               "name": "name",
@@ -468,7 +468,7 @@ func TestHTTPModel(t *testing.T) {
               "name": "isdefault",
               "type": "boolean",
               "readonly": true,
-              "serverrequired": true,
+              "required": true,
               "default": false
             },
             "description": {
@@ -489,12 +489,12 @@ func TestHTTPModel(t *testing.T) {
             "createdat": {
               "name": "createdat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "modifiedat": {
               "name": "modifiedat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -506,19 +506,19 @@ func TestHTTPModel(t *testing.T) {
               "name": "fileid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "self": {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xid": {
               "name": "xid",
               "type": "xid",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xref": {
               "name": "xref",
@@ -527,22 +527,22 @@ func TestHTTPModel(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
-              "serverrequired": true
+              "required": true
             },
             "createdat": {
               "name": "createdat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "modifiedat": {
               "name": "modifiedat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "readonly": {
               "name": "readonly",
               "type": "boolean",
-              "serverrequired": true,
+              "required": true,
               "default": false
             },
             "compatibility": {
@@ -558,25 +558,25 @@ func TestHTTPModel(t *testing.T) {
                 "full_transitive"
               ],
               "strict": false,
-              "serverrequired": true,
+              "required": true,
               "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "serverrequired": true
+              "required": true
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true,
-              "serverrequired": true,
+              "required": true,
               "default": false
             }
           }
@@ -621,30 +621,30 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true,
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "registryid": {
       "name": "registryid",
       "type": "string",
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "self": {
       "name": "self",
       "type": "url",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "xid": {
       "name": "xid",
       "type": "xid",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
-      "serverrequired": true
+      "required": true
     },
     "name": {
       "name": "name",
@@ -668,12 +668,12 @@ func TestHTTPModel(t *testing.T) {
     "createdat": {
       "name": "createdat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     },
     "modifiedat": {
       "name": "modifiedat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     }
   },
   "groups": {
@@ -685,24 +685,24 @@ func TestHTTPModel(t *testing.T) {
           "name": "dirid",
           "type": "string",
           "immutable": true,
-          "serverrequired": true
+          "required": true
         },
         "self": {
           "name": "self",
           "type": "url",
           "readonly": true,
-          "serverrequired": true
+          "required": true
         },
         "xid": {
           "name": "xid",
           "type": "xid",
           "readonly": true,
-          "serverrequired": true
+          "required": true
         },
         "epoch": {
           "name": "epoch",
           "type": "uinteger",
-          "serverrequired": true
+          "required": true
         },
         "name": {
           "name": "name",
@@ -726,12 +726,12 @@ func TestHTTPModel(t *testing.T) {
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
-          "serverrequired": true
+          "required": true
         },
         "modifiedat": {
           "name": "modifiedat",
           "type": "timestamp",
-          "serverrequired": true
+          "required": true
         }
       },
       "resources": {
@@ -747,30 +747,30 @@ func TestHTTPModel(t *testing.T) {
               "name": "fileid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "versionid": {
               "name": "versionid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "self": {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xid": {
               "name": "xid",
               "type": "xid",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
-              "serverrequired": true
+              "required": true
             },
             "name": {
               "name": "name",
@@ -780,7 +780,7 @@ func TestHTTPModel(t *testing.T) {
               "name": "isdefault",
               "type": "boolean",
               "readonly": true,
-              "serverrequired": true,
+              "required": true,
               "default": false
             },
             "description": {
@@ -801,12 +801,12 @@ func TestHTTPModel(t *testing.T) {
             "createdat": {
               "name": "createdat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "modifiedat": {
               "name": "modifiedat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -818,19 +818,19 @@ func TestHTTPModel(t *testing.T) {
               "name": "fileid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "self": {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xid": {
               "name": "xid",
               "type": "xid",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xref": {
               "name": "xref",
@@ -839,22 +839,22 @@ func TestHTTPModel(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
-              "serverrequired": true
+              "required": true
             },
             "createdat": {
               "name": "createdat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "modifiedat": {
               "name": "modifiedat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "readonly": {
               "name": "readonly",
               "type": "boolean",
-              "serverrequired": true,
+              "required": true,
               "default": false
             },
             "compatibility": {
@@ -870,25 +870,25 @@ func TestHTTPModel(t *testing.T) {
                 "full_transitive"
               ],
               "strict": false,
-              "serverrequired": true,
+              "required": true,
               "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "serverrequired": true
+              "required": true
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true,
-              "serverrequired": true,
+              "required": true,
               "default": false
             }
           }
@@ -936,30 +936,30 @@ func TestHTTPModel(t *testing.T) {
       "type": "string",
       "readonly": true,
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "registryid": {
       "name": "registryid",
       "type": "string",
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "self": {
       "name": "self",
       "type": "url",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "xid": {
       "name": "xid",
       "type": "xid",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
-      "serverrequired": true
+      "required": true
     },
     "name": {
       "name": "name",
@@ -987,12 +987,12 @@ func TestHTTPModel(t *testing.T) {
     "createdat": {
       "name": "createdat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     },
     "modifiedat": {
       "name": "modifiedat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     }
   },
   "groups": {
@@ -1004,24 +1004,24 @@ func TestHTTPModel(t *testing.T) {
           "name": "dirid",
           "type": "string",
           "immutable": true,
-          "serverrequired": true
+          "required": true
         },
         "self": {
           "name": "self",
           "type": "url",
           "readonly": true,
-          "serverrequired": true
+          "required": true
         },
         "xid": {
           "name": "xid",
           "type": "xid",
           "readonly": true,
-          "serverrequired": true
+          "required": true
         },
         "epoch": {
           "name": "epoch",
           "type": "uinteger",
-          "serverrequired": true
+          "required": true
         },
         "name": {
           "name": "name",
@@ -1045,12 +1045,12 @@ func TestHTTPModel(t *testing.T) {
         "createdat": {
           "name": "createdat",
           "type": "timestamp",
-          "serverrequired": true
+          "required": true
         },
         "modifiedat": {
           "name": "modifiedat",
           "type": "timestamp",
-          "serverrequired": true
+          "required": true
         }
       },
       "resources": {
@@ -1066,30 +1066,30 @@ func TestHTTPModel(t *testing.T) {
               "name": "fileid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "versionid": {
               "name": "versionid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "self": {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xid": {
               "name": "xid",
               "type": "xid",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
-              "serverrequired": true
+              "required": true
             },
             "name": {
               "name": "name",
@@ -1099,7 +1099,7 @@ func TestHTTPModel(t *testing.T) {
               "name": "isdefault",
               "type": "boolean",
               "readonly": true,
-              "serverrequired": true,
+              "required": true,
               "default": false
             },
             "description": {
@@ -1120,12 +1120,12 @@ func TestHTTPModel(t *testing.T) {
             "createdat": {
               "name": "createdat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "modifiedat": {
               "name": "modifiedat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "contenttype": {
               "name": "contenttype",
@@ -1137,19 +1137,19 @@ func TestHTTPModel(t *testing.T) {
               "name": "fileid",
               "type": "string",
               "immutable": true,
-              "serverrequired": true
+              "required": true
             },
             "self": {
               "name": "self",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xid": {
               "name": "xid",
               "type": "xid",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "xref": {
               "name": "xref",
@@ -1158,22 +1158,22 @@ func TestHTTPModel(t *testing.T) {
             "epoch": {
               "name": "epoch",
               "type": "uinteger",
-              "serverrequired": true
+              "required": true
             },
             "createdat": {
               "name": "createdat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "modifiedat": {
               "name": "modifiedat",
               "type": "timestamp",
-              "serverrequired": true
+              "required": true
             },
             "readonly": {
               "name": "readonly",
               "type": "boolean",
-              "serverrequired": true,
+              "required": true,
               "default": false
             },
             "compatibility": {
@@ -1189,25 +1189,25 @@ func TestHTTPModel(t *testing.T) {
                 "full_transitive"
               ],
               "strict": false,
-              "serverrequired": true,
+              "required": true,
               "default": "none"
             },
             "defaultversionid": {
               "name": "defaultversionid",
               "type": "string",
-              "serverrequired": true
+              "required": true
             },
             "defaultversionurl": {
               "name": "defaultversionurl",
               "type": "url",
               "readonly": true,
-              "serverrequired": true
+              "required": true
             },
             "defaultversionsticky": {
               "name": "defaultversionsticky",
               "type": "boolean",
               "readonly": true,
-              "serverrequired": true,
+              "required": true,
               "default": false
             }
           }
@@ -5075,10 +5075,9 @@ func TestHTTPIfValue(t *testing.T) {
 			"20": &registry.IfValue{
 				SiblingAttributes: registry.Attributes{
 					"mystr": &registry.Attribute{
-						Name:           "mystr",
-						Type:           registry.STRING,
-						ClientRequired: true,
-						ServerRequired: true,
+						Name:     "mystr",
+						Type:     registry.STRING,
+						Required: true,
 					},
 					"*": &registry.Attribute{
 						Name: "*",
@@ -5336,10 +5335,9 @@ func TestHTTPIfValue(t *testing.T) {
 							"2": &registry.IfValue{
 								SiblingAttributes: registry.Attributes{
 									"myint7": {
-										Name:           "myint7",
-										Type:           registry.INTEGER,
-										ClientRequired: true,
-										ServerRequired: true,
+										Name:     "myint7",
+										Type:     registry.INTEGER,
+										Required: true,
 									},
 								},
 							},
@@ -7164,28 +7162,25 @@ func TestHTTPRequiredFields(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
-		Name:           "clireq1",
-		Type:           registry.STRING,
-		ClientRequired: true,
-		ServerRequired: true,
+		Name:     "req1",
+		Type:     registry.STRING,
+		Required: true,
 	})
 	xNoErr(t, err)
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	_, err = gm.AddAttribute(&registry.Attribute{
-		Name:           "clireq2",
-		Type:           registry.STRING,
-		ClientRequired: true,
-		ServerRequired: true,
+		Name:     "req2",
+		Type:     registry.STRING,
+		Required: true,
 	})
 	xNoErr(t, err)
 
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
 	_, err = rm.AddAttribute(&registry.Attribute{
-		Name:           "clireq3",
-		Type:           registry.STRING,
-		ClientRequired: true,
-		ServerRequired: true,
+		Name:     "req3",
+		Type:     registry.STRING,
+		Required: true,
 	})
 	xNoErr(t, err)
 
@@ -7195,9 +7190,9 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 	// Registry itself
 	err = reg.SetSave("description", "testing")
-	xCheckErr(t, err, "Required property \"clireq1\" is missing")
+	xCheckErr(t, err, "Required property \"req1\" is missing")
 
-	xNoErr(t, reg.JustSet("clireq1", "testing1"))
+	xNoErr(t, reg.JustSet("req1", "testing1"))
 	xNoErr(t, reg.SetSave("description", "testing"))
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
@@ -7209,7 +7204,7 @@ func TestHTTPRequiredFields(t *testing.T) {
   "description": "testing",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
-  "clireq1": "testing1",
+  "req1": "testing1",
 
   "dirsurl": "http://localhost:8181/dirs",
   "dirscount": 0
@@ -7218,11 +7213,11 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 	// Groups
 	xHTTP(t, reg, "PUT", "/dirs/d1", `{"description": "testing"}`, 400,
-		`Required property "clireq2" is missing`+"\n")
+		`Required property "req2" is missing`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1", `{
   "description": "testing",
-  "clireq2": "testing2"
+  "req2": "testing2"
 }`, 201, `{
   "dirid": "d1",
   "self": "http://localhost:8181/dirs/d1",
@@ -7231,7 +7226,7 @@ func TestHTTPRequiredFields(t *testing.T) {
   "description": "testing",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
-  "clireq2": "testing2",
+  "req2": "testing2",
 
   "filesurl": "http://localhost:8181/dirs/d1/files",
   "filescount": 0
@@ -7241,11 +7236,11 @@ func TestHTTPRequiredFields(t *testing.T) {
 	// Resources
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details",
 		`{"description": "testing"}`, 400,
-		`Required property "clireq3" is missing`+"\n")
+		`Required property "req3" is missing`+"\n")
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details", `{
   "description": "testingdesc3",
-  "clireq3": "testing3"
+  "req3": "testing3"
 }`, 201, `{
   "fileid": "f1",
   "versionid": "1",
@@ -7256,7 +7251,7 @@ func TestHTTPRequiredFields(t *testing.T) {
   "description": "testingdesc3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:01Z",
-  "clireq3": "testing3",
+  "req3": "testing3",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
   "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
@@ -7274,7 +7269,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Required property "clireq3" is missing
+		ResBody: `Required property "req3" is missing
 `,
 	})
 
@@ -7288,7 +7283,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 
 		Code:       400,
 		ResHeaders: []string{},
-		ResBody: `Required property "clireq3" is missing
+		ResBody: `Required property "req3" is missing
 `,
 	})
 
@@ -7298,7 +7293,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 		Method: "PUT",
 		ReqHeaders: []string{
 			"xRegistry-description: desctesting",
-			"xRegistry-clireq3: testing3",
+			"xRegistry-req3: testing3",
 		},
 
 		Code: 201,
@@ -7312,7 +7307,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 			"xRegistry-description: desctesting",
 			"xRegistry-createdat: 2024-01-01T12:00:01Z",
 			"xRegistry-modifiedat: 2024-01-01T12:00:01Z",
-			"xRegistry-clireq3: testing3",
+			"xRegistry-req3: testing3",
 			"xRegistry-metaurl: http://localhost:8181/dirs/d1/files/f2/meta",
 			"xRegistry-versionsurl: http://localhost:8181/dirs/d1/files/f2/versions",
 			"xRegistry-versionscount: 1",
@@ -7330,7 +7325,7 @@ func TestHTTPRequiredFields(t *testing.T) {
 		Method: "PUT",
 		ReqBody: `{
   "description": "desctesting3",
-  "clireq3": "testing4"
+  "req3": "testing4"
 }`,
 
 		Code: 200,
@@ -7344,7 +7339,7 @@ func TestHTTPRequiredFields(t *testing.T) {
   "description": "desctesting3",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
-  "clireq3": "testing4",
+  "req3": "testing4",
 
   "metaurl": "http://localhost:8181/dirs/d1/files/f2/meta",
   "versionsurl": "http://localhost:8181/dirs/d1/files/f2/versions",
@@ -7360,11 +7355,11 @@ func TestHTTPRequiredFields(t *testing.T) {
 		ReqHeaders: []string{
 			"xRegistry-versionid: 1",
 			"xRegistry-description: desctesting",
-			"xRegistry-clireq3: null",
+			"xRegistry-req3: null",
 		},
 
 		Code:    400,
-		ResBody: "Required property \"clireq3\" is missing\n",
+		ResBody: "Required property \"req3\" is missing\n",
 	})
 
 	xCheckHTTP(t, reg, &HTTPTest{
@@ -7374,10 +7369,10 @@ func TestHTTPRequiredFields(t *testing.T) {
 		ReqHeaders: []string{
 			"xRegistry-versionid: 1",
 			"xRegistry-description: desctesting",
-			"xRegistry-clireq3: null",
+			"xRegistry-req3: null",
 		},
 
 		Code:    400,
-		ResBody: "Required property \"clireq3\" is missing\n",
+		ResBody: "Required property \"req3\" is missing\n",
 	})
 }

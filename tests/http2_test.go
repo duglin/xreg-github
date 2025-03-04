@@ -310,30 +310,30 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true,
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "registryid": {
       "name": "registryid",
       "type": "string",
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "self": {
       "name": "self",
       "type": "url",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "xid": {
       "name": "xid",
       "type": "xid",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
-      "serverrequired": true
+      "required": true
     },
     "name": {
       "name": "name",
@@ -357,12 +357,12 @@ func TestHTTPModelSchema(t *testing.T) {
     "createdat": {
       "name": "createdat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     },
     "modifiedat": {
       "name": "modifiedat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     }
   }
 }
@@ -375,30 +375,30 @@ func TestHTTPModelSchema(t *testing.T) {
       "type": "string",
       "readonly": true,
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "registryid": {
       "name": "registryid",
       "type": "string",
       "immutable": true,
-      "serverrequired": true
+      "required": true
     },
     "self": {
       "name": "self",
       "type": "url",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "xid": {
       "name": "xid",
       "type": "xid",
       "readonly": true,
-      "serverrequired": true
+      "required": true
     },
     "epoch": {
       "name": "epoch",
       "type": "uinteger",
-      "serverrequired": true
+      "required": true
     },
     "name": {
       "name": "name",
@@ -422,12 +422,12 @@ func TestHTTPModelSchema(t *testing.T) {
     "createdat": {
       "name": "createdat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     },
     "modifiedat": {
       "name": "modifiedat",
       "type": "timestamp",
-      "serverrequired": true
+      "required": true
     }
   }
 }

@@ -74,30 +74,30 @@ func TestExportBasic(t *testing.T) {
         "type": "string",
         "readonly": true,
         "immutable": true,
-        "serverrequired": true
+        "required": true
       },
       "registryid": {
         "name": "registryid",
         "type": "string",
         "immutable": true,
-        "serverrequired": true
+        "required": true
       },
       "self": {
         "name": "self",
         "type": "url",
         "readonly": true,
-        "serverrequired": true
+        "required": true
       },
       "xid": {
         "name": "xid",
         "type": "xid",
         "readonly": true,
-        "serverrequired": true
+        "required": true
       },
       "epoch": {
         "name": "epoch",
         "type": "uinteger",
-        "serverrequired": true
+        "required": true
       },
       "name": {
         "name": "name",
@@ -121,12 +121,12 @@ func TestExportBasic(t *testing.T) {
       "createdat": {
         "name": "createdat",
         "type": "timestamp",
-        "serverrequired": true
+        "required": true
       },
       "modifiedat": {
         "name": "modifiedat",
         "type": "timestamp",
-        "serverrequired": true
+        "required": true
       }
     },
     "groups": {
@@ -138,24 +138,24 @@ func TestExportBasic(t *testing.T) {
             "name": "dirid",
             "type": "string",
             "immutable": true,
-            "serverrequired": true
+            "required": true
           },
           "self": {
             "name": "self",
             "type": "url",
             "readonly": true,
-            "serverrequired": true
+            "required": true
           },
           "xid": {
             "name": "xid",
             "type": "xid",
             "readonly": true,
-            "serverrequired": true
+            "required": true
           },
           "epoch": {
             "name": "epoch",
             "type": "uinteger",
-            "serverrequired": true
+            "required": true
           },
           "name": {
             "name": "name",
@@ -179,12 +179,12 @@ func TestExportBasic(t *testing.T) {
           "createdat": {
             "name": "createdat",
             "type": "timestamp",
-            "serverrequired": true
+            "required": true
           },
           "modifiedat": {
             "name": "modifiedat",
             "type": "timestamp",
-            "serverrequired": true
+            "required": true
           }
         },
         "resources": {
@@ -200,30 +200,30 @@ func TestExportBasic(t *testing.T) {
                 "name": "fileid",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "required": true
               },
               "versionid": {
                 "name": "versionid",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "required": true
               },
               "self": {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "xid": {
                 "name": "xid",
                 "type": "xid",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "epoch": {
                 "name": "epoch",
                 "type": "uinteger",
-                "serverrequired": true
+                "required": true
               },
               "name": {
                 "name": "name",
@@ -233,7 +233,7 @@ func TestExportBasic(t *testing.T) {
                 "name": "isdefault",
                 "type": "boolean",
                 "readonly": true,
-                "serverrequired": true,
+                "required": true,
                 "default": false
               },
               "description": {
@@ -254,12 +254,12 @@ func TestExportBasic(t *testing.T) {
               "createdat": {
                 "name": "createdat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "modifiedat": {
                 "name": "modifiedat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "contenttype": {
                 "name": "contenttype",
@@ -271,19 +271,19 @@ func TestExportBasic(t *testing.T) {
                 "name": "fileid",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "required": true
               },
               "self": {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "xid": {
                 "name": "xid",
                 "type": "xid",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "xref": {
                 "name": "xref",
@@ -292,22 +292,22 @@ func TestExportBasic(t *testing.T) {
               "epoch": {
                 "name": "epoch",
                 "type": "uinteger",
-                "serverrequired": true
+                "required": true
               },
               "createdat": {
                 "name": "createdat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "modifiedat": {
                 "name": "modifiedat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "readonly": {
                 "name": "readonly",
                 "type": "boolean",
-                "serverrequired": true,
+                "required": true,
                 "default": false
               },
               "compatibility": {
@@ -323,25 +323,25 @@ func TestExportBasic(t *testing.T) {
                   "full_transitive"
                 ],
                 "strict": false,
-                "serverrequired": true,
+                "required": true,
                 "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
                 "type": "string",
-                "serverrequired": true
+                "required": true
               },
               "defaultversionurl": {
                 "name": "defaultversionurl",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
                 "readonly": true,
-                "serverrequired": true,
+                "required": true,
                 "default": false
               }
             }
@@ -616,30 +616,30 @@ func TestExportBasic(t *testing.T) {
         "type": "string",
         "readonly": true,
         "immutable": true,
-        "serverrequired": true
+        "required": true
       },
       "registryid": {
         "name": "registryid",
         "type": "string",
         "immutable": true,
-        "serverrequired": true
+        "required": true
       },
       "self": {
         "name": "self",
         "type": "url",
         "readonly": true,
-        "serverrequired": true
+        "required": true
       },
       "xid": {
         "name": "xid",
         "type": "xid",
         "readonly": true,
-        "serverrequired": true
+        "required": true
       },
       "epoch": {
         "name": "epoch",
         "type": "uinteger",
-        "serverrequired": true
+        "required": true
       },
       "name": {
         "name": "name",
@@ -663,12 +663,12 @@ func TestExportBasic(t *testing.T) {
       "createdat": {
         "name": "createdat",
         "type": "timestamp",
-        "serverrequired": true
+        "required": true
       },
       "modifiedat": {
         "name": "modifiedat",
         "type": "timestamp",
-        "serverrequired": true
+        "required": true
       }
     },
     "groups": {
@@ -680,24 +680,24 @@ func TestExportBasic(t *testing.T) {
             "name": "dirid",
             "type": "string",
             "immutable": true,
-            "serverrequired": true
+            "required": true
           },
           "self": {
             "name": "self",
             "type": "url",
             "readonly": true,
-            "serverrequired": true
+            "required": true
           },
           "xid": {
             "name": "xid",
             "type": "xid",
             "readonly": true,
-            "serverrequired": true
+            "required": true
           },
           "epoch": {
             "name": "epoch",
             "type": "uinteger",
-            "serverrequired": true
+            "required": true
           },
           "name": {
             "name": "name",
@@ -721,12 +721,12 @@ func TestExportBasic(t *testing.T) {
           "createdat": {
             "name": "createdat",
             "type": "timestamp",
-            "serverrequired": true
+            "required": true
           },
           "modifiedat": {
             "name": "modifiedat",
             "type": "timestamp",
-            "serverrequired": true
+            "required": true
           }
         },
         "resources": {
@@ -742,30 +742,30 @@ func TestExportBasic(t *testing.T) {
                 "name": "fileid",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "required": true
               },
               "versionid": {
                 "name": "versionid",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "required": true
               },
               "self": {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "xid": {
                 "name": "xid",
                 "type": "xid",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "epoch": {
                 "name": "epoch",
                 "type": "uinteger",
-                "serverrequired": true
+                "required": true
               },
               "name": {
                 "name": "name",
@@ -775,7 +775,7 @@ func TestExportBasic(t *testing.T) {
                 "name": "isdefault",
                 "type": "boolean",
                 "readonly": true,
-                "serverrequired": true,
+                "required": true,
                 "default": false
               },
               "description": {
@@ -796,12 +796,12 @@ func TestExportBasic(t *testing.T) {
               "createdat": {
                 "name": "createdat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "modifiedat": {
                 "name": "modifiedat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "contenttype": {
                 "name": "contenttype",
@@ -813,19 +813,19 @@ func TestExportBasic(t *testing.T) {
                 "name": "fileid",
                 "type": "string",
                 "immutable": true,
-                "serverrequired": true
+                "required": true
               },
               "self": {
                 "name": "self",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "xid": {
                 "name": "xid",
                 "type": "xid",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "xref": {
                 "name": "xref",
@@ -834,22 +834,22 @@ func TestExportBasic(t *testing.T) {
               "epoch": {
                 "name": "epoch",
                 "type": "uinteger",
-                "serverrequired": true
+                "required": true
               },
               "createdat": {
                 "name": "createdat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "modifiedat": {
                 "name": "modifiedat",
                 "type": "timestamp",
-                "serverrequired": true
+                "required": true
               },
               "readonly": {
                 "name": "readonly",
                 "type": "boolean",
-                "serverrequired": true,
+                "required": true,
                 "default": false
               },
               "compatibility": {
@@ -865,25 +865,25 @@ func TestExportBasic(t *testing.T) {
                   "full_transitive"
                 ],
                 "strict": false,
-                "serverrequired": true,
+                "required": true,
                 "default": "none"
               },
               "defaultversionid": {
                 "name": "defaultversionid",
                 "type": "string",
-                "serverrequired": true
+                "required": true
               },
               "defaultversionurl": {
                 "name": "defaultversionurl",
                 "type": "url",
                 "readonly": true,
-                "serverrequired": true
+                "required": true
               },
               "defaultversionsticky": {
                 "name": "defaultversionsticky",
                 "type": "boolean",
                 "readonly": true,
-                "serverrequired": true,
+                "required": true,
                 "default": false
               }
             }

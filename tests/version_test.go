@@ -677,10 +677,9 @@ func TestVersionRequiredFields(t *testing.T) {
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	rm, _ := gm.AddResourceModel("files", "file", 0, true, true, true)
 	_, err := rm.AddAttribute(&registry.Attribute{
-		Name:           "clireq",
-		Type:           registry.STRING,
-		ClientRequired: true,
-		ServerRequired: true,
+		Name:     "req",
+		Type:     registry.STRING,
+		Required: true,
 	})
 	xNoErr(t, err)
 
@@ -688,23 +687,23 @@ func TestVersionRequiredFields(t *testing.T) {
 	xNoErr(t, err)
 
 	f1, err := group.AddResourceWithObject("files", "f1", "v1",
-		registry.Object{"clireq": "test"}, false)
+		registry.Object{"req": "test"}, false)
 	xNoErr(t, err)
 	reg.SaveAllAndCommit()
 
 	_, err = f1.AddVersion("v2")
-	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	xCheckErr(t, err, "Required property \"req\" is missing")
 	reg.Rollback()
 	reg.Refresh()
 
-	v1, _, err := f1.UpsertVersionWithObject("v2", registry.Object{"clireq": "test"}, registry.ADD_ADD)
+	v1, _, err := f1.UpsertVersionWithObject("v2", registry.Object{"req": "test"}, registry.ADD_ADD)
 	xNoErr(t, err)
 	reg.SaveAllAndCommit()
 
-	err = v1.SetSave("clireq", nil)
-	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	err = v1.SetSave("req", nil)
+	xCheckErr(t, err, "Required property \"req\" is missing")
 
-	err = v1.SetSave("clireq", "again")
+	err = v1.SetSave("req", "again")
 	xNoErr(t, err)
 }
 

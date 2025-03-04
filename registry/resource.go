@@ -653,7 +653,7 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 					strings.Join(extraAttrs, ","))
 			}
 
-			if err = meta.SetSave("xref", xref); err != nil {
+			if err = meta.JustSet("xref", xref); err != nil {
 				return nil, false, err
 			}
 
@@ -681,10 +681,13 @@ func (r *Resource) UpsertMetaWithObject(obj Object, addType AddType, createVersi
 		if err = r.ProcessVersionInfo(); err != nil {
 			return nil, false, err
 		}
-	}
 
-	if err = meta.ValidateAndSave(); err != nil {
-		return nil, false, err
+		// Only validate if we processed the version info since if we didn't
+		// process the version info then it means we're not done setting up
+		// the meta stuff yet
+		if err = meta.ValidateAndSave(); err != nil {
+			return nil, false, err
+		}
 	}
 
 	return meta, isNew, nil
@@ -699,13 +702,13 @@ func (r *Resource) ProcessVersionInfo() error {
 	stickyAny := m.Get("defaultversionsticky")
 	if !IsNil(stickyAny) && stickyAny != true && stickyAny != false {
 		return fmt.Errorf("Attribute \"defaultversionsticky\" must be a " +
-			"boolean or null")
+			"boolean")
 	}
 	sticky := (stickyAny == true)
 
 	defaultVersionID := ""
 	verIDAny := m.Get("defaultversionid")
-	if verIDAny == nil {
+	if IsNil(verIDAny) {
 		v, err := r.GetNewest()
 		Must(err)
 		if v != nil {
@@ -740,8 +743,21 @@ func (r *Resource) ProcessVersionInfo() error {
 			return fmt.Errorf("Version %q not found", defaultVersionID)
 		}
 
-		m.JustSet(r.Singular+"id", r.UID)
-		m.JustSet("defaultversionid", defaultVersionID)
+		// Make sure we only "touch" meta if something changed. Calling this
+		// func needs to be idempotent
+		if m.Get(r.Singular+"id") != r.UID {
+			m.JustSet(r.Singular+"id", r.UID)
+		}
+		if m.Get("defaultversionid") != defaultVersionID {
+			m.JustSet("defaultversionid", defaultVersionID)
+		}
+	} else {
+		// Bold assumption that no defaultversionid means that we're still
+		// in the process of creating things (or converting from an xRef
+		// resource to a non-xref resource) and the version isn't there yet
+		// so just return (and skip ValidateAndSave) for now. We should call
+		// this func again later in the processing though
+		return nil
 	}
 
 	return m.ValidateAndSave()
@@ -978,10 +994,6 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 		r.Touch()
 	}
 
-	if err = meta.ValidateAndSave(); err != nil {
-		return nil, false, err
-	}
-
 	// If we can only have one Version, then set the one we just created
 	// as the default.
 	// Also set it if we're not sticky w.r.t. default version
@@ -995,6 +1007,14 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 	// If we've reached the maximum # of Versions, then delete oldest
 	if err = r.EnsureMaxVersions(); err != nil {
 		return nil, false, err
+	}
+
+	// Only validate meta if there's a defaultversionid. Assume that
+	// if it's missing then we're in the middle of recreating things
+	if meta.GetAsString("defaultversionid") != "" {
+		if err = meta.ValidateAndSave(); err != nil {
+			return nil, false, err
+		}
 	}
 
 	return v, isNew, nil

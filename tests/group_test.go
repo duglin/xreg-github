@@ -90,27 +90,26 @@ func TestGroupRequiredFields(t *testing.T) {
 
 	gm, _ := reg.Model.AddGroupModel("dirs", "dir")
 	_, err := gm.AddAttribute(&registry.Attribute{
-		Name:           "clireq",
-		Type:           registry.STRING,
-		ClientRequired: true,
-		ServerRequired: true,
+		Name:     "req",
+		Type:     registry.STRING,
+		Required: true,
 	})
 	xNoErr(t, err)
 	reg.SaveAllAndCommit()
 
 	_, err = reg.AddGroup("dirs", "d1")
-	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	xCheckErr(t, err, "Required property \"req\" is missing")
 	reg.Rollback()
 	reg.Refresh()
 
 	g1, err := reg.AddGroupWithObject("dirs", "d1",
-		registry.Object{"clireq": "test"})
+		registry.Object{"req": "test"})
 	xNoErr(t, err)
 	reg.SaveAllAndCommit()
 
-	err = g1.SetSave("clireq", nil)
-	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	err = g1.SetSave("req", nil)
+	xCheckErr(t, err, "Required property \"req\" is missing")
 
-	err = g1.SetSave("clireq", "again")
+	err = g1.SetSave("req", "again")
 	xNoErr(t, err)
 }

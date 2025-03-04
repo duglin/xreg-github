@@ -358,10 +358,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 			}
 			return nil, false, err
 		}
-	} else {
-		meta, err = r.FindMeta(false)
-		PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 	}
+
+	meta, err = r.FindMeta(false)
+	PanicIf(err != nil, "No meta %q: %s", r.UID, err)
 
 	// Kind of late in the process but oh well
 	if meta.Get("readonly") == true {
@@ -379,6 +379,10 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 
 		if err = g.ValidateAndSave(); err != nil {
+			return nil, false, err
+		}
+
+		if err = r.ProcessVersionInfo(); err != nil {
 			return nil, false, err
 		}
 
@@ -441,23 +445,12 @@ func (g *Group) UpsertResourceWithObject(rType string, id string, vID string, ob
 		}
 	}
 
-	// Make sure defaultversionid is set appropriately
-	// TODO I don't think this is right, so comment out for now
-	/*
-		if !sticky {
-			// Not sticky == always use latest
-			if err := r.SetDefault(nil); err != nil {
-				return nil, false, err
-			}
-		} else {
-			// Note that vID can be "", in which case use latest
-			if err := r.SetDefaultID(vID); err != nil {
-				return nil, false, err
-			}
-		}
-	*/
-
 	if err = g.ValidateAndSave(); err != nil {
+		return nil, false, err
+	}
+
+	// Re-process the defaultversion info in case things changed
+	if err = r.ProcessVersionInfo(); err != nil {
 		return nil, false, err
 	}
 

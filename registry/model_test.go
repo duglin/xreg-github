@@ -23,14 +23,13 @@ func TestModelVerifySimple(t *testing.T) {
 		{"reg 1 attr - full", Model{
 			Attributes: Attributes{
 				"myint": &Attribute{
-					Name:           "myint",
-					Type:           "integer",
-					Description:    "cool int",
-					Enum:           []any{1},
-					Strict:         PtrBool(true),
-					ReadOnly:       true,
-					ClientRequired: true,
-					ServerRequired: true,
+					Name:        "myint",
+					Type:        "integer",
+					Description: "cool int",
+					Enum:        []any{1},
+					Strict:      PtrBool(true),
+					ReadOnly:    true,
+					Required:    true,
 
 					IfValues: IfValues{},
 				},
@@ -251,16 +250,6 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"type - bad urlx", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: "urlx"}}},
 			`"model.x" has an invalid type: urlx`},
-
-		{"type - bad required", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: "url",
-				ClientRequired: true}}},
-			`"model.x" must have "serverrequired" since "clientrequired" is "true"`},
-
-		{"type - missing server required", Model{
-			Attributes: Attributes{"x": {Name: "x", Type: "url",
-				Default: "xxx"}}},
-			`"model.x" must have "serverrequired" since a "default" value is provided`},
 
 		// Now some Item stuff
 		{"Item - missing", Model{

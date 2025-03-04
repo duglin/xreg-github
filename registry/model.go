@@ -72,6 +72,7 @@ type AttrInternals struct {
 	dontStore       bool   // don't store this prop in the DB
 	alwaysSerialize bool   // even if nil
 	httpHeader      string // custom HTTP header name, not xRegistry-xxx
+	xrefrequired    bool   // required in meta even when xref is set
 
 	getFn    func(*Entity, *RequestInfo) any // return prop's value
 	checkFn  func(*Entity) error             // validate incoming prop
@@ -83,18 +84,17 @@ type AttrInternals struct {
 // 'false', but Strict needs to default to 'true'. See the custome Unmarshal
 // funcs in model.go for how we set those
 type Attribute struct {
-	Model          *Model `json:"-"`
-	Name           string `json:"name,omitempty"`
-	Type           string `json:"type,omitempty"`
-	Target         string `json:"target,omitempty"`
-	Description    string `json:"description,omitempty"`
-	Enum           []any  `json:"enum,omitempty"` // just scalars though
-	Strict         *bool  `json:"strict,omitempty"`
-	ReadOnly       bool   `json:"readonly,omitempty"`
-	Immutable      bool   `json:"immutable,omitempty"`
-	ClientRequired bool   `json:"clientrequired,omitempty"`
-	ServerRequired bool   `json:"serverrequired,omitempty"`
-	Default        any    `json:"default,omitempty"`
+	Model       *Model `json:"-"`
+	Name        string `json:"name,omitempty"`
+	Type        string `json:"type,omitempty"`
+	Target      string `json:"target,omitempty"`
+	Description string `json:"description,omitempty"`
+	Enum        []any  `json:"enum,omitempty"` // just scalars though
+	Strict      *bool  `json:"strict,omitempty"`
+	ReadOnly    bool   `json:"readonly,omitempty"`
+	Immutable   bool   `json:"immutable,omitempty"`
+	Required    bool   `json:"required,omitempty"`
+	Default     any    `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
 	Item       *Item      `json:"item,omitempty"`       // for maps & arrays
@@ -1507,9 +1507,9 @@ func EnsureAttrOK(userAttr *Attribute, specAttr *Attribute) error {
 		return nil
 	}
 
-	if specAttr.ServerRequired {
-		if userAttr.ServerRequired == false {
-			return fmt.Errorf(`"model.%s" must have its "serverrequired" `+
+	if specAttr.Required {
+		if userAttr.Required == false {
+			return fmt.Errorf(`"model.%s" must have its "required" `+
 				`attribute set to "true"`, userAttr.Name)
 		}
 		if specAttr.ReadOnly && !userAttr.ReadOnly {
@@ -2301,19 +2301,7 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			}
 		}
 
-		if attr.ClientRequired && !attr.ServerRequired {
-			return fmt.Errorf("%q must have \"serverrequired\" "+
-				"since \"clientrequired\" is \"true\"",
-				path.UI())
-		}
-
 		if !IsNil(attr.Default) {
-			if !attr.ServerRequired {
-				return fmt.Errorf("%q must have \"serverrequired\" "+
-					"since a \"default\" value is provided",
-					path.UI())
-			}
-
 			if IsScalar(attr.Type) != true {
 				return fmt.Errorf("%q is not a scalar, so \"default\" is not "+
 					"allowed", path.UI())

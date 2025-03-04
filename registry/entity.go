@@ -571,10 +571,6 @@ func (e *Entity) ValidateAndSave() error {
 		return err
 	}
 
-	if err := PrepUpdateEntity(e); err != nil {
-		return err
-	}
-
 	return e.Save()
 }
 
@@ -874,11 +870,11 @@ func StrTypes(types ...int) string {
 // This allows for us to choose the order and define custom logic per prop
 var OrderedSpecProps = []*Attribute{
 	{
-		Name:           "specversion",
-		Type:           STRING,
-		ReadOnly:       true,
-		Immutable:      true,
-		ServerRequired: true,
+		Name:      "specversion",
+		Type:      STRING,
+		ReadOnly:  true,
+		Immutable: true,
+		Required:  true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_REGISTRY),
@@ -897,15 +893,16 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "id",
-		Type:           STRING,
-		Immutable:      true,
-		ServerRequired: true,
+		Name:      "id",
+		Type:      STRING,
+		Immutable: true,
+		Required:  true,
 
 		internals: AttrInternals{
-			types:     "", // Yes even ENTITY_RESOURCE
-			dontStore: false,
-			getFn:     nil,
+			types:        "", // Yes even ENTITY_RESOURCE
+			dontStore:    false,
+			xrefrequired: true,
+			getFn:        nil,
 			checkFn: func(e *Entity) error {
 				singular := e.Singular
 				// PanicIf(singular == "", "singular is '' :  %v", e)
@@ -962,10 +959,10 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "versionid",
-		Type:           STRING,
-		Immutable:      true,
-		ServerRequired: true,
+		Name:      "versionid",
+		Type:      STRING,
+		Immutable: true,
+		Required:  true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_VERSION),
@@ -1004,14 +1001,15 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "self",
-		Type:           URL,
-		ReadOnly:       true,
-		ServerRequired: true,
+		Name:     "self",
+		Type:     URL,
+		ReadOnly: true,
+		Required: true,
 
 		internals: AttrInternals{
-			types:     "", // Yes even ENTITY_RESOURCE
-			dontStore: true,
+			types:        "", // Yes even ENTITY_RESOURCE
+			dontStore:    true,
+			xrefrequired: true,
 			getFn: func(e *Entity, info *RequestInfo) any {
 				base := ""
 				path := e.Path
@@ -1055,11 +1053,12 @@ var OrderedSpecProps = []*Attribute{
 			Name:           "shortself",
 			Type:           URL,
 			ReadOnly:       true,
-			ServerRequired: true,
+			Required: true,
 
 			internals: AttrInternals{
 				types:     "",
 				dontStore: true,
+			xrefrequired: true,
 				getFn: func(e *Entity, info *RequestInfo) any {
 					path := e.Path
 					base := ""
@@ -1090,16 +1089,17 @@ var OrderedSpecProps = []*Attribute{
 		},
 	*/
 	{
-		Name:           "xid",
-		Type:           XID,
-		ReadOnly:       true,
-		ServerRequired: true,
+		Name:     "xid",
+		Type:     XID,
+		ReadOnly: true,
+		Required: true,
 
 		internals: AttrInternals{
-			types:     "",
-			dontStore: true,
-			getFn:     nil,
-			checkFn:   nil,
+			types:        "",
+			dontStore:    true,
+			xrefrequired: true,
+			getFn:        nil,
+			checkFn:      nil,
 		},
 	},
 	{
@@ -1118,9 +1118,9 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "epoch",
-		Type:           UINTEGER,
-		ServerRequired: true,
+		Name:     "epoch",
+		Type:     UINTEGER,
+		Required: true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
@@ -1204,11 +1204,11 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "isdefault",
-		Type:           BOOLEAN,
-		ReadOnly:       true,
-		ServerRequired: true,
-		Default:        false,
+		Name:     "isdefault",
+		Type:     BOOLEAN,
+		ReadOnly: true,
+		Required: true,
+		Default:  false,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_VERSION),
@@ -1263,9 +1263,9 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "createdat",
-		Type:           TIMESTAMP,
-		ServerRequired: true,
+		Name:     "createdat",
+		Type:     TIMESTAMP,
+		Required: true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
@@ -1307,9 +1307,9 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "modifiedat",
-		Type:           TIMESTAMP,
-		ServerRequired: true,
+		Name:     "modifiedat",
+		Type:     TIMESTAMP,
+		Required: true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_REGISTRY, ENTITY_GROUP, ENTITY_META, ENTITY_VERSION),
@@ -1348,10 +1348,10 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "readonly",
-		Type:           BOOLEAN,
-		ServerRequired: true,
-		Default:        false,
+		Name:     "readonly",
+		Type:     BOOLEAN,
+		Required: true,
+		Default:  false,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -1366,9 +1366,9 @@ var OrderedSpecProps = []*Attribute{
 		Type: STRING,
 		Enum: []any{"none", "backward", "backward_transitive", "forward",
 			"forward_transitive", "full", "full_transitive"},
-		Strict:         PtrBool(false),
-		ServerRequired: true,
-		Default:        "none",
+		Strict:   PtrBool(false),
+		Required: true,
+		Default:  "none",
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -1435,7 +1435,7 @@ var OrderedSpecProps = []*Attribute{
 				v, ok := e.NewObject[singular+"proxyurl"]
 				if ok && !IsNil(v) {
 					e.NewObject[singular] = nil
-					e.NewObject[singular+"proxyUrl"] = nil
+					e.NewObject[singular+"url"] = nil
 					e.NewObject["#contentid"] = nil
 				}
 				return nil
@@ -1467,10 +1467,10 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "metaurl",
-		Type:           URL,
-		ReadOnly:       true,
-		ServerRequired: true,
+		Name:     "metaurl",
+		Type:     URL,
+		ReadOnly: true,
+		Required: true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_RESOURCE),
@@ -1515,7 +1515,7 @@ var OrderedSpecProps = []*Attribute{
 		Name: "defaultversionid",
 		Type: STRING,
 		// ReadOnly: true,
-		ServerRequired: true,
+		Required: true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -1545,10 +1545,10 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "defaultversionurl",
-		Type:           URL,
-		ReadOnly:       true,
-		ServerRequired: true,
+		Name:     "defaultversionurl",
+		Type:     URL,
+		ReadOnly: true,
+		Required: true,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -1622,11 +1622,11 @@ var OrderedSpecProps = []*Attribute{
 		},
 	},
 	{
-		Name:           "defaultversionsticky",
-		Type:           BOOLEAN,
-		ReadOnly:       true,
-		ServerRequired: true,
-		Default:        false,
+		Name:     "defaultversionsticky",
+		Type:     BOOLEAN,
+		ReadOnly: true,
+		Required: true,
+		Default:  false,
 
 		internals: AttrInternals{
 			types:     StrTypes(ENTITY_META),
@@ -2398,37 +2398,51 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				}
 			}
 
-			// We normally skip read-only attrs, but if it has a checkFn
-			// then allow for that to be called
-			if attr.ReadOnly {
-				// Call the attr's checkFn if there
-				if attr.internals.checkFn != nil {
-					if err := attr.internals.checkFn(e); err != nil {
-						return err
-					}
-				}
-
-				// Now we can skip it
-				delete(objKeys, key)
-				continue
-			}
-
-			// Required but not present - note that nil means will be deleted
-			if attr.ClientRequired && (!keyPresent || IsNil(val)) {
-				return fmt.Errorf("Required property %q is missing",
-					path.P(key).UI())
-			}
-
-			// Not ClientRequired && not there (or being deleted)
-			if !attr.ClientRequired && (!keyPresent || IsNil(val)) {
-				delete(objKeys, key)
-				continue
-			}
-
-			// Call the attr's checkFn if there - for more refined checks
+			// Call the attr's checkFn if there to make sure any
+			// incoming value is ok
 			if attr.internals.checkFn != nil {
 				if err := attr.internals.checkFn(e); err != nil {
 					return err
+				}
+			}
+
+			// Skip read-only attrs
+			if attr.ReadOnly {
+				delete(objKeys, key) // Remove from to-process list
+				continue
+			}
+
+			// If this attr has a func to update its value, call it
+			if attr.internals.updateFn != nil {
+				if err := attr.internals.updateFn(e); err != nil {
+					return err
+				}
+
+				// grab value in case it changed
+				val, keyPresent = newObj[key]
+			}
+
+			// Required but not present - note that nil means will be deleted
+			if attr.Required && (!keyPresent || IsNil(val)) {
+				flagit := true // Assume we'll err
+
+				// Most "meta" attribute aren't actually required when xref
+				// is set, so only flag the ones w/o 'xrefrequired=true'
+				if e.Type == ENTITY_META && e.GetAsString("xref") != "" &&
+					!attr.internals.xrefrequired {
+					flagit = false
+				}
+
+				// Version.RESOURCEid MUST be missing, so don't flag it
+				// All other entities need that attribute though
+				if path.Len() == 0 && e.Type == ENTITY_VERSION &&
+					key == e.GetResourceSingular()+"id" {
+					flagit = false
+				}
+
+				if flagit {
+					return fmt.Errorf("Required property %q is missing",
+						path.P(key).UI())
 				}
 			}
 
@@ -2440,7 +2454,7 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				}
 			}
 
-			// Everything is good, so remove it
+			// Everything is good, so remove it from to-process list
 			delete(objKeys, key)
 		}
 	}

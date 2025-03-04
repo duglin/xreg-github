@@ -140,10 +140,9 @@ func TestRegistryRequiredFields(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
-		Name:           "clireq",
-		Type:           registry.STRING,
-		ClientRequired: true,
-		ServerRequired: true,
+		Name:     "req",
+		Type:     registry.STRING,
+		Required: true,
 	})
 	xNoErr(t, err)
 
@@ -151,9 +150,9 @@ func TestRegistryRequiredFields(t *testing.T) {
 	reg.SaveAllAndCommit()
 
 	err = reg.SetSave("description", "testing")
-	xCheckErr(t, err, "Required property \"clireq\" is missing")
+	xCheckErr(t, err, "Required property \"req\" is missing")
 
-	xNoErr(t, reg.JustSet("clireq", "testing2"))
+	xNoErr(t, reg.JustSet("req", "testing2"))
 	xNoErr(t, reg.SetSave("description", "testing"))
 
 	xHTTP(t, reg, "GET", "/", "", 200, `{
@@ -165,7 +164,7 @@ func TestRegistryRequiredFields(t *testing.T) {
   "description": "testing",
   "createdat": "2024-01-01T12:00:01Z",
   "modifiedat": "2024-01-01T12:00:02Z",
-  "clireq": "testing2"
+  "req": "testing2"
 }
 `)
 
@@ -176,41 +175,34 @@ func TestRegistryDefaultFields(t *testing.T) {
 	defer PassDeleteReg(t, reg)
 
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
-		Name:    "defstring",
-		Type:    registry.STRING,
-		Default: "hello",
-	})
-	xCheckErr(t, err, `"model.defstring" must have "serverrequired" since a "default" value is provided`)
-
-	_, err = reg.Model.AddAttribute(&registry.Attribute{
-		Name:           "defstring",
-		Type:           registry.STRING,
-		ServerRequired: true,
-		Default:        123,
+		Name:     "defstring",
+		Type:     registry.STRING,
+		Required: true,
+		Default:  123,
 	})
 	xCheckErr(t, err, `"model.defstring" "default" value must be of type "string"`)
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
-		Name:           "defstring",
-		Type:           registry.OBJECT,
-		ServerRequired: true,
-		Default:        "hello",
+		Name:     "defstring",
+		Type:     registry.OBJECT,
+		Required: true,
+		Default:  "hello",
 	})
 	xCheckErr(t, err, `"model.defstring" is not a scalar, so "default" is not allowed`)
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
-		Name:           "defstring",
-		Type:           registry.STRING,
-		ServerRequired: true,
-		Default:        map[string]any{"key": "value"},
+		Name:     "defstring",
+		Type:     registry.STRING,
+		Required: true,
+		Default:  map[string]any{"key": "value"},
 	})
 	xCheckErr(t, err, `"model.defstring" "default" value must be of type "string"`)
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
-		Name:           "defstring",
-		Type:           registry.STRING,
-		ServerRequired: true,
-		Default:        "hello",
+		Name:     "defstring",
+		Type:     registry.STRING,
+		Required: true,
+		Default:  "hello",
 	})
 	xNoErr(t, err)
 
@@ -221,33 +213,26 @@ func TestRegistryDefaultFields(t *testing.T) {
 	xNoErr(t, err)
 
 	_, err = obj.AddAttribute(&registry.Attribute{
-		Name:    "defint",
-		Type:    registry.INTEGER,
-		Default: 123,
-	})
-	xCheckErr(t, err, `"model.myobj.defint" must have "serverrequired" since a "default" value is provided`)
-
-	_, err = obj.AddAttribute(&registry.Attribute{
-		Name:           "defint",
-		Type:           registry.INTEGER,
-		ServerRequired: true,
-		Default:        "string",
+		Name:     "defint",
+		Type:     registry.INTEGER,
+		Required: true,
+		Default:  "string",
 	})
 	xCheckErr(t, err, `"model.myobj.defint" "default" value must be of type "integer"`)
 
 	_, err = obj.AddAttribute(&registry.Attribute{
-		Name:           "defint",
-		Type:           registry.OBJECT,
-		ServerRequired: true,
-		Default:        "string",
+		Name:     "defint",
+		Type:     registry.OBJECT,
+		Required: true,
+		Default:  "string",
 	})
 	xCheckErr(t, err, `"model.myobj.defint" is not a scalar, so "default" is not allowed`)
 
 	_, err = obj.AddAttribute(&registry.Attribute{
-		Name:           "defint",
-		Type:           registry.INTEGER,
-		ServerRequired: true,
-		Default:        123,
+		Name:     "defint",
+		Type:     registry.INTEGER,
+		Required: true,
+		Default:  123,
 	})
 	xNoErr(t, err)
 

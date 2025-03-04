@@ -45,7 +45,7 @@ func TestXrefBasic(t *testing.T) {
 	xNoErr(t, err)
 	xCheckEqual(t, "", len(rows), 0)
 
-	xHTTP(t, reg, "GET", "/dirs/d1/files", "", 200, `{
+	xHTTP(t, reg, "GET", "/dirs/d1/files?inline=meta", "", 200, `{
   "f1": {
     "fileid": "f1",
     "versionid": "v1",
@@ -57,6 +57,20 @@ func TestXrefBasic(t *testing.T) {
     "modifiedat": "2024-01-01T12:00:01Z",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "meta": {
+      "fileid": "f1",
+      "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+      "xid": "/dirs/d1/files/f1/meta",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:01Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "readonly": false,
+      "compatibility": "none",
+
+      "defaultversionid": "v1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+      "defaultversionsticky": false
+    },
     "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
     "versionscount": 1
   },
@@ -71,13 +85,58 @@ func TestXrefBasic(t *testing.T) {
     "modifiedat": "2024-01-01T12:00:01Z",
 
     "metaurl": "http://localhost:8181/dirs/d1/files/fx/meta",
+    "meta": {
+      "fileid": "fx",
+      "self": "http://localhost:8181/dirs/d1/files/fx/meta",
+      "xid": "/dirs/d1/files/fx/meta",
+      "xref": "/dirs/d1/files/f1",
+      "epoch": 1,
+      "createdat": "YYYY-MM-DDTHH:MM:01Z",
+      "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+      "readonly": false,
+      "compatibility": "none",
+
+      "defaultversionid": "v1",
+      "defaultversionurl": "http://localhost:8181/dirs/d1/files/fx/versions/v1$details",
+      "defaultversionsticky": false
+    },
     "versionsurl": "http://localhost:8181/dirs/d1/files/fx/versions",
     "versionscount": 1
   }
 }
 `)
-	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$details",
-		`{"description":"testing xref"}`, 200, `*`)
+
+	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1$details?inline=meta",
+		`{"description":"testing xref"}`, 200, `{
+  "fileid": "f1",
+  "versionid": "v1",
+  "self": "http://localhost:8181/dirs/d1/files/f1$details",
+  "xid": "/dirs/d1/files/f1",
+  "epoch": 2,
+  "isdefault": true,
+  "description": "testing xref",
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z",
+
+  "metaurl": "http://localhost:8181/dirs/d1/files/f1/meta",
+  "meta": {
+    "fileid": "f1",
+    "self": "http://localhost:8181/dirs/d1/files/f1/meta",
+    "xid": "/dirs/d1/files/f1/meta",
+    "epoch": 1,
+    "createdat": "YYYY-MM-DDTHH:MM:01Z",
+    "modifiedat": "YYYY-MM-DDTHH:MM:01Z",
+    "readonly": false,
+    "compatibility": "none",
+
+    "defaultversionid": "v1",
+    "defaultversionurl": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+    "defaultversionsticky": false
+  },
+  "versionsurl": "http://localhost:8181/dirs/d1/files/f1/versions",
+  "versionscount": 1
+}
+`)
 
 	f1, err = reg.FindXIDResource("/dirs/d1/files/f1")
 	xNoErr(t, err)
@@ -88,7 +147,19 @@ func TestXrefBasic(t *testing.T) {
 	xCheckEqual(t, "", fx.Get("description"), "testing xref")
 
 	xHTTP(t, reg, "PATCH", "/dirs/d1/files/f1/versions/v1$details",
-		`{"name":"v1 name"}`, 200, `*`)
+		`{"name":"v1 name"}`, 200, `{
+  "fileid": "f1",
+  "versionid": "v1",
+  "self": "http://localhost:8181/dirs/d1/files/f1/versions/v1$details",
+  "xid": "/dirs/d1/files/f1/versions/v1",
+  "epoch": 3,
+  "name": "v1 name",
+  "isdefault": true,
+  "description": "testing xref",
+  "createdat": "YYYY-MM-DDTHH:MM:01Z",
+  "modifiedat": "YYYY-MM-DDTHH:MM:02Z"
+}
+`)
 
 	xHTTP(t, reg, "GET", "/dirs/d1/files?inline", "", 200, `{
   "f1": {

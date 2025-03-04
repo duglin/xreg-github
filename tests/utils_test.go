@@ -65,7 +65,8 @@ func NewRegistry(name string, opts ...registry.RegOpt) *registry.Registry {
 
 	reg, err = registry.NewRegistry(nil, name, opts...)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating registry %q: %s", name, err)
+		fmt.Fprintf(os.Stderr, "Error creating registry %q: %s\n", name, err)
+		ShowStack()
 		os.Exit(1)
 	}
 

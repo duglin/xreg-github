@@ -142,3 +142,5 @@ TODOs:
 - verify that attrs with default values require "serverrequired" to be true
 - test default values - incuding within objects
 - add tests for immutable attributes - in particular extensions
+- see if we can add RESOURCEid to Versions so we don't need special logic
+  to exclude them in the code (e.g. in rID's updatefn and validateobj)
