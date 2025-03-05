@@ -739,6 +739,7 @@ func TestValidChars(t *testing.T) {
 		{"a*", `Invalid map key name "a*", must match: ` + match},
 		{"a!", `Invalid map key name "a!", must match: ` + match},
 		{"a~", `Invalid map key name "a~", must match: ` + match},
+		{":a", `Invalid map key name ":a", must match: ` + match},
 		{a64, `Invalid map key name "` + a64 + `", must match: ` + match},
 
 		{"a", ``},
@@ -752,6 +753,7 @@ func TestValidChars(t *testing.T) {
 		{"m-z", ``},
 		{"m.9", ``},
 		{"m_9", ``},
+		{"m:9", ``},
 		{a63, ``},
 	} {
 		err := IsValidMapKey(test.input)

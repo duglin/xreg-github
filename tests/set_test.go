@@ -626,15 +626,18 @@ func TestSetNameUser(t *testing.T) {
 }
 `)
 
+	xHTTP(t, reg, "PUT", "/", `{"mymap":{":bar":"bar"}}`, 400,
+		`Invalid map key name ":bar", must match: ^[a-z0-9][a-z0-9_.:\-]{0,62}$
+`)
 	xHTTP(t, reg, "PUT", "/", `{"mymap":{"@bar":"bar"}}`, 400,
-		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.\-]{0,62}$
+		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.:\-]{0,62}$
 `)
 	// This is ok because "mymap" is under "ext" which is defined as "*"
 	// and that allows ANYTHING as long as it's valid json
 	xHTTP(t, reg, "PUT", "/", `{"ext":{"mymap":{"@bar":"bar"}}}`, 200, `*`)
 
 	xHTTP(t, reg, "PUT", "/dirs/d1", `{"mymap":{"@bar":"bar"}}`, 400,
-		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.\-]{0,62}$
+		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.:\-]{0,62}$
 `)
 	// This is ok because "mymap" is under "ext" which is defined as "*"
 	// and that allows ANYTHING as long as it's valid json
@@ -643,7 +646,7 @@ func TestSetNameUser(t *testing.T) {
 
 	xHTTP(t, reg, "PUT", "/dirs/d1/files/f1$details",
 		`{"mymap":{"@bar":"bar"}}`, 400,
-		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.\-]{0,62}$
+		`Invalid map key name "@bar", must match: ^[a-z0-9][a-z0-9_.:\-]{0,62}$
 `)
 	// This is ok because "mymap" is under "ext" which is defined as "*"
 	// and that allows ANYTHING as long as it's valid json
