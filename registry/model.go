@@ -16,6 +16,7 @@ import (
 
 var RegexpModelName = regexp.MustCompile("^[a-z_][a-z_0-9]{0,57}$")
 var RegexpPropName = regexp.MustCompile("^[a-z_][a-z_0-9]{0,62}$")
+var RegexpPropRelaxedName = regexp.MustCompile("^[a-z_][a-z_0-9\\-]{0,62}$")
 var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.:\\-]{0,62}$")
 var RegexpID = regexp.MustCompile("^[a-zA-Z0-9_][a-zA-Z0-9_.\\-~@]{0,127}$")
 
@@ -37,6 +38,14 @@ func IsValidAttributeName(name string) error {
 	}
 	return fmt.Errorf("Invalid attribute name %q, must match: %s",
 		name, RegexpPropName.String())
+}
+
+func IsValidAttributeRelaxedName(name string) error {
+	if RegexpPropRelaxedName.MatchString(name) {
+		return nil
+	}
+	return fmt.Errorf("Invalid attribute name %q, must match: %s",
+		name, RegexpPropRelaxedName.String())
 }
 
 func IsValidMapKey(key string) error {
@@ -84,17 +93,18 @@ type AttrInternals struct {
 // 'false', but Strict needs to default to 'true'. See the custome Unmarshal
 // funcs in model.go for how we set those
 type Attribute struct {
-	Model       *Model `json:"-"`
-	Name        string `json:"name,omitempty"`
-	Type        string `json:"type,omitempty"`
-	Target      string `json:"target,omitempty"`
-	Description string `json:"description,omitempty"`
-	Enum        []any  `json:"enum,omitempty"` // just scalars though
-	Strict      *bool  `json:"strict,omitempty"`
-	ReadOnly    bool   `json:"readonly,omitempty"`
-	Immutable   bool   `json:"immutable,omitempty"`
-	Required    bool   `json:"required,omitempty"`
-	Default     any    `json:"default,omitempty"`
+	Model        *Model `json:"-"`
+	Name         string `json:"name,omitempty"`
+	Type         string `json:"type,omitempty"`
+	Target       string `json:"target,omitempty"`
+	RelaxedNames bool   `json:"relaxednames,omitempty"`
+	Description  string `json:"description,omitempty"`
+	Enum         []any  `json:"enum,omitempty"` // just scalars though
+	Strict       *bool  `json:"strict,omitempty"`
+	ReadOnly     bool   `json:"readonly,omitempty"`
+	Immutable    bool   `json:"immutable,omitempty"`
+	Required     bool   `json:"required,omitempty"`
+	Default      any    `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
 	Item       *Item      `json:"item,omitempty"`       // for maps & arrays
@@ -108,10 +118,11 @@ type Attribute struct {
 }
 
 type Item struct { // for maps and arrays
-	Model      *Model     `json:"-"`
-	Type       string     `json:"type,omitempty"`
-	Attributes Attributes `json:"attributes,omitempty"` // when 'type'=obj
-	Item       *Item      `json:"item,omitempty"`       // when 'type'=map,array
+	Model        *Model     `json:"-"`
+	Type         string     `json:"type,omitempty"`
+	RelaxedNames bool       `json:"relaxednames,omitempty"` // when 'type'=obj
+	Attributes   Attributes `json:"attributes,omitempty"`   // when 'type'=obj
+	Item         *Item      `json:"item,omitempty"`         // when 'type'=map,array
 }
 
 type IfValues map[string]*IfValue
@@ -616,8 +627,14 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	if attr.Name != "*" {
-		if err := IsValidAttributeName(attr.Name); err != nil {
-			return nil, err
+		if i.RelaxedNames {
+			if err := IsValidAttributeRelaxedName(attr.Name); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := IsValidAttributeName(attr.Name); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -1463,8 +1480,14 @@ func (a *Attribute) AddAttrArray(name string, item *Item) (*Attribute, error) {
 }
 func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Name != "*" {
-		if err := IsValidAttributeName(attr.Name); err != nil {
-			return nil, err
+		if a.RelaxedNames {
+			if err := IsValidAttributeRelaxedName(attr.Name); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := IsValidAttributeName(attr.Name); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -1559,7 +1582,7 @@ func (m *Model) Verify() error {
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("model"),
 	}
-	if err := m.Attributes.Verify(ld); err != nil {
+	if err := m.Attributes.Verify(false, ld); err != nil {
 		return err
 	}
 
@@ -1655,7 +1678,7 @@ func (gm *GroupModel) Verify(gmName string) error {
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("groups").P(gm.Plural),
 	}
-	if err := gm.Attributes.Verify(ld); err != nil {
+	if err := gm.Attributes.Verify(false, ld); err != nil {
 		return err
 	}
 
@@ -1797,7 +1820,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		// attrs[rm.Singular+"base64"] = &Attribute{Name: rm.Singular + "base64", Type: STRING}
 	}
 
-	if err := attrs.Verify(ld); err != nil {
+	if err := attrs.Verify(false, ld); err != nil {
 		return err
 	}
 
@@ -2166,7 +2189,7 @@ func ConvertString(val string, toType string) (any, bool) {
 var targetREstr = `^(?:/([^/]+)(?:/([^[/]+)(?:(?:/(versions)|(\[(?:/versions)]))?))?)?$`
 var targetRE = regexp.MustCompile(targetREstr)
 
-func (attrs Attributes) Verify(ld *LevelData) error {
+func (attrs Attributes) Verify(relaxedNames bool, ld *LevelData) error {
 	ld = &LevelData{
 		Model:     ld.Model,
 		AttrNames: maps.Clone(ld.AttrNames),
@@ -2182,7 +2205,6 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			return fmt.Errorf("Error processing %q: "+
 				"attribute %q can't be empty", ld.Path.UI(), name)
 		}
-
 		if name == "" { // attribute key empty?
 			return fmt.Errorf("Error processing %q: "+
 				"it has an empty attribute key", ld.Path.UI())
@@ -2194,11 +2216,17 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 		// Not sure why we look at SpecProp, I suspect it's because at one
 		// point in time we had non-conforming (special) names in there and
 		// we wanted to let those pass.
-		// Technicall we should convert the XXXid into id but any XXXid needs
+		// Technically we should convert the XXXid into id but any XXXid needs
 		// to be a valid name/string so we should be ok
 		if name != "*" && SpecProps[name] == nil {
-			if err := IsValidAttributeName(name); err != nil { // valid chars?
-				return fmt.Errorf("Error processing %q: %s", ld.Path.UI(), err)
+			if relaxedNames {
+				if err := IsValidAttributeRelaxedName(name); err != nil {
+					return fmt.Errorf("Error processing %q: %s", ld.Path.UI(), err)
+				}
+			} else {
+				if err := IsValidAttributeName(name); err != nil {
+					return fmt.Errorf("Error processing %q: %s", ld.Path.UI(), err)
+				}
 			}
 		}
 		path := ld.Path.P(name)
@@ -2297,7 +2325,7 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 			if attr.Item != nil {
 				return fmt.Errorf("%q must not have an \"item\" section", path.UI())
 			}
-			if err := attr.Attributes.Verify(&LevelData{ld.Model, nil, path}); err != nil {
+			if err := attr.Attributes.Verify(attr.RelaxedNames, &LevelData{ld.Model, nil, path}); err != nil {
 				return err
 			}
 		}
@@ -2331,7 +2359,7 @@ func (attrs Attributes) Verify(ld *LevelData) error {
 				ld.Path.P(attr.Name).P("ifvalues").P(valStr)}
 
 			// Recursive
-			if err := ifValue.SiblingAttributes.Verify(nextLD); err != nil {
+			if err := ifValue.SiblingAttributes.Verify(relaxedNames, nextLD); err != nil {
 				return err
 			}
 		}
@@ -2387,7 +2415,7 @@ func (item *Item) Verify(path *PropPath) error {
 	}
 
 	if item.Attributes != nil {
-		if err := item.Attributes.Verify(&LevelData{item.Model, nil, p}); err != nil {
+		if err := item.Attributes.Verify(item.RelaxedNames, &LevelData{item.Model, nil, p}); err != nil {
 			return err
 		}
 	}

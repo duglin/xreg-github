@@ -691,3 +691,173 @@ func TestWildcard2LayersTypes(t *testing.T) {
 	xCheck(t, val == nil, fmt.Sprintf("set obj.myany.bogus.k1.k2: %v", val))
 
 }
+
+func TestRelaxedNames(t *testing.T) {
+	reg := NewRegistry("TestRelaxedNames")
+	defer PassDeleteReg(t, reg)
+
+	_, err := reg.Model.AddAttribute(&registry.Attribute{
+		Name: "obj1",
+		Type: registry.OBJECT,
+		Attributes: map[string]*registry.Attribute{
+			"attr1-": {
+				Name: "attr1-",
+				Type: registry.STRING,
+			},
+		},
+	})
+	xCheckErr(t, err, `Error processing "model.obj1": Invalid attribute name "attr1-", must match: ^[a-z_][a-z_0-9]{0,62}$`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name: "obj1",
+		Type: registry.OBJECT,
+		Attributes: map[string]*registry.Attribute{
+			"attr1": {
+				Name: "attr1",
+				Type: registry.STRING,
+				IfValues: registry.IfValues{
+					"a1": &registry.IfValue{
+						SiblingAttributes: registry.Attributes{
+							"another-": &registry.Attribute{
+								Name: "another-",
+								Type: registry.STRING,
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	xCheckErr(t, err, `Error processing "model.obj1.attr1.ifvalues.a1": Invalid attribute name "another-", must match: ^[a-z_][a-z_0-9]{0,62}$`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name:         "obj1",
+		Type:         registry.OBJECT,
+		RelaxedNames: true,
+		Attributes: map[string]*registry.Attribute{
+			"attr1-": {
+				Name: "attr1-",
+				Type: registry.STRING,
+				IfValues: registry.IfValues{
+					"a1": &registry.IfValue{
+						SiblingAttributes: registry.Attributes{
+							"another-": &registry.Attribute{
+								Name: "another-",
+								Type: registry.STRING,
+							},
+						},
+					},
+				},
+			},
+			"attr1-id": {
+				Name: "attr1-id",
+				Type: registry.STRING,
+			},
+		},
+	})
+	xNoErr(t, err)
+	// reg.Model.Save()
+
+	err = reg.SetSave("obj1.attr1-", "a1")
+	xCheck(t, err == nil, fmt.Sprintf("set foo.attr1-: %s", err))
+	err = reg.SetSave("obj1.attr1-id", "a1-id")
+	xCheck(t, err == nil, fmt.Sprintf("set foo.attr1-id: %s", err))
+
+	reg.Refresh()
+
+	val := reg.Get("obj1.attr1-")
+	xCheck(t, val == "a1", fmt.Sprintf("set obj1.attr1-: %v", val))
+	val = reg.Get("obj1.attr1-id")
+	xCheck(t, val == "a1-id", fmt.Sprintf("set obj1.attr1-id: %v", val))
+
+	xHTTP(t, reg, "GET", "/model", ``, 200, `{
+  "attributes": {
+    "specversion": {
+      "name": "specversion",
+      "type": "string",
+      "readonly": true,
+      "immutable": true,
+      "required": true
+    },
+    "registryid": {
+      "name": "registryid",
+      "type": "string",
+      "immutable": true,
+      "required": true
+    },
+    "self": {
+      "name": "self",
+      "type": "url",
+      "readonly": true,
+      "required": true
+    },
+    "xid": {
+      "name": "xid",
+      "type": "xid",
+      "readonly": true,
+      "required": true
+    },
+    "epoch": {
+      "name": "epoch",
+      "type": "uinteger",
+      "required": true
+    },
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+    "description": {
+      "name": "description",
+      "type": "string"
+    },
+    "documentation": {
+      "name": "documentation",
+      "type": "url"
+    },
+    "labels": {
+      "name": "labels",
+      "type": "map",
+      "item": {
+        "type": "string"
+      }
+    },
+    "createdat": {
+      "name": "createdat",
+      "type": "timestamp",
+      "required": true
+    },
+    "modifiedat": {
+      "name": "modifiedat",
+      "type": "timestamp",
+      "required": true
+    },
+    "obj1": {
+      "name": "obj1",
+      "type": "object",
+      "relaxednames": true,
+      "attributes": {
+        "attr1-": {
+          "name": "attr1-",
+          "type": "string",
+          "ifValues": {
+            "a1": {
+              "siblingAttributes": {
+                "another-": {
+                  "name": "another-",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "attr1-id": {
+          "name": "attr1-id",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+`)
+
+}

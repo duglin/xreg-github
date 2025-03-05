@@ -718,6 +718,43 @@ func TestValidChars(t *testing.T) {
 		}
 	}
 
+	// Test relaxed attribute names
+	match = RegexpPropRelaxedName.String()
+	for _, test := range []struct {
+		input  string
+		result string
+	}{
+		{"", `Invalid attribute name "", must match: ` + match},
+		{"A", `Invalid attribute name "A", must match: ` + match},
+		{"*", `Invalid attribute name "*", must match: ` + match},
+		{"@", `Invalid attribute name "@", must match: ` + match},
+		{"0", `Invalid attribute name "0", must match: ` + match},
+		{"0a", `Invalid attribute name "0a", must match: ` + match},
+		{"aZ", `Invalid attribute name "aZ", must match: ` + match},
+		{"-aZ", `Invalid attribute name "-aZ", must match: ` + match},
+		{a64, `Invalid attribute name "` + a64 + `", must match: ` + match},
+		{"a", ``},
+		{"_", ``},
+		{"_a", ``},
+		{"_8", ``},
+		{"a_", ``},
+		{"a-", ``},
+		{"a_8", ``},
+		{"a-8", ``},
+		{"aa", ``},
+		{"a9", ``},
+		{a63, ``},
+	} {
+		err := IsValidAttributeRelaxedName(test.input)
+		got := ""
+		if err != nil {
+			got = err.Error()
+		}
+		if got != test.result {
+			t.Fatalf("Test: %s\nExp: %s\nGot: %s", test.input, test.result, got)
+		}
+	}
+
 	// Test map keys
 	match = RegexpMapKey.String()
 	for _, test := range []struct {

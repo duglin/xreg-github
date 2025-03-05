@@ -2240,12 +2240,12 @@ func (e *Entity) Validate() error {
 			e.Type, e.UID, ToJSON(e.NewObject))
 		log.VPrintf(0, "Attrs: %v", SortedKeys(attrs))
 	}
-	return e.ValidateObject(e.NewObject, attrs, NewPP())
+	return e.ValidateObject(e.NewObject, false, attrs, NewPP())
 }
 
 // This should be called after all type-specific calculated properties have
 // been removed - such as collections
-func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) error {
+func (e *Entity) ValidateObject(val any, relaxedNames bool, origAttrs Attributes, path *PropPath) error {
 
 	log.VPrintf(3, ">Enter: ValidateObject(path: %s)", path)
 	defer log.VPrintf(3, "<Exit: ValidateObject")
@@ -2355,11 +2355,13 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 				}
 			}
 
+			/* Not sure what this was for :-)  save for now
 			if path.Len() > 0 {
 				if err := IsValidAttributeName(path.Bottom()); err != nil {
 					return err
 				}
 			}
+			*/
 
 			// Based on the attribute's type check the incoming 'val'.
 			// This will check for adherence to the model (eg type),
@@ -2449,8 +2451,14 @@ func (e *Entity) ValidateObject(val any, origAttrs Attributes, path *PropPath) e
 			// And finally check to make sure it's a valid attribute name,
 			// but only if it's actually present in the object.
 			if keyPresent {
-				if err := IsValidAttributeName(key); err != nil {
-					return err
+				if relaxedNames {
+					if err := IsValidAttributeRelaxedName(key); err != nil {
+						return err
+					}
+				} else {
+					if err := IsValidAttributeName(key); err != nil {
+						return err
+					}
 				}
 			}
 
@@ -2509,7 +2517,7 @@ func (e *Entity) ValidateAttribute(val any, attr *Attribute, path *PropPath) err
 			}
 		*/
 
-		return e.ValidateObject(val, attr.Attributes, path)
+		return e.ValidateObject(val, attr.RelaxedNames, attr.Attributes, path)
 	}
 
 	ShowStack()
