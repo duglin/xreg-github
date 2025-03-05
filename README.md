@@ -144,3 +144,8 @@ TODOs:
 - add tests for immutable attributes - in particular extensions
 - see if we can add RESOURCEid to Versions so we don't need special logic
   to exclude them in the code (e.g. in rID's updatefn and validateobj)
+- why are "capabilities" and "model" readonly?
+- allow any model change, verify entities
+- make sure that maxversions=0 when we only support 1 means sitcky must be false
+- add "relaxednames" to attr aspects
+- add ":" to map key names

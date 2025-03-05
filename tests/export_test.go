@@ -51,7 +51,6 @@ func TestExportBasic(t *testing.T) {
       "setdefaultversionid",
       "specversion"
     ],
-    "maxmaxversions": 0,
     "mutable": [
       "capabilities",
       "entities",
@@ -571,7 +570,6 @@ func TestExportBasic(t *testing.T) {
       "setdefaultversionid",
       "specversion"
     ],
-    "maxmaxversions": 0,
     "mutable": [
       "capabilities",
       "entities",

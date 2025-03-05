@@ -12,7 +12,6 @@ import (
 type Capabilities struct {
 	EnforceCompatibility bool     `json:"enforcecompatibility"`
 	Flags                []string `json:"flags"`
-	MaxMaxVersions       int      `json:"maxmaxversions"`
 	Mutable              []string `json:"mutable"`
 	Pagination           bool     `json:"pagination"`
 	Schemas              []string `json:"schemas"`
@@ -37,7 +36,6 @@ type OfferedItem struct {
 type Offered struct {
 	EnforceCompatibility OfferedCapability `json:"enforcecompatibility,omitempty"`
 	Flags                OfferedCapability `json:"flags,omitempty"`
-	MaxMaxVersions       OfferedCapability `json:"maxmaxversions,omitempty"`
 	Mutable              OfferedCapability `json:"mutable,omitempty"`
 	Pagination           OfferedCapability `json:"pagination,omitempty"`
 	Schemas              OfferedCapability `json:"schemas,omitempty"`
@@ -62,7 +60,6 @@ var AllowableSpecVersions = ArrayToLower([]string{"0.5"})
 var DefaultCapabilities = &Capabilities{
 	EnforceCompatibility: false,
 	Flags:                AllowableFlags,
-	MaxMaxVersions:       0,
 	Mutable:              AllowableMutable,
 	Pagination:           false,
 	Schemas:              AllowableSchemas,
@@ -102,9 +99,6 @@ func GetOffered() *Offered {
 				Type: "string",
 			},
 			Enum: String2AnySlice(AllowableFlags),
-		},
-		MaxMaxVersions: OfferedCapability{
-			Type: "uinteger",
 		},
 		Mutable: OfferedCapability{
 			Type: "string",
@@ -210,10 +204,6 @@ func (c *Capabilities) Validate() error {
 		return err
 	}
 
-	if c.MaxMaxVersions < 0 {
-		return fmt.Errorf(`"maxmaxversions" must be an unsigned integer`)
-	}
-
 	c.Mutable, err = CleanArray(c.Mutable, AllowableMutable, "mutable")
 	if err != nil {
 		return err
@@ -273,10 +263,6 @@ func (c *Capabilities) EnforceCompatibilityEnabled() bool {
 
 func (c *Capabilities) FlagEnabled(str string) bool {
 	return ArrayContainsAnyCase(c.Flags, str)
-}
-
-func (c *Capabilities) MaxMaxVersionsEnabled(ver int) bool {
-	return ver >= 0 && (c.MaxMaxVersions == 0 || (ver > 0 && ver <= c.MaxMaxVersions))
 }
 
 func (c *Capabilities) MutableEnabled(str string) bool {
