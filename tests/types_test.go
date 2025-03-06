@@ -753,6 +753,10 @@ func TestRelaxedNames(t *testing.T) {
 				Name: "attr1-id",
 				Type: registry.STRING,
 			},
+			"*": {
+				Name: "*",
+				Type: registry.INTEGER,
+			},
 		},
 	})
 	xNoErr(t, err)
@@ -762,6 +766,8 @@ func TestRelaxedNames(t *testing.T) {
 	xCheck(t, err == nil, fmt.Sprintf("set foo.attr1-: %s", err))
 	err = reg.SetSave("obj1.attr1-id", "a1-id")
 	xCheck(t, err == nil, fmt.Sprintf("set foo.attr1-id: %s", err))
+	err = reg.SetSave("obj1.foo-bar", 5)
+	xCheck(t, err == nil, fmt.Sprintf("set foo.foo-bar: %s", err))
 
 	reg.Refresh()
 
@@ -769,6 +775,8 @@ func TestRelaxedNames(t *testing.T) {
 	xCheck(t, val == "a1", fmt.Sprintf("set obj1.attr1-: %v", val))
 	val = reg.Get("obj1.attr1-id")
 	xCheck(t, val == "a1-id", fmt.Sprintf("set obj1.attr1-id: %v", val))
+	val = reg.Get("obj1.foo-bar")
+	xCheck(t, val == 5, fmt.Sprintf("set obj1.foo-bar: %v", val))
 
 	xHTTP(t, reg, "GET", "/model", ``, 200, `{
   "attributes": {
@@ -853,6 +861,10 @@ func TestRelaxedNames(t *testing.T) {
         "attr1-id": {
           "name": "attr1-id",
           "type": "string"
+        },
+        "*": {
+          "name": "*",
+          "type": "integer"
         }
       }
     }
