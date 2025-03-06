@@ -53,6 +53,13 @@ func main() {
 	xrCmd := &cobra.Command{
 		Use:   "xr",
 		Short: "xRegistry CLI",
+
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			// Just make sure Server starts with some variant of "http"
+			if !strings.HasPrefix(Server, "http") {
+				Server = "http://" + strings.TrimLeft(Server, "/")
+			}
+		},
 	}
 	xrCmd.CompletionOptions.HiddenDefaultCmd = true
 	xrCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false,
