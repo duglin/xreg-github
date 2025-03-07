@@ -951,11 +951,13 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
-			"Content-Length:13",
+			"Content-Length:18",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"Content-Disposition:f1",
 		},
-		ResBody: `{"foo":"bar"}`,
+		ResBody: `{
+  "foo": "bar"
+}`,
 	})
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline=file", "", 200, `{
   "fileid": "f1",
@@ -1022,11 +1024,15 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f1/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
-			"Content-Length:16",
+			"Content-Length:26",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f1/versions/1",
 			"Content-Disposition:f1",
 		},
-		ResBody: `["hello",null,5]`,
+		ResBody: `[
+  "hello",
+  null,
+  5
+]`,
 	})
 	xHTTP(t, reg, "GET", "/dirs/d1/files/f1$details?inline=file", "", 200, `{
   "fileid": "f1",
@@ -1513,11 +1519,13 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f12/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
-			"Content-Length:13",
+			"Content-Length:18",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f12/versions/1",
 			"Content-Disposition:f12",
 		},
-		ResBody: `{"foo":"bar"}`,
+		ResBody: `{
+  "foo": "bar"
+}`,
 	})
 
 	// New implied json - numeric
@@ -1615,11 +1623,14 @@ func TestHTTPContent(t *testing.T) {
 			"xRegistry-versionsurl:http://localhost:8181/dirs/d1/files/f14/versions",
 			"xRegistry-versionscount:1",
 			"Content-Type:application/json",
-			"Content-Length:7",
+			"Content-Length:14",
 			"Content-Location:http://localhost:8181/dirs/d1/files/f14/versions/1",
 			"Content-Disposition:f14",
 		},
-		ResBody: `[123,0]`,
+		ResBody: `[
+  123,
+  0
+]`,
 	})
 
 	// New implied json - bool

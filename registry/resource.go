@@ -909,7 +909,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 				buf := []byte(nil)
 				switch reflect.ValueOf(data).Kind() {
 				case reflect.Float64, reflect.Map, reflect.Slice, reflect.Bool:
-					buf, err = json.Marshal(data)
+					buf, err = json.MarshalIndent(data, "", "  ")
 					if err != nil {
 						return nil, false, err
 					}
