@@ -16,7 +16,6 @@ import (
 
 var RegexpModelName = regexp.MustCompile("^[a-z_][a-z_0-9]{0,57}$")
 var RegexpPropName = regexp.MustCompile("^[a-z_][a-z_0-9]{0,62}$")
-var RegexpPropRelaxedName = regexp.MustCompile("^[a-z_][a-z_0-9\\-]{0,62}$")
 var RegexpMapKey = regexp.MustCompile("^[a-z0-9][a-z0-9_.:\\-]{0,62}$")
 var RegexpID = regexp.MustCompile("^[a-zA-Z0-9_][a-zA-Z0-9_.\\-~@]{0,127}$")
 
@@ -38,14 +37,6 @@ func IsValidAttributeName(name string) error {
 	}
 	return fmt.Errorf("Invalid attribute name %q, must match: %s",
 		name, RegexpPropName.String())
-}
-
-func IsValidAttributeRelaxedName(name string) error {
-	if RegexpPropRelaxedName.MatchString(name) {
-		return nil
-	}
-	return fmt.Errorf("Invalid attribute name %q, must match: %s",
-		name, RegexpPropRelaxedName.String())
 }
 
 func IsValidMapKey(key string) error {
@@ -93,18 +84,18 @@ type AttrInternals struct {
 // 'false', but Strict needs to default to 'true'. See the custome Unmarshal
 // funcs in model.go for how we set those
 type Attribute struct {
-	Model        *Model `json:"-"`
-	Name         string `json:"name,omitempty"`
-	Type         string `json:"type,omitempty"`
-	Target       string `json:"target,omitempty"`
-	RelaxedNames bool   `json:"relaxednames,omitempty"`
-	Description  string `json:"description,omitempty"`
-	Enum         []any  `json:"enum,omitempty"` // just scalars though
-	Strict       *bool  `json:"strict,omitempty"`
-	ReadOnly     bool   `json:"readonly,omitempty"`
-	Immutable    bool   `json:"immutable,omitempty"`
-	Required     bool   `json:"required,omitempty"`
-	Default      any    `json:"default,omitempty"`
+	Model       *Model `json:"-"`
+	Name        string `json:"name,omitempty"`
+	Type        string `json:"type,omitempty"`
+	Target      string `json:"target,omitempty"`
+	NameCharSet string `json:"namecharset,omitempty"`
+	Description string `json:"description,omitempty"`
+	Enum        []any  `json:"enum,omitempty"` // just scalars though
+	Strict      *bool  `json:"strict,omitempty"`
+	ReadOnly    bool   `json:"readonly,omitempty"`
+	Immutable   bool   `json:"immutable,omitempty"`
+	Required    bool   `json:"required,omitempty"`
+	Default     any    `json:"default,omitempty"`
 
 	Attributes Attributes `json:"attributes,omitempty"` // for Objs
 	Item       *Item      `json:"item,omitempty"`       // for maps & arrays
@@ -118,17 +109,17 @@ type Attribute struct {
 }
 
 type Item struct { // for maps and arrays
-	Model        *Model     `json:"-"`
-	Type         string     `json:"type,omitempty"`
-	RelaxedNames bool       `json:"relaxednames,omitempty"` // when 'type'=obj
-	Attributes   Attributes `json:"attributes,omitempty"`   // when 'type'=obj
-	Item         *Item      `json:"item,omitempty"`         // when 'type'=map,array
+	Model       *Model     `json:"-"`
+	Type        string     `json:"type,omitempty"`
+	NameCharSet string     `json:"namecharset,omitempty"` // when 'type'=obj
+	Attributes  Attributes `json:"attributes,omitempty"`  // when 'type'=obj
+	Item        *Item      `json:"item,omitempty"`        // when 'type'=map,array
 }
 
 type IfValues map[string]*IfValue
 
 type IfValue struct {
-	SiblingAttributes Attributes `json:"siblingAttributes,omitempty"`
+	SiblingAttributes Attributes `json:"siblingattributes,omitempty"`
 }
 
 type GroupModel struct {
@@ -627,13 +618,25 @@ func (i *Item) AddAttribute(attr *Attribute) (*Attribute, error) {
 	}
 
 	if attr.Name != "*" {
-		if i.RelaxedNames {
-			if err := IsValidAttributeRelaxedName(attr.Name); err != nil {
-				return nil, err
+		if i.Type == OBJECT {
+			if i.NameCharSet == "extended" {
+				if err := IsValidMapKey(attr.Name); err != nil {
+					return nil, fmt.Errorf("Invalid attribute name %q, must "+
+						"match: %s", attr.Name, RegexpMapKey.String())
+				}
+			} else if i.NameCharSet == "strict" || i.NameCharSet == "" {
+				if err := IsValidAttributeName(attr.Name); err != nil {
+					return nil, err
+				}
+			} else {
+				return nil, fmt.Errorf("Invalid \"namecharset\" value: %s",
+					i.NameCharSet)
 			}
 		} else {
-			if err := IsValidAttributeName(attr.Name); err != nil {
-				return nil, err
+			if attr.NameCharSet != "" {
+				return nil, fmt.Errorf("Attribute %q must not have a "+
+					"\"namecharset\" value unless its type is \"object\"",
+					attr.Name)
 			}
 		}
 	}
@@ -1480,13 +1483,25 @@ func (a *Attribute) AddAttrArray(name string, item *Item) (*Attribute, error) {
 }
 func (a *Attribute) AddAttribute(attr *Attribute) (*Attribute, error) {
 	if attr.Name != "*" {
-		if a.RelaxedNames {
-			if err := IsValidAttributeRelaxedName(attr.Name); err != nil {
-				return nil, err
+		if a.Type == OBJECT {
+			if a.NameCharSet == "extended" {
+				if err := IsValidMapKey(attr.Name); err != nil {
+					return nil, fmt.Errorf("Invalid attribute name %q, must "+
+						"match: %s", attr.Name, RegexpMapKey.String())
+				}
+			} else if a.NameCharSet == "strict" || a.NameCharSet == "" {
+				if err := IsValidAttributeName(attr.Name); err != nil {
+					return nil, err
+				}
+			} else {
+				return nil, fmt.Errorf("Invalid \"namecharset\" value: %s",
+					a.NameCharSet)
 			}
 		} else {
-			if err := IsValidAttributeName(attr.Name); err != nil {
-				return nil, err
+			if a.NameCharSet != "" {
+				return nil, fmt.Errorf("Attribute %q must not have a "+
+					"\"namecharset\" value unless it is of type \"object\"",
+					a.Name)
 			}
 		}
 	}
@@ -1582,7 +1597,7 @@ func (m *Model) Verify() error {
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("model"),
 	}
-	if err := m.Attributes.Verify(false, ld); err != nil {
+	if err := m.Attributes.Verify("strict", ld); err != nil {
 		return err
 	}
 
@@ -1678,7 +1693,7 @@ func (gm *GroupModel) Verify(gmName string) error {
 		AttrNames: map[string]bool{},
 		Path:      NewPPP("groups").P(gm.Plural),
 	}
-	if err := gm.Attributes.Verify(false, ld); err != nil {
+	if err := gm.Attributes.Verify("strict", ld); err != nil {
 		return err
 	}
 
@@ -1820,7 +1835,7 @@ func (rm *ResourceModel) Verify(rmName string) error {
 		// attrs[rm.Singular+"base64"] = &Attribute{Name: rm.Singular + "base64", Type: STRING}
 	}
 
-	if err := attrs.Verify(false, ld); err != nil {
+	if err := attrs.Verify("strict", ld); err != nil {
 		return err
 	}
 
@@ -2189,7 +2204,7 @@ func ConvertString(val string, toType string) (any, bool) {
 var targetREstr = `^(?:/([^/]+)(?:/([^[/]+)(?:(?:/(versions)|(\[(?:/versions)]))?))?)?$`
 var targetRE = regexp.MustCompile(targetREstr)
 
-func (attrs Attributes) Verify(relaxedNames bool, ld *LevelData) error {
+func (attrs Attributes) Verify(namecharset string, ld *LevelData) error {
 	ld = &LevelData{
 		Model:     ld.Model,
 		AttrNames: maps.Clone(ld.AttrNames),
@@ -2219,14 +2234,17 @@ func (attrs Attributes) Verify(relaxedNames bool, ld *LevelData) error {
 		// Technically we should convert the XXXid into id but any XXXid needs
 		// to be a valid name/string so we should be ok
 		if name != "*" && SpecProps[name] == nil {
-			if relaxedNames {
-				if err := IsValidAttributeRelaxedName(name); err != nil {
+			if namecharset == "extended" {
+				if err := IsValidMapKey(name); err != nil {
 					return fmt.Errorf("Error processing %q: %s", ld.Path.UI(), err)
 				}
-			} else {
+			} else if namecharset == "strict" || namecharset == "" {
 				if err := IsValidAttributeName(name); err != nil {
 					return fmt.Errorf("Error processing %q: %s", ld.Path.UI(), err)
 				}
+			} else {
+				return fmt.Errorf("Invalid \"namecharset\" value: %s",
+					namecharset)
 			}
 		}
 		path := ld.Path.P(name)
@@ -2322,11 +2340,22 @@ func (attrs Attributes) Verify(relaxedNames bool, ld *LevelData) error {
 		}
 
 		if attr.Type == OBJECT {
+			if attr.NameCharSet != "" && attr.NameCharSet != "strict" && attr.NameCharSet != "extended" {
+				return fmt.Errorf("%q has an invalid \"namecharset\" value: "+
+					attr.NameCharSet, path.UI())
+			}
+
 			if attr.Item != nil {
 				return fmt.Errorf("%q must not have an \"item\" section", path.UI())
 			}
-			if err := attr.Attributes.Verify(attr.RelaxedNames, &LevelData{ld.Model, nil, path}); err != nil {
+			if err := attr.Attributes.Verify(attr.NameCharSet, &LevelData{ld.Model, nil, path}); err != nil {
 				return err
+			}
+		} else {
+			if attr.NameCharSet != "" {
+				return fmt.Errorf("Attribute %q must not have a "+
+					"\"namecharset\" value unless its type is \"object\"",
+					attr.Name)
 			}
 		}
 
@@ -2359,7 +2388,7 @@ func (attrs Attributes) Verify(relaxedNames bool, ld *LevelData) error {
 				ld.Path.P(attr.Name).P("ifvalues").P(valStr)}
 
 			// Recursive
-			if err := ifValue.SiblingAttributes.Verify(relaxedNames, nextLD); err != nil {
+			if err := ifValue.SiblingAttributes.Verify(namecharset, nextLD); err != nil {
 				return err
 			}
 		}
@@ -2414,8 +2443,20 @@ func (item *Item) Verify(path *PropPath) error {
 		}
 	}
 
+	if item.Type == OBJECT {
+		if item.NameCharSet != "" && item.NameCharSet != "strict" && item.NameCharSet != "extended" {
+			return fmt.Errorf("Invalid \"namecharset\" value: %s",
+				item.NameCharSet)
+		}
+	} else {
+		if item.NameCharSet != "" {
+			return fmt.Errorf("%q must not have a \"namecharset\" value "+
+				"since it is not of type \"object\"", p.UI())
+		}
+	}
+
 	if item.Attributes != nil {
-		if err := item.Attributes.Verify(item.RelaxedNames, &LevelData{item.Model, nil, p}); err != nil {
+		if err := item.Attributes.Verify(item.NameCharSet, &LevelData{item.Model, nil, p}); err != nil {
 			return err
 		}
 	}

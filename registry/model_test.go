@@ -212,6 +212,19 @@ func TestModelVerifyRegAttr(t *testing.T) {
 		{"type - object - 2", Model{
 			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
 				Attributes: Attributes{}}}}, ``},
+		{"type - object - strict '' - ", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
+				NameCharSet: ""}}}, ``},
+		{"type - object - strict - ", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
+				NameCharSet: "strict"}}}, ``},
+		{"type - object - extended '' - ", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
+				NameCharSet: "extended"}}}, ``},
+		{"type - object - bad name charset - ", Model{
+			Attributes: Attributes{"x": {Name: "x", Type: OBJECT,
+				NameCharSet: "foo"}}},
+			`"model.x" has an invalid "namecharset" value: foo`},
 
 		{"type - attr - err1", Model{
 			Attributes: Attributes{".foo": {Name: ".foo", Type: ANY}}},
@@ -264,6 +277,10 @@ func TestModelVerifyRegAttr(t *testing.T) {
 			Attributes: Attributes{"m": {Name: "m", Type: MAP,
 				Item: &Item{Type: OBJECT}}}},
 			``},
+		{"Nested - map - obj - bad namecharset", Model{
+			Attributes: Attributes{"m": {Name: "m", Type: MAP,
+				Item: &Item{Type: OBJECT, NameCharSet: "foo"}}}},
+			`Invalid "namecharset" value: foo`},
 		{"Nested - map - obj - missing item - valid", Model{
 			Attributes: Attributes{"m": {Name: "m", Type: MAP,
 				Item: &Item{Type: OBJECT, Attributes: Attributes{}}}}},
@@ -709,43 +726,6 @@ func TestValidChars(t *testing.T) {
 		{a128, ``},
 	} {
 		err := IsValidID(test.input)
-		got := ""
-		if err != nil {
-			got = err.Error()
-		}
-		if got != test.result {
-			t.Fatalf("Test: %s\nExp: %s\nGot: %s", test.input, test.result, got)
-		}
-	}
-
-	// Test relaxed attribute names
-	match = RegexpPropRelaxedName.String()
-	for _, test := range []struct {
-		input  string
-		result string
-	}{
-		{"", `Invalid attribute name "", must match: ` + match},
-		{"A", `Invalid attribute name "A", must match: ` + match},
-		{"*", `Invalid attribute name "*", must match: ` + match},
-		{"@", `Invalid attribute name "@", must match: ` + match},
-		{"0", `Invalid attribute name "0", must match: ` + match},
-		{"0a", `Invalid attribute name "0a", must match: ` + match},
-		{"aZ", `Invalid attribute name "aZ", must match: ` + match},
-		{"-aZ", `Invalid attribute name "-aZ", must match: ` + match},
-		{a64, `Invalid attribute name "` + a64 + `", must match: ` + match},
-		{"a", ``},
-		{"_", ``},
-		{"_a", ``},
-		{"_8", ``},
-		{"a_", ``},
-		{"a-", ``},
-		{"a_8", ``},
-		{"a-8", ``},
-		{"aa", ``},
-		{"a9", ``},
-		{a63, ``},
-	} {
-		err := IsValidAttributeRelaxedName(test.input)
 		got := ""
 		if err != nil {
 			got = err.Error()

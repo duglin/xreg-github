@@ -692,13 +692,26 @@ func TestWildcard2LayersTypes(t *testing.T) {
 
 }
 
-func TestRelaxedNames(t *testing.T) {
-	reg := NewRegistry("TestRelaxedNames")
+func TestNameCharSet(t *testing.T) {
+	reg := NewRegistry("TestNameCharSet")
 	defer PassDeleteReg(t, reg)
 
 	_, err := reg.Model.AddAttribute(&registry.Attribute{
 		Name: "obj1",
 		Type: registry.OBJECT,
+		Attributes: map[string]*registry.Attribute{
+			"attr1-": {
+				Name: "attr1-",
+				Type: registry.STRING,
+			},
+		},
+	})
+	xCheckErr(t, err, `Error processing "model.obj1": Invalid attribute name "attr1-", must match: ^[a-z_][a-z_0-9]{0,62}$`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name:        "obj1",
+		Type:        registry.OBJECT,
+		NameCharSet: "strict",
 		Attributes: map[string]*registry.Attribute{
 			"attr1-": {
 				Name: "attr1-",
@@ -731,9 +744,22 @@ func TestRelaxedNames(t *testing.T) {
 	xCheckErr(t, err, `Error processing "model.obj1.attr1.ifvalues.a1": Invalid attribute name "another-", must match: ^[a-z_][a-z_0-9]{0,62}$`)
 
 	_, err = reg.Model.AddAttribute(&registry.Attribute{
-		Name:         "obj1",
-		Type:         registry.OBJECT,
-		RelaxedNames: true,
+		Name:        "obj1",
+		Type:        registry.OBJECT,
+		NameCharSet: "extended",
+		Attributes: map[string]*registry.Attribute{
+			"attr space": {
+				Name: "attr space",
+				Type: registry.STRING,
+			},
+		},
+	})
+	xCheckErr(t, err, `Error processing "model.obj1": Invalid map key name "attr space", must match: ^[a-z0-9][a-z0-9_.:\-]{0,62}$`)
+
+	_, err = reg.Model.AddAttribute(&registry.Attribute{
+		Name:        "obj1",
+		Type:        registry.OBJECT,
+		NameCharSet: "extended",
 		Attributes: map[string]*registry.Attribute{
 			"attr1-": {
 				Name: "attr1-",
@@ -842,14 +868,14 @@ func TestRelaxedNames(t *testing.T) {
     "obj1": {
       "name": "obj1",
       "type": "object",
-      "relaxednames": true,
+      "namecharset": "extended",
       "attributes": {
         "attr1-": {
           "name": "attr1-",
           "type": "string",
           "ifValues": {
             "a1": {
-              "siblingAttributes": {
+              "siblingattributes": {
                 "another-": {
                   "name": "another-",
                   "type": "string"

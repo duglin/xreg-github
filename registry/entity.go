@@ -2240,12 +2240,12 @@ func (e *Entity) Validate() error {
 			e.Type, e.UID, ToJSON(e.NewObject))
 		log.VPrintf(0, "Attrs: %v", SortedKeys(attrs))
 	}
-	return e.ValidateObject(e.NewObject, false, attrs, NewPP())
+	return e.ValidateObject(e.NewObject, "strict", attrs, NewPP())
 }
 
 // This should be called after all type-specific calculated properties have
 // been removed - such as collections
-func (e *Entity) ValidateObject(val any, relaxedNames bool, origAttrs Attributes, path *PropPath) error {
+func (e *Entity) ValidateObject(val any, namecharset string, origAttrs Attributes, path *PropPath) error {
 
 	log.VPrintf(3, ">Enter: ValidateObject(path: %s)", path)
 	defer log.VPrintf(3, "<Exit: ValidateObject")
@@ -2451,14 +2451,17 @@ func (e *Entity) ValidateObject(val any, relaxedNames bool, origAttrs Attributes
 			// And finally check to make sure it's a valid attribute name,
 			// but only if it's actually present in the object.
 			if keyPresent {
-				if relaxedNames {
-					if err := IsValidAttributeRelaxedName(key); err != nil {
+				if namecharset == "extended" {
+					if err := IsValidMapKey(key); err != nil {
 						return err
 					}
-				} else {
+				} else if namecharset == "" || namecharset == "strict" {
 					if err := IsValidAttributeName(key); err != nil {
 						return err
 					}
+				} else {
+					return fmt.Errorf("Unknown \"namecharset\" value: %s",
+						namecharset)
 				}
 			}
 
@@ -2517,7 +2520,7 @@ func (e *Entity) ValidateAttribute(val any, attr *Attribute, path *PropPath) err
 			}
 		*/
 
-		return e.ValidateObject(val, attr.RelaxedNames, attr.Attributes, path)
+		return e.ValidateObject(val, attr.NameCharSet, attr.Attributes, path)
 	}
 
 	ShowStack()
