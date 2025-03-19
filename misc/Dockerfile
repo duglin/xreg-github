@@ -22,7 +22,7 @@ FROM alpine
 # FROM mysql
 # ENV MYSQL_ROOT_PASSWORD=password
 
-LABEL org.opencontainers.image.source https://github.com/duglin/xreg-github
+LABEL org.opencontainers.image.source https://github.com/xregistry/server
 
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt \
 	/etc/ssl/certs/ca-certificates.crt

@@ -5,7 +5,7 @@
 
 FROM golang:alpine
 
-LABEL org.opencontainers.image.source https://github.com/duglin/xreg-github
+LABEL org.opencontainers.image.source https://github.com/xregistry/server
 
 ARG GIT_COMMIT
 
@@ -16,11 +16,11 @@ RUN apk add make git bash docker
 # Clone the repo. Don't actually do it since we want to test changes to make
 # sure it didn't break anything. However, normally you'll want to use this
 # 'clone' command instead of the 'COPY' below.
-# WORKDIR /go/src/github.com/duglin
-# git clone https://github.com/duglin/xreg-github.git
+# WORKDIR /go/src/github.com/xregistry
+# git clone https://github.com/xregistry/server.git
 
 # Copy our repo (comment this section out if the above section is enabled)
-WORKDIR /go/src/github.com/duglin/xreg-github
+WORKDIR /go/src/github.com/xregistry/server
 COPY . ./
 
 # Erase any built files from the COPY so we have a clean env

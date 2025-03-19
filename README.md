@@ -1,4 +1,4 @@
-[![CI](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml/badge.svg)](https://github.com/duglin/xreg-github/actions/workflows/ci.yaml)
+[![CI](https://github.com/xregistry/server/actions/workflows/ci.yaml/badge.svg)](https://github.com/xregistry/server/actions/workflows/ci.yaml)
 
 # xreg-github
 
@@ -12,7 +12,7 @@ To run the official image:
 ```
 # You need to have Docker installed
 
-docker run -ti -p 8080:8080 ghcr.io/duglin/xreg-github/xreg-server-all
+docker run -ti -p 8080:8080 ghcr.io/xregistry/server/xreg-server-all
 ```
 
 To build and run it locally:
