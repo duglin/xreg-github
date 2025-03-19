@@ -6,7 +6,7 @@ MAKEFLAGS  += --no-print-directory
 # export VERBOSE=[0-9]
 # Override these env vars as needed:
 # DOCKERHUB must end with /, if it's set at all
-export GIT_ORG    ?= duglin
+export GIT_ORG    ?= xregistry
 export GIT_REPO   ?= $(shell basename `git rev-parse --show-toplevel`)
 export DOCKERHUB  ?=
 export DBHOST     ?= 127.0.0.1
