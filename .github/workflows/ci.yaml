@@ -5,7 +5,7 @@ on:
       - master
 
 env:
-  IMAGE: ghcr.io/duglin/xreg-github/xreg-server
+  IMAGE: ghcr.io/xregistry/xreg-github/xreg-server
 
 jobs:
   build_test_push:
