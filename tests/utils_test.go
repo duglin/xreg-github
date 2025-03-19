@@ -17,7 +17,7 @@ import (
 	"testing"
 
 	log "github.com/duglin/dlog"
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestMain(m *testing.M) {

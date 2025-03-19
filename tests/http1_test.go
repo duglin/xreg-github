@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestHTTPhtml(t *testing.T) {

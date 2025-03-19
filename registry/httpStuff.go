@@ -898,7 +898,7 @@ function changeRegistry(name) {
 function opensrc(loc) {
   if (loc == null) loc = "https://xregistry.io"
   else if (loc == "commit") {
-    loc = "https://github.com/duglin/xreg-github/tree/`+GitCommit+`"
+    loc = "https://github.com/xregistry/server/tree/`+GitCommit+`"
   }
   window.open( loc )
 }

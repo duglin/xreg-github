@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	// log "github.com/duglin/dlog"
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestCreateGroup(t *testing.T) {

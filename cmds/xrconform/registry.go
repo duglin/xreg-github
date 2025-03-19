@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestRoot(td *TD) {

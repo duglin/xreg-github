@@ -13,7 +13,7 @@ import (
 	"time"
 
 	log "github.com/duglin/dlog"
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 var Token string
@@ -89,7 +89,7 @@ func LoadAPIGuru(reg *registry.Registry, orgName string, repoName string) *regis
 		ErrFatalf(reg.SetSave("#baseURL", "http://soaphub.org:8585/"))
 		ErrFatalf(reg.SetSave("name", "APIs-guru Registry"))
 		ErrFatalf(reg.SetSave("description", "xRegistry view of github.com/APIs-guru/openapi-directory"))
-		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
+		ErrFatalf(reg.SetSave("documentation", "https://github.com/xregistry/server"))
 		ErrFatalf(reg.Refresh())
 		// log.VPrintf(3, "New registry:\n%#v", reg)
 
@@ -215,7 +215,7 @@ func LoadDirsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(reg.SetSave("#baseURL", "http://soaphub.org:8585/"))
 		ErrFatalf(reg.SetSave("name", "Test Registry"))
 		ErrFatalf(reg.SetSave("description", "A test reg"))
-		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
+		ErrFatalf(reg.SetSave("documentation", "https://github.com/xregistry/server"))
 
 		ErrFatalf(reg.SetSave("labels.stage", "prod"))
 
@@ -341,7 +341,7 @@ func LoadEndpointsSample(reg *registry.Registry) *registry.Registry {
 		ErrFatalf(reg.SetSave("#baseURL", "http://soaphub.org:8585/"))
 		ErrFatalf(reg.SetSave("name", "Endpoints Registry"))
 		ErrFatalf(reg.SetSave("description", "An impl of the endpoints spec"))
-		ErrFatalf(reg.SetSave("documentation", "https://github.com/duglin/xreg-github"))
+		ErrFatalf(reg.SetSave("documentation", "https://github.com/xregistry/server"))
 	}
 
 	log.VPrintf(1, "Loading: /reg-%s", reg.UID)
@@ -410,7 +410,7 @@ func LoadMessagesSample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
 		reg.SetSave("name", "Messages Registry")
 		reg.SetSave("description", "An impl of the sages spec")
-		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+		reg.SetSave("documentation", "https://github.com/xregistry/server")
 	}
 
 	log.VPrintf(1, "Loading: /reg-%s", reg.UID)
@@ -443,7 +443,7 @@ func LoadSchemasSample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
 		reg.SetSave("name", "Schemas Registry")
 		reg.SetSave("description", "An impl of the schemas spec")
-		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+		reg.SetSave("documentation", "https://github.com/xregistry/server")
 	}
 
 	log.VPrintf(1, "Loading: /reg-%s", reg.UID)
@@ -477,7 +477,7 @@ func LoadLargeSample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
 		reg.SetSave("name", "Large Registry")
 		reg.SetSave("description", "A large Registry")
-		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+		reg.SetSave("documentation", "https://github.com/xregistry/server")
 	}
 
 	log.VPrintf(1, "Loading: /reg-%s", reg.UID)
@@ -533,7 +533,7 @@ func LoadDocStore(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
 		reg.SetSave("name", "DocStore Registry")
 		reg.SetSave("description", "A doc store Registry")
-		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+		reg.SetSave("documentation", "https://github.com/xregistry/server")
 	}
 
 	log.VPrintf(1, "Loading: /reg-%s", reg.UID)
@@ -586,7 +586,7 @@ func LoadCESample(reg *registry.Registry) *registry.Registry {
 		reg.SetSave("#baseURL", "http://soaphub.org:8585/")
 		reg.SetSave("name", "CloudEvents Registry")
 		reg.SetSave("description", "An impl of the CloudEvents xReg spec")
-		reg.SetSave("documentation", "https://github.com/duglin/xreg-github")
+		reg.SetSave("documentation", "https://github.com/xregistry/server")
 	}
 
 	log.VPrintf(1, "Loading: /reg-%s", reg.UID)

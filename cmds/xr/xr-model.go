@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	// log "github.com/duglin/dlog"
-	"github.com/duglin/xreg-github/registry"
 	"github.com/spf13/cobra"
+	"github.com/xregistry/server/registry"
 )
 
 func addModelCmd(parent *cobra.Command) {

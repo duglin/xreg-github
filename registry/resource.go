@@ -900,7 +900,7 @@ func (r *Resource) UpsertVersionWithObject(id string, obj Object, addType AddTyp
 			// at one point I had that, but other issues popped up so I moved
 			// it down here for now. When we try to support more than just
 			// JSON we may want to reconsider this logic.
-			// This commit (https://github.com/duglin/xreg-github/commit/c1945a061fed88f33983738010eb5c4fbdf41596)
+			// This commit (https://github.com/xregistry/server/commit/c1945a061fed88f33983738010eb5c4fbdf41596)
 			// removed that logic (and the #-contenttype_ attr). Look for
 			// the ConvertResourceContents func and the hoops I had to just
 			// thru to make sure all cases were handled.

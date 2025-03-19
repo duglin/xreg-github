@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 var PASS = 1

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestSetAttributeNames(t *testing.T) {
