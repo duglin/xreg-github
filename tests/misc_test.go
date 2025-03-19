@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestDBRows(t *testing.T) {

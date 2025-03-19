@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 var RepoBase = "https://raw.githubusercontent.com/xregistry/spec/main"

@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	log "github.com/duglin/dlog"
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 var GitCommit string

@@ -7,28 +7,15 @@ import (
 
 	// log "github.com/duglin/dlog"
 	"github.com/spf13/cobra"
+	"github.com/xregistry/server/cmds/xr/xrlib"
+	"github.com/xregistry/server/registry"
 )
 
 var GitComit string
-var worked = true
-var Verbose = EnvBool("XR_VERBOSE", false)
-var Server = EnvString("XR_SERVER", "")
-
-func EnvBool(name string, def bool) bool {
-	val := os.Getenv(name)
-	if val != "" {
-		def = strings.EqualFold(val, "true")
-	}
-	return def
-}
-
-func EnvString(name string, def string) string {
-	val := os.Getenv(name)
-	if val != "" {
-		def = val
-	}
-	return def
-}
+var VerboseFlag = xrlib.EnvBool("XR_VERBOSE", false)
+var DebugFlag = xrlib.EnvBool("XR_DEBUG", false)
+var Server = "" // Will grab DefaultServer after we add the --server flag
+var DefaultServer = xrlib.EnvString("XR_SERVER", "")
 
 func ErrStop(err error, prefix ...any) {
 	if err == nil {
@@ -43,10 +30,28 @@ func ErrStop(err error, prefix ...any) {
 }
 
 func Error(str string, args ...any) {
-	str = strings.TrimSpace(str) + "\n"
-	fmt.Fprintf(os.Stderr, str, args...)
-	worked = false
+	if str != "" {
+		str = strings.TrimSpace(str) + "\n"
+		fmt.Fprintf(os.Stderr, str, args...)
+	}
 	os.Exit(1)
+}
+
+func Verbose(args ...any) {
+	if !VerboseFlag || len(args) == 0 || registry.IsNil(args[0]) {
+		return
+	}
+
+	fmtStr := ""
+	ok := false
+
+	if fmtStr, ok = args[0].(string); ok {
+		// fmtStr already set
+	} else {
+		fmtStr = fmt.Sprintf("%v", args[0])
+	}
+
+	fmt.Fprintf(os.Stderr, fmtStr+"\n", args[1:]...)
 }
 
 func main() {
@@ -59,17 +64,26 @@ func main() {
 			if !strings.HasPrefix(Server, "http") {
 				Server = "http://" + strings.TrimLeft(Server, "/")
 			}
+
+			xrlib.DebugFlag = DebugFlag
 		},
 	}
 	xrCmd.CompletionOptions.HiddenDefaultCmd = true
-	xrCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false,
-		"Chatty?")
-	xrCmd.PersistentFlags().StringVarP(&Server, "server", "s", Server,
-		"URL to server")
+	xrCmd.PersistentFlags().BoolVarP(&VerboseFlag, "verbose", "v", false,
+		"Be chatty")
+	xrCmd.PersistentFlags().BoolVarP(&DebugFlag, "debug", "x", false,
+		"Show HTTP traffic")
+	xrCmd.PersistentFlags().StringVarP(&Server, "server", "s", "",
+		"Server URL")
+
+	// Set Server after we add the --server flag so we don't show the
+	// default value in the help text
+	Server = DefaultServer
 
 	addModelCmd(xrCmd)
 	addRegistryCmd(xrCmd)
 	addGroupCmd(xrCmd)
+	addGetCmd(xrCmd)
 
 	if err := xrCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)

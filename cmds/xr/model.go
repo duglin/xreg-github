@@ -8,8 +8,9 @@ import (
 	"strings"
 
 	// log "github.com/duglin/dlog"
-	"github.com/duglin/xreg-github/registry"
+	// "github.com/xregistry/server/cmds/xr/xrlib"
 	"github.com/spf13/cobra"
+	"github.com/xregistry/server/registry"
 )
 
 func addModelCmd(parent *cobra.Command) {
@@ -44,9 +45,7 @@ func modelNormalizeFunc(cmd *cobra.Command, args []string) {
 	}
 
 	for _, fileName := range args {
-		if Verbose {
-			fmt.Printf("%s:\n", fileName)
-		}
+		Verbose("%s:\n", fileName)
 
 		if fileName == "" || fileName == "-" {
 			buf, err = io.ReadAll(os.Stdin)
@@ -99,9 +98,7 @@ func modelVerifyFunc(cmd *cobra.Command, args []string) {
 	}
 
 	for _, fileName := range args {
-		if Verbose {
-			fmt.Printf("%s:\n", fileName)
-		}
+		Verbose("%s:\n", fileName)
 		if strings.HasPrefix(fileName, "http") {
 			res, err := http.Get(fileName)
 			if err == nil {

@@ -6,7 +6,7 @@ metadata:
   name: xreg-server
 spec:
   containers:
-  - image: duglin/xreg-server
+  - image: ghcr.io/xregistry/server/xreg-server
     imagePullPolicy: Never
     name: xreg-server
     command: [ "/server" ]

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestCapabilitySimple(t *testing.T) {

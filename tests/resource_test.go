@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/duglin/xreg-github/registry"
+	"github.com/xregistry/server/registry"
 )
 
 func TestCreateResource(t *testing.T) {

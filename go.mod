@@ -1,4 +1,4 @@
-module github.com/duglin/xreg-github
+module github.com/xregistry/server
 
 go 1.20
 
